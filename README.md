@@ -6,12 +6,12 @@
 [![Download APK](https://img.shields.io/github/v/release/RedGridTactical/RedGridMGRS?label=Android%20APK&color=CC0000&logo=android)](https://github.com/RedGridTactical/RedGridMGRS/releases/latest)
 [![License](https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-8B0000)](LICENSE)
 [![No Tracking](https://img.shields.io/badge/Tracking-None-CC0000)](PRIVACY.md)
-[![Support](https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-CC0000?logo=buymeacoffee)](https://buymeacoffee.com/redgridtactical)
+[![Support](https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-CC0000?logo=buymeacoffee)](https://buymeacoffee.com/redgridtac0)
 
 **A tactical land navigation utility for iOS and Android.**
 
-Red-light display. MGRS coordinates. Wayfinder. 8 field tools. 5 radio report templates.
-Zero network. Zero storage. Zero tracking. Open source.
+Red-light display. MGRS coordinates. Wayfinder. 8 field tools. 3 radio report templates.
+Zero network. Zero tracking. Open source.
 
 ---
 
@@ -32,11 +32,12 @@ Zero network. Zero storage. Zero tracking. Open source.
 
 ## RedGrid Pro — $4.99 one-time
 
-- 📍 **Saved Waypoint Lists** — save named patrol routes, OBJs, rally points — persisted locally
-- 📋 **Additional Report Templates** — ICS 201 (Incident Command), ANGUS/CFF (Call for Fire)
-- 🔴 **Display Themes** — NVG green, day white, blue-force colour schemes
+- 📍 **Saved Waypoint Lists** — save named patrol routes, OBJs, rally points — persisted locally on device
+- 📋 **Additional Report Templates** — ICS 201 Incident Command, CASEVAC
+- 🎨 **Display Themes** — NVG green, day white, night blue colour schemes
+- 🌐 **Coordinate Formats** — switch between MGRS, UTM, Decimal Degrees, DMS
 
-No subscription. No recurring charges. One purchase, permanent unlock.
+No subscription. No recurring charges. One purchase, permanent unlock. All future Pro features included.
 
 ---
 
@@ -71,7 +72,7 @@ Individual personal use is always free.
 
 ## Support the Project
 
-☕ [**Buy Me a Coffee**](https://buymeacoffee.com/redgridtactical)
+☕ [**Buy Me a Coffee**](https://buymeacoffee.com/redgridtac0)
 💛 [**GitHub Sponsors**](https://github.com/sponsors/RedGridTactical)
 
 ---
@@ -81,12 +82,12 @@ Individual personal use is always free.
 | Data | Collected | Stored | Transmitted |
 |------|-----------|--------|-------------|
 | GPS location | In memory only | ❌ Never | ❌ Never |
-| Waypoints | In memory (free) / device only (Pro lists) | ✅ Local only (Pro) | ❌ Never |
+| Waypoints (free) | In memory only, cleared on exit | ❌ Never | ❌ Never |
+| Waypoint lists (Pro) | On device only | ✅ Local only | ❌ Never |
 | Pace count / Declination / Theme | On device only | ✅ Local only | ❌ Never |
 | Device identifiers | ❌ Never | ❌ Never | ❌ Never |
 
-IAP is handled by RevenueCat. RevenueCat's privacy policy: [revenuecat.com/privacy](https://www.revenuecat.com/privacy).
-No ad networks. No analytics. No crash reporting. Full details in [PRIVACY.md](PRIVACY.md).
+No ad networks. No analytics. No crash reporting. No third-party SDKs. Full details in [PRIVACY.md](PRIVACY.md).
 
 ---
 
@@ -99,7 +100,7 @@ npm install
 npx expo start
 ```
 
-To build without IAP (development / open-source builds), the app falls back gracefully — all free features work, Pro features are accessible without a purchase when `react-native-purchases` is not configured.
+All free features work immediately. Pro features require a valid IAP purchase through Apple or Google — there is no way to bypass this in production builds.
 
 ---
 
