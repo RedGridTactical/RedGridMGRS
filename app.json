@@ -11,14 +11,16 @@
     },
     "android": {
       "package": "com.redgrid.redgridtactical",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#000000"
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
-      ]
+      ],
+      "targetSdkVersion": 35,
+      "compileSdkVersion": 35
     },
     "ios": {
       "bundleIdentifier": "com.redgrid.redgridtactical",
