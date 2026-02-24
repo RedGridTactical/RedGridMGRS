@@ -2,7 +2,7 @@
  * RedGrid Tactical — Root Application v2.0
  * Tabs: GRID · TOOLS · REPORT · LISTS (Pro) · THEME (Pro)
  *
- * Privacy: no location stored, no network (except IAP via RevenueCat), no analytics.
+ * Privacy: no location stored, no network (IAP uses Apple/Google native payment only), no analytics.
  */
 import React, { useState, useMemo } from 'react';
 import {
