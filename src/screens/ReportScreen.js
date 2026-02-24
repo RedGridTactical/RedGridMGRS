@@ -1,11 +1,12 @@
 /**
  * ReportScreen — Radio-ready report templates.
- * Current MGRS auto-fills the location field.
- * All text is ephemeral — cleared on tab switch.
+ * Free: SALUTE, 9-Line MEDEVAC, SPOT
+ * Pro: ICS 201 (Incident Command), ANGUS (Artillery), Custom template
  */
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Clipboard, Alert,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  TextInput, Clipboard, Alert,
 } from 'react-native';
 
 const RED  = '#CC0000';
@@ -16,9 +17,6 @@ const RED5 = '#1A0000';
 const BG   = '#0A0000';
 
 // ─── REPORT DEFINITIONS ──────────────────────────────────────────────────────
-// Each report is a list of fields: { key, label, placeholder, autoFill? }
-// autoFill: 'grid' | 'datetime' — auto-populated from live data
-
 const SALUTE_FIELDS = [
   { key: 'size',     label: 'S — SIZE',       placeholder: 'Squad / Platoon / Vehicle...' },
   { key: 'activity', label: 'A — ACTIVITY',   placeholder: 'Moving N, Digging in, Firing...' },
@@ -41,17 +39,42 @@ const MEDEVAC_FIELDS = [
 ];
 
 const SPOT_FIELDS = [
-  { key: 'who',      label: 'WHO',      placeholder: 'Reporting callsign' },
-  { key: 'what',     label: 'WHAT',     placeholder: 'What observed' },
-  { key: 'where',    label: 'WHERE',    placeholder: 'MGRS location', autoFill: 'grid' },
-  { key: 'when',     label: 'WHEN',     placeholder: 'DTG', autoFill: 'datetime' },
-  { key: 'why',      label: 'WHY',      placeholder: 'Intent / significance' },
+  { key: 'who',   label: 'WHO',   placeholder: 'Reporting callsign' },
+  { key: 'what',  label: 'WHAT',  placeholder: 'What observed' },
+  { key: 'where', label: 'WHERE', placeholder: 'MGRS location', autoFill: 'grid' },
+  { key: 'when',  label: 'WHEN',  placeholder: 'DTG', autoFill: 'datetime' },
+  { key: 'why',   label: 'WHY',   placeholder: 'Intent / significance' },
+];
+
+// Pro templates
+const ICS201_FIELDS = [
+  { key: 'incident',  label: 'INCIDENT NAME',    placeholder: 'Operation / incident name' },
+  { key: 'date',      label: 'DATE / TIME',       placeholder: 'DTG', autoFill: 'datetime' },
+  { key: 'location',  label: 'LOCATION',          placeholder: 'MGRS / address', autoFill: 'grid' },
+  { key: 'situation', label: 'SITUATION',          placeholder: 'Current situation summary' },
+  { key: 'resources', label: 'RESOURCES ASSIGNED', placeholder: 'Units / personnel / equipment' },
+  { key: 'ic',        label: 'INCIDENT COMMANDER', placeholder: 'Name / callsign' },
+  { key: 'objectives',label: 'OBJECTIVES',         placeholder: 'Priority actions' },
+  { key: 'safety',    label: 'SAFETY MESSAGE',     placeholder: 'Hazards / precautions' },
+];
+
+const ANGUS_FIELDS = [
+  { key: 'unit',      label: 'UNIT / CALLSIGN',    placeholder: 'Requesting callsign' },
+  { key: 'grid',      label: 'TARGET GRID',         placeholder: 'MGRS', autoFill: 'grid' },
+  { key: 'altitude',  label: 'TARGET ALTITUDE',     placeholder: 'MSL in metres' },
+  { key: 'description',label:'TARGET DESCRIPTION',  placeholder: 'Personnel, vehicle, structure...' },
+  { key: 'danger',    label: 'DANGER CLOSE',         placeholder: 'Distance to friendlies (m)' },
+  { key: 'effects',   label: 'DESIRED EFFECTS',      placeholder: 'Neutralise / Suppress / Destroy' },
+  { key: 'method',    label: 'METHOD OF ENGAGEMENT', placeholder: 'Direction, number of rounds...' },
+  { key: 'clearance', label: 'CLEARANCE',            placeholder: 'Auth callsign / code word' },
 ];
 
 const REPORTS = [
-  { id: 'salute', label: 'SALUTE',       sub: 'Enemy contact report',  fields: SALUTE_FIELDS  },
-  { id: 'medevac',label: '9-LINE MEDEVAC', sub: 'Medical evacuation request', fields: MEDEVAC_FIELDS },
-  { id: 'spot',   label: 'SPOT REPORT',  sub: 'Observation report',    fields: SPOT_FIELDS    },
+  { id: 'salute',  label: 'SALUTE',          sub: 'Enemy contact report',       fields: SALUTE_FIELDS,  pro: false },
+  { id: 'medevac', label: '9-LINE MEDEVAC',  sub: 'Medical evacuation request', fields: MEDEVAC_FIELDS, pro: false },
+  { id: 'spot',    label: 'SPOT REPORT',     sub: 'Observation report',         fields: SPOT_FIELDS,    pro: false },
+  { id: 'ics201',  label: 'ICS 201',         sub: 'Incident command briefing',  fields: ICS201_FIELDS,  pro: true  },
+  { id: 'angus',   label: 'ANGUS / CFF',     sub: 'Call for fire — artillery',  fields: ANGUS_FIELDS,   pro: true  },
 ];
 
 function getNowDTG() {
@@ -63,75 +86,84 @@ function getNowDTG() {
   return `${dd}${hh}${mm}Z ${months[n.getUTCMonth()]} ${n.getUTCFullYear()}`;
 }
 
-function buildReportText(fields, values, label) {
-  const lines = [`=== ${label} ===`];
-  fields.forEach(f => {
-    lines.push(`${f.label}: ${values[f.key] || '---'}`);
-  });
-  return lines.join('\n');
+function buildReport(reportId, fields, values) {
+  const header = `=== ${REPORTS.find(r=>r.id===reportId)?.label ?? reportId.toUpperCase()} ===`;
+  const lines = fields.map(f => `${f.label}: ${values[f.key] || '—'}`);
+  return [header, ...lines].join('\n');
 }
 
-function ReportForm({ report, mgrs }) {
-  const initValues = () => {
+function ReportCard({ report, mgrs, isPro, onShowProGate }) {
+  const initVals = useCallback(() => {
     const v = {};
     report.fields.forEach(f => {
-      if (f.autoFill === 'grid') v[f.key] = mgrs || '';
-      else if (f.autoFill === 'datetime') v[f.key] = getNowDTG();
-      else v[f.key] = '';
+      v[f.key] = f.autoFill === 'grid' ? (mgrs || '') : f.autoFill === 'datetime' ? getNowDTG() : '';
     });
     return v;
+  }, [report, mgrs]);
+
+  const [open, setOpen]   = useState(false);
+  const [vals, setVals]   = useState(initVals);
+  const isLocked = report.pro && !isPro;
+
+  const handleOpen = () => {
+    if (isLocked) { onShowProGate(report.label); return; }
+    setOpen(o => !o);
   };
-
-  const [values, setValues] = useState(initValues);
-  const [copied, setCopied] = useState(false);
-
-  const set = (key, val) => setValues(prev => ({ ...prev, [key]: val }));
-  const clear = () => setValues(initValues());
 
   const copy = () => {
-    const text = buildReportText(report.fields, values, report.label);
+    const text = buildReport(report.id, report.fields, vals);
     Clipboard.setString(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    Alert.alert('Copied', 'Report copied to clipboard.');
   };
 
-  return (
-    <View>
-      {report.fields.map(f => (
-        <View key={f.key} style={styles.field}>
-          <Text style={styles.fieldLabel}>{f.label}</Text>
-          <TextInput
-            style={[styles.fieldInput, f.autoFill && styles.fieldInputAuto]}
-            value={values[f.key]}
-            onChangeText={v => set(f.key, v)}
-            placeholder={f.placeholder}
-            placeholderTextColor="#3A0000"
-            autoCapitalize="characters"
-            autoCorrect={false}
-            multiline={false}
-          />
-        </View>
-      ))}
+  const clear = () => setVals(initVals());
 
-      <View style={styles.reportBtns}>
-        <TouchableOpacity style={styles.copyBtn} onPress={copy}>
-          <Text style={styles.copyBtnText}>{copied ? 'COPIED ✓' : 'COPY REPORT'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.clearBtn} onPress={clear}>
-          <Text style={styles.clearBtnText}>CLEAR</Text>
-        </TouchableOpacity>
-      </View>
+  return (
+    <View style={[styles.card, open && styles.cardOpen, isLocked && styles.cardLocked]}>
+      <TouchableOpacity style={styles.cardHeader} onPress={handleOpen} activeOpacity={0.7}>
+        <View>
+          <View style={styles.labelRow}>
+            <Text style={styles.cardTitle}>{report.label}</Text>
+            {isLocked && <Text style={styles.proBadge}>PRO</Text>}
+          </View>
+          <Text style={styles.cardSub}>{report.sub}</Text>
+        </View>
+        <Text style={[styles.chevron, open && styles.chevronOpen]}>▶</Text>
+      </TouchableOpacity>
+
+      {open && (
+        <View style={styles.cardBody}>
+          {report.fields.map(f => {
+            const isAuto = !!f.autoFill;
+            return (
+              <View key={f.key} style={styles.fieldBlock}>
+                <Text style={styles.fieldLabel}>{f.label}</Text>
+                <TextInput
+                  style={[styles.fieldInput, isAuto && styles.fieldInputAuto]}
+                  placeholder={f.placeholder}
+                  placeholderTextColor={RED3}
+                  value={vals[f.key]}
+                  onChangeText={t => setVals(v => ({ ...v, [f.key]: t }))}
+                  multiline={f.key === 'situation' || f.key === 'objectives'}
+                />
+              </View>
+            );
+          })}
+          <View style={styles.reportBtns}>
+            <TouchableOpacity style={styles.copyBtn} onPress={copy}>
+              <Text style={styles.copyBtnText}>COPY REPORT</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.clearBtn} onPress={clear}>
+              <Text style={styles.clearBtnText}>CLEAR</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
 
-export function ReportScreen({ mgrs }) {
-  const [openReport, setOpenReport] = useState(null);
-
-  const toggle = useCallback((id) => {
-    setOpenReport(prev => prev === id ? null : id);
-  }, []);
-
+export function ReportScreen({ mgrs, isPro, onShowProGate }) {
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
@@ -140,76 +172,63 @@ export function ReportScreen({ mgrs }) {
       </View>
 
       {mgrs && (
-        <View style={styles.autoFillBanner}>
-          <Text style={styles.autoFillText}>AUTO-FILLING GRID: {mgrs}</Text>
+        <View style={styles.autoBanner}>
+          <Text style={styles.autoText}>AUTO-FILLING GRID: {mgrs}</Text>
         </View>
       )}
 
-      {REPORTS.map(report => {
-        const isOpen = openReport === report.id;
-        return (
-          <View key={report.id} style={[styles.card, isOpen && styles.cardOpen]}>
-            <TouchableOpacity style={styles.cardHeader} onPress={() => toggle(report.id)} activeOpacity={0.7}>
-              <View>
-                <Text style={styles.cardTitle}>{report.label}</Text>
-                <Text style={styles.cardSub}>{report.sub}</Text>
-              </View>
-              <Text style={[styles.chevron, isOpen && styles.chevronOpen]}>▶</Text>
-            </TouchableOpacity>
+      {REPORTS.map(r => (
+        <ReportCard
+          key={r.id}
+          report={r}
+          mgrs={mgrs}
+          isPro={isPro}
+          onShowProGate={onShowProGate}
+        />
+      ))}
 
-            {isOpen && (
-              <View style={styles.cardBody}>
-                <View style={styles.cardDivider} />
-                <ReportForm report={report} mgrs={mgrs} />
-              </View>
-            )}
-          </View>
-        );
-      })}
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>REPORTS ARE EPHEMERAL · CLEARED ON EXIT · NO DATA STORED</Text>
-      </View>
+      <Text style={styles.footer}>REPORTS ARE EPHEMERAL · CLEARED ON EXIT · NO DATA STORED</Text>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: BG },
+  root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
-
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingTop: 4 },
-  title: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', letterSpacing: 5, color: RED },
-  subtitle: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 3, color: RED3 },
-
-  autoFillBanner: { borderWidth: 1, borderColor: RED3, backgroundColor: RED5, padding: 8, marginBottom: 12 },
-  autoFillText: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2, color: RED2 },
-
-  card: { borderWidth: 1, borderColor: RED3, backgroundColor: '#0D0000', marginBottom: 8 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  title: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', letterSpacing: 4, color: RED },
+  subtitle: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2, color: RED3 },
+  autoBanner: {
+    borderWidth: 1, borderColor: RED3, backgroundColor: RED5,
+    paddingHorizontal: 12, paddingVertical: 7, marginBottom: 12,
+  },
+  autoText: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 1, color: RED2 },
+  card: { marginBottom: 10, borderWidth: 1, borderColor: RED3, backgroundColor: '#0D0000' },
   cardOpen: { borderColor: RED2 },
+  cardLocked: { opacity: 0.7 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
-  cardTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, color: RED, fontWeight: '700', marginBottom: 2 },
-  cardSub:   { fontFamily: 'monospace', fontSize: 9,  letterSpacing: 2, color: RED3 },
-  chevron:   { fontFamily: 'monospace', fontSize: 10, color: RED3 },
-  chevronOpen: { color: RED, transform: [{ rotate: '90deg' }] },
-  cardBody: { paddingHorizontal: 14, paddingBottom: 16 },
-  cardDivider: { height: 1, backgroundColor: RED4, marginBottom: 14 },
-
-  field: { marginBottom: 10 },
-  fieldLabel: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 3, color: RED3, marginBottom: 4 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  cardTitle: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', letterSpacing: 2, color: RED },
+  proBadge: {
+    fontFamily: 'monospace', fontSize: 8, color: BG,
+    backgroundColor: RED, paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 2,
+  },
+  cardSub: { fontFamily: 'monospace', fontSize: 9, color: RED3, letterSpacing: 1 },
+  chevron: { fontFamily: 'monospace', fontSize: 10, color: RED3 },
+  chevronOpen: { transform: [{ rotate: '90deg' }] },
+  cardBody: { paddingHorizontal: 14, paddingBottom: 14, borderTopWidth: 1, borderTopColor: RED4 },
+  fieldBlock: { marginTop: 10 },
+  fieldLabel: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2, color: RED3, marginBottom: 4 },
   fieldInput: {
     borderWidth: 1, borderColor: RED3, backgroundColor: '#110000',
-    color: RED, fontFamily: 'monospace', fontSize: 12, letterSpacing: 2,
+    color: RED, fontFamily: 'monospace', fontSize: 13,
     paddingHorizontal: 10, paddingVertical: 8,
   },
-  fieldInputAuto: { borderColor: RED2, color: RED },
-
-  reportBtns: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  copyBtn: { flex: 2, borderWidth: 1, borderColor: RED2, backgroundColor: RED4, paddingVertical: 12, alignItems: 'center' },
-  copyBtnText: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 3, color: RED, fontWeight: '700' },
-  clearBtn: { flex: 1, borderWidth: 1, borderColor: RED3, paddingVertical: 12, alignItems: 'center' },
-  clearBtnText: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 3, color: RED3 },
-
-  footer: { paddingTop: 24, alignItems: 'center' },
-  footerText: { fontFamily: 'monospace', fontSize: 7, letterSpacing: 2, color: RED4 },
+  fieldInputAuto: { borderColor: RED2 },
+  reportBtns: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  copyBtn: { flex: 2, backgroundColor: RED3, paddingVertical: 11, alignItems: 'center' },
+  copyBtnText: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', color: RED, letterSpacing: 3 },
+  clearBtn: { flex: 1, borderWidth: 1, borderColor: RED3, paddingVertical: 11, alignItems: 'center' },
+  clearBtnText: { fontFamily: 'monospace', fontSize: 10, color: RED3, letterSpacing: 3 },
+  footer: { fontFamily: 'monospace', fontSize: 7, color: RED4, textAlign: 'center', marginTop: 20, letterSpacing: 1 },
 });

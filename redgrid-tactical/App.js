@@ -1,52 +1,42 @@
 /**
- * RedGrid Tactical — Root Application v2.0
- * Tabs: GRID · TOOLS · REPORT · LISTS (Pro) · THEME (Pro)
+ * RedGrid Tactical — Root Application
+ * Three tabs: GRID (position + wayfinder) · TOOLS (8 tactical calculators) · REPORT (radio templates)
  *
- * Privacy: no location stored, no network (except IAP via RevenueCat), no analytics.
+ * Privacy: no location stored, no network, no analytics.
+ * Orientation: portrait and landscape both fully supported.
  */
 import React, { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  SafeAreaView, StatusBar, useWindowDimensions,
+  SafeAreaView, StatusBar, useWindowDimensions, Platform,
 } from 'react-native';
 
 import { useLocation }  from './src/hooks/useLocation';
 import { useSettings }  from './src/hooks/useSettings';
-import { useIAP }       from './src/hooks/useIAP';
-import { useTheme }     from './src/hooks/useTheme';
 
 import { MGRSDisplay }    from './src/components/MGRSDisplay';
 import { WayfinderArrow } from './src/components/WayfinderArrow';
 import { WaypointModal }  from './src/components/WaypointModal';
-import { ProGate }        from './src/components/ProGate';
 import { ToolsScreen }    from './src/screens/ToolsScreen';
 import { ReportScreen }   from './src/screens/ReportScreen';
-import { WaypointListsScreen } from './src/screens/WaypointListsScreen';
-import { ThemeScreen }    from './src/screens/ThemeScreen';
 
 import {
   toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance,
 } from './src/utils/mgrs';
 import { applyDeclination } from './src/utils/tactical';
 
+// ─── COLOURS ────────────────────────────────────────────────────────────────
 const RED  = '#CC0000';
 const RED2 = '#990000';
 const RED3 = '#660000';
 const RED4 = '#330000';
 const BG   = '#0A0000';
 
-const FREE_TABS = [
-  { id: 'grid',   label: 'GRID'   },
-  { id: 'tools',  label: 'TOOLS'  },
-  { id: 'report', label: 'REPORT' },
-];
-
-const PRO_TABS = [
-  { id: 'grid',   label: 'GRID'   },
-  { id: 'tools',  label: 'TOOLS'  },
-  { id: 'report', label: 'REPORT' },
-  { id: 'lists',  label: 'LISTS'  },
-  { id: 'theme',  label: 'THEME'  },
+// ─── TABS ────────────────────────────────────────────────────────────────────
+const TABS = [
+  { id: 'grid',   label: 'GRID'    },
+  { id: 'tools',  label: 'TOOLS'   },
+  { id: 'report', label: 'REPORT'  },
 ];
 
 export default function App() {
@@ -54,40 +44,32 @@ export default function App() {
   const isLandscape = width > height;
 
   const { location, error, isLoading, retry } = useLocation();
-  const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme } = useSettings();
-  const { isPro, isPurchasing, product, purchase, restore } = useIAP();
-  const themeData = useTheme(theme);
+  const { declination, setDeclination, paceCount, setPaceCount } = useSettings();
 
-  const [tab, setTab]               = useState('grid');
-  const [waypoint, setWaypoint]     = useState(null);
-  const [showModal, setShowModal]   = useState(false);
-  const [proGateVisible, setProGateVisible] = useState(false);
-  const [proGateFeature, setProGateFeature] = useState('');
+  const [tab, setTab]           = useState('grid');
+  const [waypoint, setWaypoint] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  const TABS = isPro ? PRO_TABS : FREE_TABS;
-
-  const showProGate = (featureName) => {
-    setProGateFeature(featureName);
-    setProGateVisible(true);
-  };
-
-  // Derived MGRS
+  // ── Derived MGRS values ──
   const mgrsRaw       = useMemo(() => location ? toMGRS(location.lat, location.lon, 5) : null, [location]);
   const mgrsFormatted = useMemo(() => mgrsRaw ? formatMGRS(mgrsRaw) : null, [mgrsRaw]);
 
-  // Wayfinder
+  // ── Wayfinder ──
   const { bearing, distance } = useMemo(() => {
     if (!location || !waypoint) return { bearing: null, distance: null };
     const raw = calculateBearing(location.lat, location.lon, waypoint.lat, waypoint.lon);
+    // Apply declination correction to displayed bearing
+    const corrected = applyDeclination(raw, declination);
     return {
-      bearing: applyDeclination(raw, declination),
+      bearing: corrected,
       distance: calculateDistance(location.lat, location.lon, waypoint.lat, waypoint.lon),
     };
   }, [location, waypoint, declination]);
 
-  const waypointMGRS = useMemo(() => waypoint ? formatMGRS(toMGRS(waypoint.lat, waypoint.lon, 5)) : null, [waypoint]);
-  const arrowSize    = isLandscape ? Math.min(height * 0.52, 190) : 200;
+  const waypointMGRS  = useMemo(() => waypoint ? formatMGRS(toMGRS(waypoint.lat, waypoint.lon, 5)) : null, [waypoint]);
+  const arrowSize     = isLandscape ? Math.min(height * 0.52, 190) : 200;
 
+  // ── Grid tab content (portrait / landscape aware) ──
   const gridContent = isLandscape ? (
     <LandscapeGrid
       isLoading={isLoading} location={location} error={error} retry={retry}
@@ -108,7 +90,7 @@ export default function App() {
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor={BG} hidden={isLandscape} />
 
-      {/* Tab bar */}
+      {/* ── TAB BAR ── */}
       <View style={[styles.tabBar, isLandscape && styles.tabBarLandscape]}>
         {TABS.map(t => (
           <TouchableOpacity
@@ -121,15 +103,9 @@ export default function App() {
             {tab === t.id && <View style={styles.tabIndicator} />}
           </TouchableOpacity>
         ))}
-        {/* Pro badge in tab bar */}
-        {isPro && (
-          <View style={styles.proBadgeBar}>
-            <Text style={styles.proBadgeText}>PRO</Text>
-          </View>
-        )}
       </View>
 
-      {/* Screen content */}
+      {/* ── SCREEN CONTENT ── */}
       <View style={styles.screenContent}>
         {tab === 'grid' && gridContent}
 
@@ -144,66 +120,18 @@ export default function App() {
         )}
 
         {tab === 'report' && (
-          <ReportScreen
-            mgrs={mgrsFormatted}
-            isPro={isPro}
-            onShowProGate={showProGate}
-          />
-        )}
-
-        {tab === 'lists' && isPro && (
-          <WaypointListsScreen
-            location={location}
-            onLoadWaypoint={(wp) => { setWaypoint(wp); setTab('grid'); }}
-          />
-        )}
-
-        {tab === 'theme' && isPro && (
-          <ThemeScreen
-            currentTheme={theme}
-            isPro={isPro}
-            onSelectTheme={setTheme}
-            onShowProGate={showProGate}
-          />
-        )}
-
-        {/* Upsell tab for non-Pro */}
-        {(tab === 'lists' || tab === 'theme') && !isPro && (
-          <UpsellScreen onUpgrade={() => showProGate('RedGrid Pro')} />
+          <ReportScreen mgrs={mgrsFormatted} />
         )}
       </View>
 
-      {/* Waypoint modal */}
+      {/* ── WAYPOINT MODAL ── */}
       <WaypointModal
         visible={showModal}
         onClose={() => setShowModal(false)}
         onSetWaypoint={setWaypoint}
         currentLocation={location}
       />
-
-      {/* Pro gate */}
-      <ProGate
-        visible={proGateVisible}
-        onClose={() => setProGateVisible(false)}
-        featureName={proGateFeature}
-        product={product}
-        isPurchasing={isPurchasing}
-        onPurchase={purchase}
-        onRestore={restore}
-      />
     </SafeAreaView>
-  );
-}
-
-function UpsellScreen({ onUpgrade }) {
-  return (
-    <View style={styles.upsellRoot}>
-      <Text style={styles.upsellTitle}>REDGRID PRO</Text>
-      <Text style={styles.upsellSub}>Unlock the full experience</Text>
-      <TouchableOpacity style={styles.upsellBtn} onPress={onUpgrade}>
-        <Text style={styles.upsellBtnText}>UNLOCK PRO</Text>
-      </TouchableOpacity>
-    </View>
   );
 }
 
@@ -216,11 +144,13 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
         <SignalBadge isLoading={isLoading} location={location} />
       </View>
       <Div />
+
       {error
         ? <ErrBlock error={error} retry={retry} />
         : <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact={false} />
       }
       <Div />
+
       {!waypoint ? (
         <View style={styles.noWpBlock}>
           <Crosshair size={50} />
@@ -248,6 +178,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
           </View>
         </View>
       )}
+
       <View style={styles.footer}><Text style={styles.footerText}>NO DATA STORED · NO NETWORK · OPEN SOURCE</Text></View>
     </View>
   );
@@ -263,8 +194,13 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
           <SignalBadge isLoading={isLoading} location={location} />
         </View>
         <Div />
-        {error ? <ErrBlock error={error} retry={retry} compact /> : <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact />}
+
+        {error
+          ? <ErrBlock error={error} retry={retry} compact />
+          : <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact />
+        }
         <Div />
+
         {waypoint ? (
           <View style={styles.lsWpInfo}>
             <Text style={styles.lsWpLabel}>{waypoint.label}</Text>
@@ -274,6 +210,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
         ) : (
           <Text style={styles.noWpText}>NO WAYPOINT SET</Text>
         )}
+
         <View style={styles.lsBtnWrap}>
           <View style={styles.lsBtns}>
             <TouchableOpacity style={styles.lsBtn} onPress={onAddWaypoint}>
@@ -288,7 +225,9 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
           <Text style={styles.footerText}>NO DATA STORED · NO NETWORK</Text>
         </View>
       </View>
+
       <View style={styles.lsVDiv} />
+
       <View style={styles.lsRight}>
         {waypoint && bearing !== null ? (
           <View style={styles.lsArrow}>
@@ -308,7 +247,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
   );
 }
 
-// ─── ATOMS ───────────────────────────────────────────────────────────────────
+// ─── SHARED ATOMS ────────────────────────────────────────────────────────────
 function SignalBadge({ isLoading, location }) {
   const color = isLoading ? RED3 : location ? RED : RED3;
   const label = isLoading ? 'ACQUIRING' : location ? 'FIX' : 'NO SIGNAL';
@@ -319,7 +258,9 @@ function SignalBadge({ isLoading, location }) {
     </View>
   );
 }
+
 function Div() { return <View style={styles.divider} />; }
+
 function ErrBlock({ error, retry, compact }) {
   return (
     <View style={[styles.errBlock, compact && { paddingVertical: 10 }]}>
@@ -330,6 +271,7 @@ function ErrBlock({ error, retry, compact }) {
     </View>
   );
 }
+
 function Crosshair({ size = 50 }) {
   return (
     <View style={{ width: size, height: size, opacity: 0.3 }}>
@@ -340,23 +282,34 @@ function Crosshair({ size = 50 }) {
   );
 }
 
-// ─── STYLES ──────────────────────────────────────────────────────────────────
+// ─── STYLES ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: { flex:1, backgroundColor:BG },
-  tabBar: { flexDirection:'row', borderBottomWidth:1, borderBottomColor:RED4, backgroundColor:BG, alignItems:'center' },
+
+  // Tab bar
+  tabBar: {
+    flexDirection:'row',
+    borderBottomWidth:1,
+    borderBottomColor:RED4,
+    backgroundColor:BG,
+  },
   tabBarLandscape: { paddingTop: 0 },
   tabItem: { flex:1, alignItems:'center', paddingVertical:12, position:'relative' },
-  tabLabel: { fontFamily:'monospace', fontSize:10, letterSpacing:3, color:RED3, fontWeight:'700' },
+  tabItemActive: {},
+  tabLabel: { fontFamily:'monospace', fontSize:11, letterSpacing:4, color:RED3, fontWeight:'700' },
   tabLabelActive: { color:RED },
   tabIndicator: { position:'absolute', bottom:0, left:'10%', right:'10%', height:2, backgroundColor:RED },
-  proBadgeBar: { paddingHorizontal:8, paddingVertical:3, backgroundColor:RED4, marginRight:8 },
-  proBadgeText: { fontFamily:'monospace', fontSize:7, color:RED, letterSpacing:3, fontWeight:'700' },
+
   screenContent: { flex:1 },
+
+  // Portrait grid
   portraitRoot: { flex:1, paddingHorizontal:20, paddingTop:12, paddingBottom:20 },
   header: { flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingBottom:10 },
   appTitle: { fontFamily:'monospace', fontSize:16, fontWeight:'700', letterSpacing:4, color:RED },
+
+  // Landscape grid
   landscapeRoot: { flex:1, flexDirection:'row' },
-  lsLeft: { flex:1, paddingHorizontal:16, paddingVertical:8 },
+  lsLeft: { flex:1, paddingHorizontal:16, paddingVertical:8, justifyContent:'flex-start' },
   lsVDiv: { width:1, backgroundColor:RED4, marginVertical:8 },
   lsRight: { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:8 },
   lsHeader: { flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingBottom:6 },
@@ -373,6 +326,8 @@ const styles = StyleSheet.create({
   lsArrow: { alignItems:'center', gap:8 },
   lsBearing: { fontFamily:'monospace', fontSize:30, letterSpacing:4, color:RED, fontWeight:'700' },
   lsNoWp: { alignItems:'center', gap:20 },
+
+  // Shared
   signal: { flexDirection:'row', alignItems:'center', gap:6 },
   signalDot: { width:7, height:7, borderRadius:4 },
   signalText: { fontFamily:'monospace', fontSize:9, letterSpacing:3, color:RED3 },
@@ -399,9 +354,4 @@ const styles = StyleSheet.create({
   clearBtnText: { fontFamily:'monospace', fontSize:11, letterSpacing:3, color:RED2 },
   footer: { marginTop:'auto', paddingTop:16, alignItems:'center' },
   footerText: { fontFamily:'monospace', fontSize:7, letterSpacing:2, color:RED4 },
-  upsellRoot: { flex:1, alignItems:'center', justifyContent:'center', gap:16, padding:40 },
-  upsellTitle: { fontFamily:'monospace', fontSize:24, fontWeight:'700', letterSpacing:6, color:RED },
-  upsellSub: { fontFamily:'monospace', fontSize:11, color:RED3, letterSpacing:2 },
-  upsellBtn: { borderWidth:1, borderColor:RED, backgroundColor:RED4, paddingHorizontal:32, paddingVertical:14 },
-  upsellBtnText: { fontFamily:'monospace', fontSize:12, fontWeight:'700', letterSpacing:4, color:RED },
 });

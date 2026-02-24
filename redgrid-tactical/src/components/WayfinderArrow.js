@@ -1,0 +1,152 @@
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Animated } from 'react-native';
+
+/**
+ * WayfinderArrow — Animated directional arrow pointing to waypoint.
+ * bearing: 0–360 degrees from North
+ * size: diameter of the component
+ */
+export function WayfinderArrow({ bearing, size = 180 }) {
+  const rotateAnim = useRef(new Animated.Value(bearing)).current;
+  const prevBearing = useRef(bearing);
+
+  useEffect(() => {
+    // Shortest-path rotation to avoid spinning the wrong way
+    let delta = bearing - prevBearing.current;
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+
+    const next = prevBearing.current + delta;
+    prevBearing.current = next;
+
+    Animated.timing(rotateAnim, {
+      toValue: next,
+      duration: 400,
+      useNativeDriver: true,
+    }).start();
+  }, [bearing]);
+
+  const rotate = rotateAnim.interpolate({
+    inputRange: [-360, 360],
+    outputRange: ['-360deg', '360deg'],
+  });
+
+  const arrowSize = size * 0.38;
+  const shaftWidth = size * 0.09;
+  const headWidth = size * 0.24;
+  const headHeight = size * 0.28;
+
+  return (
+    <View style={[styles.container, { width: size, height: size }]}>
+      {/* Outer ring */}
+      <View
+        style={[
+          styles.ring,
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            borderWidth: size * 0.015,
+          },
+        ]}
+      />
+      {/* Cardinal ticks */}
+      {[0, 90, 180, 270].map((deg) => (
+        <View
+          key={deg}
+          style={[
+            styles.tick,
+            {
+              width: size * 0.012,
+              height: size * 0.07,
+              top: size * 0.04,
+              left: size / 2 - size * 0.006,
+              transformOrigin: `${size * 0.006}px ${size * 0.46}px`,
+              transform: [{ rotate: `${deg}deg` }],
+            },
+          ]}
+        />
+      ))}
+
+      {/* Rotating arrow */}
+      <Animated.View
+        style={[
+          styles.arrowContainer,
+          { transform: [{ rotate }] },
+        ]}
+      >
+        {/* Arrowhead (pointing up = North = 0°) */}
+        <View
+          style={[
+            styles.arrowHead,
+            {
+              borderLeftWidth: headWidth / 2,
+              borderRightWidth: headWidth / 2,
+              borderBottomWidth: headHeight,
+              marginBottom: -1,
+            },
+          ]}
+        />
+        {/* Arrow shaft */}
+        <View
+          style={[
+            styles.arrowShaft,
+            {
+              width: shaftWidth,
+              height: arrowSize,
+            },
+          ]}
+        />
+        {/* Tail flare */}
+        <View
+          style={[
+            styles.tailFlare,
+            {
+              width: shaftWidth * 1.8,
+              height: shaftWidth * 0.5,
+              marginTop: -1,
+            },
+          ]}
+        />
+      </Animated.View>
+    </View>
+  );
+}
+
+const RED = '#CC0000';
+
+const styles = StyleSheet.create({
+  container: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  ring: {
+    position: 'absolute',
+    borderColor: RED,
+    opacity: 0.5,
+  },
+  tick: {
+    position: 'absolute',
+    backgroundColor: RED,
+    opacity: 0.6,
+  },
+  arrowContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowHead: {
+    width: 0,
+    height: 0,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: RED,
+  },
+  arrowShaft: {
+    backgroundColor: RED,
+  },
+  tailFlare: {
+    backgroundColor: RED,
+    opacity: 0.6,
+  },
+});
