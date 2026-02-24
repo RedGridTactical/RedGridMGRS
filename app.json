@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.redgrid.redgridtactical",
-      "versionCode": 6,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive_foreground.png",
         "backgroundColor": "#000000"
@@ -22,7 +22,10 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
       ],
-      "icon": "./assets/icons/icon.png"
+      "targetSdkVersion": 35,
+      "compileSdkVersion": 35,
+      "icon": "./assets/icons/icon.png",
+      "buildToolsVersion": "35.0.0"
     },
     "ios": {
       "bundleIdentifier": "com.redgrid.redgridtactical",
@@ -38,16 +41,6 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "RedGrid Tactical uses your location to display your current grid coordinates. No data is stored or transmitted."
-        }
-      ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "targetSdkVersion": 35,
-            "compileSdkVersion": 35,
-            "buildToolsVersion": "35.0.0"
-          }
         }
       ]
     ],

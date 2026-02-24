@@ -8,7 +8,7 @@ RedGrid Tactical is a free, open-source application. This policy describes exact
 
 ## Location Data
 
-RedGrid Tactical requests access to your device's GPS location **while the app is open** (foreground only). This location data is used solely to calculate and display your current MGRS coordinates on screen.
+RedGrid Tactical requests access to your device's GPS location **while the app is open** (foreground only). This location data is used solely to calculate and display your current MGRS (Military Grid Reference System) coordinates on screen.
 
 - Location data is **never written to disk**
 - Location data is **never transmitted** over any network
@@ -17,18 +17,12 @@ RedGrid Tactical requests access to your device's GPS location **while the app i
 
 ## Stored Data
 
-The following data is saved locally on your device:
+The only data RedGrid Tactical saves to your device is:
 
-**All users:**
 - **Magnetic declination offset** — a single number you configure (default: 0)
 - **Pace count calibration** — a single number you configure (default: 62)
 
-**RedGrid Pro users (optional, one-time purchase):**
-- **Saved waypoint lists** — named lists of waypoints you choose to save, stored locally on your device only
-- **Display theme preference** — your selected colour theme
-- **Coordinate format preference** — your selected coordinate display format
-
-All of the above is stored **locally on your device only** using the standard system storage API. None of it is ever transmitted anywhere.
+These two values are stored locally on your device using the standard system storage API. They are never transmitted anywhere.
 
 ## Network Activity
 
@@ -40,9 +34,7 @@ RedGrid Tactical makes **zero network requests**. There is no:
 - Account system or cloud sync
 - Update check or telemetry
 
-In-app purchases (RedGrid Pro) are processed entirely by Apple (App Store) or Google (Play Store). RedGrid Tactical never sees your payment details and receives no data from these transactions beyond a confirmation that a purchase was made.
-
-You can verify the zero-network claim by reviewing the source code or monitoring network traffic while using the app.
+You can verify this by reviewing the source code or monitoring network traffic while using the app.
 
 ## Permissions
 
@@ -54,7 +46,7 @@ No other permissions are requested.
 
 ## Third Parties
 
-RedGrid Tactical contains no third-party SDKs that collect data. It is built on the Expo runtime framework, which handles the underlying platform APIs. In-app purchases use the native Apple StoreKit and Google Play Billing APIs directly — no third-party purchase SDK is included.
+RedGrid Tactical contains no third-party SDKs that collect data. It is built on the Expo runtime framework, which handles the underlying platform APIs.
 
 ## Children
 
@@ -68,5 +60,3 @@ Any changes to this policy will be reflected in the GitHub repository with an up
 
 For questions or concerns, open an issue at:
 https://github.com/RedGridTactical/RedGridMGRS/issues
-
-Or email: redgridtactical@gmail.com
