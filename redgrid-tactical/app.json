@@ -2,7 +2,7 @@
   "expo": {
     "name": "RedGrid Tactical",
     "slug": "redgrid-tactical",
-    "version": "2.0.0",
+    "version": "1.0.0",
     "orientation": "default",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#000000",
@@ -10,22 +10,20 @@
       "backgroundColor": "#000000"
     },
     "android": {
-      "package": "com.redgrid.redgridtactical",
-      "versionCode": 2,
       "adaptiveIcon": {
         "backgroundColor": "#000000"
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
-      ]
+      ],
+      "package": "com.redgrid.tactical"
     },
     "ios": {
-      "bundleIdentifier": "com.redgrid.redgridtactical",
-      "buildNumber": "2",
+      "bundleIdentifier": "com.redgrid.tactical",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "RedGrid Tactical uses your location to display your current grid coordinates. No location data is stored or transmitted.",
-        "SKAdNetworkItems": []
+        "NSLocationAlwaysUsageDescription": "RedGrid Tactical uses your location to display your current grid coordinates. No location data is stored or transmitted."
       }
     },
     "plugins": [
@@ -35,12 +33,7 @@
           "locationWhenInUsePermission": "RedGrid Tactical uses your location to display your current grid coordinates. No data is stored or transmitted."
         }
       ],
-      "react-native-purchases"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "c55caaee-6950-4b8c-850b-f0d2d402cc09"
-      }
-    }
+      "@react-native-async-storage/async-storage"
+    ]
   }
 }
