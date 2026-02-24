@@ -10,8 +10,8 @@
 
 **A tactical land navigation utility for iOS and Android.**
 
-Red-light display. MGRS coordinates. Wayfinder. 8 field tools. 3 radio report templates.
-Zero network. Zero tracking. Open source.
+Red-light display. MGRS coordinates. Wayfinder. 8 field tools. 5 radio report templates.
+Zero network. Zero storage. Zero tracking. Open source.
 
 ---
 
@@ -32,12 +32,11 @@ Zero network. Zero tracking. Open source.
 
 ## RedGrid Pro — $4.99 one-time
 
-- 📍 **Saved Waypoint Lists** — save named patrol routes, OBJs, rally points — persisted locally on device
-- 📋 **Additional Report Templates** — ICS 201 Incident Command, CASEVAC
-- 🎨 **Display Themes** — NVG green, day white, night blue colour schemes
-- 🌐 **Coordinate Formats** — switch between MGRS, UTM, Decimal Degrees, DMS
+- 📍 **Saved Waypoint Lists** — save named patrol routes, OBJs, rally points — persisted locally
+- 📋 **Additional Report Templates** — ICS 201 (Incident Command), ANGUS/CFF (Call for Fire)
+- 🔴 **Display Themes** — NVG green, day white, blue-force colour schemes
 
-No subscription. No recurring charges. One purchase, permanent unlock. All future Pro features included.
+No subscription. No recurring charges. One purchase, permanent unlock.
 
 ---
 
@@ -82,12 +81,12 @@ Individual personal use is always free.
 | Data | Collected | Stored | Transmitted |
 |------|-----------|--------|-------------|
 | GPS location | In memory only | ❌ Never | ❌ Never |
-| Waypoints (free) | In memory only, cleared on exit | ❌ Never | ❌ Never |
-| Waypoint lists (Pro) | On device only | ✅ Local only | ❌ Never |
+| Waypoints | In memory (free) / device only (Pro lists) | ✅ Local only (Pro) | ❌ Never |
 | Pace count / Declination / Theme | On device only | ✅ Local only | ❌ Never |
 | Device identifiers | ❌ Never | ❌ Never | ❌ Never |
 
-No ad networks. No analytics. No crash reporting. No third-party SDKs. Full details in [PRIVACY.md](PRIVACY.md).
+IAP is handled by RevenueCat. RevenueCat's privacy policy: [revenuecat.com/privacy](https://www.revenuecat.com/privacy).
+No ad networks. No analytics. No crash reporting. Full details in [PRIVACY.md](PRIVACY.md).
 
 ---
 
@@ -100,7 +99,7 @@ npm install
 npx expo start
 ```
 
-All free features work immediately. Pro features require a valid IAP purchase through Apple or Google — there is no way to bypass this in production builds.
+To build without IAP (development / open-source builds), the app falls back gracefully — all free features work, Pro features are accessible without a purchase when `react-native-purchases` is not configured.
 
 ---
 
