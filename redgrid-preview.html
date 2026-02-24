@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RedGrid Tactical — UI Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red:  #CC0000;
+    --red2: #990000;
+    --red3: #660000;
+    --red4: #2A0000;
+    --red5: #120000;
+    --bg:   #050000;
+    --scan: rgba(180,0,0,0.03);
+  }
+
+  html, body {
+    background: #0d0d0d;
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    gap: 56px;
+  }
+
+  h2 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: #333;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: -36px;
+  }
+
+  /* ── PHONE ROW ── */
+  .phone-row {
+    display: flex;
+    gap: 40px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .phone-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .phone-label { color: #333; font-family: 'Rajdhani', sans-serif; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; }
+
+  /* ── PORTRAIT PHONE ── */
+  .phone {
+    width: 300px;
+    height: 620px;
+    background: #080808;
+    border-radius: 42px;
+    border: 1.5px solid #1e1e1e;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px #0a0a0a, 0 40px 80px rgba(0,0,0,0.85), inset 0 0 0 1px #181818;
+    flex-shrink: 0;
+  }
+
+  /* ── LANDSCAPE PHONE ── */
+  .phone-ls {
+    width: 620px;
+    height: 300px;
+    background: #080808;
+    border-radius: 42px;
+    border: 1.5px solid #1e1e1e;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px #0a0a0a, 0 40px 80px rgba(0,0,0,0.85), inset 0 0 0 1px #181818;
+    flex-shrink: 0;
+  }
+
+  /* Notch portrait */
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 90px; height: 26px;
+    background: #080808;
+    border-radius: 0 0 16px 16px;
+    z-index: 20;
+    border: 1.5px solid #1e1e1e;
+    border-top: none;
+  }
+
+  /* Notch landscape — left side pill */
+  .phone-ls .ls-notch {
+    position: absolute;
+    left: 0; top: 50%;
+    transform: translateY(-50%);
+    width: 10px; height: 60px;
+    background: #080808;
+    border-radius: 0 12px 12px 0;
+    z-index: 20;
+    border: 1.5px solid #1e1e1e;
+    border-left: none;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 6px;
+    border-radius: 37px;
+    background: var(--bg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Scanlines */
+  .screen::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, var(--scan) 2px, var(--scan) 4px);
+    pointer-events: none; z-index: 100; border-radius: inherit;
+  }
+
+  /* Vignette */
+  .screen::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.55) 100%);
+    pointer-events: none; z-index: 99; border-radius: inherit;
+  }
+
+  /* Grid texture */
+  .grid-tex {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(100,0,0,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(100,0,0,0.04) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none; z-index: 1; border-radius: inherit;
+  }
+
+  /* ── APP PORTRAIT ── */
+  .app-p {
+    padding: 38px 18px 18px;
+    display: flex; flex-direction: column; height: 100%; gap: 0;
+    position: relative; z-index: 2;
+  }
+
+  /* ── APP LANDSCAPE ── */
+  .app-ls {
+    display: flex; flex-direction: row; height: 100%;
+    padding: 12px 16px 12px 20px;
+    position: relative; z-index: 2;
+    gap: 0;
+  }
+
+  .ls-left {
+    flex: 1;
+    display: flex; flex-direction: column;
+    gap: 0;
+    padding-right: 14px;
+  }
+
+  .ls-vdiv {
+    width: 1px; background: var(--red4);
+    margin: 6px 0; align-self: stretch;
+  }
+
+  .ls-right {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    padding-left: 14px;
+  }
+
+  /* ── SHARED UI ATOMS ── */
+  .status-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 16px 0; font-size: 8px; color: var(--red3); letter-spacing: 1px; opacity: 0.6;
+    position: relative; z-index: 2;
+  }
+
+  .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; animation: fadeIn 0.5s ease both; }
+  .app-name { font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 4px; color: var(--red); text-transform: uppercase; }
+  .app-name-sm { font-size: 11px; letter-spacing: 3px; }
+
+  .signal { display: flex; align-items: center; gap: 5px; }
+  .signal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); animation: pulse 2s ease-in-out infinite; }
+  .signal-txt { font-size: 8px; letter-spacing: 3px; color: var(--red3); }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.25} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+
+  .div { height: 1px; background: var(--red4); margin: 0 0 8px; }
+  .div-sm { margin: 0 0 5px; }
+
+  /* ── GRID DISPLAY PORTRAIT ── */
+  .grid-p { text-align: center; padding: 10px 0 14px; animation: fadeIn 0.7s ease 0.1s both; }
+  .grid-label { font-size: 8px; letter-spacing: 5px; color: var(--red3); margin-bottom: 6px; }
+  .grid-gzd { font-size: 16px; letter-spacing: 3px; color: var(--red3); font-weight: 600; }
+  .grid-sq  { font-size: 28px; letter-spacing: 5px; color: var(--red); font-weight: 700; text-shadow: 0 0 14px rgba(204,0,0,0.35); line-height: 1.1; }
+  .grid-en  { font-size: 24px; letter-spacing: 6px; color: var(--red); font-weight: 600; margin-top: 2px; text-shadow: 0 0 10px rgba(204,0,0,0.25); }
+  .grid-meta { display: flex; justify-content: center; gap: 16px; margin-top: 6px; opacity: 0.6; }
+  .grid-meta span { font-size: 9px; letter-spacing: 2px; color: var(--red3); }
+
+  /* ── GRID DISPLAY COMPACT (LANDSCAPE) ── */
+  .grid-c { padding: 6px 0 8px; animation: fadeIn 0.6s ease 0.1s both; }
+  .grid-label-c { font-size: 7px; letter-spacing: 5px; color: var(--red3); margin-bottom: 4px; }
+  .grid-row { display: flex; align-items: baseline; gap: 8px; }
+  .grid-gzd-c { font-size: 13px; letter-spacing: 2px; color: var(--red3); font-weight: 600; }
+  .grid-sq-c  { font-size: 20px; letter-spacing: 4px; color: var(--red); font-weight: 700; }
+  .grid-en-c  { font-size: 18px; letter-spacing: 4px; color: var(--red); font-weight: 600; margin-top: 2px; }
+  .grid-meta-c { display: flex; gap: 12px; margin-top: 4px; opacity: 0.6; }
+  .grid-meta-c span { font-size: 8px; letter-spacing: 2px; color: var(--red3); }
+
+  /* ── COMPASS ── */
+  .compass-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; animation: fadeIn 0.9s ease 0.2s both; }
+
+  .compass {
+    position: relative; display: flex; align-items: center; justify-content: center;
+  }
+
+  .ring { position: absolute; border-radius: 50%; border: 1.5px solid var(--red3); opacity: 0.5; }
+  .ring-inner { position: absolute; border-radius: 50%; border: 1px solid var(--red4); opacity: 0.35; }
+
+  .cardinal { position: absolute; font-size: 7px; color: var(--red3); opacity: 0.5; }
+
+  .arrow-wrap {
+    position: absolute; display: flex; flex-direction: column; align-items: center;
+    transform-origin: center;
+    animation: arrowSettle 1.1s cubic-bezier(0.34,1.56,0.64,1) 0.4s both;
+  }
+
+  @keyframes arrowSettle { from{transform:rotate(-60deg);opacity:0} to{transform:rotate(47deg);opacity:1} }
+
+  .arrow-head {
+    width: 0; height: 0;
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-bottom: 24px solid var(--red);
+    filter: drop-shadow(0 0 5px rgba(204,0,0,0.6));
+  }
+  .arrow-shaft { width: 6px; background: var(--red); margin-top: -1px; filter: drop-shadow(0 0 3px rgba(204,0,0,0.4)); }
+  .arrow-tail  { width: 10px; height: 4px; background: var(--red2); opacity: 0.5; margin-top: -1px; }
+  .center-dot  { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--bg); border: 1.5px solid var(--red2); z-index: 10; }
+
+  .bearing { font-size: 24px; letter-spacing: 4px; color: var(--red); font-weight: 700; text-shadow: 0 0 12px rgba(204,0,0,0.3); }
+  .bearing-lg { font-size: 30px; }
+
+  /* ── WAYPOINT INFO (portrait) ── */
+  .wp-block-p { display: flex; flex-direction: column; align-items: center; gap: 3px; animation: fadeIn 1s ease 0.3s both; }
+  .wp-lbl { font-size: 9px; letter-spacing: 5px; color: var(--red2); font-weight: 700; font-family: 'Rajdhani', sans-serif; }
+  .wp-grid { font-size: 12px; letter-spacing: 2px; color: var(--red); opacity: 0.8; }
+  .wp-dist { font-size: 18px; letter-spacing: 3px; color: var(--red); font-weight: 700; margin-top: 2px; }
+
+  /* ── WAYPOINT INFO (landscape) ── */
+  .wp-block-l { padding: 8px 0; display: flex; flex-direction: column; gap: 3px; animation: fadeIn 0.8s ease 0.2s both; }
+  .wp-lbl-l { font-size: 9px; letter-spacing: 4px; color: var(--red2); font-weight: 700; }
+  .wp-grid-l { font-size: 11px; letter-spacing: 2px; color: var(--red); }
+  .wp-dist-l { font-size: 20px; letter-spacing: 3px; color: var(--red); font-weight: 700; margin-top: 2px; }
+
+  /* ── BUTTONS ── */
+  .btn-row { display: flex; gap: 8px; margin-top: 6px; animation: fadeIn 1.2s ease 0.35s both; }
+
+  .btn {
+    flex: 1; border: 1px solid var(--red3); background: var(--red5);
+    color: var(--red2); font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; letter-spacing: 3px; padding: 8px 0; text-align: center;
+    text-transform: uppercase; cursor: pointer;
+  }
+  .btn-primary { border-color: var(--red2); background: var(--red4); color: var(--red); }
+
+  /* ── NO WAYPOINT ── */
+  .no-wp { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; flex: 1; animation: fadeIn 0.8s ease 0.2s both; }
+  .no-wp-txt { font-size: 9px; letter-spacing: 4px; color: var(--red3); }
+
+  .crosshair { position: relative; opacity: 0.25; }
+  .ch-v { position: absolute; width: 1px; background: var(--red2); left: 50%; }
+  .ch-h { position: absolute; height: 1px; background: var(--red2); top: 50%; }
+  .ch-ring { position: absolute; border: 1px solid var(--red2); border-radius: 50%; }
+
+  .add-btn {
+    border: 1px solid var(--red2); background: var(--red4); color: var(--red);
+    font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 3px;
+    padding: 10px 20px; cursor: pointer; text-transform: uppercase;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 50;
+    display: flex; flex-direction: column; justify-content: flex-end; border-radius: inherit;
+  }
+  .modal-sheet {
+    background: var(--bg); border-top: 1px solid var(--red3);
+    padding: 16px 18px 24px; display: flex; flex-direction: column; gap: 7px;
+    animation: slideUp 0.45s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:none} }
+
+  .modal-title { font-family:'Rajdhani',sans-serif; font-size:12px; letter-spacing:5px; color:var(--red); font-weight:700; text-align:center; margin-bottom:3px; }
+  .field-lbl { font-size:7px; letter-spacing:4px; color:var(--red3); margin-top:3px; }
+  .mock-input { border:1px solid var(--red3); background:#110000; padding:8px 10px; color:var(--red3); font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:2px; }
+  .mock-input.filled { color:var(--red); font-size:13px; letter-spacing:4px; border-color:var(--red2); }
+  .cursor { display:inline-block; width:1px; height:12px; background:var(--red); margin-left:2px; vertical-align:middle; animation:blink 1s step-end infinite; }
+  @keyframes blink { 50%{opacity:0} }
+  .modal-btn-p { border:1px solid var(--red2); background:var(--red3); color:var(--red); font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:4px; padding:10px; text-align:center; cursor:pointer; }
+  .modal-btn-s { border:1px solid var(--red4); color:var(--red3); font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:3px; padding:8px; text-align:center; cursor:pointer; }
+  .modal-btn-c { color:var(--red4); font-family:'Share Tech Mono',monospace; font-size:8px; letter-spacing:3px; padding:6px; text-align:center; cursor:pointer; }
+
+  /* ── FOOTER ── */
+  .footer-txt { font-size:6px; letter-spacing:2px; color:var(--red4); text-align:center; }
+  .footer-p { margin-top:auto; padding-top:10px; }
+  .ls-footer { margin-top:auto; padding-top:6px; }
+
+  /* ── LS buttons wrapper ── */
+  .ls-btn-wrap { margin-top: auto; display: flex; flex-direction: column; gap: 5px; }
+
+</style>
+</head>
+<body>
+
+<h2>RedGrid Tactical — UI Preview</h2>
+
+<!-- ══ ROW 1: PORTRAIT SCREENS ══════════════════════════════════════════════ -->
+<div class="phone-row">
+
+  <!-- PORTRAIT: Active Wayfinder -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="screen">
+        <div class="grid-tex"></div>
+        <div class="status-bar"><span>09:47</span><span>GPS ▲</span></div>
+        <div class="app-p">
+
+          <div class="header">
+            <div class="app-name">REDGRID TACTICAL</div>
+            <div class="signal"><div class="signal-dot"></div><span class="signal-txt">FIX</span></div>
+          </div>
+          <div class="div"></div>
+
+          <div class="grid-p">
+            <div class="grid-label">GRID</div>
+            <div class="grid-gzd">18S</div>
+            <div class="grid-sq">UJ</div>
+            <div class="grid-en">47832 91204</div>
+            <div class="grid-meta"><span>±4m</span><span>ALT 312m</span></div>
+          </div>
+          <div class="div"></div>
+
+          <!-- Arrow -->
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;flex:1;justify-content:center">
+            <div class="compass" style="width:160px;height:160px">
+              <div class="ring" style="inset:0"></div>
+              <div class="ring-inner" style="inset:14px"></div>
+              <span class="cardinal" style="top:18px;left:50%;transform:translateX(-50%)">N</span>
+              <span class="cardinal" style="right:18px;top:50%;transform:translateY(-50%)">E</span>
+              <span class="cardinal" style="bottom:18px;left:50%;transform:translateX(-50%)">S</span>
+              <span class="cardinal" style="left:18px;top:50%;transform:translateY(-50%)">W</span>
+              <div class="arrow-wrap">
+                <div class="arrow-head"></div>
+                <div class="arrow-shaft" style="height:40px"></div>
+                <div class="arrow-tail"></div>
+              </div>
+              <div class="center-dot"></div>
+            </div>
+            <div class="bearing">047°</div>
+
+            <div class="wp-block-p">
+              <div class="wp-lbl">OBJ BRAVO</div>
+              <div class="wp-grid">18S UJ 48201 91850</div>
+              <div class="wp-dist">1.3km</div>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <div class="btn">EDIT</div>
+            <div class="btn btn-primary">CLEAR WP</div>
+          </div>
+          <div class="footer-p"><div class="footer-txt">NO DATA STORED · NO NETWORK · OPEN SOURCE</div></div>
+
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Portrait · Wayfinder</div>
+  </div>
+
+  <!-- PORTRAIT: No Waypoint -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="screen">
+        <div class="grid-tex"></div>
+        <div class="status-bar"><span>09:47</span><span>GPS ▲</span></div>
+        <div class="app-p">
+
+          <div class="header">
+            <div class="app-name">REDGRID TACTICAL</div>
+            <div class="signal"><div class="signal-dot"></div><span class="signal-txt">FIX</span></div>
+          </div>
+          <div class="div"></div>
+
+          <div class="grid-p">
+            <div class="grid-label">GRID</div>
+            <div class="grid-gzd">18S</div>
+            <div class="grid-sq">UJ</div>
+            <div class="grid-en">47832 91204</div>
+            <div class="grid-meta"><span>±4m</span><span>ALT 312m</span></div>
+          </div>
+          <div class="div"></div>
+
+          <div class="no-wp">
+            <div class="crosshair" style="width:52px;height:52px">
+              <div class="ch-v" style="height:52px;top:0"></div>
+              <div class="ch-h" style="width:52px;left:0"></div>
+              <div class="ch-ring" style="inset:10px"></div>
+            </div>
+            <div class="no-wp-txt">NO WAYPOINT SET</div>
+            <div class="add-btn">+ ADD WAYPOINT</div>
+          </div>
+
+          <div class="footer-p"><div class="footer-txt">NO DATA STORED · NO NETWORK · OPEN SOURCE</div></div>
+
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Portrait · No Waypoint</div>
+  </div>
+
+  <!-- PORTRAIT: Waypoint Modal -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="screen">
+        <div class="grid-tex"></div>
+        <div class="status-bar" style="opacity:0.15"><span>09:47</span><span>GPS ▲</span></div>
+        <div class="app-p" style="opacity:0.2;pointer-events:none">
+          <div class="header"><div class="app-name">REDGRID TACTICAL</div></div>
+          <div class="div"></div>
+          <div class="grid-p">
+            <div class="grid-label">GRID</div>
+            <div class="grid-gzd">18S</div>
+            <div class="grid-sq">UJ</div>
+            <div class="grid-en">47832 91204</div>
+          </div>
+        </div>
+
+        <div class="modal-overlay">
+          <div class="modal-sheet">
+            <div class="modal-title">SET WAYPOINT</div>
+            <div class="div div-sm"></div>
+            <div class="field-lbl">LABEL (OPTIONAL)</div>
+            <div class="mock-input filled">OBJ BRAVO</div>
+            <div class="field-lbl">MGRS COORDINATE</div>
+            <div class="mock-input filled">18S UJ 48201 91850<span class="cursor"></span></div>
+            <div class="modal-btn-p">SET WAYPOINT</div>
+            <div class="modal-btn-s">MARK CURRENT POSITION</div>
+            <div class="modal-btn-c">CANCEL</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="phone-label">Portrait · Waypoint Entry</div>
+  </div>
+
+</div>
+
+<!-- ══ ROW 2: LANDSCAPE SCREENS ═════════════════════════════════════════════ -->
+<div class="phone-row" style="flex-direction:column;align-items:center">
+
+  <!-- LANDSCAPE: Active Wayfinder -->
+  <div class="phone-wrap">
+    <div class="phone-ls">
+      <div class="screen">
+        <div class="grid-tex"></div>
+        <div class="ls-notch"></div>
+        <div class="app-ls">
+
+          <!-- LEFT COL -->
+          <div class="ls-left">
+            <div class="header" style="padding-bottom:6px">
+              <div class="app-name app-name-sm">REDGRID TACTICAL</div>
+              <div class="signal"><div class="signal-dot"></div><span class="signal-txt">FIX</span></div>
+            </div>
+            <div class="div div-sm"></div>
+
+            <div class="grid-c">
+              <div class="grid-label-c">GRID</div>
+              <div class="grid-row">
+                <span class="grid-gzd-c">18S</span>
+                <span class="grid-sq-c">UJ</span>
+              </div>
+              <div class="grid-en-c">47832 91204</div>
+              <div class="grid-meta-c"><span>±4m</span><span>ALT 312m</span></div>
+            </div>
+            <div class="div div-sm"></div>
+
+            <div class="wp-block-l">
+              <div class="wp-lbl-l">OBJ BRAVO</div>
+              <div class="wp-grid-l">18S UJ 48201 91850</div>
+              <div class="wp-dist-l">1.3km</div>
+            </div>
+
+            <div class="ls-btn-wrap">
+              <div class="btn-row" style="margin-top:0">
+                <div class="btn btn-primary">EDIT WP</div>
+                <div class="btn">CLEAR</div>
+              </div>
+              <div class="footer-txt">NO DATA STORED · NO NETWORK</div>
+            </div>
+          </div>
+
+          <div class="ls-vdiv"></div>
+
+          <!-- RIGHT COL: Arrow -->
+          <div class="ls-right">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+              <div class="compass" style="width:180px;height:180px">
+                <div class="ring" style="inset:0"></div>
+                <div class="ring-inner" style="inset:14px"></div>
+                <span class="cardinal" style="top:16px;left:50%;transform:translateX(-50%)">N</span>
+                <span class="cardinal" style="right:16px;top:50%;transform:translateY(-50%)">E</span>
+                <span class="cardinal" style="bottom:16px;left:50%;transform:translateX(-50%)">S</span>
+                <span class="cardinal" style="left:16px;top:50%;transform:translateY(-50%)">W</span>
+                <div class="arrow-wrap" style="animation-name:arrowSettle">
+                  <div class="arrow-head" style="border-left-width:13px;border-right-width:13px;border-bottom-width:28px"></div>
+                  <div class="arrow-shaft" style="height:46px;width:7px"></div>
+                  <div class="arrow-tail" style="width:12px;height:5px"></div>
+                </div>
+                <div class="center-dot"></div>
+              </div>
+              <div class="bearing bearing-lg">047°</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Landscape · Wayfinder Active</div>
+  </div>
+
+  <!-- LANDSCAPE: No Waypoint -->
+  <div class="phone-wrap">
+    <div class="phone-ls">
+      <div class="screen">
+        <div class="grid-tex"></div>
+        <div class="ls-notch"></div>
+        <div class="app-ls">
+
+          <div class="ls-left">
+            <div class="header" style="padding-bottom:6px">
+              <div class="app-name app-name-sm">REDGRID TACTICAL</div>
+              <div class="signal"><div class="signal-dot"></div><span class="signal-txt">FIX</span></div>
+            </div>
+            <div class="div div-sm"></div>
+
+            <div class="grid-c">
+              <div class="grid-label-c">GRID</div>
+              <div class="grid-row">
+                <span class="grid-gzd-c">18S</span>
+                <span class="grid-sq-c">UJ</span>
+              </div>
+              <div class="grid-en-c">47832 91204</div>
+              <div class="grid-meta-c"><span>±4m</span><span>ALT 312m</span></div>
+            </div>
+            <div class="div div-sm"></div>
+
+            <div class="wp-block-l" style="padding-top:4px">
+              <span class="no-wp-txt">NO WAYPOINT SET</span>
+            </div>
+
+            <div class="ls-btn-wrap">
+              <div class="btn-row" style="margin-top:0">
+                <div class="btn btn-primary">+ WAYPOINT</div>
+              </div>
+              <div class="footer-txt">NO DATA STORED · NO NETWORK</div>
+            </div>
+          </div>
+
+          <div class="ls-vdiv"></div>
+
+          <div class="ls-right">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+              <div class="crosshair" style="width:72px;height:72px">
+                <div class="ch-v" style="height:72px;top:0"></div>
+                <div class="ch-h" style="width:72px;left:0"></div>
+                <div class="ch-ring" style="inset:14px"></div>
+              </div>
+              <div class="add-btn" style="font-size:9px;padding:9px 16px">+ ADD WAYPOINT</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Landscape · No Waypoint</div>
+  </div>
+
+</div>
+
+</body>
+</html>

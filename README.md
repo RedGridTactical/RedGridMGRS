@@ -1,145 +1,113 @@
+![RedGrid Tactical](docs/images/banner.png)
+
 # RedGrid Tactical
 
-A simple, open-source, tactical land navigation utility for iOS and Android.
+[![Download on App Store](https://img.shields.io/badge/App%20Store-Coming%20Soon-8B0000?logo=apple)](https://github.com/RedGridTactical/RedGridMGRS/releases/latest)
+[![Download APK](https://img.shields.io/github/v/release/RedGridTactical/RedGridMGRS?label=Android%20APK&color=CC0000&logo=android)](https://github.com/RedGridTactical/RedGridMGRS/releases/latest)
+[![License](https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-8B0000)](LICENSE)
+[![No Tracking](https://img.shields.io/badge/Tracking-None-CC0000)](PRIVACY.md)
+[![Support](https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-CC0000?logo=buymeacoffee)](https://buymeacoffee.com/redgridtactical)
 
-**No data collected. No network calls. No analytics. No ads.**
+**A tactical land navigation utility for iOS and Android.**
 
----
-
-## Features
-
-- 📍 **Real-time MGRS coordinates** — displays your current Military Grid Reference System position to 1-meter precision
-- 🧭 **Waypoint wayfinder** — set a destination MGRS grid and see a directional arrow pointing the way
-- 📏 **Distance readout** — straight-line distance to your waypoint in meters or kilometers
-- 🔴 **Red-light mode** — full red-on-black display to maintain light discipline in tactical environments
-- 🔒 **Privacy-first** — location data never leaves your device, never written to storage, never transmitted
-- 📴 **Screen discipline** — follows normal OS screen timeout; wake on tap
+Red-light display. MGRS coordinates. Wayfinder. 8 field tools. 5 radio report templates.
+Zero network. Zero storage. Zero tracking. Open source.
 
 ---
 
-## Screenshots
-
-> Red-on-black display, monospace military typography, zero clutter.
+| Grid & Wayfinder | Tools | Reports | Landscape |
+|:---:|:---:|:---:|:---:|
+| ![Grid tab](docs/images/screenshot_1_grid.png) | ![Tools tab](docs/images/screenshot_2_tools.png) | ![Reports tab](docs/images/screenshot_3_report.png) | ![Landscape](docs/images/screenshot_4_landscape.png) |
 
 ---
 
-## Installation (Sideload)
+## Free Features
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v18+)
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)
-- [EAS CLI](https://docs.expo.dev/eas/) for building APK/IPA
-- For Android sideload: Developer mode enabled, USB debugging on
-- For iOS sideload: AltStore or similar, or TestFlight via EAS
+- **Real-time MGRS** — live position to 1-meter precision
+- **Wayfinder arrow** — bearing and distance to any waypoint, declination-corrected
+- **8 tactical tools** — Dead Reckoning, Resection, Back Azimuth, Pace Count, Declination, TDS, Solar/Lunar, MGRS Precision
+- **3 radio report templates** — SALUTE, 9-Line MEDEVAC, SPOT — grid auto-filled
+- **Red-light mode** — red-on-black display, no white light emission
+- **Landscape support** — two-column layout
 
-### Setup
+## RedGrid Pro — $4.99 one-time
+
+- 📍 **Saved Waypoint Lists** — save named patrol routes, OBJs, rally points — persisted locally
+- 📋 **Additional Report Templates** — ICS 201 (Incident Command), ANGUS/CFF (Call for Fire)
+- 🔴 **Display Themes** — NVG green, day white, blue-force colour schemes
+
+No subscription. No recurring charges. One purchase, permanent unlock.
+
+---
+
+## Install
+
+### iOS — App Store *(Coming Soon)*
+A paid one-time App Store version is in development. No subscription. No ads.
+
+**Free sideload via AltStore:**
+1. Install AltStore from [altstore.io](https://altstore.io) on your Mac or PC
+2. Connect iPhone → install AltStore via desktop app
+3. Download `RedGrid-Tactical.ipa` from [Releases](https://github.com/RedGridTactical/RedGridMGRS/releases/latest)
+4. Open AltStore → **+** → select the `.ipa`
+5. AltStore re-signs every 7 days automatically on same Wi-Fi
+
+### Android — Direct APK
+1. Download `RedGrid-Tactical.apk` from [Releases](https://github.com/RedGridTactical/RedGridMGRS/releases/latest)
+2. Open the file → tap **Settings** if prompted → enable **Install from this source**
+3. Tap **Install** → grant **"While using the app"** location permission
+
+---
+
+## Organizational & Commercial Use
+
+Organizations deploying RedGrid Tactical across multiple devices or integrating it into a paid product require a commercial license.
+
+**Contact:** redgridtactical@gmail.com
+
+Individual personal use is always free.
+
+---
+
+## Support the Project
+
+☕ [**Buy Me a Coffee**](https://buymeacoffee.com/redgridtactical)
+💛 [**GitHub Sponsors**](https://github.com/sponsors/RedGridTactical)
+
+---
+
+## Privacy
+
+| Data | Collected | Stored | Transmitted |
+|------|-----------|--------|-------------|
+| GPS location | In memory only | ❌ Never | ❌ Never |
+| Waypoints | In memory (free) / device only (Pro lists) | ✅ Local only (Pro) | ❌ Never |
+| Pace count / Declination / Theme | On device only | ✅ Local only | ❌ Never |
+| Device identifiers | ❌ Never | ❌ Never | ❌ Never |
+
+IAP is handled by RevenueCat. RevenueCat's privacy policy: [revenuecat.com/privacy](https://www.revenuecat.com/privacy).
+No ad networks. No analytics. No crash reporting. Full details in [PRIVACY.md](PRIVACY.md).
+
+---
+
+## Build from Source
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/redgrid-tactical.git
-cd redgrid-tactical
+git clone https://github.com/RedGridTactical/RedGridMGRS.git
+cd RedGridMGRS
 npm install
-```
-
-### Run in Expo Go (development)
-
-```bash
 npx expo start
 ```
 
-Scan the QR code with [Expo Go](https://expo.dev/client) on your device.
-
-### Build Android APK (sideloadable)
-
-```bash
-npm install -g eas-cli
-eas login
-eas build --platform android --profile preview
-```
-
-Download the `.apk` from the EAS build dashboard and install it on your Android device.
-
-### Build iOS IPA
-
-```bash
-eas build --platform ios --profile preview
-```
-
-Install via AltStore, SideStore, or distribute via TestFlight.
-
----
-
-## Project Structure
-
-```
-redgrid-tactical/
-├── App.js                          # Root component, main UI
-├── app.json                        # Expo config, permissions
-├── src/
-│   ├── utils/
-│   │   └── mgrs.js                 # MGRS/UTM math (pure JS, no deps)
-│   ├── hooks/
-│   │   └── useLocation.js          # GPS hook (ephemeral, no storage)
-│   └── components/
-│       ├── MGRSDisplay.js          # Current position display
-│       ├── WayfinderArrow.js       # Animated directional arrow
-│       └── WaypointModal.js        # Waypoint entry modal
-└── README.md
-```
-
----
-
-## Privacy & Security
-
-- **Location permission**: `ACCESS_FINE_LOCATION` (foreground only)
-- **No background location**: The app never requests background location access
-- **No storage**: No `AsyncStorage`, no `SQLite`, no file writes
-- **No network**: Zero outbound connections — verified by the absence of any `fetch()` or network library calls in the codebase
-- **Open source**: Audit every line yourself
-
----
-
-## Technical Notes
-
-### MGRS Conversion
-The MGRS conversion is implemented as pure JavaScript mathematics in `src/utils/mgrs.js`, based on the Defense Mapping Agency Technical Manual DMA TM 8358.1 (Datums, Ellipsoids, Grids, and Grid Reference Systems). No external library dependency.
-
-### Accuracy
-GPS accuracy is displayed alongside your grid. Typical civilian GPS provides ±3–10m accuracy. The MGRS coordinate is displayed to 5-digit precision (1m) but accuracy depends on your device's GPS hardware and environmental conditions.
-
-### Screen Timeout
-The app respects your device's normal screen timeout. This is intentional — it reduces battery drain and light emissions. Wake the screen with a tap or button press to view your coordinates.
-
----
-
-## Building for Distribution
-
-### eas.json
-
-```json
-{
-  "build": {
-    "preview": {
-      "android": {
-        "buildType": "apk"
-      }
-    },
-    "production": {}
-  }
-}
-```
+To build without IAP (development / open-source builds), the app falls back gracefully — all free features work, Pro features are accessible without a purchase when `react-native-purchases` is not configured.
 
 ---
 
 ## License
 
-MIT License — free to use, modify, and distribute.
+[MIT + Commons Clause](LICENSE) — free for personal non-commercial use. Commercial use requires written permission.
+Contact: redgridtactical@gmail.com
 
 ---
 
-## Contributing
-
-PRs welcome. Keep it simple. No telemetry. No bloat.
-
----
-
-*Built for the field. Zero frills.*
+*Built for the field. No frills. No tracking. Open source.*

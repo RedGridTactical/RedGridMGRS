@@ -1,26 +1,17 @@
 {
   "cli": {
-    "version": ">= 5.9.1"
+    "version": ">= 18.0.4",
+    "appVersionSource": "remote"
   },
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal"
-    },
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease"
-      },
-      "ios": {
-        "simulator": false
+        "buildType": "apk"
       }
     },
     "production": {
-      "android": {
-        "buildType": "aab"
-      }
+      "autoIncrement": true
     }
   },
   "submit": {

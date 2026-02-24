@@ -1,29 +1,29 @@
 {
   "name": "redgrid-tactical",
-  "version": "2.0.0",
-  "main": "App.js",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "build:android": "eas build --platform android --profile preview",
-    "build:ios": "eas build --platform ios --profile preview",
-    "build:prod": "eas build --platform all --profile production"
+    "build:ios": "eas build --platform ios --profile preview"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "1.23.1",
     "expo": "~51.0.0",
-    "expo-location": "~17.0.1",
     "expo-status-bar": "~1.12.1",
+    "expo-location": "~17.0.1",
+    "expo-keep-awake": "~13.0.1",
+    "expo-screen-orientation": "~7.0.3",
     "react": "18.2.0",
     "react-native": "0.74.5",
-    "react-native-purchases": "^7.26.0",
-    "react-native-safe-area-context": "4.10.5"
+    "react-native-safe-area-context": "4.10.5",
+    "@react-native-async-storage/async-storage": "1.23.1"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@types/react": "~18.2.45",
-    "typescript": "~5.3.3"
+    "typescript": "^5.3.0"
   },
   "private": true
 }
