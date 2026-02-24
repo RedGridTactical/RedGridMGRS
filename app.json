@@ -7,12 +7,15 @@
     "userInterfaceStyle": "dark",
     "backgroundColor": "#000000",
     "splash": {
+      "image": "./assets/icons/splash_ios.png",
+      "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
     "android": {
       "package": "com.redgrid.redgridtactical",
       "versionCode": 3,
       "adaptiveIcon": {
+        "foregroundImage": "./assets/icons/adaptive_foreground.png",
         "backgroundColor": "#000000"
       },
       "permissions": [
@@ -20,7 +23,8 @@
         "ACCESS_COARSE_LOCATION"
       ],
       "targetSdkVersion": 35,
-      "compileSdkVersion": 35
+      "compileSdkVersion": 35,
+      "icon": "./assets/icons/icon.png"
     },
     "ios": {
       "bundleIdentifier": "com.redgrid.redgridtactical",
@@ -28,7 +32,8 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "RedGrid Tactical uses your location to display your current grid coordinates. No location data is stored or transmitted.",
         "SKAdNetworkItems": []
-      }
+      },
+      "icon": "./assets/icons/icon.png"
     },
     "plugins": [
       [
@@ -42,6 +47,7 @@
       "eas": {
         "projectId": "c55caaee-6950-4b8c-850b-f0d2d402cc09"
       }
-    }
+    },
+    "icon": "./assets/icons/icon.png"
   }
 }
