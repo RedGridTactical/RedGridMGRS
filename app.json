@@ -24,7 +24,8 @@
       ],
       "targetSdkVersion": 35,
       "compileSdkVersion": 35,
-      "icon": "./assets/icons/icon.png"
+      "icon": "./assets/icons/icon.png",
+      "buildToolsVersion": "35.0.0"
     },
     "ios": {
       "bundleIdentifier": "com.redgrid.redgridtactical",
