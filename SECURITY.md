@@ -5,11 +5,8 @@
 | Data Type | Collected | Stored | Transmitted |
 |-----------|-----------|--------|-------------|
 | GPS coordinates | In-memory only | ❌ Never | ❌ Never |
-| Waypoints (free tier) | In-memory only, cleared on exit | ❌ Never | ❌ Never |
-| Waypoint lists (Pro) | On device only | ✅ Local only | ❌ Never |
-| Settings (declination, pace count, theme) | On device only | ✅ Local only | ❌ Never |
+| Waypoints | In-memory only | ❌ Never | ❌ Never |
 | Device identifiers | ❌ Never | ❌ Never | ❌ Never |
-| Payment details | ❌ Never — handled by Apple/Google | ❌ Never | ❌ Never |
 
 ## Permissions requested
 
@@ -22,28 +19,17 @@
 
 ## Network activity
 
-Zero. This application makes no network requests of any kind. There is no analytics SDK, no crash reporting service, no ad network, and no update check. In-app purchases use the native Apple StoreKit and Google Play Billing APIs built into the operating system — no third-party purchase SDK is bundled.
-
-You can verify this by inspecting the source code or using a network monitor while running the app.
+Zero. This application makes no network requests of any kind. There is no analytics SDK, no crash reporting service, no ad network, and no update check. You can verify this by inspecting the source code or using a network monitor while running the app.
 
 ## Data lifecycle
 
 GPS data flows:
 ```
-Device GPS → expo-location → React state → Display → Garbage collected on exit
+Device GPS → expo-location → React state → Display → Garbage collected
 ```
 
-Free tier waypoints:
-```
-User input → React state → Display → Garbage collected on exit
-```
-
-Pro waypoint lists:
-```
-User input → AsyncStorage (device only) → Display
-           → Deleted when user clears the list
-```
+When you close the app, all data is gone. When you clear a waypoint, it is gone. Nothing is written anywhere.
 
 ## Reporting vulnerabilities
 
-Open an issue on GitHub or contact the maintainer directly at redgridtactical@gmail.com. Please do not publicly disclose security issues before they are addressed.
+Open an issue on GitHub or contact the maintainer directly. Please do not publicly disclose security issues before they are addressed.
