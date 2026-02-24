@@ -35,7 +35,7 @@
           "locationWhenInUsePermission": "RedGrid Tactical uses your location to display your current grid coordinates. No data is stored or transmitted."
         }
       ],
-      "react-native-purchases"
+      "expo-iap"
     ],
     "extra": {
       "eas": {

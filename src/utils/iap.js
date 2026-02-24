@@ -23,7 +23,7 @@ const PRO_RECEIPT_KEY        = 'rg_pro_receipt';
 // ─── MOCK MODE ───────────────────────────────────────────────────────────────
 // Set true during development to bypass real payment flow.
 // MUST be false in any production build.
-const MOCK_MODE = __DEV__;
+const MOCK_MODE = (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production');
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 let _isPro = false;
