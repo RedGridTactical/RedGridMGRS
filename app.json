@@ -47,11 +47,11 @@
             "targetSdkVersion": 35,
             "compileSdkVersion": 35,
             "buildToolsVersion": "35.0.0",
-            "minSdkVersion": 24,
-            "kotlinVersion": "1.8.22"
+            "minSdkVersion": 24
           }
         }
-      ]
+      ],
+      "./withKotlinVersion"
     ],
     "extra": {
       "eas": {
