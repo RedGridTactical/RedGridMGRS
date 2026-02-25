@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "com.redgrid.redgridtactical",
-      "versionCode": 9,
+      "versionCode": 10,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive_foreground.png",
         "backgroundColor": "#000000"
@@ -47,7 +47,8 @@
             "targetSdkVersion": 35,
             "compileSdkVersion": 35,
             "buildToolsVersion": "35.0.0",
-            "minSdkVersion": 24
+            "minSdkVersion": 24,
+            "kotlinVersion": "1.9.25"
           }
         }
       ]
