@@ -10,8 +10,8 @@
 
 **A tactical land navigation utility for iOS and Android.**
 
-Red-light display. MGRS coordinates. Wayfinder. 8 field tools. 5 radio report templates.
-Zero network. Zero storage. Zero tracking. Open source.
+Red-light display. MGRS coordinates. Wayfinder. 8 field tools. 3 radio report templates.
+Zero network. Zero tracking. Open source.
 
 ---
 
@@ -32,11 +32,12 @@ Zero network. Zero storage. Zero tracking. Open source.
 
 ## RedGrid Pro — $4.99 one-time
 
-- 📍 **Saved Waypoint Lists** — save named patrol routes, OBJs, rally points — persisted locally
-- 📋 **Additional Report Templates** — ICS 201 (Incident Command), ANGUS/CFF (Call for Fire)
-- 🔴 **Display Themes** — NVG green, day white, blue-force colour schemes
+- 📍 **Saved Waypoint Lists** — save named patrol routes, OBJs, rally points — persisted locally on device
+- 📋 **Additional Report Templates** — ICS 201 Incident Command, CASEVAC
+- 🎨 **Display Themes** — NVG green, day white, blue-force colour schemes
+- 🌐 **Coordinate Formats** — switch between MGRS, UTM, Decimal Degrees, DMS
 
-No subscription. No recurring charges. One purchase, permanent unlock.
+No subscription. No recurring charges. One purchase, permanent unlock. All future Pro features included.
 
 ---
 
@@ -81,12 +82,14 @@ Individual personal use is always free.
 | Data | Collected | Stored | Transmitted |
 |------|-----------|--------|-------------|
 | GPS location | In memory only | ❌ Never | ❌ Never |
-| Waypoints | In memory (free) / device only (Pro lists) | ✅ Local only (Pro) | ❌ Never |
+| Waypoints (free) | In memory only, cleared on exit | ❌ Never | ❌ Never |
+| Waypoint lists (Pro) | On device only | ✅ Local only | ❌ Never |
 | Pace count / Declination / Theme | On device only | ✅ Local only | ❌ Never |
 | Device identifiers | ❌ Never | ❌ Never | ❌ Never |
 
-IAP is handled by RevenueCat. RevenueCat's privacy policy: [revenuecat.com/privacy](https://www.revenuecat.com/privacy).
-No ad networks. No analytics. No crash reporting. Full details in [PRIVACY.md](PRIVACY.md).
+No ad networks. No analytics. No crash reporting. No third-party SDKs.
+In-app purchases are processed by Apple or Google — RedGrid Tactical never sees your payment details.
+Full details in [PRIVACY.md](PRIVACY.md).
 
 ---
 
@@ -99,7 +102,7 @@ npm install
 npx expo start
 ```
 
-To build without IAP (development / open-source builds), the app falls back gracefully — all free features work, Pro features are accessible without a purchase when `react-native-purchases` is not configured.
+All free features work immediately from source. Pro features require a valid purchase through Apple or Google.
 
 ---
 
