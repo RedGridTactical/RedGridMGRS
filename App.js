@@ -72,7 +72,7 @@ class AppErrorBoundary extends Component {
       return (
         <SafeAreaView style={staticStyles.errorRoot}>
           <View style={staticStyles.errorContainer}>
-            <Text style={staticStyles.errorTitle}>REDGRID ERROR</Text>
+            <Text style={staticStyles.errorTitle}>RED GRID ERROR</Text>
             <Text style={staticStyles.errorMsg}>An unexpected error occurred during startup.</Text>
             <Text style={staticStyles.errorDetail}>{this.state.error?.message || 'Unknown error'}</Text>
             <TouchableOpacity
@@ -115,20 +115,24 @@ function App() {
   }, []);
 
   // Derived MGRS
-  const mgrsRaw       = useMemo(() => location ? toMGRS(location.lat, location.lon, 5) : null, [location]);
-  const mgrsFormatted = useMemo(() => mgrsRaw ? formatMGRS(mgrsRaw) : null, [mgrsRaw]);
+  const mgrsRaw       = useMemo(() => { try { return location ? toMGRS(location.lat, location.lon, 5) : null; } catch { return null; } }, [location]);
+  const mgrsFormatted = useMemo(() => { try { return mgrsRaw ? formatMGRS(mgrsRaw) : null; } catch { return null; } }, [mgrsRaw]);
 
   // Wayfinder
   const { bearing, distance } = useMemo(() => {
     if (!location || !waypoint) return { bearing: null, distance: null };
-    const raw = calculateBearing(location.lat, location.lon, waypoint.lat, waypoint.lon);
-    return {
-      bearing: applyDeclination(raw, declination),
-      distance: calculateDistance(location.lat, location.lon, waypoint.lat, waypoint.lon),
-    };
+    try {
+      const raw = calculateBearing(location.lat, location.lon, waypoint.lat, waypoint.lon);
+      return {
+        bearing: applyDeclination(raw, declination),
+        distance: calculateDistance(location.lat, location.lon, waypoint.lat, waypoint.lon),
+      };
+    } catch {
+      return { bearing: null, distance: null };
+    }
   }, [location, waypoint, declination]);
 
-  const waypointMGRS = useMemo(() => waypoint ? formatMGRS(toMGRS(waypoint.lat, waypoint.lon, 5)) : null, [waypoint]);
+  const waypointMGRS = useMemo(() => { try { return waypoint ? formatMGRS(toMGRS(waypoint.lat, waypoint.lon, 5)) : null; } catch { return null; } }, [waypoint]);
   const arrowSize    = isLandscape ? Math.min(height * 0.52, 190) : 200;
 
   // Dynamic StatusBar style: white theme uses dark content, others use light
@@ -310,7 +314,7 @@ function UpsellScreen({ onUpgrade }) {
   const colors = useColors();
   return (
     <View style={staticStyles.upsellRoot}>
-      <Text style={[staticStyles.upsellTitle, { color: colors.text }]}>REDGRID PRO</Text>
+      <Text style={[staticStyles.upsellTitle, { color: colors.text }]}>RED GRID PRO</Text>
       <Text style={[staticStyles.upsellSub, { color: colors.text3 }]}>Unlock the full experience</Text>
       <TouchableOpacity style={[staticStyles.upsellBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]} onPress={onUpgrade} accessibilityRole="button" accessibilityLabel="Unlock Red Grid Pro">
         <Text style={[staticStyles.upsellBtnText, { color: colors.text }]}>UNLOCK PRO</Text>

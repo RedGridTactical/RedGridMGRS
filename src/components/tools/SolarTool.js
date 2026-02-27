@@ -15,15 +15,24 @@ export function SolarTool({ location }) {
     return () => clearInterval(id);
   }, []);
 
-  if (!location) {
+  if (!location || typeof location.lat !== 'number' || typeof location.lon !== 'number') {
     return <ToolHint text="NO GPS FIX — LOCATION REQUIRED FOR SOLAR BEARING" />;
   }
 
-  const sun  = solarBearing(now, location.lat, location.lon);
-  const moon = lunarBearing(now, location.lat, location.lon);
+  let sun, moon;
+  try {
+    sun  = solarBearing(now, location.lat, location.lon);
+    moon = lunarBearing(now, location.lat, location.lon);
+  } catch {
+    return <ToolHint text="CALCULATION ERROR — COULD NOT COMPUTE SOLAR POSITION" />;
+  }
+
+  if (!sun || !moon) {
+    return <ToolHint text="CALCULATION ERROR — COULD NOT COMPUTE SOLAR POSITION" />;
+  }
 
   const data = body === 'sun' ? sun : moon;
-  const az = Math.round(data.azimuth);
+  const az = Math.round(data.azimuth || 0);
   const sunAlt = typeof sun.altitude === 'number' && isFinite(sun.altitude) ? Math.round(sun.altitude) : 0;
   const moonAlt = typeof moon.altitude === 'number' && isFinite(moon.altitude) ? Math.round(moon.altitude) : 0;
   const alt = body === 'sun' ? sunAlt : moonAlt;

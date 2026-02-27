@@ -13,11 +13,15 @@ export function ResectionTool() {
   const [bearing2, setBearing2] = useState('');
 
   const result = useMemo(() => {
-    const b1 = parseFloat(bearing1), b2 = parseFloat(bearing2);
-    if (isNaN(b1)||isNaN(b2)) return null;
-    const p1 = parseMGRSToLatLon(pt1MGRS), p2 = parseMGRSToLatLon(pt2MGRS);
-    if (!p1||!p2) return null;
-    return resection(p1.lat, p1.lon, b1, p2.lat, p2.lon, b2);
+    try {
+      const b1 = parseFloat(bearing1), b2 = parseFloat(bearing2);
+      if (isNaN(b1)||isNaN(b2)) return null;
+      const p1 = parseMGRSToLatLon(pt1MGRS), p2 = parseMGRSToLatLon(pt2MGRS);
+      if (!p1||!p2) return null;
+      return resection(p1.lat, p1.lon, b1, p2.lat, p2.lon, b2);
+    } catch {
+      return null;
+    }
   }, [pt1MGRS, bearing1, pt2MGRS, bearing2]);
 
   return (
