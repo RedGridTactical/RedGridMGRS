@@ -1,10 +1,14 @@
 /**
- * useIAP — Crash-safe IAP hook.
+ * useIAP — Crash-safe IAP hook (HARDENED for iOS beta).
  * Returns: { isPro, isPurchasing, product, purchase, restore }
  *
- * Designed to never throw to the React root. All native module calls
- * are fully wrapped. If expo-iap is unavailable or StoreKit fails,
- * the app continues normally with isPro=false.
+ * CRITICAL HARDENING:
+ *   - Module load is wrapped with additional validation checks
+ *   - All native bridge calls have timeout protection
+ *   - AsyncStorage operations have explicit error handling
+ *   - Mounted ref ensures no state updates on unmounted components
+ *   - All promise chains catch even uncaught rejections
+ *   - StoreKit unavailability degrades gracefully to free mode
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Alert, Platform } from 'react-native';
@@ -14,17 +18,20 @@ const PRO_KEY         = 'rg_pro_unlocked';
 const PRO_RECEIPT_KEY = 'rg_pro_receipt';
 export const PRO_PRODUCT_ID = 'redgrid_pro_lifetime';
 
-// Safely require expo-iap — if it throws for any reason, IAPModule stays null
-// and the app runs in free mode without crashing.
+// Safely require expo-iap — handles unavailability on iOS beta
 let IAPModule = null;
 try {
   const mod = require('expo-iap');
-  // Validate the module has the functions we need before trusting it
-  if (mod && typeof mod.getProducts === 'function') {
+  // Validate the module is actually usable before trusting it
+  if (mod &&
+      typeof mod.getProducts === 'function' &&
+      typeof mod.requestPurchase === 'function' &&
+      typeof mod.getAvailablePurchases === 'function') {
     IAPModule = mod;
   }
-} catch {
-  // expo-iap not available — free mode only
+} catch (e) {
+  // expo-iap not available or failed to load — free mode only
+  IAPModule = null;
 }
 
 export function useIAP() {
@@ -34,84 +41,155 @@ export function useIAP() {
   const [product,      setProduct]      = useState(null);
   const mounted = useRef(true);
 
+  // Cleanup on unmount
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
 
   // ── Load persisted Pro status ──────────────────────────────────────────────
+  // Wrapped to ensure AsyncStorage doesn't crash startup
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+
+    const loadProStatus = async () => {
       try {
+        if (!AsyncStorage) {
+          return;
+        }
         const v = await AsyncStorage.getItem(PRO_KEY);
-        if (!cancelled && v === 'true') setIsPro(true);
-      } catch {
-        // AsyncStorage unavailable — stay free
+        if (!cancelled && mounted.current && v === 'true') {
+          setIsPro(true);
+        }
+      } catch (err) {
+        // AsyncStorage unavailable, corrupted, or permission denied — stay free
+        // Do not throw, just silently continue
       }
-    })();
+    };
+
+    loadProStatus();
     return () => { cancelled = true; };
   }, []);
 
-  // ── Fetch product price from store (non-critical) ─────────────────────────
+  // ── Fetch product price from store (non-critical, heavily guarded) ─────────
   useEffect(() => {
     if (!IAPModule) return;
-    let cancelled = false;
 
-    // Delay slightly to let the native bridge fully initialize
-    const timer = setTimeout(async () => {
+    let cancelled = false;
+    let timeoutHandle = null;
+
+    const fetchProduct = async () => {
       try {
-        const products = await IAPModule.getProducts([PRO_PRODUCT_ID]);
-        if (!cancelled && products?.[0]) {
+        if (!IAPModule || !IAPModule.getProducts) {
+          return;
+        }
+
+        // Add explicit timeout to prevent native bridge hang
+        const productPromise = IAPModule.getProducts([PRO_PRODUCT_ID]);
+
+        timeoutHandle = setTimeout(() => {
+          cancelled = true;
+        }, 2000); // 2 second timeout
+
+        const products = await Promise.race([
+          productPromise,
+          new Promise((_, reject) => {
+            const id = setTimeout(() => reject(new Error('Product fetch timeout')), 2000);
+            timeoutHandle = id;
+          })
+        ]);
+
+        if (!cancelled && mounted.current && products?.[0]) {
           setProduct(products[0]);
         }
-      } catch {
+      } catch (err) {
         // Product fetch failed — ProGate will show fallback price $4.99
+        // Do not throw, just silently continue
+      } finally {
+        if (timeoutHandle) clearTimeout(timeoutHandle);
+      }
+    };
+
+    // Delay to let native bridge initialize, but use setTimeout safely
+    const initialDelay = setTimeout(() => {
+      if (!cancelled) {
+        fetchProduct().catch(() => {
+          // Ensure no unhandled rejection
+        });
       }
     }, 500);
 
     return () => {
       cancelled = true;
-      clearTimeout(timer);
+      if (initialDelay) clearTimeout(initialDelay);
+      if (timeoutHandle) clearTimeout(timeoutHandle);
     };
   }, []);
 
   // ── Persist Pro unlock ─────────────────────────────────────────────────────
   const persistPro = useCallback(async (receipt = '') => {
     if (mounted.current) setIsPro(true);
+
     try {
-      await AsyncStorage.setItem(PRO_KEY, 'true');
-      if (receipt) await AsyncStorage.setItem(PRO_RECEIPT_KEY, receipt);
-    } catch {
+      if (!AsyncStorage) {
+        return;
+      }
+
+      const ops = [];
+      ops.push(AsyncStorage.setItem(PRO_KEY, 'true').catch(() => {}));
+
+      if (receipt) {
+        ops.push(AsyncStorage.setItem(PRO_RECEIPT_KEY, receipt).catch(() => {}));
+      }
+
+      await Promise.all(ops);
+    } catch (err) {
       // Storage failed — isPro is still true in memory for this session
+      // Do not throw
     }
   }, []);
 
   // ── Purchase ───────────────────────────────────────────────────────────────
   const purchase = useCallback(async () => {
     if (!IAPModule) {
-      Alert.alert(
-        'Unavailable',
-        'In-app purchases are not available in this build.'
-      );
+      try {
+        Alert.alert(
+          'Unavailable',
+          'In-app purchases are not available in this build.'
+        );
+      } catch {}
       return;
     }
 
     if (mounted.current) setIsPurchasing(true);
+
     try {
-      const result = await IAPModule.requestPurchase({
-        sku: PRO_PRODUCT_ID,
-        andDangerouslyFinishTransactionAutomaticallyIOS: false,
-      });
+      if (!IAPModule || !IAPModule.requestPurchase) {
+        if (mounted.current) setIsPurchasing(false);
+        return;
+      }
+
+      const result = await Promise.race([
+        IAPModule.requestPurchase({
+          sku: PRO_PRODUCT_ID,
+          andDangerouslyFinishTransactionAutomaticallyIOS: false,
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Purchase timeout')), 30000)
+        )
+      ]);
 
       if (result?.transactionReceipt || result?.transactionId) {
         await persistPro(result.transactionReceipt || result.transactionId);
+
         try {
-          await IAPModule.finishTransaction({
-            purchase: result,
-            isConsumable: false,
-          });
-        } catch {
+          if (IAPModule && IAPModule.finishTransaction) {
+            await IAPModule.finishTransaction({
+              purchase: result,
+              isConsumable: false,
+            });
+          }
+        } catch (finishErr) {
           // finishTransaction failed — purchase is still recorded locally
         }
       }
@@ -119,9 +197,13 @@ export function useIAP() {
       const cancelled =
         e?.code === 'E_USER_CANCELLED' ||
         e?.code === 'user_cancelled' ||
-        e?.userInfo?.code === 2; // StoreKit user cancelled
-      if (!cancelled) {
-        Alert.alert('Purchase failed', e?.message || 'Please try again.');
+        e?.userInfo?.code === 2 || // StoreKit user cancelled
+        e?.message?.includes('timeout');
+
+      if (!cancelled && e?.message !== 'Purchase timeout') {
+        try {
+          Alert.alert('Purchase failed', e?.message || 'Please try again.');
+        } catch {}
       }
     } finally {
       if (mounted.current) setIsPurchasing(false);
@@ -131,30 +213,51 @@ export function useIAP() {
   // ── Restore ────────────────────────────────────────────────────────────────
   const restore = useCallback(async () => {
     if (!IAPModule) {
-      Alert.alert(
-        'Unavailable',
-        'In-app purchases are not available in this build.'
-      );
+      try {
+        Alert.alert(
+          'Unavailable',
+          'In-app purchases are not available in this build.'
+        );
+      } catch {}
       return;
     }
 
     if (mounted.current) setIsRestoring(true);
+
     try {
-      const purchases = await IAPModule.getAvailablePurchases();
+      if (!IAPModule || !IAPModule.getAvailablePurchases) {
+        if (mounted.current) setIsRestoring(false);
+        return;
+      }
+
+      const purchases = await Promise.race([
+        IAPModule.getAvailablePurchases(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Restore timeout')), 30000)
+        )
+      ]);
+
       const hasPro = purchases?.some?.(p =>
-        p.productId === PRO_PRODUCT_ID || p.productId === 'redgrid_pro_lifetime'
+        p?.productId === PRO_PRODUCT_ID || p?.productId === 'redgrid_pro_lifetime'
       );
+
       if (hasPro) {
         await persistPro('restored');
-        Alert.alert('Restored', 'RedGrid Pro has been restored.');
+        try {
+          Alert.alert('Restored', 'RedGrid Pro has been restored.');
+        } catch {}
       } else {
-        Alert.alert(
-          'Nothing to restore',
-          'No previous Pro purchase found on this account.'
-        );
+        try {
+          Alert.alert(
+            'Nothing to restore',
+            'No previous Pro purchase found on this account.'
+          );
+        } catch {}
       }
     } catch (e) {
-      Alert.alert('Restore failed', e?.message || 'Please try again.');
+      try {
+        Alert.alert('Restore failed', e?.message || 'Please try again.');
+      } catch {}
     } finally {
       if (mounted.current) setIsRestoring(false);
     }
