@@ -232,7 +232,7 @@ export function useIAP() {
       if (hasPro) {
         await persistPro('restored');
         try {
-          Alert.alert('Restored', 'RedGrid Pro has been restored.');
+          Alert.alert('Restored', 'Red Grid Pro has been restored.');
         } catch {}
       } else {
         try {

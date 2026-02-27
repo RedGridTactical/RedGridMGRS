@@ -19,11 +19,27 @@ export function useLocation() {
   const [permissionStatus, setPermissionStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const mounted = useRef(true);
+  const prevCoords = useRef(null);
 
   // Track cleanup to prevent state updates on unmounted component
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; };
+  }, []);
+
+  // Only update state if position changed by more than ~0.1m to prevent cascade re-renders
+  const COORD_THRESHOLD = 0.000001;
+  const updateLocationIfChanged = useCallback((newLoc) => {
+    const prev = prevCoords.current;
+    if (
+      prev &&
+      Math.abs(newLoc.lat - prev.lat) < COORD_THRESHOLD &&
+      Math.abs(newLoc.lon - prev.lon) < COORD_THRESHOLD
+    ) {
+      return; // Position unchanged, skip re-render
+    }
+    prevCoords.current = { lat: newLoc.lat, lon: newLoc.lon };
+    setLocation(newLoc);
   }, []);
 
   const requestAndWatch = useCallback(async () => {
@@ -95,7 +111,7 @@ export function useLocation() {
       if (!mounted.current) return;
 
       if (initial?.coords) {
-        setLocation({
+        updateLocationIfChanged({
           lat: initial.coords.latitude,
           lon: initial.coords.longitude,
           accuracy: initial.coords.accuracy,
@@ -119,7 +135,7 @@ export function useLocation() {
           },
           (pos) => {
             if (mounted.current && pos?.coords) {
-              setLocation({
+              updateLocationIfChanged({
                 lat: pos.coords.latitude,
                 lon: pos.coords.longitude,
                 accuracy: Math.round(pos.coords.accuracy),
@@ -151,7 +167,7 @@ export function useLocation() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [updateLocationIfChanged]);
 
   useEffect(() => {
     let cleanup;

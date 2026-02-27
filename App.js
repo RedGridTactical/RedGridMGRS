@@ -1,5 +1,5 @@
 /**
- * RedGrid Tactical — Root Application v2.0 (HARDENED)
+ * Red Grid Tactical — Root Application v2.0 (HARDENED)
  * Tabs: GRID · TOOLS · REPORT · LISTS (Pro) · THEME (Pro)
  *
  * Privacy: no location stored, no network (IAP uses Apple/Google native payment only), no analytics.
@@ -9,7 +9,7 @@
  *   - Graceful fallback UI if startup fails
  *   - All hooks guaranteed to never throw
  */
-import React, { useState, useMemo, Component } from 'react';
+import React, { useState, useMemo, useCallback, Component } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   SafeAreaView, StatusBar, useWindowDimensions,
@@ -19,6 +19,7 @@ import { useLocation }  from './src/hooks/useLocation';
 import { useSettings }  from './src/hooks/useSettings';
 import { useIAP }       from './src/hooks/useIAP';
 import { useTheme }     from './src/hooks/useTheme';
+import { ThemeProvider, useColors } from './src/utils/ThemeContext';
 
 import { MGRSDisplay }    from './src/components/MGRSDisplay';
 import { WayfinderArrow } from './src/components/WayfinderArrow';
@@ -33,12 +34,6 @@ import {
   toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance,
 } from './src/utils/mgrs';
 import { applyDeclination } from './src/utils/tactical';
-
-const RED  = '#CC0000';
-const RED2 = '#990000';
-const RED3 = '#660000';
-const RED4 = '#330000';
-const BG   = '#0A0000';
 
 const FREE_TABS = [
   { id: 'grid',   label: 'GRID'   },
@@ -56,6 +51,7 @@ const PRO_TABS = [
 
 // ─── ERROR BOUNDARY ──────────────────────────────────────────────────────────
 // Catches any unhandled errors during render or hook execution and shows safe UI
+// Note: class component cannot use hooks, so error boundary keeps hardcoded red fallback
 class AppErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -74,16 +70,18 @@ class AppErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <SafeAreaView style={styles.root}>
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorTitle}>REDGRID ERROR</Text>
-            <Text style={styles.errorMsg}>An unexpected error occurred during startup.</Text>
-            <Text style={styles.errorDetail}>{this.state.error?.message || 'Unknown error'}</Text>
+        <SafeAreaView style={staticStyles.errorRoot}>
+          <View style={staticStyles.errorContainer}>
+            <Text style={staticStyles.errorTitle}>REDGRID ERROR</Text>
+            <Text style={staticStyles.errorMsg}>An unexpected error occurred during startup.</Text>
+            <Text style={staticStyles.errorDetail}>{this.state.error?.message || 'Unknown error'}</Text>
             <TouchableOpacity
-              style={styles.errorRetryBtn}
+              style={staticStyles.errorRetryBtn}
               onPress={() => this.setState({ hasError: false })}
+              accessibilityRole="button"
+              accessibilityLabel="Retry loading application"
             >
-              <Text style={styles.errorRetryText}>RETRY</Text>
+              <Text style={staticStyles.errorRetryText}>RETRY</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -111,10 +109,10 @@ function App() {
 
   const TABS = isPro ? PRO_TABS : FREE_TABS;
 
-  const showProGate = (featureName) => {
+  const showProGate = useCallback((featureName) => {
     setProGateFeature(featureName);
     setProGateVisible(true);
-  };
+  }, []);
 
   // Derived MGRS
   const mgrsRaw       = useMemo(() => location ? toMGRS(location.lat, location.lon, 5) : null, [location]);
@@ -132,6 +130,9 @@ function App() {
 
   const waypointMGRS = useMemo(() => waypoint ? formatMGRS(toMGRS(waypoint.lat, waypoint.lon, 5)) : null, [waypoint]);
   const arrowSize    = isLandscape ? Math.min(height * 0.52, 190) : 200;
+
+  // Dynamic StatusBar style: white theme uses dark content, others use light
+  const statusBarStyle = themeData.id === 'white' ? 'dark-content' : 'light-content';
 
   const gridContent = isLandscape ? (
     <LandscapeGrid
@@ -156,32 +157,82 @@ function App() {
   }
 
   return (
-    <SafeAreaView style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor={BG} hidden={isLandscape} />
+    <ThemeProvider colors={themeData.colors}>
+      <AppContent
+        safeTab={safeTab}
+        setTab={setTab}
+        TABS={TABS}
+        isPro={isPro}
+        isLandscape={isLandscape}
+        gridContent={gridContent}
+        location={location}
+        declination={declination}
+        paceCount={paceCount}
+        setDeclination={setDeclination}
+        setPaceCount={setPaceCount}
+        mgrsFormatted={mgrsFormatted}
+        showProGate={showProGate}
+        theme={theme}
+        setTheme={setTheme}
+        setWaypoint={setWaypoint}
+        showModal={showModal}
+        setShowModal={setShowModal}
+        proGateVisible={proGateVisible}
+        setProGateVisible={setProGateVisible}
+        proGateFeature={proGateFeature}
+        product={product}
+        isPurchasing={isPurchasing}
+        purchase={purchase}
+        restore={restore}
+        statusBarStyle={statusBarStyle}
+        waypoint={waypoint}
+      />
+    </ThemeProvider>
+  );
+}
+
+/** Inner component that can call useColors() since it lives inside ThemeProvider */
+function AppContent({
+  safeTab, setTab, TABS, isPro, isLandscape,
+  gridContent, location, declination, paceCount,
+  setDeclination, setPaceCount, mgrsFormatted, showProGate,
+  theme, setTheme, setWaypoint,
+  showModal, setShowModal, proGateVisible, setProGateVisible,
+  proGateFeature, product, isPurchasing, purchase, restore,
+  statusBarStyle, waypoint,
+}) {
+  const colors = useColors();
+
+  return (
+    <SafeAreaView style={[staticStyles.root, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={statusBarStyle} backgroundColor={colors.bg} hidden={isLandscape} />
 
       {/* Tab bar */}
-      <View style={[styles.tabBar, isLandscape && styles.tabBarLandscape]}>
+      <View style={[staticStyles.tabBar, { borderBottomColor: colors.border2, backgroundColor: colors.bg }, isLandscape && staticStyles.tabBarLandscape]} accessibilityRole="tablist">
         {TABS && Array.isArray(TABS) && TABS.map(t => (
           <TouchableOpacity
             key={t?.id || 'unknown'}
-            style={[styles.tabItem, safeTab === t?.id && styles.tabItemActive]}
+            style={staticStyles.tabItem}
             onPress={() => t?.id && setTab(t.id)}
             activeOpacity={0.7}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: safeTab === t?.id }}
+            accessibilityLabel={`${t?.label || ''} tab`}
           >
-            <Text style={[styles.tabLabel, safeTab === t?.id && styles.tabLabelActive]}>{t?.label || ''}</Text>
-            {safeTab === t?.id && <View style={styles.tabIndicator} />}
+            <Text style={[staticStyles.tabLabel, { color: colors.border }, safeTab === t?.id && { color: colors.text }]}>{t?.label || ''}</Text>
+            {safeTab === t?.id && <View style={[staticStyles.tabIndicator, { backgroundColor: colors.text }]} />}
           </TouchableOpacity>
         ))}
         {/* Pro badge in tab bar */}
         {isPro && (
-          <View style={styles.proBadgeBar}>
-            <Text style={styles.proBadgeText}>PRO</Text>
+          <View style={[staticStyles.proBadgeBar, { backgroundColor: colors.border2 }]}>
+            <Text style={[staticStyles.proBadgeText, { color: colors.text }]}>PRO</Text>
           </View>
         )}
       </View>
 
       {/* Screen content */}
-      <View style={styles.screenContent}>
+      <View style={staticStyles.screenContent}>
         {safeTab === 'grid' && gridContent}
 
         {safeTab === 'tools' && (
@@ -220,7 +271,7 @@ function App() {
 
         {/* Upsell tab for non-Pro */}
         {(safeTab === 'lists' || safeTab === 'theme') && !isPro && (
-          <UpsellScreen onUpgrade={() => showProGate('RedGrid Pro')} />
+          <UpsellScreen onUpgrade={() => showProGate('Red Grid Pro')} />
         )}
       </View>
 
@@ -256,12 +307,13 @@ export default function AppWithErrorBoundary() {
 }
 
 function UpsellScreen({ onUpgrade }) {
+  const colors = useColors();
   return (
-    <View style={styles.upsellRoot}>
-      <Text style={styles.upsellTitle}>REDGRID PRO</Text>
-      <Text style={styles.upsellSub}>Unlock the full experience</Text>
-      <TouchableOpacity style={styles.upsellBtn} onPress={onUpgrade}>
-        <Text style={styles.upsellBtnText}>UNLOCK PRO</Text>
+    <View style={staticStyles.upsellRoot}>
+      <Text style={[staticStyles.upsellTitle, { color: colors.text }]}>REDGRID PRO</Text>
+      <Text style={[staticStyles.upsellSub, { color: colors.text3 }]}>Unlock the full experience</Text>
+      <TouchableOpacity style={[staticStyles.upsellBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]} onPress={onUpgrade} accessibilityRole="button" accessibilityLabel="Unlock Red Grid Pro">
+        <Text style={[staticStyles.upsellBtnText, { color: colors.text }]}>UNLOCK PRO</Text>
       </TouchableOpacity>
     </View>
   );
@@ -269,10 +321,11 @@ function UpsellScreen({ onUpgrade }) {
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
 function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, distance, arrowSize, onAddWaypoint, onClearWaypoint }) {
+  const colors = useColors();
   return (
-    <View style={styles.portraitRoot}>
-      <View style={styles.header}>
-        <Text style={styles.appTitle}>REDGRID TACTICAL</Text>
+    <View style={staticStyles.portraitRoot}>
+      <View style={staticStyles.header}>
+        <Text style={[staticStyles.appTitle, { color: colors.text }]}>REDGRID TACTICAL</Text>
         <SignalBadge isLoading={isLoading} location={location} />
       </View>
       <Div />
@@ -282,84 +335,85 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
       }
       <Div />
       {!waypoint ? (
-        <View style={styles.noWpBlock}>
+        <View style={staticStyles.noWpBlock}>
           <Crosshair size={50} />
-          <Text style={styles.noWpText}>NO WAYPOINT SET</Text>
-          <TouchableOpacity style={styles.addBtn} onPress={onAddWaypoint}>
-            <Text style={styles.addBtnText}>+ ADD WAYPOINT</Text>
+          <Text style={[staticStyles.noWpText, { color: colors.border }]}>NO WAYPOINT SET</Text>
+          <TouchableOpacity style={[staticStyles.addBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel="Add waypoint">
+            <Text style={[staticStyles.addBtnText, { color: colors.text }]}>+ ADD WAYPOINT</Text>
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={styles.wpBlock}>
+        <View style={staticStyles.wpBlock}>
           {bearing !== null && (
-            <View style={styles.arrowWrap}>
+            <View style={staticStyles.arrowWrap}>
               <WayfinderArrow bearing={bearing} size={arrowSize} />
-              <Text style={styles.bearingText}>{Math.round(bearing)}°</Text>
+              <Text style={[staticStyles.bearingText, { color: colors.text }]}>{Math.round(bearing)}°</Text>
             </View>
           )}
-          <View style={styles.wpInfo}>
-            <Text style={styles.wpLabel}>{waypoint.label}</Text>
-            <Text style={styles.wpGrid}>{waypointMGRS}</Text>
-            {distance !== null && <Text style={styles.wpDist}>{formatDistance(distance)}</Text>}
+          <View style={staticStyles.wpInfo}>
+            <Text style={[staticStyles.wpLabel, { color: colors.text2 }]}>{waypoint.label}</Text>
+            <Text style={[staticStyles.wpGrid, { color: colors.text }]}>{waypointMGRS}</Text>
+            {distance !== null && <Text style={[staticStyles.wpDist, { color: colors.text }]}>{formatDistance(distance)}</Text>}
           </View>
-          <View style={styles.wpBtns}>
-            <TouchableOpacity style={styles.editBtn} onPress={onAddWaypoint}><Text style={styles.editBtnText}>EDIT</Text></TouchableOpacity>
-            <TouchableOpacity style={styles.clearBtn} onPress={onClearWaypoint}><Text style={styles.clearBtnText}>CLEAR</Text></TouchableOpacity>
+          <View style={staticStyles.wpBtns}>
+            <TouchableOpacity style={[staticStyles.editBtn, { borderColor: colors.border }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel="Edit waypoint"><Text style={[staticStyles.editBtnText, { color: colors.text2 }]}>EDIT</Text></TouchableOpacity>
+            <TouchableOpacity style={[staticStyles.clearBtn, { borderColor: colors.border, backgroundColor: colors.border2 }]} onPress={onClearWaypoint} accessibilityRole="button" accessibilityLabel="Clear waypoint"><Text style={[staticStyles.clearBtnText, { color: colors.text2 }]}>CLEAR</Text></TouchableOpacity>
           </View>
         </View>
       )}
-      <View style={styles.footer}><Text style={styles.footerText}>NO DATA STORED · NO NETWORK · OPEN SOURCE</Text></View>
+      <View style={staticStyles.footer}><Text style={[staticStyles.footerText, { color: colors.text4 }]}>NO DATA STORED · NO NETWORK · OPEN SOURCE</Text></View>
     </View>
   );
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
 function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, distance, arrowSize, onAddWaypoint, onClearWaypoint }) {
+  const colors = useColors();
   return (
-    <View style={styles.landscapeRoot}>
-      <View style={styles.lsLeft}>
-        <View style={styles.lsHeader}>
-          <Text style={styles.lsTitle}>REDGRID TACTICAL</Text>
+    <View style={staticStyles.landscapeRoot}>
+      <View style={staticStyles.lsLeft}>
+        <View style={staticStyles.lsHeader}>
+          <Text style={[staticStyles.lsTitle, { color: colors.text }]}>REDGRID TACTICAL</Text>
           <SignalBadge isLoading={isLoading} location={location} />
         </View>
         <Div />
         {error ? <ErrBlock error={error} retry={retry} compact /> : <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact />}
         <Div />
         {waypoint ? (
-          <View style={styles.lsWpInfo}>
-            <Text style={styles.lsWpLabel}>{waypoint.label}</Text>
-            <Text style={styles.lsWpGrid}>{waypointMGRS}</Text>
-            {distance !== null && <Text style={styles.lsWpDist}>{formatDistance(distance)}</Text>}
+          <View style={staticStyles.lsWpInfo}>
+            <Text style={[staticStyles.lsWpLabel, { color: colors.text2 }]}>{waypoint.label}</Text>
+            <Text style={[staticStyles.lsWpGrid, { color: colors.text }]}>{waypointMGRS}</Text>
+            {distance !== null && <Text style={[staticStyles.lsWpDist, { color: colors.text }]}>{formatDistance(distance)}</Text>}
           </View>
         ) : (
-          <Text style={styles.noWpText}>NO WAYPOINT SET</Text>
+          <Text style={[staticStyles.noWpText, { color: colors.border }]}>NO WAYPOINT SET</Text>
         )}
-        <View style={styles.lsBtnWrap}>
-          <View style={styles.lsBtns}>
-            <TouchableOpacity style={styles.lsBtn} onPress={onAddWaypoint}>
-              <Text style={styles.lsBtnText}>{waypoint ? 'EDIT WP' : '+ WAYPOINT'}</Text>
+        <View style={staticStyles.lsBtnWrap}>
+          <View style={staticStyles.lsBtns}>
+            <TouchableOpacity style={[staticStyles.lsBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel={waypoint ? 'Edit waypoint' : 'Add waypoint'}>
+              <Text style={[staticStyles.lsBtnText, { color: colors.text }]}>{waypoint ? 'EDIT WP' : '+ WAYPOINT'}</Text>
             </TouchableOpacity>
             {waypoint && (
-              <TouchableOpacity style={[styles.lsBtn, styles.lsBtnDim]} onPress={onClearWaypoint}>
-                <Text style={[styles.lsBtnText, { color: RED3 }]}>CLEAR</Text>
+              <TouchableOpacity style={[staticStyles.lsBtn, { borderColor: colors.border, backgroundColor: 'transparent' }]} onPress={onClearWaypoint} accessibilityRole="button" accessibilityLabel="Clear waypoint">
+                <Text style={[staticStyles.lsBtnText, { color: colors.border }]}>CLEAR</Text>
               </TouchableOpacity>
             )}
           </View>
-          <Text style={styles.footerText}>NO DATA STORED · NO NETWORK</Text>
+          <Text style={[staticStyles.footerText, { color: colors.text4 }]}>NO DATA STORED · NO NETWORK</Text>
         </View>
       </View>
-      <View style={styles.lsVDiv} />
-      <View style={styles.lsRight}>
+      <View style={[staticStyles.lsVDiv, { backgroundColor: colors.border2 }]} />
+      <View style={staticStyles.lsRight}>
         {waypoint && bearing !== null ? (
-          <View style={styles.lsArrow}>
+          <View style={staticStyles.lsArrow}>
             <WayfinderArrow bearing={bearing} size={arrowSize} />
-            <Text style={styles.lsBearing}>{Math.round(bearing)}°</Text>
+            <Text style={[staticStyles.lsBearing, { color: colors.text }]}>{Math.round(bearing)}°</Text>
           </View>
         ) : (
-          <View style={styles.lsNoWp}>
+          <View style={staticStyles.lsNoWp}>
             <Crosshair size={72} />
-            <TouchableOpacity style={styles.addBtn} onPress={onAddWaypoint}>
-              <Text style={styles.addBtnText}>+ ADD WAYPOINT</Text>
+            <TouchableOpacity style={[staticStyles.addBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel="Add waypoint">
+              <Text style={[staticStyles.addBtnText, { color: colors.text }]}>+ ADD WAYPOINT</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -370,104 +424,116 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
 
 // ─── ATOMS ───────────────────────────────────────────────────────────────────
 function SignalBadge({ isLoading, location }) {
-  const color = isLoading ? RED3 : location ? RED : RED3;
+  const colors = useColors();
+  const color = isLoading ? colors.border : location ? colors.text : colors.border;
   const label = isLoading ? 'ACQUIRING' : location ? 'FIX' : 'NO SIGNAL';
   return (
-    <View style={styles.signal}>
-      <View style={[styles.signalDot, { backgroundColor: color }]} />
-      <Text style={styles.signalText}>{label}</Text>
+    <View style={staticStyles.signal} accessibilityRole="status" accessibilityLiveRegion="polite" accessibilityLabel={`GPS status: ${label}`}>
+      <View style={[staticStyles.signalDot, { backgroundColor: color }]} />
+      <Text style={[staticStyles.signalText, { color: colors.border }]}>{label}</Text>
     </View>
   );
 }
-function Div() { return <View style={styles.divider} />; }
+function Div() {
+  const colors = useColors();
+  return <View style={[staticStyles.divider, { backgroundColor: colors.border2 }]} />;
+}
 function ErrBlock({ error, retry, compact }) {
+  const colors = useColors();
   return (
-    <View style={[styles.errBlock, compact && { paddingVertical: 10 }]}>
-      <Text style={styles.errText}>{error}</Text>
-      <TouchableOpacity style={styles.retryBtn} onPress={retry}>
-        <Text style={styles.retryText}>RETRY</Text>
+    <View style={[staticStyles.errBlock, compact && { paddingVertical: 10 }]}>
+      <Text style={[staticStyles.errText, { color: colors.text2 }]}>{error}</Text>
+      <TouchableOpacity style={[staticStyles.retryBtn, { borderColor: colors.border }]} onPress={retry} accessibilityRole="button" accessibilityLabel="Retry GPS signal acquisition">
+        <Text style={[staticStyles.retryText, { color: colors.text2 }]}>RETRY</Text>
       </TouchableOpacity>
     </View>
   );
 }
 function Crosshair({ size = 50 }) {
+  const colors = useColors();
   return (
-    <View style={{ width: size, height: size, opacity: 0.3 }}>
-      <View style={{ position:'absolute', width:1, height:size, left:size/2, backgroundColor:RED2 }} />
-      <View style={{ position:'absolute', height:1, width:size, top:size/2, backgroundColor:RED2 }} />
-      <View style={{ position:'absolute', top:size*.2, left:size*.2, right:size*.2, bottom:size*.2, borderRadius:size, borderWidth:1, borderColor:RED2 }} />
+    <View style={{ width: size, height: size, opacity: 0.3 }} importantForAccessibility="no" accessibilityElementsHidden={true}>
+      <View style={{ position:'absolute', width:1, height:size, left:size/2, backgroundColor:colors.text2 }} />
+      <View style={{ position:'absolute', height:1, width:size, top:size/2, backgroundColor:colors.text2 }} />
+      <View style={{ position:'absolute', top:size*.2, left:size*.2, right:size*.2, bottom:size*.2, borderRadius:size, borderWidth:1, borderColor:colors.text2 }} />
     </View>
   );
 }
 
 // ─── STYLES ──────────────────────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  root: { flex:1, backgroundColor:BG },
+// Structural styles only — colours applied inline via useColors()
+const staticStyles = StyleSheet.create({
+  root: { flex:1 },
+  // Error boundary fallback (hardcoded red — class component, no hooks)
+  errorRoot: { flex:1, backgroundColor:'#0A0000' },
   errorContainer: { flex:1, justifyContent:'center', alignItems:'center', padding:20 },
-  errorTitle: { fontFamily:'monospace', fontSize:18, fontWeight:'700', letterSpacing:4, color:RED, marginBottom:16, textAlign:'center' },
-  errorMsg: { fontFamily:'monospace', fontSize:12, color:RED2, textAlign:'center', marginBottom:12, lineHeight:18 },
-  errorDetail: { fontFamily:'monospace', fontSize:10, color:RED3, textAlign:'center', marginBottom:24, lineHeight:14, fontStyle:'italic' },
-  errorRetryBtn: { borderWidth:1, borderColor:RED, backgroundColor:RED4, paddingHorizontal:32, paddingVertical:12 },
-  errorRetryText: { fontFamily:'monospace', fontSize:11, color:RED, letterSpacing:3, fontWeight:'700' },
-  tabBar: { flexDirection:'row', borderBottomWidth:1, borderBottomColor:RED4, backgroundColor:BG, alignItems:'center' },
+  errorTitle: { fontFamily:'monospace', fontSize:18, fontWeight:'700', letterSpacing:4, color:'#CC0000', marginBottom:16, textAlign:'center' },
+  errorMsg: { fontFamily:'monospace', fontSize:12, color:'#BB3333', textAlign:'center', marginBottom:12, lineHeight:18 },
+  errorDetail: { fontFamily:'monospace', fontSize:10, color:'#AA2222', textAlign:'center', marginBottom:24, lineHeight:14, fontStyle:'italic' },
+  errorRetryBtn: { borderWidth:1, borderColor:'#CC0000', backgroundColor:'#330000', paddingHorizontal:32, paddingVertical:12 },
+  errorRetryText: { fontFamily:'monospace', fontSize:11, color:'#CC0000', letterSpacing:3, fontWeight:'700' },
+  // Tab bar
+  tabBar: { flexDirection:'row', borderBottomWidth:1, alignItems:'center' },
   tabBarLandscape: { paddingTop: 0 },
   tabItem: { flex:1, alignItems:'center', paddingVertical:12, position:'relative' },
-  tabLabel: { fontFamily:'monospace', fontSize:10, letterSpacing:3, color:RED3, fontWeight:'700' },
-  tabLabelActive: { color:RED },
-  tabIndicator: { position:'absolute', bottom:0, left:'10%', right:'10%', height:2, backgroundColor:RED },
-  proBadgeBar: { paddingHorizontal:8, paddingVertical:3, backgroundColor:RED4, marginRight:8 },
-  proBadgeText: { fontFamily:'monospace', fontSize:7, color:RED, letterSpacing:3, fontWeight:'700' },
+  tabLabel: { fontFamily:'monospace', fontSize:10, letterSpacing:3, fontWeight:'700' },
+  tabIndicator: { position:'absolute', bottom:0, left:'10%', right:'10%', height:2 },
+  proBadgeBar: { paddingHorizontal:8, paddingVertical:3, marginRight:8 },
+  proBadgeText: { fontFamily:'monospace', fontSize:9, letterSpacing:3, fontWeight:'700' },
   screenContent: { flex:1 },
+  // Portrait
   portraitRoot: { flex:1, paddingHorizontal:20, paddingTop:12, paddingBottom:20 },
   header: { flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingBottom:10 },
-  appTitle: { fontFamily:'monospace', fontSize:16, fontWeight:'700', letterSpacing:4, color:RED },
+  appTitle: { fontFamily:'monospace', fontSize:16, fontWeight:'700', letterSpacing:4 },
+  // Landscape
   landscapeRoot: { flex:1, flexDirection:'row' },
   lsLeft: { flex:1, paddingHorizontal:16, paddingVertical:8 },
-  lsVDiv: { width:1, backgroundColor:RED4, marginVertical:8 },
+  lsVDiv: { width:1, marginVertical:8 },
   lsRight: { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:8 },
   lsHeader: { flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingBottom:6 },
-  lsTitle: { fontFamily:'monospace', fontSize:12, fontWeight:'700', letterSpacing:3, color:RED },
+  lsTitle: { fontFamily:'monospace', fontSize:12, fontWeight:'700', letterSpacing:3 },
   lsWpInfo: { paddingVertical:8, gap:3 },
-  lsWpLabel: { fontFamily:'monospace', fontSize:10, letterSpacing:4, color:RED2, fontWeight:'700' },
-  lsWpGrid: { fontFamily:'monospace', fontSize:12, letterSpacing:2, color:RED },
-  lsWpDist: { fontFamily:'monospace', fontSize:22, letterSpacing:3, color:RED, fontWeight:'700', marginTop:2 },
+  lsWpLabel: { fontFamily:'monospace', fontSize:10, letterSpacing:4, fontWeight:'700' },
+  lsWpGrid: { fontFamily:'monospace', fontSize:12, letterSpacing:2 },
+  lsWpDist: { fontFamily:'monospace', fontSize:22, letterSpacing:3, fontWeight:'700', marginTop:2 },
   lsBtnWrap: { marginTop:'auto', gap:5 },
   lsBtns: { flexDirection:'row', gap:8 },
-  lsBtn: { flex:1, borderWidth:1, borderColor:RED2, backgroundColor:RED4, paddingVertical:10, alignItems:'center' },
-  lsBtnDim: { borderColor:RED3, backgroundColor:'transparent' },
-  lsBtnText: { fontFamily:'monospace', fontSize:10, letterSpacing:3, color:RED, fontWeight:'700' },
+  lsBtn: { flex:1, borderWidth:1, paddingVertical:10, alignItems:'center' },
+  lsBtnText: { fontFamily:'monospace', fontSize:10, letterSpacing:3, fontWeight:'700' },
   lsArrow: { alignItems:'center', gap:8 },
-  lsBearing: { fontFamily:'monospace', fontSize:30, letterSpacing:4, color:RED, fontWeight:'700' },
+  lsBearing: { fontFamily:'monospace', fontSize:30, letterSpacing:4, fontWeight:'700' },
   lsNoWp: { alignItems:'center', gap:20 },
+  // Atoms
   signal: { flexDirection:'row', alignItems:'center', gap:6 },
   signalDot: { width:7, height:7, borderRadius:4 },
-  signalText: { fontFamily:'monospace', fontSize:9, letterSpacing:3, color:RED3 },
-  divider: { height:1, backgroundColor:RED4, marginVertical:6 },
+  signalText: { fontFamily:'monospace', fontSize:9, letterSpacing:3 },
+  divider: { height:1, marginVertical:6 },
   errBlock: { paddingVertical:20, alignItems:'center', gap:12 },
-  errText: { fontFamily:'monospace', fontSize:11, color:RED2, textAlign:'center', letterSpacing:1 },
-  retryBtn: { borderWidth:1, borderColor:RED3, paddingHorizontal:18, paddingVertical:8 },
-  retryText: { fontFamily:'monospace', fontSize:11, color:RED2, letterSpacing:3 },
+  errText: { fontFamily:'monospace', fontSize:11, textAlign:'center', letterSpacing:1 },
+  retryBtn: { borderWidth:1, paddingHorizontal:18, paddingVertical:8, minHeight:44 },
+  retryText: { fontFamily:'monospace', fontSize:11, letterSpacing:3 },
   noWpBlock: { paddingVertical:20, alignItems:'center', gap:16 },
-  noWpText: { fontFamily:'monospace', fontSize:11, letterSpacing:4, color:RED3 },
-  addBtn: { borderWidth:1, borderColor:RED2, paddingHorizontal:26, paddingVertical:13, backgroundColor:RED4 },
-  addBtnText: { fontFamily:'monospace', fontSize:12, letterSpacing:3, color:RED, fontWeight:'700' },
+  noWpText: { fontFamily:'monospace', fontSize:11, letterSpacing:4 },
+  addBtn: { borderWidth:1, paddingHorizontal:26, paddingVertical:13, minHeight:44 },
+  addBtnText: { fontFamily:'monospace', fontSize:12, letterSpacing:3, fontWeight:'700' },
   wpBlock: { alignItems:'center', paddingVertical:10, gap:12 },
   arrowWrap: { alignItems:'center', gap:6 },
-  bearingText: { fontFamily:'monospace', fontSize:26, color:RED, letterSpacing:4, fontWeight:'700' },
+  bearingText: { fontFamily:'monospace', fontSize:26, letterSpacing:4, fontWeight:'700' },
   wpInfo: { alignItems:'center', gap:4 },
-  wpLabel: { fontFamily:'monospace', fontSize:12, letterSpacing:4, color:RED2, fontWeight:'700' },
-  wpGrid: { fontFamily:'monospace', fontSize:14, letterSpacing:3, color:RED },
-  wpDist: { fontFamily:'monospace', fontSize:22, letterSpacing:4, color:RED, fontWeight:'700', marginTop:2 },
+  wpLabel: { fontFamily:'monospace', fontSize:12, letterSpacing:4, fontWeight:'700' },
+  wpGrid: { fontFamily:'monospace', fontSize:14, letterSpacing:3 },
+  wpDist: { fontFamily:'monospace', fontSize:22, letterSpacing:4, fontWeight:'700', marginTop:2 },
   wpBtns: { flexDirection:'row', gap:10 },
-  editBtn: { borderWidth:1, borderColor:RED3, paddingHorizontal:22, paddingVertical:9 },
-  editBtnText: { fontFamily:'monospace', fontSize:11, letterSpacing:3, color:RED2 },
-  clearBtn: { borderWidth:1, borderColor:RED3, paddingHorizontal:22, paddingVertical:9, backgroundColor:RED4 },
-  clearBtnText: { fontFamily:'monospace', fontSize:11, letterSpacing:3, color:RED2 },
+  editBtn: { borderWidth:1, paddingHorizontal:22, paddingVertical:9, minHeight:44 },
+  editBtnText: { fontFamily:'monospace', fontSize:11, letterSpacing:3 },
+  clearBtn: { borderWidth:1, paddingHorizontal:22, paddingVertical:9, minHeight:44 },
+  clearBtnText: { fontFamily:'monospace', fontSize:11, letterSpacing:3 },
   footer: { marginTop:'auto', paddingTop:16, alignItems:'center' },
-  footerText: { fontFamily:'monospace', fontSize:7, letterSpacing:2, color:RED4 },
+  footerText: { fontFamily:'monospace', fontSize:9, letterSpacing:2 },
+  // Upsell
   upsellRoot: { flex:1, alignItems:'center', justifyContent:'center', gap:16, padding:40 },
-  upsellTitle: { fontFamily:'monospace', fontSize:24, fontWeight:'700', letterSpacing:6, color:RED },
-  upsellSub: { fontFamily:'monospace', fontSize:11, color:RED3, letterSpacing:2 },
-  upsellBtn: { borderWidth:1, borderColor:RED, backgroundColor:RED4, paddingHorizontal:32, paddingVertical:14 },
-  upsellBtnText: { fontFamily:'monospace', fontSize:12, fontWeight:'700', letterSpacing:4, color:RED },
+  upsellTitle: { fontFamily:'monospace', fontSize:24, fontWeight:'700', letterSpacing:6 },
+  upsellSub: { fontFamily:'monospace', fontSize:11, letterSpacing:2 },
+  upsellBtn: { borderWidth:1, paddingHorizontal:32, paddingVertical:14 },
+  upsellBtnText: { fontFamily:'monospace', fontSize:12, fontWeight:'700', letterSpacing:4 },
 });

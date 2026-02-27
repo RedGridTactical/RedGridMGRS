@@ -2,6 +2,19 @@
  * useTheme — Provides the active colour palette.
  * Free users: red (default only).
  * Pro users: red, green (NVG), white (day), blue (blue-force).
+ *
+ * Colour keys:
+ *   text   — primary text / arrows / headings
+ *   text2  — secondary text (labels, dim values)  [WCAG AA ~5:1]
+ *   text3  — tertiary text (subtitles, hints)      [WCAG AA ~4.5:1]
+ *   text4  — very dim text (footers, disabled)
+ *   text5  — near-bg decorative (tiny separators)
+ *   accent — interactive highlights (same as text usually)
+ *   bg     — screen background
+ *   card   — card / modal surface
+ *   card2  — input / field surface
+ *   border — medium border
+ *   border2— dim border / divider
  */
 import { useMemo } from 'react';
 
@@ -12,13 +25,17 @@ export const THEMES = {
     sub: 'Default tactical display',
     pro: false,
     colors: {
-      bg:    '#0A0000',
-      text:  '#CC0000',
-      text2: '#990000',
-      text3: '#660000',
-      text4: '#330000',
-      text5: '#1A0000',
-      accent:'#CC0000',
+      bg:      '#0A0000',
+      text:    '#CC0000',
+      text2:   '#BB3333',
+      text3:   '#AA2222',
+      text4:   '#330000',
+      text5:   '#1A0000',
+      accent:  '#CC0000',
+      card:    '#0D0000',
+      card2:   '#110000',
+      border:  '#660000',
+      border2: '#330000',
     },
   },
   green: {
@@ -27,13 +44,17 @@ export const THEMES = {
     sub: 'Night vision goggle compatible',
     pro: true,
     colors: {
-      bg:    '#001400',
-      text:  '#00CC00',
-      text2: '#009900',
-      text3: '#006600',
-      text4: '#003300',
-      text5: '#001A00',
-      accent:'#00CC00',
+      bg:      '#001400',
+      text:    '#00CC00',
+      text2:   '#33BB33',
+      text3:   '#22AA22',
+      text4:   '#003300',
+      text5:   '#001A00',
+      accent:  '#00CC00',
+      card:    '#001800',
+      card2:   '#001E00',
+      border:  '#006600',
+      border2: '#003300',
     },
   },
   white: {
@@ -42,13 +63,17 @@ export const THEMES = {
     sub: 'High visibility in sunlight',
     pro: true,
     colors: {
-      bg:    '#F5F5F5',
-      text:  '#111111',
-      text2: '#333333',
-      text3: '#666666',
-      text4: '#AAAAAA',
-      text5: '#DDDDDD',
-      accent:'#CC0000',
+      bg:      '#F5F5F5',
+      text:    '#111111',
+      text2:   '#333333',
+      text3:   '#555555',
+      text4:   '#999999',
+      text5:   '#DDDDDD',
+      accent:  '#CC0000',
+      card:    '#FFFFFF',
+      card2:   '#EEEEEE',
+      border:  '#999999',
+      border2: '#CCCCCC',
     },
   },
   blue: {
@@ -57,13 +82,17 @@ export const THEMES = {
     sub: 'Blue-force tracker color scheme',
     pro: true,
     colors: {
-      bg:    '#000A14',
-      text:  '#0088CC',
-      text2: '#006699',
-      text3: '#004466',
-      text4: '#002233',
-      text5: '#00111A',
-      accent:'#0088CC',
+      bg:      '#000A14',
+      text:    '#0099DD',
+      text2:   '#33AABB',
+      text3:   '#2288AA',
+      text4:   '#002233',
+      text5:   '#00111A',
+      accent:  '#0099DD',
+      card:    '#000E1A',
+      card2:   '#001422',
+      border:  '#004466',
+      border2: '#002233',
     },
   },
 };

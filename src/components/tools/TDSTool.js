@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { timeToTravel, formatMinutes, formatDistance } from '../../utils/tactical';
+import { timeToTravel, formatMinutes } from '../../utils/tactical';
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
-
-const RED = '#CC0000', RED2 = '#990000', RED3 = '#660000', RED4 = '#330000', RED5 = '#1A0000';
+import { useColors } from '../../utils/ThemeContext';
 
 const PRESETS = [
   { label: 'OPEN TERRAIN', kmh: 4.0 },
@@ -13,6 +12,7 @@ const PRESETS = [
 ];
 
 export function TDSTool({ location }) {
+  const colors = useColors();
   const [distance, setDistance] = useState('');
   const [speed, setSpeed]       = useState('');
 
@@ -32,16 +32,16 @@ export function TDSTool({ location }) {
     <View>
       <ToolInput label="DISTANCE (METRES)" value={distance} onChangeText={setDistance} placeholder="e.g. 1500" keyboardType="numeric" />
 
-      <Text style={styles.presetsLabel}>SPEED PRESETS</Text>
+      <Text style={[styles.presetsLabel, { color: colors.border }]}>SPEED PRESETS</Text>
       <View style={styles.presets}>
         {PRESETS.map(p => (
           <TouchableOpacity
             key={p.label}
-            style={[styles.preset, speed === String(p.kmh) && styles.presetActive]}
+            style={[styles.preset, { borderColor: colors.border2 }, speed === String(p.kmh) && { borderColor: colors.text2, backgroundColor: colors.text5 }]}
             onPress={() => setSpeed(String(p.kmh))}
           >
-            <Text style={[styles.presetLabel, speed === String(p.kmh) && styles.presetLabelActive]}>{p.label}</Text>
-            <Text style={[styles.presetVal, speed === String(p.kmh) && styles.presetValActive]}>{p.kmh}km/h</Text>
+            <Text style={[styles.presetLabel, { color: colors.border2 }, speed === String(p.kmh) && { color: colors.text2 }]}>{p.label}</Text>
+            <Text style={[styles.presetVal, { color: colors.border2 }, speed === String(p.kmh) && { color: colors.text }]}>{p.kmh}km/h</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -61,13 +61,10 @@ export function TDSTool({ location }) {
 }
 
 const styles = StyleSheet.create({
-  presetsLabel: { fontFamily:'monospace', fontSize:9, letterSpacing:3, color:RED3, marginBottom:8 },
+  presetsLabel: { fontFamily:'monospace', fontSize:9, letterSpacing:3, marginBottom:8 },
   presets: { flexDirection:'row', flexWrap:'wrap', gap:6, marginBottom:12 },
-  preset: { flex:1, minWidth:'45%', borderWidth:1, borderColor:RED4, padding:8 },
-  presetActive: { borderColor:RED2, backgroundColor:RED5 },
-  presetLabel: { fontFamily:'monospace', fontSize:8, letterSpacing:2, color:RED4 },
-  presetLabelActive: { color:RED2 },
-  presetVal: { fontFamily:'monospace', fontSize:10, letterSpacing:2, color:RED4, fontWeight:'700', marginTop:2 },
-  presetValActive: { color:RED },
+  preset: { flex:1, minWidth:'45%', borderWidth:1, padding:8 },
+  presetLabel: { fontFamily:'monospace', fontSize:8, letterSpacing:2 },
+  presetVal: { fontFamily:'monospace', fontSize:10, letterSpacing:2, fontWeight:'700', marginTop:2 },
   results: { marginTop:12, gap:8 },
 });
