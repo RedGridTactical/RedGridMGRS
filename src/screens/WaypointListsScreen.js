@@ -31,8 +31,8 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
   }, []);
 
   const persist = useCallback(async (updated) => {
-    const saved = await saveWaypointLists(updated);
-    setLists(saved);
+    await saveWaypointLists(updated);
+    setLists(updated);
   }, []);
 
   // ── Create list ──
