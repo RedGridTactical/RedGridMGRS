@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { solarBearing, lunarBearing } from '../../utils/tactical';
 import { ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
-
-const RED = '#CC0000', RED2 = '#990000', RED3 = '#660000', RED4 = '#330000';
+import { useColors } from '../../utils/ThemeContext';
 
 export function SolarTool({ location }) {
+  const colors = useColors();
   const [now, setNow] = useState(new Date());
   const [body, setBody] = useState('sun');
 
@@ -38,11 +38,11 @@ export function SolarTool({ location }) {
   return (
     <View>
       <View style={styles.toggle}>
-        <TouchableOpacity style={[styles.toggleBtn, body==='sun' && styles.toggleActive]} onPress={() => setBody('sun')}>
-          <Text style={[styles.toggleText, body==='sun' && styles.toggleTextActive]}>☀ SUN</Text>
+        <TouchableOpacity style={[styles.toggleBtn, { borderColor: colors.border2 }, body==='sun' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setBody('sun')}>
+          <Text style={[styles.toggleText, { color: colors.border2 }, body==='sun' && { color: colors.text }]}>☀ SUN</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.toggleBtn, body==='moon' && styles.toggleActive]} onPress={() => setBody('moon')}>
-          <Text style={[styles.toggleText, body==='moon' && styles.toggleTextActive]}>☽ MOON</Text>
+        <TouchableOpacity style={[styles.toggleBtn, { borderColor: colors.border2 }, body==='moon' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setBody('moon')}>
+          <Text style={[styles.toggleText, { color: colors.border2 }, body==='moon' && { color: colors.text }]}>☽ MOON</Text>
         </TouchableOpacity>
       </View>
 
@@ -65,12 +65,9 @@ export function SolarTool({ location }) {
   );
 }
 
-const RED5 = '#1A0000';
 const styles = StyleSheet.create({
   toggle: { flexDirection:'row', gap:8, marginBottom:12 },
-  toggleBtn: { flex:1, borderWidth:1, borderColor:RED4, paddingVertical:9, alignItems:'center' },
-  toggleActive: { borderColor:RED2, backgroundColor:RED5 },
-  toggleText: { fontFamily:'monospace', fontSize:10, letterSpacing:3, color:RED4 },
-  toggleTextActive: { color:RED },
+  toggleBtn: { flex:1, borderWidth:1, paddingVertical:9, alignItems:'center' },
+  toggleText: { fontFamily:'monospace', fontSize:10, letterSpacing:3 },
   results: { marginTop:12, gap:8 },
 });

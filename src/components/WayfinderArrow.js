@@ -1,12 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
+import { useColors } from '../utils/ThemeContext';
 
 /**
  * WayfinderArrow — Animated directional arrow pointing to waypoint.
- * bearing: 0–360 degrees from North
+ * bearing: 0-360 degrees from North
  * size: diameter of the component
  */
-export function WayfinderArrow({ bearing, size = 180 }) {
+export const WayfinderArrow = React.memo(function WayfinderArrow({ bearing, size = 180 }) {
+  const colors = useColors();
   const rotateAnim = useRef(new Animated.Value(bearing)).current;
   const prevBearing = useRef(bearing);
 
@@ -37,7 +39,7 @@ export function WayfinderArrow({ bearing, size = 180 }) {
   const headHeight = size * 0.28;
 
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
+    <View style={[styles.container, { width: size, height: size }]} accessible={true} accessibilityRole="image" accessibilityLabel={`Wayfinder arrow pointing ${Math.round(bearing)} degrees`}>
       {/* Outer ring */}
       <View
         style={[
@@ -47,6 +49,7 @@ export function WayfinderArrow({ bearing, size = 180 }) {
             height: size,
             borderRadius: size / 2,
             borderWidth: size * 0.015,
+            borderColor: colors.text,
           },
         ]}
       />
@@ -63,6 +66,7 @@ export function WayfinderArrow({ bearing, size = 180 }) {
               left: size / 2 - size * 0.006,
               transformOrigin: `${size * 0.006}px ${size * 0.46}px`,
               transform: [{ rotate: `${deg}deg` }],
+              backgroundColor: colors.text,
             },
           ]}
         />
@@ -75,7 +79,7 @@ export function WayfinderArrow({ bearing, size = 180 }) {
           { transform: [{ rotate }] },
         ]}
       >
-        {/* Arrowhead (pointing up = North = 0°) */}
+        {/* Arrowhead (pointing up = North = 0 deg) */}
         <View
           style={[
             styles.arrowHead,
@@ -83,6 +87,7 @@ export function WayfinderArrow({ bearing, size = 180 }) {
               borderLeftWidth: headWidth / 2,
               borderRightWidth: headWidth / 2,
               borderBottomWidth: headHeight,
+              borderBottomColor: colors.text,
               marginBottom: -1,
             },
           ]}
@@ -94,6 +99,7 @@ export function WayfinderArrow({ bearing, size = 180 }) {
             {
               width: shaftWidth,
               height: arrowSize,
+              backgroundColor: colors.text,
             },
           ]}
         />
@@ -105,15 +111,14 @@ export function WayfinderArrow({ bearing, size = 180 }) {
               width: shaftWidth * 1.8,
               height: shaftWidth * 0.5,
               marginTop: -1,
+              backgroundColor: colors.text,
             },
           ]}
         />
       </Animated.View>
     </View>
   );
-}
-
-const RED = '#CC0000';
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -123,12 +128,10 @@ const styles = StyleSheet.create({
   },
   ring: {
     position: 'absolute',
-    borderColor: RED,
     opacity: 0.5,
   },
   tick: {
     position: 'absolute',
-    backgroundColor: RED,
     opacity: 0.6,
   },
   arrowContainer: {
@@ -140,13 +143,10 @@ const styles = StyleSheet.create({
     height: 0,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: RED,
   },
   arrowShaft: {
-    backgroundColor: RED,
   },
   tailFlare: {
-    backgroundColor: RED,
     opacity: 0.6,
   },
 });

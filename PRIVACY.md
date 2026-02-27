@@ -2,13 +2,13 @@
 
 **Last updated: 2025**
 
-RedGrid Tactical is a free, open-source application. This policy describes exactly what data the app accesses and what it does with it.
+Red Grid Tactical is a free, open-source application. This policy describes exactly what data the app accesses and what it does with it.
 
 ---
 
 ## Location Data
 
-RedGrid Tactical requests access to your device's GPS location **while the app is open** (foreground only). This location data is used solely to calculate and display your current MGRS coordinates on screen.
+Red Grid Tactical requests access to your device's GPS location **while the app is open** (foreground only). This location data is used solely to calculate and display your current MGRS coordinates on screen.
 
 - Location data is **never written to disk**
 - Location data is **never transmitted** over any network
@@ -23,7 +23,7 @@ The following data is saved locally on your device:
 - **Magnetic declination offset** — a single number you configure (default: 0)
 - **Pace count calibration** — a single number you configure (default: 62)
 
-**RedGrid Pro users (optional one-time purchase):**
+**Red Grid Pro users (optional one-time purchase):**
 - **Saved waypoint lists** — named lists of waypoints you choose to save, stored locally on your device only
 - **Display theme preference** — your selected colour theme
 - **Coordinate format preference** — your selected coordinate display format
@@ -32,7 +32,7 @@ All stored data lives **on your device only**. None of it is ever transmitted an
 
 ## Network Activity
 
-RedGrid Tactical makes **zero network requests**. There is no:
+Red Grid Tactical makes **zero network requests**. There is no:
 
 - Analytics or usage tracking
 - Crash reporting
@@ -40,7 +40,7 @@ RedGrid Tactical makes **zero network requests**. There is no:
 - Account system or cloud sync
 - Update check or telemetry
 
-In-app purchases (RedGrid Pro) are processed entirely by Apple (App Store) or Google (Play Store). RedGrid Tactical never sees your payment details and receives no personal data from these transactions.
+In-app purchases (Red Grid Pro) are processed entirely by Apple (App Store) or Google (Play Store). Red Grid Tactical never sees your payment details and receives no personal data from these transactions.
 
 You can verify the zero-network claim by reviewing the source code or monitoring network traffic while using the app.
 
@@ -54,7 +54,7 @@ No other permissions are requested.
 
 ## Third Parties
 
-RedGrid Tactical contains no third-party SDKs that collect data. It is built on the Expo runtime framework. In-app purchases use native Apple StoreKit and Google Play Billing APIs — no third-party purchase SDK is included.
+Red Grid Tactical contains no third-party SDKs that collect data. It is built on the Expo runtime framework. In-app purchases use native Apple StoreKit and Google Play Billing APIs — no third-party purchase SDK is included.
 
 ## Children
 

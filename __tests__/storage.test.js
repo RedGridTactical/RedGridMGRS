@@ -18,16 +18,16 @@ const {
   saveTheme,
   loadWaypointLists,
   saveWaypointLists,
-  addWaypointList,
-  deleteWaypointList,
-  addWaypointToList,
-  removeWaypointFromList,
 } = require('../src/utils/storage');
 
 describe('storage.js - Persistent Storage Wrapper', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Restore mock functions that may have been set to null by previous tests
+    AsyncStorage.multiGet = jest.fn();
+    AsyncStorage.setItem = jest.fn();
+    AsyncStorage.getItem = jest.fn();
   });
 
   // ─── loadSettings ─────────────────────────────────────────────────────
@@ -297,173 +297,8 @@ describe('storage.js - Persistent Storage Wrapper', () => {
     });
   });
 
-  // ─── addWaypointList ──────────────────────────────────────────────────
-  describe('addWaypointList(name)', () => {
-
-    test('Adds new waypoint list', async () => {
-      AsyncStorage.getItem.mockResolvedValue('[]');
-      AsyncStorage.setItem.mockResolvedValue(undefined);
-
-      const result = await addWaypointList('My List');
-      expect(result.name).toBe('My List');
-      expect(result.waypoints).toEqual([]);
-      expect(result.id).toBeDefined();
-      expect(result.createdAt).toBeDefined();
-    });
-
-    test('Appends to existing lists', async () => {
-      const existing = [{ id: 'wl_1', name: 'List 1', waypoints: [] }];
-      AsyncStorage.getItem.mockResolvedValue(JSON.stringify(existing));
-
-      await addWaypointList('List 2');
-
-      const savedCall = AsyncStorage.setItem.mock.calls[0];
-      const savedLists = JSON.parse(savedCall[1]);
-      expect(savedLists.length).toBe(2);
-    });
-
-    test('Generates unique ID', async () => {
-      AsyncStorage.getItem.mockResolvedValue('[]');
-
-      const list1 = await addWaypointList('List 1');
-      const list2 = await addWaypointList('List 2');
-      expect(list1.id).not.toBe(list2.id);
-    });
-
-    test('Returns list even if save fails', async () => {
-      AsyncStorage.getItem.mockResolvedValue('[]');
-      AsyncStorage.setItem.mockRejectedValue(new Error('Save failed'));
-
-      const result = await addWaypointList('My List');
-      expect(result.name).toBe('My List');
-      expect(result.waypoints).toEqual([]);
-    });
-  });
-
-  // ─── deleteWaypointList ───────────────────────────────────────────────
-  describe('deleteWaypointList(id)', () => {
-
-    test('Deletes waypoint list by ID', async () => {
-      const lists = [
-        { id: 'wl_1', name: 'List 1', waypoints: [] },
-        { id: 'wl_2', name: 'List 2', waypoints: [] },
-      ];
-      AsyncStorage.getItem.mockResolvedValue(JSON.stringify(lists));
-
-      await deleteWaypointList('wl_1');
-
-      const savedCall = AsyncStorage.setItem.mock.calls[0];
-      const savedLists = JSON.parse(savedCall[1]);
-      expect(savedLists.length).toBe(1);
-      expect(savedLists[0].id).toBe('wl_2');
-    });
-
-    test('Handles non-existent ID gracefully', async () => {
-      const lists = [{ id: 'wl_1', name: 'List 1', waypoints: [] }];
-      AsyncStorage.getItem.mockResolvedValue(JSON.stringify(lists));
-
-      await deleteWaypointList('wl_999');
-
-      const savedCall = AsyncStorage.setItem.mock.calls[0];
-      const savedLists = JSON.parse(savedCall[1]);
-      expect(savedLists.length).toBe(1);
-    });
-
-    test('Handles error silently', async () => {
-      AsyncStorage.getItem.mockRejectedValue(new Error('Load failed'));
-      await expect(deleteWaypointList('wl_1')).resolves.toBeUndefined();
-    });
-  });
-
-  // ─── addWaypointToList ────────────────────────────────────────────────
-  describe('addWaypointToList(listId, waypoint)', () => {
-
-    test('Adds waypoint to list', async () => {
-      const lists = [{ id: 'wl_1', name: 'List 1', waypoints: [] }];
-      AsyncStorage.getItem.mockResolvedValue(JSON.stringify(lists));
-
-      const waypoint = { lat: 40, lon: -74, name: 'NYC' };
-      await addWaypointToList('wl_1', waypoint);
-
-      const savedCall = AsyncStorage.setItem.mock.calls[0];
-      const savedLists = JSON.parse(savedCall[1]);
-      expect(savedLists[0].waypoints.length).toBe(1);
-      expect(savedLists[0].waypoints[0].lat).toBe(40);
-    });
-
-    test('Generates waypoint ID', async () => {
-      const lists = [{ id: 'wl_1', name: 'List 1', waypoints: [] }];
-      AsyncStorage.getItem.mockResolvedValue(JSON.stringify(lists));
-
-      const waypoint = { lat: 40, lon: -74 };
-      await addWaypointToList('wl_1', waypoint);
-
-      const savedCall = AsyncStorage.setItem.mock.calls[0];
-      const savedLists = JSON.parse(savedCall[1]);
-      expect(savedLists[0].waypoints[0].id).toBeDefined();
-    });
-
-    test('Handles null listId gracefully', async () => {
-      await addWaypointToList(null, { lat: 40, lon: -74 });
-      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
-    });
-
-    test('Handles null waypoint gracefully', async () => {
-      await addWaypointToList('wl_1', null);
-      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
-    });
-  });
-
-  // ─── removeWaypointFromList ───────────────────────────────────────────
-  describe('removeWaypointFromList(listId, waypointId)', () => {
-
-    test('Removes waypoint from list', async () => {
-      const lists = [
-        {
-          id: 'wl_1',
-          name: 'List 1',
-          waypoints: [
-            { id: 'wp_1', lat: 40, lon: -74 },
-            { id: 'wp_2', lat: 41, lon: -73 },
-          ]
-        }
-      ];
-      AsyncStorage.getItem.mockResolvedValue(JSON.stringify(lists));
-
-      await removeWaypointFromList('wl_1', 'wp_1');
-
-      const savedCall = AsyncStorage.setItem.mock.calls[0];
-      const savedLists = JSON.parse(savedCall[1]);
-      expect(savedLists[0].waypoints.length).toBe(1);
-      expect(savedLists[0].waypoints[0].id).toBe('wp_2');
-    });
-
-    test('Handles non-existent waypoint gracefully', async () => {
-      const lists = [
-        {
-          id: 'wl_1',
-          name: 'List 1',
-          waypoints: [{ id: 'wp_1', lat: 40, lon: -74 }]
-        }
-      ];
-      AsyncStorage.getItem.mockResolvedValue(JSON.stringify(lists));
-
-      await removeWaypointFromList('wl_1', 'wp_999');
-
-      const savedCall = AsyncStorage.setItem.mock.calls[0];
-      const savedLists = JSON.parse(savedCall[1]);
-      expect(savedLists[0].waypoints.length).toBe(1);
-    });
-
-    test('Handles null listId gracefully', async () => {
-      await removeWaypointFromList(null, 'wp_1');
-      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
-    });
-
-    test('Handles null waypointId gracefully', async () => {
-      await removeWaypointFromList('wl_1', null);
-      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
-    });
-  });
+  // Note: addWaypointList, deleteWaypointList, addWaypointToList, and
+  // removeWaypointFromList were removed as dead code. WaypointListsScreen
+  // manages CRUD operations inline using loadWaypointLists/saveWaypointLists.
 
 });
