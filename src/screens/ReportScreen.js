@@ -8,7 +8,13 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, Alert, LayoutAnimation, UIManager, Platform, AccessibilityInfo,
 } from 'react-native';
-import * as ExpoClipboard from 'expo-clipboard';
+// Lazy-load expo-clipboard to prevent crash if native module is unavailable
+let ExpoClipboard = null;
+try {
+  ExpoClipboard = require('expo-clipboard');
+} catch (e) {
+  // expo-clipboard not available — copy will fall back to alert-only
+}
 import { useColors } from '../utils/ThemeContext';
 
 if (Platform.OS === 'android') {
@@ -140,7 +146,9 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
 
   const copy = () => {
     const text = buildReport(report.id, report.fields, vals);
-    ExpoClipboard.setStringAsync(text).catch(() => {});
+    if (ExpoClipboard && typeof ExpoClipboard.setStringAsync === 'function') {
+      ExpoClipboard.setStringAsync(text).catch(() => {});
+    }
     AccessibilityInfo.announceForAccessibility('Report copied to clipboard');
     Alert.alert('Copied', 'Report copied to clipboard.');
   };
