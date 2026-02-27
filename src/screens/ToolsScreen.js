@@ -4,8 +4,13 @@
  */
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager,
 } from 'react-native';
+import { useColors } from '../utils/ThemeContext';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 import { BackAzimuthTool }   from '../components/tools/BackAzimuthTool';
 import { DeadReckoningTool } from '../components/tools/DeadReckoningTool';
@@ -15,12 +20,6 @@ import { DeclinationTool }   from '../components/tools/DeclinationTool';
 import { TDSTool }           from '../components/tools/TDSTool';
 import { SolarTool }         from '../components/tools/SolarTool';
 import { PrecisionTool }     from '../components/tools/PrecisionTool';
-
-const RED  = '#CC0000';
-const RED2 = '#990000';
-const RED3 = '#660000';
-const RED4 = '#330000';
-const BG   = '#0A0000';
 
 const TOOLS = [
   { id: 'backaz',   label: 'BACK AZIMUTH',    sub: 'Reciprocal bearing calculator',         Component: BackAzimuthTool   },
@@ -34,34 +33,44 @@ const TOOLS = [
 ];
 
 export function ToolsScreen({ location, declination, paceCount, setDeclination, setPaceCount }) {
+  const colors = useColors();
   const [openTool, setOpenTool] = useState(null);
 
   const toggle = useCallback((id) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setOpenTool(prev => prev === id ? null : id);
   }, []);
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.root, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.title}>TOOLS</Text>
-        <Text style={styles.subtitle}>TAP TO EXPAND</Text>
+        <Text style={[styles.title, { color: colors.text }]}>TOOLS</Text>
+        <Text style={[styles.subtitle, { color: colors.text3 }]}>TAP TO EXPAND</Text>
       </View>
 
       {TOOLS.map(({ id, label, sub, Component }) => {
         const isOpen = openTool === id;
         return (
-          <View key={id} style={[styles.card, isOpen && styles.cardOpen]}>
-            <TouchableOpacity style={styles.cardHeader} onPress={() => toggle(id)} activeOpacity={0.7}>
+          <View key={id} style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }, isOpen && { borderColor: colors.text2 }]}>
+            <TouchableOpacity
+              style={styles.cardHeader}
+              onPress={() => toggle(id)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: isOpen }}
+              accessibilityLabel={`${label}, ${sub}`}
+              accessibilityHint={isOpen ? 'Double tap to collapse' : 'Double tap to expand'}
+            >
               <View>
-                <Text style={styles.cardTitle}>{label}</Text>
-                <Text style={styles.cardSub}>{sub}</Text>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>{label}</Text>
+                <Text style={[styles.cardSub, { color: colors.text3 }]}>{sub}</Text>
               </View>
-              <Text style={[styles.chevron, isOpen && styles.chevronOpen]}>▶</Text>
+              <Text style={[styles.chevron, { color: colors.border }, isOpen && { color: colors.text, transform: [{ rotate: '90deg' }] }]} importantForAccessibility="no" accessibilityElementsHidden={true}>▶</Text>
             </TouchableOpacity>
 
             {isOpen && (
               <View style={styles.cardBody}>
-                <View style={styles.cardDivider} />
+                <View style={[styles.cardDivider, { backgroundColor: colors.border2 }]} />
                 <Component
                   location={location}
                   declination={declination}
@@ -76,26 +85,23 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
       })}
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>ALL COMPUTATIONS LOCAL · NO NETWORK · NO STORAGE</Text>
+        <Text style={[styles.footerText, { color: colors.text4 }]}>ALL COMPUTATIONS LOCAL · NO NETWORK · NO STORAGE</Text>
       </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: BG },
+  root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingTop: 4 },
-  title: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', letterSpacing: 5, color: RED },
-  subtitle: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 3, color: RED3 },
+  title: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', letterSpacing: 5 },
+  subtitle: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 3 },
 
   card: {
     borderWidth: 1,
-    borderColor: RED3,
-    backgroundColor: '#0D0000',
     marginBottom: 8,
   },
-  cardOpen: { borderColor: RED2 },
 
   cardHeader: {
     flexDirection: 'row',
@@ -103,14 +109,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
   },
-  cardTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, color: RED, fontWeight: '700', marginBottom: 2 },
-  cardSub:   { fontFamily: 'monospace', fontSize: 9,  letterSpacing: 2, color: RED3 },
-  chevron:   { fontFamily: 'monospace', fontSize: 10, color: RED3, transform: [{ rotate: '0deg' }] },
-  chevronOpen: { color: RED, transform: [{ rotate: '90deg' }] },
+  cardTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '700', marginBottom: 2 },
+  cardSub:   { fontFamily: 'monospace', fontSize: 9,  letterSpacing: 2 },
+  chevron:   { fontFamily: 'monospace', fontSize: 10, transform: [{ rotate: '0deg' }] },
 
   cardBody: { paddingHorizontal: 14, paddingBottom: 16 },
-  cardDivider: { height: 1, backgroundColor: RED4, marginBottom: 14 },
+  cardDivider: { height: 1, marginBottom: 14 },
 
   footer: { paddingTop: 24, alignItems: 'center' },
-  footerText: { fontFamily: 'monospace', fontSize: 7, letterSpacing: 2, color: RED4 },
+  footerText: { fontFamily: 'monospace', fontSize: 7, letterSpacing: 2 },
 });

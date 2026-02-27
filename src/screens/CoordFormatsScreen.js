@@ -5,13 +5,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { toMGRS, formatMGRS } from '../utils/mgrs';
-
-const RED  = '#CC0000';
-const RED2 = '#990000';
-const RED3 = '#660000';
-const RED4 = '#330000';
-const RED5 = '#1A0000';
-const BG   = '#0A0000';
+import { useColors } from '../utils/ThemeContext';
 
 const FORMATS = [
   { id: 'mgrs', label: 'MGRS',             sub: 'Military Grid Reference System — standard tactical format' },
@@ -48,6 +42,7 @@ function formatDMS(lat, lon) {
 }
 
 export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
+  const colors = useColors();
   const positions = useMemo(() => {
     if (!location) return null;
     const { lat, lon } = location;
@@ -60,32 +55,32 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
   }, [location]);
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      <Text style={styles.hint}>SELECT COORDINATE FORMAT — APPLIES TO MAIN GRID DISPLAY</Text>
+    <ScrollView style={[styles.root, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.hint, { color: colors.text3 }]}>SELECT COORDINATE FORMAT — APPLIES TO MAIN GRID DISPLAY</Text>
 
       {FORMATS.map(f => {
         const isActive = coordFormat === f.id;
         return (
           <TouchableOpacity
             key={f.id}
-            style={[styles.card, isActive && styles.cardActive]}
+            style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }, isActive && { borderColor: colors.text2, backgroundColor: colors.text5 }]}
             onPress={() => setCoordFormat(f.id)}
             activeOpacity={0.7}
           >
             <View style={styles.cardTop}>
               <View>
-                <Text style={styles.cardTitle}>{f.label}</Text>
-                <Text style={styles.cardSub}>{f.sub}</Text>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>{f.label}</Text>
+                <Text style={[styles.cardSub, { color: colors.text3 }]}>{f.sub}</Text>
               </View>
-              <View style={[styles.radio, isActive && styles.radioActive]}>
-                {isActive && <View style={styles.radioDot} />}
+              <View style={[styles.radio, { borderColor: colors.border }, isActive && { borderColor: colors.text }]}>
+                {isActive && <View style={[styles.radioDot, { backgroundColor: colors.text }]} />}
               </View>
             </View>
 
             {positions && isActive && (
-              <View style={styles.preview}>
-                <Text style={styles.previewLabel}>YOUR POSITION</Text>
-                <Text style={styles.previewValue}>{positions[f.id]}</Text>
+              <View style={[styles.preview, { borderTopColor: colors.border2 }]}>
+                <Text style={[styles.previewLabel, { color: colors.border }]}>YOUR POSITION</Text>
+                <Text style={[styles.previewValue, { color: colors.text }]}>{positions[f.id]}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -93,26 +88,24 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
       })}
 
       {!location && (
-        <Text style={styles.noFix}>NO GPS FIX — ACQUIRE POSITION TO SEE FORMAT PREVIEW</Text>
+        <Text style={[styles.noFix, { color: colors.text4 }]}>NO GPS FIX — ACQUIRE POSITION TO SEE FORMAT PREVIEW</Text>
       )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: BG },
+  root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
-  hint: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2, color: RED3, marginBottom: 12 },
-  card: { borderWidth: 1, borderColor: RED3, backgroundColor: '#0D0000', marginBottom: 8, padding: 14 },
-  cardActive: { borderColor: RED2, backgroundColor: RED5 },
+  hint: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2, marginBottom: 12 },
+  card: { borderWidth: 1, marginBottom: 8, padding: 14 },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardTitle: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', letterSpacing: 3, color: RED, marginBottom: 3 },
-  cardSub: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 1, color: RED3 },
-  radio: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, borderColor: RED3, alignItems: 'center', justifyContent: 'center' },
-  radioActive: { borderColor: RED },
-  radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: RED },
-  preview: { marginTop: 10, borderTopWidth: 1, borderTopColor: RED4, paddingTop: 10 },
-  previewLabel: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2, color: RED3, marginBottom: 4 },
-  previewValue: { fontFamily: 'monospace', fontSize: 14, fontWeight: '700', letterSpacing: 2, color: RED, lineHeight: 22 },
-  noFix: { fontFamily: 'monospace', fontSize: 9, color: RED4, textAlign: 'center', marginTop: 20, letterSpacing: 2 },
+  cardTitle: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', letterSpacing: 3, marginBottom: 3 },
+  cardSub: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 1 },
+  radio: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  radioDot: { width: 8, height: 8, borderRadius: 4 },
+  preview: { marginTop: 10, borderTopWidth: 1, paddingTop: 10 },
+  previewLabel: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2, marginBottom: 4 },
+  previewValue: { fontFamily: 'monospace', fontSize: 14, fontWeight: '700', letterSpacing: 2, lineHeight: 22 },
+  noFix: { fontFamily: 'monospace', fontSize: 9, textAlign: 'center', marginTop: 20, letterSpacing: 2 },
 });

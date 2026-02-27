@@ -3,18 +3,17 @@
  * Free: SALUTE, 9-Line MEDEVAC, SPOT
  * Pro: ICS 201 (Incident Command), ANGUS (Artillery), Custom template
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, Clipboard, Alert,
+  TextInput, Alert, LayoutAnimation, UIManager, Platform, AccessibilityInfo,
 } from 'react-native';
+import * as ExpoClipboard from 'expo-clipboard';
+import { useColors } from '../utils/ThemeContext';
 
-const RED  = '#CC0000';
-const RED2 = '#990000';
-const RED3 = '#660000';
-const RED4 = '#330000';
-const RED5 = '#1A0000';
-const BG   = '#0A0000';
+if (Platform.OS === 'android') {
+  UIManager.setLayoutAnimationEnabledExperimental?.(true);
+}
 
 // ─── REPORT DEFINITIONS ──────────────────────────────────────────────────────
 const SALUTE_FIELDS = [
@@ -69,12 +68,24 @@ const ANGUS_FIELDS = [
   { key: 'clearance', label: 'CLEARANCE',            placeholder: 'Auth callsign / code word' },
 ];
 
+const CASEVAC_FIELDS = [
+  { key: 'grid',      label: 'PICKUP GRID',           placeholder: 'MGRS of pickup site', autoFill: 'grid' },
+  { key: 'callsign',  label: 'CALLSIGN / FREQ',       placeholder: 'Requesting callsign & frequency' },
+  { key: 'casualties', label: 'CASUALTIES',            placeholder: 'Number and type (ambulatory/litter)' },
+  { key: 'injuries',  label: 'INJURIES / ILLNESS',     placeholder: 'Nature of injuries' },
+  { key: 'security',  label: 'SECURITY AT PICKUP',     placeholder: 'Clear / Hostile / Unknown' },
+  { key: 'marking',   label: 'MARKING',                placeholder: 'Panels / Smoke / None' },
+  { key: 'equip',     label: 'EQUIPMENT NEEDED',       placeholder: 'Ventilator / Litter / None' },
+  { key: 'time',      label: 'TIME OF INJURY',         placeholder: 'DTG', autoFill: 'datetime' },
+];
+
 const REPORTS = [
-  { id: 'salute',  label: 'SALUTE',          sub: 'Enemy contact report',       fields: SALUTE_FIELDS,  pro: false },
-  { id: 'medevac', label: '9-LINE MEDEVAC',  sub: 'Medical evacuation request', fields: MEDEVAC_FIELDS, pro: false },
-  { id: 'spot',    label: 'SPOT REPORT',     sub: 'Observation report',         fields: SPOT_FIELDS,    pro: false },
-  { id: 'ics201',  label: 'ICS 201',         sub: 'Incident command briefing',  fields: ICS201_FIELDS,  pro: true  },
-  { id: 'angus',   label: 'ANGUS / CFF',     sub: 'Call for fire — artillery',  fields: ANGUS_FIELDS,   pro: true  },
+  { id: 'salute',   label: 'SALUTE',          sub: 'Enemy contact report',       fields: SALUTE_FIELDS,   pro: false },
+  { id: 'medevac',  label: '9-LINE MEDEVAC',  sub: 'Medical evacuation request', fields: MEDEVAC_FIELDS,  pro: false },
+  { id: 'spot',     label: 'SPOT REPORT',     sub: 'Observation report',         fields: SPOT_FIELDS,     pro: false },
+  { id: 'ics201',   label: 'ICS 201',         sub: 'Incident command briefing',  fields: ICS201_FIELDS,   pro: true  },
+  { id: 'casevac',  label: 'CASEVAC',         sub: 'Casualty evacuation request', fields: CASEVAC_FIELDS, pro: true  },
+  { id: 'angus',    label: 'ANGUS / CFF',     sub: 'Call for fire — artillery',  fields: ANGUS_FIELDS,    pro: true  },
 ];
 
 function getNowDTG() {
@@ -93,6 +104,7 @@ function buildReport(reportId, fields, values) {
 }
 
 function ReportCard({ report, mgrs, isPro, onShowProGate }) {
+  const colors = useColors();
   const initVals = useCallback(() => {
     const v = {};
     report.fields.forEach(f => {
@@ -105,56 +117,87 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
   const [vals, setVals]   = useState(initVals);
   const isLocked = report.pro && !isPro;
 
+  // Keep auto-fill fields updated when GPS position changes
+  useEffect(() => {
+    setVals(prev => {
+      const updated = { ...prev };
+      let changed = false;
+      report.fields.forEach(f => {
+        if (f.autoFill === 'grid') {
+          const newVal = mgrs || '';
+          if (updated[f.key] !== newVal) { updated[f.key] = newVal; changed = true; }
+        }
+      });
+      return changed ? updated : prev;
+    });
+  }, [mgrs, report.fields]);
+
   const handleOpen = () => {
     if (isLocked) { onShowProGate(report.label); return; }
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setOpen(o => !o);
   };
 
   const copy = () => {
     const text = buildReport(report.id, report.fields, vals);
-    Clipboard.setString(text);
+    ExpoClipboard.setStringAsync(text).catch(() => {});
+    AccessibilityInfo.announceForAccessibility('Report copied to clipboard');
     Alert.alert('Copied', 'Report copied to clipboard.');
   };
 
-  const clear = () => setVals(initVals());
+  const clear = () => {
+    Alert.alert('Clear Report?', 'Reset all fields to defaults?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Clear', style: 'destructive', onPress: () => setVals(initVals()) },
+    ]);
+  };
 
   return (
-    <View style={[styles.card, open && styles.cardOpen, isLocked && styles.cardLocked]}>
-      <TouchableOpacity style={styles.cardHeader} onPress={handleOpen} activeOpacity={0.7}>
+    <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }, open && { borderColor: colors.text2 }, isLocked && styles.cardLocked]}>
+      <TouchableOpacity
+        style={styles.cardHeader}
+        onPress={handleOpen}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open, disabled: isLocked }}
+        accessibilityLabel={`${report.label} report. ${report.sub}${isLocked ? '. Pro feature, locked.' : ''}`}
+        accessibilityHint={isLocked ? 'Double tap to view upgrade options' : (open ? 'Double tap to collapse' : 'Double tap to expand')}
+      >
         <View>
           <View style={styles.labelRow}>
-            <Text style={styles.cardTitle}>{report.label}</Text>
-            {isLocked && <Text style={styles.proBadge}>PRO</Text>}
+            <Text style={[styles.cardTitle, { color: colors.text }]}>{report.label}</Text>
+            {isLocked && <Text style={[styles.proBadge, { color: colors.bg, backgroundColor: colors.text }]} importantForAccessibility="no">PRO</Text>}
           </View>
-          <Text style={styles.cardSub}>{report.sub}</Text>
+          <Text style={[styles.cardSub, { color: colors.text3 }]}>{report.sub}</Text>
         </View>
-        <Text style={[styles.chevron, open && styles.chevronOpen]}>▶</Text>
+        <Text style={[styles.chevron, { color: colors.border }, open && { transform: [{ rotate: '90deg' }] }]} importantForAccessibility="no">▶</Text>
       </TouchableOpacity>
 
       {open && (
-        <View style={styles.cardBody}>
+        <View style={[styles.cardBody, { borderTopColor: colors.border2 }]}>
           {report.fields.map(f => {
             const isAuto = !!f.autoFill;
             return (
               <View key={f.key} style={styles.fieldBlock}>
-                <Text style={styles.fieldLabel}>{f.label}</Text>
+                <Text style={[styles.fieldLabel, { color: colors.border }]}>{f.label}</Text>
                 <TextInput
-                  style={[styles.fieldInput, isAuto && styles.fieldInputAuto]}
+                  style={[styles.fieldInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }, isAuto && { borderColor: colors.text2 }]}
                   placeholder={f.placeholder}
-                  placeholderTextColor={RED3}
+                  placeholderTextColor={colors.border}
                   value={vals[f.key]}
                   onChangeText={t => setVals(v => ({ ...v, [f.key]: t }))}
                   multiline={f.key === 'situation' || f.key === 'objectives'}
+                  accessibilityLabel={f.label}
                 />
               </View>
             );
           })}
           <View style={styles.reportBtns}>
-            <TouchableOpacity style={styles.copyBtn} onPress={copy}>
-              <Text style={styles.copyBtnText}>COPY REPORT</Text>
+            <TouchableOpacity style={[styles.copyBtn, { backgroundColor: colors.border }]} onPress={copy} accessibilityRole="button" accessibilityLabel="Copy report to clipboard">
+              <Text style={[styles.copyBtnText, { color: colors.text }]}>COPY REPORT</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.clearBtn} onPress={clear}>
-              <Text style={styles.clearBtnText}>CLEAR</Text>
+            <TouchableOpacity style={[styles.clearBtn, { borderColor: colors.border }]} onPress={clear} accessibilityRole="button" accessibilityLabel="Clear all report fields">
+              <Text style={[styles.clearBtnText, { color: colors.border }]}>CLEAR</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -164,16 +207,17 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
 }
 
 export function ReportScreen({ mgrs, isPro, onShowProGate }) {
+  const colors = useColors();
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.root, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.title}>REPORTS</Text>
-        <Text style={styles.subtitle}>RADIO-READY TEMPLATES</Text>
+        <Text style={[styles.title, { color: colors.text }]}>REPORTS</Text>
+        <Text style={[styles.subtitle, { color: colors.text3 }]}>RADIO-READY TEMPLATES</Text>
       </View>
 
       {mgrs && (
-        <View style={styles.autoBanner}>
-          <Text style={styles.autoText}>AUTO-FILLING GRID: {mgrs}</Text>
+        <View style={[styles.autoBanner, { borderColor: colors.border, backgroundColor: colors.text5 }]}>
+          <Text style={[styles.autoText, { color: colors.text2 }]}>AUTO-FILLING GRID: {mgrs}</Text>
         </View>
       )}
 
@@ -187,48 +231,45 @@ export function ReportScreen({ mgrs, isPro, onShowProGate }) {
         />
       ))}
 
-      <Text style={styles.footer}>REPORTS ARE EPHEMERAL · CLEARED ON EXIT · NO DATA STORED</Text>
+      <Text style={[styles.footer, { color: colors.text4 }]}>REPORTS ARE EPHEMERAL · CLEARED ON EXIT · NO DATA STORED</Text>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: BG },
+  root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  title: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', letterSpacing: 4, color: RED },
-  subtitle: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2, color: RED3 },
+  title: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', letterSpacing: 4 },
+  subtitle: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2 },
   autoBanner: {
-    borderWidth: 1, borderColor: RED3, backgroundColor: RED5,
+    borderWidth: 1,
     paddingHorizontal: 12, paddingVertical: 7, marginBottom: 12,
   },
-  autoText: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 1, color: RED2 },
-  card: { marginBottom: 10, borderWidth: 1, borderColor: RED3, backgroundColor: '#0D0000' },
-  cardOpen: { borderColor: RED2 },
+  autoText: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 1 },
+  card: { marginBottom: 10, borderWidth: 1 },
   cardLocked: { opacity: 0.7 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  cardTitle: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', letterSpacing: 2, color: RED },
+  cardTitle: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', letterSpacing: 2 },
   proBadge: {
-    fontFamily: 'monospace', fontSize: 8, color: BG,
-    backgroundColor: RED, paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 2,
+    fontFamily: 'monospace', fontSize: 8,
+    paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 2,
   },
-  cardSub: { fontFamily: 'monospace', fontSize: 9, color: RED3, letterSpacing: 1 },
-  chevron: { fontFamily: 'monospace', fontSize: 10, color: RED3 },
-  chevronOpen: { transform: [{ rotate: '90deg' }] },
-  cardBody: { paddingHorizontal: 14, paddingBottom: 14, borderTopWidth: 1, borderTopColor: RED4 },
+  cardSub: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 1 },
+  chevron: { fontFamily: 'monospace', fontSize: 10 },
+  cardBody: { paddingHorizontal: 14, paddingBottom: 14, borderTopWidth: 1 },
   fieldBlock: { marginTop: 10 },
-  fieldLabel: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2, color: RED3, marginBottom: 4 },
+  fieldLabel: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2, marginBottom: 4 },
   fieldInput: {
-    borderWidth: 1, borderColor: RED3, backgroundColor: '#110000',
-    color: RED, fontFamily: 'monospace', fontSize: 13,
+    borderWidth: 1,
+    fontFamily: 'monospace', fontSize: 13,
     paddingHorizontal: 10, paddingVertical: 8,
   },
-  fieldInputAuto: { borderColor: RED2 },
   reportBtns: { flexDirection: 'row', gap: 8, marginTop: 14 },
-  copyBtn: { flex: 2, backgroundColor: RED3, paddingVertical: 11, alignItems: 'center' },
-  copyBtnText: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', color: RED, letterSpacing: 3 },
-  clearBtn: { flex: 1, borderWidth: 1, borderColor: RED3, paddingVertical: 11, alignItems: 'center' },
-  clearBtnText: { fontFamily: 'monospace', fontSize: 10, color: RED3, letterSpacing: 3 },
-  footer: { fontFamily: 'monospace', fontSize: 7, color: RED4, textAlign: 'center', marginTop: 20, letterSpacing: 1 },
+  copyBtn: { flex: 2, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
+  copyBtnText: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', letterSpacing: 3 },
+  clearBtn: { flex: 1, borderWidth: 1, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
+  clearBtnText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3 },
+  footer: { fontFamily: 'monospace', fontSize: 9, textAlign: 'center', marginTop: 20, letterSpacing: 1 },
 });

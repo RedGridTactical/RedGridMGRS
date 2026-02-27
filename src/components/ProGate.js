@@ -7,13 +7,7 @@ import {
   View, Text, StyleSheet, Modal, TouchableOpacity,
   ActivityIndicator, ScrollView,
 } from 'react-native';
-
-const RED  = '#CC0000';
-const RED2 = '#990000';
-const RED3 = '#660000';
-const RED4 = '#330000';
-const RED5 = '#1A0000';
-const BG   = '#0A0000';
+import { useColors } from '../utils/ThemeContext';
 
 const PRO_FEATURES = [
   { icon: '📍', label: 'Saved Waypoint Lists', sub: 'Save named patrol routes, OBJs, and rally points' },
@@ -22,6 +16,7 @@ const PRO_FEATURES = [
 ];
 
 export function ProGate({ visible, onClose, featureName, product, isPurchasing, onPurchase, onRestore }) {
+  const colors = useColors();
   const priceStr = product?.priceString ?? '$4.99';
 
   return (
@@ -32,64 +27,67 @@ export function ProGate({ visible, onClose, featureName, product, isPurchasing, 
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.modal}>
+        <View style={[styles.modal, { backgroundColor: colors.card, borderColor: colors.text2 }]} accessibilityViewIsModal={true}>
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.badge}>PRO</Text>
-            <Text style={styles.title}>REDGRID PRO</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.badge, { color: colors.bg, backgroundColor: colors.text }]}>PRO</Text>
+            <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">RED GRID PRO</Text>
+            <Text style={[styles.subtitle, { color: colors.text3 }]}>
               {featureName
                 ? `${featureName} is a Pro feature`
-                : 'Unlock the full RedGrid experience'}
+                : 'Unlock the full Red Grid experience'}
             </Text>
           </View>
 
           {/* Feature list */}
           <ScrollView style={styles.features} showsVerticalScrollIndicator={false}>
             {PRO_FEATURES.map((f, i) => (
-              <View key={i} style={styles.featureRow}>
-                <Text style={styles.featureIcon}>{f.icon}</Text>
+              <View key={i} style={[styles.featureRow, { borderBottomColor: colors.text5 }]}>
+                <Text style={styles.featureIcon} importantForAccessibility="no" accessibilityElementsHidden={true}>{f.icon}</Text>
                 <View style={styles.featureText}>
-                  <Text style={styles.featureLabel}>{f.label}</Text>
-                  <Text style={styles.featureSub}>{f.sub}</Text>
+                  <Text style={[styles.featureLabel, { color: colors.text }]}>{f.label}</Text>
+                  <Text style={[styles.featureSub, { color: colors.text3 }]}>{f.sub}</Text>
                 </View>
               </View>
             ))}
           </ScrollView>
 
           {/* Divider */}
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border2 }]} />
 
           {/* Price */}
-          <Text style={styles.price}>{priceStr}</Text>
-          <Text style={styles.priceSub}>ONE-TIME PURCHASE · NO SUBSCRIPTION · NO ADS</Text>
+          <Text style={[styles.price, { color: colors.text }]}>{priceStr}</Text>
+          <Text style={[styles.priceSub, { color: colors.text3 }]}>ONE-TIME PURCHASE · NO SUBSCRIPTION · NO ADS</Text>
 
           {/* Purchase button */}
           <TouchableOpacity
-            style={[styles.purchaseBtn, isPurchasing && styles.purchaseBtnDisabled]}
+            style={[styles.purchaseBtn, { backgroundColor: colors.text }, isPurchasing && { backgroundColor: colors.border }]}
             onPress={onPurchase}
             disabled={isPurchasing}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={`Unlock Red Grid Pro for ${priceStr}`}
+            accessibilityState={{ disabled: isPurchasing }}
           >
             {isPurchasing
-              ? <ActivityIndicator color={BG} />
-              : <Text style={styles.purchaseBtnText}>UNLOCK REDGRID PRO</Text>
+              ? <ActivityIndicator color={colors.bg} />
+              : <Text style={[styles.purchaseBtnText, { color: colors.bg }]}>UNLOCK RED GRID PRO</Text>
             }
           </TouchableOpacity>
 
           {/* Restore */}
-          <TouchableOpacity style={styles.restoreBtn} onPress={onRestore} disabled={isPurchasing}>
-            <Text style={styles.restoreText}>RESTORE PREVIOUS PURCHASE</Text>
+          <TouchableOpacity style={styles.restoreBtn} onPress={onRestore} disabled={isPurchasing} accessibilityRole="button" accessibilityLabel="Restore previous purchase">
+            <Text style={[styles.restoreText, { color: colors.text3 }]}>RESTORE PREVIOUS PURCHASE</Text>
           </TouchableOpacity>
 
           {/* Close */}
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
-            <Text style={styles.closeText}>NOT NOW</Text>
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close, not now">
+            <Text style={[styles.closeText, { color: colors.text4 }]}>NOT NOW</Text>
           </TouchableOpacity>
 
           {/* Legal */}
-          <Text style={styles.legal}>
+          <Text style={[styles.legal, { color: colors.text4 }]}>
             Payment charged to your App Store / Google Play account at confirmation.
             No recurring charges. No subscription.
           </Text>
@@ -111,60 +109,57 @@ const styles = StyleSheet.create({
   modal: {
     width: '100%',
     maxWidth: 380,
-    backgroundColor: '#0D0000',
     borderWidth: 1,
-    borderColor: RED2,
     padding: 24,
   },
   header: { alignItems: 'center', marginBottom: 20 },
   badge: {
     fontFamily: 'monospace', fontSize: 10, letterSpacing: 6,
-    color: BG, backgroundColor: RED, paddingHorizontal: 10, paddingVertical: 3,
+    paddingHorizontal: 10, paddingVertical: 3,
     marginBottom: 10,
   },
   title: {
     fontFamily: 'monospace', fontSize: 22, fontWeight: '700',
-    letterSpacing: 6, color: RED, marginBottom: 6,
+    letterSpacing: 6, marginBottom: 6,
   },
   subtitle: {
-    fontFamily: 'monospace', fontSize: 10, color: RED3,
+    fontFamily: 'monospace', fontSize: 10,
     textAlign: 'center', letterSpacing: 1,
   },
   features: { maxHeight: 180, marginBottom: 16 },
   featureRow: {
     flexDirection: 'row', alignItems: 'flex-start',
-    paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: RED5,
+    paddingVertical: 8, borderBottomWidth: 1,
   },
   featureIcon: { fontSize: 18, marginRight: 12, marginTop: 2 },
   featureText: { flex: 1 },
   featureLabel: {
     fontFamily: 'monospace', fontSize: 11, fontWeight: '700',
-    color: RED, letterSpacing: 1, marginBottom: 2,
+    letterSpacing: 1, marginBottom: 2,
   },
-  featureSub: { fontFamily: 'monospace', fontSize: 9, color: RED3, letterSpacing: 0.5 },
-  divider: { height: 1, backgroundColor: RED4, marginVertical: 16 },
+  featureSub: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 0.5 },
+  divider: { height: 1, marginVertical: 16 },
   price: {
     fontFamily: 'monospace', fontSize: 28, fontWeight: '700',
-    color: RED, textAlign: 'center', letterSpacing: 4, marginBottom: 4,
+    textAlign: 'center', letterSpacing: 4, marginBottom: 4,
   },
   priceSub: {
-    fontFamily: 'monospace', fontSize: 8, color: RED3,
+    fontFamily: 'monospace', fontSize: 8,
     textAlign: 'center', letterSpacing: 2, marginBottom: 20,
   },
   purchaseBtn: {
-    backgroundColor: RED, paddingVertical: 14, alignItems: 'center', marginBottom: 10,
+    paddingVertical: 14, alignItems: 'center', marginBottom: 10, minHeight: 44,
   },
-  purchaseBtnDisabled: { backgroundColor: RED3 },
   purchaseBtnText: {
     fontFamily: 'monospace', fontSize: 12, fontWeight: '700',
-    color: BG, letterSpacing: 4,
+    letterSpacing: 4,
   },
-  restoreBtn: { paddingVertical: 10, alignItems: 'center', marginBottom: 4 },
-  restoreText: { fontFamily: 'monospace', fontSize: 9, color: RED3, letterSpacing: 2 },
-  closeBtn: { paddingVertical: 8, alignItems: 'center', marginBottom: 12 },
-  closeText: { fontFamily: 'monospace', fontSize: 9, color: RED4, letterSpacing: 3 },
+  restoreBtn: { paddingVertical: 10, alignItems: 'center', marginBottom: 4, minHeight: 44 },
+  restoreText: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2 },
+  closeBtn: { paddingVertical: 8, alignItems: 'center', marginBottom: 12, minHeight: 44 },
+  closeText: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 3 },
   legal: {
-    fontFamily: 'monospace', fontSize: 7, color: RED4,
+    fontFamily: 'monospace', fontSize: 7,
     textAlign: 'center', letterSpacing: 0.5, lineHeight: 12,
   },
 });

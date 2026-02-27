@@ -1,6 +1,6 @@
-![RedGrid Tactical](docs/images/banner.png)
+![Red Grid Tactical](docs/images/banner.png)
 
-# RedGrid Tactical
+# Red Grid Tactical
 
 [![Download on App Store](https://img.shields.io/badge/App%20Store-Coming%20Soon-8B0000?logo=apple)](https://github.com/RedGridTactical/RedGridMGRS/releases/latest)
 [![Download APK](https://img.shields.io/github/v/release/RedGridTactical/RedGridMGRS?label=Android%20APK&color=CC0000&logo=android)](https://github.com/RedGridTactical/RedGridMGRS/releases/latest)
@@ -30,7 +30,7 @@ Zero network. Zero tracking. Open source.
 - **Red-light mode** — red-on-black display, no white light emission
 - **Landscape support** — two-column layout
 
-## RedGrid Pro — $4.99 one-time
+## Red Grid Pro — $4.99 one-time
 
 - 📍 **Saved Waypoint Lists** — save named patrol routes, OBJs, rally points — persisted locally on device
 - 📋 **Additional Report Templates** — ICS 201 Incident Command, CASEVAC
@@ -62,7 +62,7 @@ A paid one-time App Store version is in development. No subscription. No ads.
 
 ## Organizational & Commercial Use
 
-Organizations deploying RedGrid Tactical across multiple devices or integrating it into a paid product require a commercial license.
+Organizations deploying Red Grid Tactical across multiple devices or integrating it into a paid product require a commercial license.
 
 **Contact:** redgridtactical@gmail.com
 
@@ -88,7 +88,7 @@ Individual personal use is always free.
 | Device identifiers | ❌ Never | ❌ Never | ❌ Never |
 
 No ad networks. No analytics. No crash reporting. No third-party SDKs.
-In-app purchases are processed by Apple or Google — RedGrid Tactical never sees your payment details.
+In-app purchases are processed by Apple or Google — Red Grid Tactical never sees your payment details.
 Full details in [PRIVACY.md](PRIVACY.md).
 
 ---
