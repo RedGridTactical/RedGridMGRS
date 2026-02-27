@@ -1,11 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import * as Location from 'expo-location';
+
+// Defensive lazy-load expo-location to prevent SIGABRT if native module unavailable
+let Location = null;
+try {
+  Location = require('expo-location');
+} catch (e) {
+  // expo-location not available — location features will degrade gracefully
+}
 
 /**
  * useLocation — Real-time GPS hook (HARDENED).
  * Data is ephemeral: lives only in React state, never written to disk or network.
  *
  * CRITICAL HARDENING:
+ *   - expo-location loaded defensively (lazy require with try/catch)
  *   - All Location API calls wrapped in try/catch with mounted check
  *   - Permission requests have explicit error handling
  *   - getCurrentPositionAsync guarded with timeout
