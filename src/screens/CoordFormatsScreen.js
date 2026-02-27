@@ -44,14 +44,18 @@ function formatDMS(lat, lon) {
 export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
   const colors = useColors();
   const positions = useMemo(() => {
-    if (!location) return null;
+    if (!location || typeof location.lat !== 'number' || typeof location.lon !== 'number') return null;
     const { lat, lon } = location;
-    return {
-      mgrs: formatMGRS(toMGRS(lat, lon, 5)),
-      utm:  toUTM(lat, lon),
-      dd:   `${lat.toFixed(6)}°\n${lon.toFixed(6)}°`,
-      dms:  formatDMS(lat, lon),
-    };
+    try {
+      return {
+        mgrs: formatMGRS(toMGRS(lat, lon, 5)),
+        utm:  toUTM(lat, lon),
+        dd:   `${lat.toFixed(6)}°\n${lon.toFixed(6)}°`,
+        dms:  formatDMS(lat, lon),
+      };
+    } catch {
+      return null;
+    }
   }, [location]);
 
   return (
