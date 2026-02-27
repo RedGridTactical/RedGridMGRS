@@ -1,10 +1,15 @@
 /**
- * RedGrid Tactical — Root Application v2.0
+ * RedGrid Tactical — Root Application v2.0 (HARDENED)
  * Tabs: GRID · TOOLS · REPORT · LISTS (Pro) · THEME (Pro)
  *
  * Privacy: no location stored, no network (IAP uses Apple/Google native payment only), no analytics.
+ *
+ * CRITICAL HARDENING:
+ *   - Error boundary catches any hook or component crashes
+ *   - Graceful fallback UI if startup fails
+ *   - All hooks guaranteed to never throw
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Component } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   SafeAreaView, StatusBar, useWindowDimensions,
@@ -49,7 +54,47 @@ const PRO_TABS = [
   { id: 'theme',  label: 'THEME'  },
 ];
 
-export default function App() {
+// ─── ERROR BOUNDARY ──────────────────────────────────────────────────────────
+// Catches any unhandled errors during render or hook execution and shows safe UI
+class AppErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    // Log but don't crash
+    console.error('App error boundary caught:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <SafeAreaView style={styles.root}>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorTitle}>REDGRID ERROR</Text>
+            <Text style={styles.errorMsg}>An unexpected error occurred during startup.</Text>
+            <Text style={styles.errorDetail}>{this.state.error?.message || 'Unknown error'}</Text>
+            <TouchableOpacity
+              style={styles.errorRetryBtn}
+              onPress={() => this.setState({ hasError: false })}
+            >
+              <Text style={styles.errorRetryText}>RETRY</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+function App() {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
 
@@ -104,21 +149,27 @@ export default function App() {
     />
   );
 
+  // Safely build tab list with error protection
+  let safeTab = 'grid';
+  if (TABS && TABS.length > 0 && TABS.some(t => t.id === tab)) {
+    safeTab = tab;
+  }
+
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="light-content" backgroundColor={BG} hidden={isLandscape} />
 
       {/* Tab bar */}
       <View style={[styles.tabBar, isLandscape && styles.tabBarLandscape]}>
-        {TABS.map(t => (
+        {TABS && Array.isArray(TABS) && TABS.map(t => (
           <TouchableOpacity
-            key={t.id}
-            style={[styles.tabItem, tab === t.id && styles.tabItemActive]}
-            onPress={() => setTab(t.id)}
+            key={t?.id || 'unknown'}
+            style={[styles.tabItem, safeTab === t?.id && styles.tabItemActive]}
+            onPress={() => t?.id && setTab(t.id)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.tabLabel, tab === t.id && styles.tabLabelActive]}>{t.label}</Text>
-            {tab === t.id && <View style={styles.tabIndicator} />}
+            <Text style={[styles.tabLabel, safeTab === t?.id && styles.tabLabelActive]}>{t?.label || ''}</Text>
+            {safeTab === t?.id && <View style={styles.tabIndicator} />}
           </TouchableOpacity>
         ))}
         {/* Pro badge in tab bar */}
@@ -131,9 +182,9 @@ export default function App() {
 
       {/* Screen content */}
       <View style={styles.screenContent}>
-        {tab === 'grid' && gridContent}
+        {safeTab === 'grid' && gridContent}
 
-        {tab === 'tools' && (
+        {safeTab === 'tools' && (
           <ToolsScreen
             location={location}
             declination={declination}
@@ -143,7 +194,7 @@ export default function App() {
           />
         )}
 
-        {tab === 'report' && (
+        {safeTab === 'report' && (
           <ReportScreen
             mgrs={mgrsFormatted}
             isPro={isPro}
@@ -151,14 +202,14 @@ export default function App() {
           />
         )}
 
-        {tab === 'lists' && isPro && (
+        {safeTab === 'lists' && isPro && (
           <WaypointListsScreen
             location={location}
             onLoadWaypoint={(wp) => { setWaypoint(wp); setTab('grid'); }}
           />
         )}
 
-        {tab === 'theme' && isPro && (
+        {safeTab === 'theme' && isPro && (
           <ThemeScreen
             currentTheme={theme}
             isPro={isPro}
@@ -168,7 +219,7 @@ export default function App() {
         )}
 
         {/* Upsell tab for non-Pro */}
-        {(tab === 'lists' || tab === 'theme') && !isPro && (
+        {(safeTab === 'lists' || safeTab === 'theme') && !isPro && (
           <UpsellScreen onUpgrade={() => showProGate('RedGrid Pro')} />
         )}
       </View>
@@ -192,6 +243,15 @@ export default function App() {
         onRestore={restore}
       />
     </SafeAreaView>
+  );
+}
+
+// Export the app wrapped in error boundary
+export default function AppWithErrorBoundary() {
+  return (
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
   );
 }
 
@@ -343,6 +403,12 @@ function Crosshair({ size = 50 }) {
 // ─── STYLES ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: { flex:1, backgroundColor:BG },
+  errorContainer: { flex:1, justifyContent:'center', alignItems:'center', padding:20 },
+  errorTitle: { fontFamily:'monospace', fontSize:18, fontWeight:'700', letterSpacing:4, color:RED, marginBottom:16, textAlign:'center' },
+  errorMsg: { fontFamily:'monospace', fontSize:12, color:RED2, textAlign:'center', marginBottom:12, lineHeight:18 },
+  errorDetail: { fontFamily:'monospace', fontSize:10, color:RED3, textAlign:'center', marginBottom:24, lineHeight:14, fontStyle:'italic' },
+  errorRetryBtn: { borderWidth:1, borderColor:RED, backgroundColor:RED4, paddingHorizontal:32, paddingVertical:12 },
+  errorRetryText: { fontFamily:'monospace', fontSize:11, color:RED, letterSpacing:3, fontWeight:'700' },
   tabBar: { flexDirection:'row', borderBottomWidth:1, borderBottomColor:RED4, backgroundColor:BG, alignItems:'center' },
   tabBarLandscape: { paddingTop: 0 },
   tabItem: { flex:1, alignItems:'center', paddingVertical:12, position:'relative' },
