@@ -24,7 +24,9 @@ export function SolarTool({ location }) {
 
   const data = body === 'sun' ? sun : moon;
   const az = Math.round(data.azimuth);
-  const alt = body === 'sun' ? Math.round(sun.altitude) : Math.round(moon.altitude);
+  const sunAlt = typeof sun.altitude === 'number' && isFinite(sun.altitude) ? Math.round(sun.altitude) : 0;
+  const moonAlt = typeof moon.altitude === 'number' && isFinite(moon.altitude) ? Math.round(moon.altitude) : 0;
+  const alt = body === 'sun' ? sunAlt : moonAlt;
   const visible = body === 'sun' ? sun.isDay : moon.isUp;
 
   // Rough cardinal from azimuth

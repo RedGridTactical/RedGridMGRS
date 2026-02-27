@@ -101,7 +101,7 @@ function App() {
   const { location, error, isLoading, retry } = useLocation();
   const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme } = useSettings();
   const { isPro, isPurchasing, product, purchase, restore } = useIAP();
-  const themeData = useTheme(theme);
+  const themeData = useTheme(theme || 'red');
 
   const [tab, setTab]               = useState('grid');
   const [waypoint, setWaypoint]     = useState(null);
@@ -205,7 +205,7 @@ function App() {
         {safeTab === 'lists' && isPro && (
           <WaypointListsScreen
             location={location}
-            onLoadWaypoint={(wp) => { setWaypoint(wp); setTab('grid'); }}
+            onSelectWaypoint={(wp) => { setWaypoint(wp); setTab('grid'); }}
           />
         )}
 
