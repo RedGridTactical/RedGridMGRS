@@ -193,7 +193,7 @@ export function ReportScreen({ mgrs, isPro, onShowProGate }) {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  root: { flex: 1, backgroundColor: BG },
   content: { padding: 16, paddingBottom: 40 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   title: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', letterSpacing: 4, color: RED },

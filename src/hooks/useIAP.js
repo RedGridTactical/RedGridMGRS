@@ -76,7 +76,6 @@ export function useIAP() {
     if (!IAPModule) return;
 
     let cancelled = false;
-    let timeoutHandle = null;
 
     const fetchProduct = async () => {
       try {
@@ -84,19 +83,11 @@ export function useIAP() {
           return;
         }
 
-        // Add explicit timeout to prevent native bridge hang
-        const productPromise = IAPModule.getProducts([PRO_PRODUCT_ID]);
-
-        timeoutHandle = setTimeout(() => {
-          cancelled = true;
-        }, 2000); // 2 second timeout
-
         const products = await Promise.race([
-          productPromise,
-          new Promise((_, reject) => {
-            const id = setTimeout(() => reject(new Error('Product fetch timeout')), 2000);
-            timeoutHandle = id;
-          })
+          IAPModule.getProducts([PRO_PRODUCT_ID]),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Product fetch timeout')), 2000)
+          )
         ]);
 
         if (!cancelled && mounted.current && products?.[0]) {
@@ -105,8 +96,6 @@ export function useIAP() {
       } catch (err) {
         // Product fetch failed — ProGate will show fallback price $4.99
         // Do not throw, just silently continue
-      } finally {
-        if (timeoutHandle) clearTimeout(timeoutHandle);
       }
     };
 
@@ -122,7 +111,6 @@ export function useIAP() {
     return () => {
       cancelled = true;
       if (initialDelay) clearTimeout(initialDelay);
-      if (timeoutHandle) clearTimeout(timeoutHandle);
     };
   }, []);
 

@@ -52,7 +52,7 @@ export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate 
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
+  root: { flex: 1, backgroundColor: BG },
   content: { padding: 16, paddingBottom: 40 },
   title: { fontFamily: 'monospace', fontSize: 16, fontWeight: '700', letterSpacing: 4, color: RED, marginBottom: 4 },
   sub: { fontFamily: 'monospace', fontSize: 9, color: RED3, letterSpacing: 1, marginBottom: 20 },

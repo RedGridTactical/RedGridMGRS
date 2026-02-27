@@ -9,10 +9,10 @@ const RED_DIM = '#880000';
  * compact=true: tighter layout for landscape mode (smaller fonts, less padding).
  */
 export function MGRSDisplay({ mgrs, accuracy, altitude, compact = false }) {
-  if (!mgrs) {
+  if (!mgrs || typeof mgrs !== 'string' || mgrs.trim().split(/\s+/).length < 3) {
     return (
       <View style={[styles.container, compact && styles.containerCompact]}>
-        <Text style={styles.acquiring}>ACQUIRING SIGNAL...</Text>
+        <Text style={styles.gzd}>---</Text>
       </View>
     );
   }
