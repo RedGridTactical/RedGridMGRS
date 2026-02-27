@@ -28,5 +28,20 @@
     "@types/react": "~18.3.0",
     "typescript": "~5.3.3"
   },
-  "private": true
+  "private": true,
+  "description": "![RedGrid Tactical](docs/images/banner.png)",
+  "directories": {
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RedGridTactical/RedGridMGRS.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RedGridTactical/RedGridMGRS/issues"
+  },
+  "homepage": "https://github.com/RedGridTactical/RedGridMGRS#readme"
 }
