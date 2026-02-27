@@ -23,6 +23,7 @@ export function backAzimuth(bearing) {
  * Returns { lat, lon, mgrs, mgrsFormatted }
  */
 export function deadReckoning(startLat, startLon, headingDeg, distanceM) {
+  if (!isFinite(distanceM) || distanceM < 0) return null;
   const R = 6371000; // Earth radius metres
   const δ = distanceM / R;
   const θ = headingDeg * DEG;
@@ -67,20 +68,20 @@ export function resection(lat1, lon1, bearing1Deg, lat2, lon2, bearing2Deg) {
     Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2
   ));
 
-  if (Math.abs(δ12) < 1e-10) return null; // same point
+  if (Math.abs(δ12) < 1e-6) return null; // same point
 
   // Initial/final bearings between the two known points
-  const θa = Math.acos((Math.sin(φ2) - Math.sin(φ1) * Math.cos(δ12)) /
-    (Math.sin(δ12) * Math.cos(φ1)));
-  const θb = Math.acos((Math.sin(φ1) - Math.sin(φ2) * Math.cos(δ12)) /
-    (Math.sin(δ12) * Math.cos(φ2)));
+  const θa = Math.acos(Math.max(-1, Math.min(1, (Math.sin(φ2) - Math.sin(φ1) * Math.cos(δ12)) /
+    (Math.sin(δ12) * Math.cos(φ1)))));
+  const θb = Math.acos(Math.max(-1, Math.min(1, (Math.sin(φ1) - Math.sin(φ2) * Math.cos(δ12)) /
+    (Math.sin(δ12) * Math.cos(φ2)))));
 
   const θ12 = Math.sin(λ2 - λ1) > 0 ? θa : (2 * Math.PI - θa);
   const θ21 = Math.sin(λ2 - λ1) > 0 ? (2 * Math.PI - θb) : θb;
 
   const α1 = θ13 - θ12; // angle at pt1
   const α2 = θ21 - θ23; // angle at pt2
-  const α3 = Math.acos(-Math.cos(α1) * Math.cos(α2) + Math.sin(α1) * Math.sin(α2) * Math.cos(δ12));
+  const α3 = Math.acos(Math.max(-1, Math.min(1, -Math.cos(α1) * Math.cos(α2) + Math.sin(α1) * Math.sin(α2) * Math.cos(δ12))));
 
   const δ13 = Math.atan2(
     Math.sin(δ12) * Math.sin(α1) * Math.sin(α2),
@@ -197,8 +198,8 @@ export function lunarBearing(date, lat, lon) {
   const n = JD - 2451545.0;
   // Simplified lunar position
   const L = (218.316 + 13.176396 * n) % 360;
-  const M = (134.963 + 13.064993 * n) % 360 * DEG;
-  const F = (93.272 + 13.229350 * n) % 360 * DEG;
+  const M = ((134.963 + 13.064993 * n) % 360) * DEG;
+  const F = ((93.272 + 13.229350 * n) % 360) * DEG;
   const λ = (L + 6.289 * Math.sin(M)) * DEG;
   const β = (5.128 * Math.sin(F)) * DEG;
   const ε = (23.439 - 0.0000004 * n) * DEG;
