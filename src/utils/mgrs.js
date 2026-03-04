@@ -123,6 +123,7 @@ function utmToMGRS(easting, northing, zoneNum, zoneLetter, precision = 5) {
  */
 export function toMGRS(lat, lon, precision = 5) {
   try {
+    if (lat == null || lon == null || isNaN(lat) || isNaN(lon)) return 'ERROR';
     if (lat < -80 || lat > 84) return 'OUT OF RANGE';
     const { easting, northing, zoneNum, zoneLetter } = latLonToUTM(lat, lon);
     return utmToMGRS(easting, northing, zoneNum, zoneLetter, precision);

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { parseMGRSToLatLon } from '../utils/mgrs';
 import { useColors } from '../utils/ThemeContext';
+import { notifySuccess, notifyWarning } from '../utils/haptics';
 
 export function WaypointModal({ visible, onClose, onSetWaypoint, currentLocation }) {
   const colors = useColors();
@@ -22,17 +23,17 @@ export function WaypointModal({ visible, onClose, onSetWaypoint, currentLocation
 
   const handleSubmit = () => {
     const cleaned = mgrsInput.replace(/\s+/g, '').toUpperCase();
-    if (cleaned.length < 6) { setError('INVALID MGRS — ENTER FULL GRID'); return; }
+    if (cleaned.length < 6) { notifyWarning(); setError('INVALID MGRS — ENTER FULL GRID'); return; }
     const parsed = parseMGRSToLatLon(cleaned);
-    if (!parsed) { setError('COULD NOT PARSE MGRS COORDINATE'); return; }
+    if (!parsed) { notifyWarning(); setError('COULD NOT PARSE MGRS COORDINATE'); return; }
     onSetWaypoint({ lat: parsed.lat, lon: parsed.lon, mgrs: cleaned, label: label.trim().toUpperCase() || 'WAYPOINT' });
-    reset(); onClose();
+    notifySuccess(); reset(); onClose();
   };
 
   const handleMark = () => {
-    if (!currentLocation) { setError('NO FIX — WAIT FOR GPS SIGNAL'); return; }
+    if (!currentLocation) { notifyWarning(); setError('NO FIX — WAIT FOR GPS SIGNAL'); return; }
     onSetWaypoint({ lat: currentLocation.lat, lon: currentLocation.lon, mgrs: '', label: label.trim().toUpperCase() || 'MARK' });
-    reset(); onClose();
+    notifySuccess(); reset(); onClose();
   };
 
   return (
