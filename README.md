@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-8B0000)](LICENSE)
 [![No Tracking](https://img.shields.io/badge/Tracking-None-CC0000)](PRIVACY.md)
 
-The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid Tactical puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for free. No network required. No data collected. Open source.
+The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid Tactical puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for $3.99. No network required. No data collected. Open source.
 
 ---
 
@@ -52,12 +52,17 @@ Generate formatted reports ready to transmit over any net:
 - CASEVAC request
 - ANGUS/CFF fire mission
 
-## Red Grid Pro — $9.99 one-time
+## Pricing
 
+### Standard — $3.99
+Live MGRS display, 1 theme, basic tools, SALUTE report, 1 waypoint.
+
+### Pro Upgrade — $9.99 (one-time in-app purchase)
 - **Saved Waypoint Lists** — patrol routes, OBJs, rally points, persisted on device
-- **All 6 Report Templates** — free tier includes SALUTE only
+- **All 6 Report Templates** — Standard includes SALUTE only
 - **NATO Voice Readout** — hands-free grid calls using phonetic alphabet
 - **4 Display Themes** — red lens, NVG green, day white, blue force
+- **Unlimited Waypoints** — no storage limits
 
 No subscription. No recurring charges. One purchase, permanent unlock.
 
@@ -66,10 +71,10 @@ No subscription. No recurring charges. One purchase, permanent unlock.
 ## Install
 
 ### iOS
-[App Store](https://apps.apple.com/app/id6759629554) — free with optional $9.99 Pro unlock.
+[App Store](https://apps.apple.com/app/id6759629554) — $3.99 with optional $9.99 Pro upgrade.
 
 ### Android
-[Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) — free with optional $9.99 Pro unlock.
+[Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) — $3.99 with optional $9.99 Pro upgrade.
 
 ### Build from Source
 
@@ -80,7 +85,7 @@ npm install
 npx expo start
 ```
 
-All free features work from source. Pro features require a valid purchase through Apple or Google.
+Standard features work from source. Pro features require a valid purchase through Apple or Google.
 
 ---
 
@@ -89,7 +94,7 @@ All free features work from source. Pro features require a valid purchase throug
 | Data | Collected | Stored | Transmitted |
 |------|-----------|--------|-------------|
 | GPS location | In memory only | Never | Never |
-| Waypoints (free) | In memory, cleared on exit | Never | Never |
+| Waypoints (Standard) | In memory, cleared on exit | Never | Never |
 | Waypoint lists (Pro) | On device only | Local only | Never |
 | Settings (pace/declination/theme) | On device only | Local only | Never |
 | Device identifiers | Never | Never | Never |
@@ -104,6 +109,35 @@ Full policy: [Privacy Policy](https://redgridtactical.github.io/RedGridMGRS/priv
 ## Built For
 
 Military personnel, search and rescue teams, law enforcement, wildland firefighters, first responders, hunters, and backcountry navigators who depend on accurate grid coordinates in austere environments. Whether you trained on a DAGR or a lensatic compass, Red Grid speaks your language.
+
+---
+
+## Roadmap
+
+### v2.1 — Polish (Spring 2026)
+- Wire coordinate format selector to navigation
+- OLED true black display mode
+- Typography refinement (SF Pro / Roboto Mono)
+- Refreshed app icon
+- One-hand usability audit
+- Smooth tab transitions
+
+### v2.5 — Pro Features (Summer 2026)
+- StandBy / HUD mode (iOS StandBy + Android always-on display)
+- Photo geostamp (MGRS/DTG burned into image)
+- Haptic grid crossing alerts (1km / 100m boundaries)
+- Enhanced voice readout (shake or tap trigger)
+- Android home screen widget (live MGRS)
+
+### v3.0 — Tactical (Fall/Winter 2026)
+- MGRS grid overlay map (MapKit / Google Maps SDK)
+- Mission planning (waypoints on map, route plotting)
+- GPX/KML import and export
+- External GPS support (Garmin GLO, Bad Elf via BLE)
+
+### v3.5+ — Platform Ecosystem (2027)
+- **iOS:** Live Activity + Dynamic Island, Apple Watch companion, Siri Shortcuts, Widgets
+- **Android:** Persistent notification with live MGRS, Wear OS tile, Quick Settings tile
 
 ---
 
