@@ -7,7 +7,7 @@ Red Grid Tactical
 DAGR-Class MGRS Navigator
 
 ## Description
-The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid Tactical puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for free. No network required. No data collected. No accounts to create.
+The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid Tactical puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for $3.99. No network required. No data collected. No accounts to create.
 
 YOUR PHONE. DAGR CAPABILITY.
 
@@ -65,7 +65,7 @@ ZERO FOOTPRINT PRIVACY:
 - No ads. No subscription. No data leaves your device.
 - Location data is held in memory only and never stored or transmitted.
 
-Free download includes live MGRS display, basic tools, and SALUTE report. Unlock Red Grid Pro ($9.99 one-time purchase) for voice readout, saved waypoint lists, all report templates, and display themes. No subscription. No recurring charges.
+Standard ($3.99) includes live MGRS display, 1 theme, basic tools, and SALUTE report. Unlock Red Grid Pro ($9.99 one-time in-app purchase) for voice readout, saved waypoint lists, all report templates, unlimited waypoints, and display themes. No subscription. No recurring charges.
 
 ## Keywords
 mgrs,military,navigation,tactical,grid,gps,land nav,army,dagr,compass
@@ -95,4 +95,4 @@ Navigation
 4+
 
 ## Price
-Free (with $9.99 Pro in-app purchase)
+$3.99 (with $9.99 Pro in-app purchase)
