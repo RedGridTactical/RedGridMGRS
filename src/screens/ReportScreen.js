@@ -16,10 +16,18 @@ try {
   // expo-clipboard not available — copy will fall back to alert-only
 }
 import { useColors } from '../utils/ThemeContext';
+import { tapMedium, notifySuccess, notifyWarning } from '../utils/haptics';
 
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
 }
+
+const SPRING_ANIM = {
+  duration: 280,
+  create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+  update: { type: LayoutAnimation.Types.spring, springDamping: 0.82 },
+  delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+};
 
 // ─── REPORT DEFINITIONS ──────────────────────────────────────────────────────
 const SALUTE_FIELDS = [
@@ -139,8 +147,28 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
   }, [mgrs, report.fields]);
 
   const handleOpen = () => {
-    if (isLocked) { onShowProGate(report.label); return; }
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    if (isLocked) {
+      tapMedium();
+      // Alert.alert is bulletproof on all platforms — guarantees purchase visibility
+      Alert.alert(
+        report.label,
+        'This is a Pro template.\n\nUnlock Red Grid Pro ($9.99) for all report templates, waypoint lists, display themes, and voice readout.\n\nOne-time purchase · No subscription.',
+        [
+          { text: 'Not Now', style: 'cancel' },
+          {
+            text: 'Unlock Pro — $9.99',
+            onPress: () => {
+              if (typeof onShowProGate === 'function') {
+                onShowProGate(report.label);
+              }
+            },
+          },
+        ]
+      );
+      return;
+    }
+    tapMedium();
+    LayoutAnimation.configureNext(SPRING_ANIM);
     setOpen(o => !o);
   };
 
@@ -149,6 +177,7 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
     if (ExpoClipboard && typeof ExpoClipboard.setStringAsync === 'function') {
       ExpoClipboard.setStringAsync(text).catch(() => {});
     }
+    notifySuccess();
     AccessibilityInfo.announceForAccessibility('Report copied to clipboard');
     Alert.alert('Copied', 'Report copied to clipboard.');
   };
@@ -156,7 +185,7 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
   const clear = () => {
     Alert.alert('Clear Report?', 'Reset all fields to defaults?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Clear', style: 'destructive', onPress: () => setVals(initVals()) },
+      { text: 'Clear', style: 'destructive', onPress: () => { notifyWarning(); setVals(initVals()); } },
     ]);
   };
 

@@ -13,3 +13,17 @@ web-build/
 .env.local
 *.apk
 *.ipa
+*.aab
+
+# Claude Code project files
+.claude/
+CLAUDE.md
+
+# Generated reports & audit docs
+*.docx
+RedGrid_Store_Listing_Audit.md
+generate_qc_report.py
+
+# OS files
+.DS_Store
+Thumbs.db

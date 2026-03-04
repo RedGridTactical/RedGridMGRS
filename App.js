@@ -11,8 +11,8 @@
  */
 import React, { useState, useMemo, useCallback, Component } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity,
-  SafeAreaView, StatusBar, useWindowDimensions,
+  View, Text, StyleSheet, TouchableOpacity, TouchableWithoutFeedback,
+  SafeAreaView, StatusBar, useWindowDimensions, Alert,
 } from 'react-native';
 
 import { useLocation }  from './src/hooks/useLocation';
@@ -34,6 +34,14 @@ import {
   toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance,
 } from './src/utils/mgrs';
 import { applyDeclination } from './src/utils/tactical';
+import { tapLight, tapHeavy, tapMedium } from './src/utils/haptics';
+import { speakMGRS, stopSpeaking } from './src/utils/voice';
+
+// ─── DEMO MODE ──────────────────────────────────────────────────────────────
+// Fake coordinates: Fort Liberty, NC (35.1390°N, 79.0065°W) — public military training area
+// Activate by long-pressing the app title. Used for safe App Store screenshots.
+const DEMO_LOCATION = { lat: 35.1390, lon: -79.0065, accuracy: 3, altitude: 106 };
+const DEMO_WAYPOINT = { lat: 35.1520, lon: -78.9940, label: 'OBJ ALPHA', mgrs: '' };
 
 const FREE_TABS = [
   { id: 'grid',   label: 'GRID'   },
@@ -106,31 +114,63 @@ function App() {
   const [showModal, setShowModal]   = useState(false);
   const [proGateVisible, setProGateVisible] = useState(false);
   const [proGateFeature, setProGateFeature] = useState('');
+  const [demoMode, setDemoMode]     = useState(false);
+  const [devPro, setDevPro]         = useState(false);
 
-  const TABS = isPro ? PRO_TABS : FREE_TABS;
+  const toggleDemo = useCallback(() => {
+    setDemoMode(d => {
+      const next = !d;
+      if (next) {
+        setWaypoint(DEMO_WAYPOINT);
+        Alert.alert('DEMO MODE', 'Showing Fort Liberty, NC coordinates.\nPro features unlocked.\nLong-press title again to exit.');
+      } else {
+        setWaypoint(null);
+        Alert.alert('DEMO OFF', 'Returning to live GPS.');
+      }
+      return next;
+    });
+  }, []);
+
+  // Triple-tap version area to toggle Pro for testing (no fake location)
+  const toggleDevPro = useCallback(() => {
+    setDevPro(d => {
+      const next = !d;
+      Alert.alert(next ? 'DEV PRO ON' : 'DEV PRO OFF', next ? 'Pro features unlocked for testing.' : 'Returned to free mode.');
+      return next;
+    });
+  }, []);
+
+  // In demo mode, override location with fake data; demo or devPro unlock Pro features
+  const activeLocation = demoMode ? DEMO_LOCATION : location;
+  const activeError = demoMode ? null : error;
+  const activeIsLoading = demoMode ? false : isLoading;
+  const activePro = isPro || demoMode || devPro;
+
+  const TABS = activePro ? PRO_TABS : FREE_TABS;
 
   const showProGate = useCallback((featureName) => {
+    console.log('[ProGate] showProGate called with:', featureName);
     setProGateFeature(featureName);
     setProGateVisible(true);
   }, []);
 
   // Derived MGRS
-  const mgrsRaw       = useMemo(() => { try { return location ? toMGRS(location.lat, location.lon, 5) : null; } catch { return null; } }, [location]);
+  const mgrsRaw       = useMemo(() => { try { return activeLocation ? toMGRS(activeLocation.lat, activeLocation.lon, 5) : null; } catch { return null; } }, [activeLocation]);
   const mgrsFormatted = useMemo(() => { try { return mgrsRaw ? formatMGRS(mgrsRaw) : null; } catch { return null; } }, [mgrsRaw]);
 
   // Wayfinder
   const { bearing, distance } = useMemo(() => {
-    if (!location || !waypoint) return { bearing: null, distance: null };
+    if (!activeLocation || !waypoint) return { bearing: null, distance: null };
     try {
-      const raw = calculateBearing(location.lat, location.lon, waypoint.lat, waypoint.lon);
+      const raw = calculateBearing(activeLocation.lat, activeLocation.lon, waypoint.lat, waypoint.lon);
       return {
         bearing: applyDeclination(raw, declination),
-        distance: calculateDistance(location.lat, location.lon, waypoint.lat, waypoint.lon),
+        distance: calculateDistance(activeLocation.lat, activeLocation.lon, waypoint.lat, waypoint.lon),
       };
     } catch {
       return { bearing: null, distance: null };
     }
-  }, [location, waypoint, declination]);
+  }, [activeLocation, waypoint, declination]);
 
   const waypointMGRS = useMemo(() => { try { return waypoint ? formatMGRS(toMGRS(waypoint.lat, waypoint.lon, 5)) : null; } catch { return null; } }, [waypoint]);
   const arrowSize    = isLandscape ? Math.min(height * 0.52, 190) : 200;
@@ -140,17 +180,19 @@ function App() {
 
   const gridContent = isLandscape ? (
     <LandscapeGrid
-      isLoading={isLoading} location={location} error={error} retry={retry}
+      isLoading={activeIsLoading} location={activeLocation} error={activeError} retry={retry}
       mgrsFormatted={mgrsFormatted} waypoint={waypoint} waypointMGRS={waypointMGRS}
       bearing={bearing} distance={distance} arrowSize={arrowSize}
-      onAddWaypoint={() => setShowModal(true)} onClearWaypoint={() => setWaypoint(null)}
+      onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
+      onToggleDemo={toggleDemo} demoMode={demoMode}
     />
   ) : (
     <PortraitGrid
-      isLoading={isLoading} location={location} error={error} retry={retry}
+      isLoading={activeIsLoading} location={activeLocation} error={activeError} retry={retry}
       mgrsFormatted={mgrsFormatted} waypoint={waypoint} waypointMGRS={waypointMGRS}
       bearing={bearing} distance={distance} arrowSize={arrowSize}
-      onAddWaypoint={() => setShowModal(true)} onClearWaypoint={() => setWaypoint(null)}
+      onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
+      onToggleDemo={toggleDemo} demoMode={demoMode}
     />
   );
 
@@ -166,10 +208,10 @@ function App() {
         safeTab={safeTab}
         setTab={setTab}
         TABS={TABS}
-        isPro={isPro}
+        isPro={activePro}
         isLandscape={isLandscape}
         gridContent={gridContent}
-        location={location}
+        location={activeLocation}
         declination={declination}
         paceCount={paceCount}
         setDeclination={setDeclination}
@@ -190,6 +232,7 @@ function App() {
         restore={restore}
         statusBarStyle={statusBarStyle}
         waypoint={waypoint}
+        onToggleDevPro={toggleDevPro}
       />
     </ThemeProvider>
   );
@@ -203,7 +246,7 @@ function AppContent({
   theme, setTheme, setWaypoint,
   showModal, setShowModal, proGateVisible, setProGateVisible,
   proGateFeature, product, isPurchasing, purchase, restore,
-  statusBarStyle, waypoint,
+  statusBarStyle, waypoint, onToggleDevPro,
 }) {
   const colors = useColors();
 
@@ -217,7 +260,9 @@ function AppContent({
           <TouchableOpacity
             key={t?.id || 'unknown'}
             style={staticStyles.tabItem}
-            onPress={() => t?.id && setTab(t.id)}
+            onPress={() => { if (t?.id) { tapLight(); setTab(t.id); } }}
+            onLongPress={t?.id === 'report' ? onToggleDevPro : undefined}
+            delayLongPress={1500}
             activeOpacity={0.7}
             accessibilityRole="tab"
             accessibilityState={{ selected: safeTab === t?.id }}
@@ -324,12 +369,14 @@ function UpsellScreen({ onUpgrade }) {
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, distance, arrowSize, onAddWaypoint, onClearWaypoint }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, distance, arrowSize, onAddWaypoint, onClearWaypoint, onToggleDemo, demoMode }) {
   const colors = useColors();
   return (
     <View style={staticStyles.portraitRoot}>
       <View style={staticStyles.header}>
-        <Text style={[staticStyles.appTitle, { color: colors.text }]}>REDGRID TACTICAL</Text>
+        <TouchableWithoutFeedback onLongPress={onToggleDemo} delayLongPress={1500}>
+          <Text style={[staticStyles.appTitle, { color: colors.text }]}>RED GRID TACTICAL{demoMode ? ' [DEMO]' : ''}</Text>
+        </TouchableWithoutFeedback>
         <SignalBadge isLoading={isLoading} location={location} />
       </View>
       <Div />
@@ -365,19 +412,33 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
           </View>
         </View>
       )}
-      <View style={staticStyles.footer}><Text style={[staticStyles.footerText, { color: colors.text4 }]}>NO DATA STORED · NO NETWORK · OPEN SOURCE</Text></View>
+      <View style={staticStyles.footer}>
+        {mgrsFormatted && (
+          <TouchableOpacity
+            style={[staticStyles.voiceBtn, { borderColor: colors.border }]}
+            onPress={() => { tapMedium(); speakMGRS(mgrsFormatted); }}
+            accessibilityRole="button"
+            accessibilityLabel="Speak current grid coordinate"
+          >
+            <Text style={[staticStyles.voiceBtnText, { color: colors.text2 }]}>SPEAK GRID</Text>
+          </TouchableOpacity>
+        )}
+        <Text style={[staticStyles.footerText, { color: colors.text4 }]}>NO DATA STORED · NO NETWORK · OPEN SOURCE</Text>
+      </View>
     </View>
   );
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, distance, arrowSize, onAddWaypoint, onClearWaypoint }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, distance, arrowSize, onAddWaypoint, onClearWaypoint, onToggleDemo, demoMode }) {
   const colors = useColors();
   return (
     <View style={staticStyles.landscapeRoot}>
       <View style={staticStyles.lsLeft}>
         <View style={staticStyles.lsHeader}>
-          <Text style={[staticStyles.lsTitle, { color: colors.text }]}>REDGRID TACTICAL</Text>
+          <TouchableWithoutFeedback onLongPress={onToggleDemo} delayLongPress={1500}>
+            <Text style={[staticStyles.lsTitle, { color: colors.text }]}>RED GRID TACTICAL{demoMode ? ' [DEMO]' : ''}</Text>
+          </TouchableWithoutFeedback>
           <SignalBadge isLoading={isLoading} location={location} />
         </View>
         <Div />
@@ -403,6 +464,16 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
               </TouchableOpacity>
             )}
           </View>
+          {mgrsFormatted && (
+            <TouchableOpacity
+              style={[staticStyles.voiceBtn, { borderColor: colors.border }]}
+              onPress={() => { tapMedium(); speakMGRS(mgrsFormatted); }}
+              accessibilityRole="button"
+              accessibilityLabel="Speak current grid coordinate"
+            >
+              <Text style={[staticStyles.voiceBtnText, { color: colors.text2 }]}>SPEAK GRID</Text>
+            </TouchableOpacity>
+          )}
           <Text style={[staticStyles.footerText, { color: colors.text4 }]}>NO DATA STORED · NO NETWORK</Text>
         </View>
       </View>
@@ -534,6 +605,8 @@ const staticStyles = StyleSheet.create({
   clearBtnText: { fontFamily:'monospace', fontSize:11, letterSpacing:3 },
   footer: { marginTop:'auto', paddingTop:16, alignItems:'center' },
   footerText: { fontFamily:'monospace', fontSize:9, letterSpacing:2 },
+  voiceBtn: { borderWidth:1, paddingHorizontal:18, paddingVertical:10, minHeight:44, alignItems:'center', marginBottom:8 },
+  voiceBtnText: { fontFamily:'monospace', fontSize:10, letterSpacing:3, fontWeight:'700' },
   // Upsell
   upsellRoot: { flex:1, alignItems:'center', justifyContent:'center', gap:16, padding:40 },
   upsellTitle: { fontFamily:'monospace', fontSize:24, fontWeight:'700', letterSpacing:6 },

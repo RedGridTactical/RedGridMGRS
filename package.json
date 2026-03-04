@@ -1,7 +1,7 @@
 {
   "name": "redgrid-tactical",
   "version": "2.0.0",
-  "main": "App.js",
+  "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -17,8 +17,10 @@
     "expo-build-properties": "~0.13.1",
     "expo-clipboard": "~7.0.1",
     "expo-font": "~13.0.1",
+    "expo-haptics": "~14.0.1",
     "expo-iap": "~2.4.0",
     "expo-location": "~18.0.4",
+    "expo-speech": "~13.0.1",
     "expo-status-bar": "~2.0.1",
     "react": "18.3.1",
     "react-native": "0.76.5",
@@ -27,6 +29,7 @@
   "devDependencies": {
     "@babel/core": "^7.24.0",
     "@types/react": "~18.3.0",
+    "tsx": "^4.21.0",
     "typescript": "~5.3.3"
   },
   "private": true,

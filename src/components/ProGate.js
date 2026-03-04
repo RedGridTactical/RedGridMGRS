@@ -8,16 +8,18 @@ import {
   ActivityIndicator, ScrollView,
 } from 'react-native';
 import { useColors } from '../utils/ThemeContext';
+import { tapMedium, tapLight } from '../utils/haptics';
 
 const PRO_FEATURES = [
+  { icon: '🗣️', label: 'Voice Readout', sub: 'NATO phonetic grid readout — hands-free operation' },
   { icon: '📍', label: 'Saved Waypoint Lists', sub: 'Save named patrol routes, OBJs, and rally points' },
-  { icon: '📋', label: 'Additional Report Templates', sub: 'ICS 201, ANGUS, custom template builder' },
-  { icon: '🔴', label: 'Display Themes', sub: 'NVG green, day white, blue-force color schemes' },
+  { icon: '📋', label: 'Tactical Reports', sub: 'ICS 201, CASEVAC, ANGUS/CFF, and custom templates' },
+  { icon: '🔴', label: 'Display Themes', sub: 'NVG green, day white, blue-force — preserve night vision' },
 ];
 
 export function ProGate({ visible, onClose, featureName, product, isPurchasing, onPurchase, onRestore }) {
   const colors = useColors();
-  const priceStr = product?.priceString ?? '$4.99';
+  const priceStr = product?.priceString ?? '$9.99';
 
   return (
     <Modal
@@ -25,6 +27,7 @@ export function ProGate({ visible, onClose, featureName, product, isPurchasing, 
       transparent
       animationType="fade"
       onRequestClose={onClose}
+      onShow={() => console.log('[ProGate] Modal onShow fired — visible:', visible)}
     >
       <View style={styles.overlay}>
         <View style={[styles.modal, { backgroundColor: colors.card, borderColor: colors.text2 }]} accessibilityViewIsModal={true}>
@@ -63,7 +66,7 @@ export function ProGate({ visible, onClose, featureName, product, isPurchasing, 
           {/* Purchase button */}
           <TouchableOpacity
             style={[styles.purchaseBtn, { backgroundColor: colors.text }, isPurchasing && { backgroundColor: colors.border }]}
-            onPress={onPurchase}
+            onPress={() => { tapMedium(); onPurchase(); }}
             disabled={isPurchasing}
             activeOpacity={0.8}
             accessibilityRole="button"
@@ -77,7 +80,7 @@ export function ProGate({ visible, onClose, featureName, product, isPurchasing, 
           </TouchableOpacity>
 
           {/* Restore */}
-          <TouchableOpacity style={styles.restoreBtn} onPress={onRestore} disabled={isPurchasing} accessibilityRole="button" accessibilityLabel="Restore previous purchase">
+          <TouchableOpacity style={styles.restoreBtn} onPress={() => { tapLight(); onRestore(); }} disabled={isPurchasing} accessibilityRole="button" accessibilityLabel="Restore previous purchase">
             <Text style={[styles.restoreText, { color: colors.text3 }]}>RESTORE PREVIOUS PURCHASE</Text>
           </TouchableOpacity>
 

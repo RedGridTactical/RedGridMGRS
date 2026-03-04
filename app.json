@@ -30,6 +30,7 @@
       "bundleIdentifier": "com.redgrid.redgridtactical",
       "buildNumber": "2",
       "infoPlist": {
+        "CFBundleDisplayName": "Red Grid",
         "NSLocationWhenInUseUsageDescription": "Red Grid Tactical uses your location to display your current grid coordinates. No location data is stored or transmitted.",
         "SKAdNetworkItems": [],
         "ITSAppUsesNonExemptEncryption": false
@@ -43,6 +44,7 @@
           "locationWhenInUsePermission": "Red Grid Tactical uses your location to display your current grid coordinates. No data is stored or transmitted."
         }
       ],
+      "expo-iap",
       [
         "expo-build-properties",
         {

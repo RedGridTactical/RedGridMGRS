@@ -7,10 +7,18 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager,
 } from 'react-native';
 import { useColors } from '../utils/ThemeContext';
+import { tapMedium } from '../utils/haptics';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
+
+const SPRING_ANIM = {
+  duration: 280,
+  create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+  update: { type: LayoutAnimation.Types.spring, springDamping: 0.82 },
+  delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
+};
 
 import { BackAzimuthTool }   from '../components/tools/BackAzimuthTool';
 import { DeadReckoningTool } from '../components/tools/DeadReckoningTool';
@@ -37,7 +45,8 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
   const [openTool, setOpenTool] = useState(null);
 
   const toggle = useCallback((id) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    tapMedium();
+    LayoutAnimation.configureNext(SPRING_ANIM);
     setOpenTool(prev => prev === id ? null : id);
   }, []);
 
