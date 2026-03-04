@@ -62,7 +62,8 @@
       "eas": {
         "projectId": "c55caaee-6950-4b8c-850b-f0d2d402cc09"
       },
-      "privacyPolicyUrl": "https://github.com/RedGridTactical/RedGridMGRS/blob/main/PRIVACY.md"
+      "privacyPolicyUrl": "https://redgridtactical.github.io/RedGridMGRS/privacy.html",
+      "supportUrl": "https://redgridtactical.github.io/RedGridMGRS/support.html"
     },
     "icon": "./assets/icons/icon.png"
   }

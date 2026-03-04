@@ -83,10 +83,10 @@ Red Grid Tactical v2.0 is a complete overhaul:
 - Bug fixes and stability improvements across all screens
 
 ## Privacy URL
-https://github.com/RedGridTactical/RedGridMGRS/blob/main/PRIVACY.md
+https://redgridtactical.github.io/RedGridMGRS/privacy.html
 
 ## Support URL
-https://github.com/RedGridTactical/RedGridMGRS/issues
+https://redgridtactical.github.io/RedGridMGRS/support.html
 
 ## Category
 Navigation
