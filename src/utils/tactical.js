@@ -112,6 +112,7 @@ export function resection(lat1, lon1, bearing1Deg, lat2, lon2, bearing2Deg) {
  * pacesPerHundredMeters: user-calibrated (typical: 62–66 for adult male).
  */
 export function pacesToDistance(paces, pacesPerHundredMeters) {
+  if (!pacesPerHundredMeters || pacesPerHundredMeters <= 0) return 0;
   return (paces / pacesPerHundredMeters) * 100;
 }
 
@@ -149,7 +150,7 @@ export function timeToTravel(distanceM, speedKmh) {
  * Format minutes as "Xhr Ymin" or just "Ymin".
  */
 export function formatMinutes(mins) {
-  if (!mins || isNaN(mins)) return '--';
+  if (mins == null || isNaN(mins)) return '--';
   const h = Math.floor(mins / 60);
   const m = Math.round(mins % 60);
   if (h === 0) return `${m}min`;

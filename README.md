@@ -2,16 +2,14 @@
 
 # Red Grid Tactical
 
-[![Download on App Store](https://img.shields.io/badge/App%20Store-Coming%20Soon-8B0000?logo=apple)](https://github.com/RedGridTactical/RedGridMGRS/releases/latest)
-[![Download APK](https://img.shields.io/github/v/release/RedGridTactical/RedGridMGRS?label=Android%20APK&color=CC0000&logo=android)](https://github.com/RedGridTactical/RedGridMGRS/releases/latest)
+**DAGR-Class MGRS Navigator**
+
+[![App Store](https://img.shields.io/badge/App%20Store-Download-8B0000?logo=apple)](https://apps.apple.com/app/id6759629554)
+[![Google Play](https://img.shields.io/badge/Google%20Play-Download-CC0000?logo=googleplay)](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical)
 [![License](https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-8B0000)](LICENSE)
 [![No Tracking](https://img.shields.io/badge/Tracking-None-CC0000)](PRIVACY.md)
-[![Support](https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-CC0000?logo=buymeacoffee)](https://buymeacoffee.com/redgridtac0)
 
-**A tactical land navigation utility for iOS and Android.**
-
-Red-light display. MGRS coordinates. Wayfinder. 8 field tools. 3 radio report templates.
-Zero network. Zero tracking. Open source.
+The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid Tactical puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for free. No network required. No data collected. Open source.
 
 ---
 
@@ -21,79 +19,59 @@ Zero network. Zero tracking. Open source.
 
 ---
 
-## Free Features
+## DAGR-Equivalent Features
 
-- **Real-time MGRS** — live position to 1-meter precision
-- **Wayfinder arrow** — bearing and distance to any waypoint, declination-corrected
-- **8 tactical tools** — Dead Reckoning, Resection, Back Azimuth, Pace Count, Declination, TDS, Solar/Lunar, MGRS Precision
-- **3 radio report templates** — SALUTE, 9-Line MEDEVAC, SPOT — grid auto-filled
-- **Red-light mode** — red-on-black display, no white light emission
-- **Landscape support** — two-column layout
+- **Live MGRS coordinates** — 4/6/8/10-digit precision, 1-meter resolution
+- **Magnetic declination** — WMM model, auto or manual offset
+- **Waypoint storage** — bearing and distance to any saved position
+- **Back azimuth and dead reckoning** — plot movement from a known point
+- **Speed, elevation, heading** — real-time sensor display
+- **Full offline operation** — zero cloud dependency
 
-## Red Grid Pro — $4.99 one-time
+## Beyond the DAGR — 8 Tactical Tools
 
-- 📍 **Saved Waypoint Lists** — save named patrol routes, OBJs, rally points — persisted locally on device
-- 📋 **Additional Report Templates** — ICS 201 Incident Command, CASEVAC
-- 🎨 **Display Themes** — NVG green, day white, blue-force colour schemes
-- 🌐 **Coordinate Formats** — switch between MGRS, UTM, Decimal Degrees, DMS
+The DAGR hardware doesn't include these. Red Grid does.
 
-No subscription. No recurring charges. One purchase, permanent unlock. All future Pro features included.
+- Back Azimuth calculator
+- Dead Reckoning plotter
+- Two-point Resection
+- Pace Count tracker
+- Magnetic Declination reference
+- Time-Distance-Speed solver
+- Sun & Moon position data
+- MGRS Precision selector (1m to 100km)
+
+## 6 Radio-Ready Report Templates
+
+Generate formatted reports ready to transmit over any net:
+
+- SALUTE (Size, Activity, Location, Unit, Time, Equipment)
+- 9-Line MEDEVAC request
+- SPOT report
+- ICS 201 incident briefing
+- CASEVAC request
+- ANGUS/CFF fire mission
+
+## Red Grid Pro — $9.99 one-time
+
+- **Saved Waypoint Lists** — patrol routes, OBJs, rally points, persisted on device
+- **All 6 Report Templates** — free tier includes SALUTE only
+- **NATO Voice Readout** — hands-free grid calls using phonetic alphabet
+- **4 Display Themes** — red lens, NVG green, day white, blue force
+
+No subscription. No recurring charges. One purchase, permanent unlock.
 
 ---
 
 ## Install
 
-### iOS — App Store *(Coming Soon)*
-A paid one-time App Store version is in development. No subscription. No ads.
+### iOS
+[App Store](https://apps.apple.com/app/id6759629554) — free with optional $9.99 Pro unlock.
 
-**Free sideload via AltStore:**
-1. Install AltStore from [altstore.io](https://altstore.io) on your Mac or PC
-2. Connect iPhone → install AltStore via desktop app
-3. Download `RedGrid-Tactical.ipa` from [Releases](https://github.com/RedGridTactical/RedGridMGRS/releases/latest)
-4. Open AltStore → **+** → select the `.ipa`
-5. AltStore re-signs every 7 days automatically on same Wi-Fi
+### Android
+[Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) — free with optional $9.99 Pro unlock.
 
-### Android — Direct APK
-1. Download `RedGrid-Tactical.apk` from [Releases](https://github.com/RedGridTactical/RedGridMGRS/releases/latest)
-2. Open the file → tap **Settings** if prompted → enable **Install from this source**
-3. Tap **Install** → grant **"While using the app"** location permission
-
----
-
-## Organizational & Commercial Use
-
-Organizations deploying Red Grid Tactical across multiple devices or integrating it into a paid product require a commercial license.
-
-**Contact:** redgridtactical@gmail.com
-
-Individual personal use is always free.
-
----
-
-## Support the Project
-
-☕ [**Buy Me a Coffee**](https://buymeacoffee.com/redgridtac0)
-💛 [**GitHub Sponsors**](https://github.com/sponsors/RedGridTactical)
-
----
-
-## Privacy
-
-| Data | Collected | Stored | Transmitted |
-|------|-----------|--------|-------------|
-| GPS location | In memory only | ❌ Never | ❌ Never |
-| Waypoints (free) | In memory only, cleared on exit | ❌ Never | ❌ Never |
-| Waypoint lists (Pro) | On device only | ✅ Local only | ❌ Never |
-| Pace count / Declination / Theme | On device only | ✅ Local only | ❌ Never |
-| Device identifiers | ❌ Never | ❌ Never | ❌ Never |
-
-No ad networks. No analytics. No crash reporting. No third-party SDKs.
-In-app purchases are processed by Apple or Google — Red Grid Tactical never sees your payment details.
-Full details in [PRIVACY.md](PRIVACY.md).
-
----
-
-## Build from Source
+### Build from Source
 
 ```bash
 git clone https://github.com/RedGridTactical/RedGridMGRS.git
@@ -102,15 +80,45 @@ npm install
 npx expo start
 ```
 
-All free features work immediately from source. Pro features require a valid purchase through Apple or Google.
+All free features work from source. Pro features require a valid purchase through Apple or Google.
+
+---
+
+## Privacy
+
+| Data | Collected | Stored | Transmitted |
+|------|-----------|--------|-------------|
+| GPS location | In memory only | Never | Never |
+| Waypoints (free) | In memory, cleared on exit | Never | Never |
+| Waypoint lists (Pro) | On device only | Local only | Never |
+| Settings (pace/declination/theme) | On device only | Local only | Never |
+| Device identifiers | Never | Never | Never |
+
+No ad networks. No analytics. No crash reporting. No third-party SDKs.
+In-app purchases are processed by Apple or Google — Red Grid never sees your payment details.
+
+Full policy: [Privacy Policy](https://redgridtactical.github.io/RedGridMGRS/privacy.html) | [PRIVACY.md](PRIVACY.md)
+
+---
+
+## Built For
+
+Military personnel, search and rescue teams, law enforcement, wildland firefighters, first responders, hunters, and backcountry navigators who depend on accurate grid coordinates in austere environments. Whether you trained on a DAGR or a lensatic compass, Red Grid speaks your language.
+
+---
+
+## Support
+
+- [Report an issue](https://github.com/RedGridTactical/RedGridMGRS/issues)
+- [Support page](https://redgridtactical.github.io/RedGridMGRS/support.html)
+- Email: redgridtactical@gmail.com
 
 ---
 
 ## License
 
 [MIT + Commons Clause](LICENSE) — free for personal non-commercial use. Commercial use requires written permission.
-Contact: redgridtactical@gmail.com
 
 ---
 
-*Built for the field. No frills. No tracking. Open source.*
+*Your phone. DAGR capability. No frills. No tracking. Open source.*

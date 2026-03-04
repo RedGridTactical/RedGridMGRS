@@ -94,7 +94,7 @@ export function useIAP() {
           setProduct(products[0]);
         }
       } catch (err) {
-        // Product fetch failed — ProGate will show fallback price $4.99
+        // Product fetch failed — ProGate will show fallback price $9.99
         // Do not throw, just silently continue
       }
     };
