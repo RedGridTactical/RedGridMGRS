@@ -149,22 +149,8 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
   const handleOpen = () => {
     if (isLocked) {
       tapMedium();
-      // Alert.alert is bulletproof on all platforms — guarantees purchase visibility
-      Alert.alert(
-        report.label,
-        'This is a Pro template.\n\nUnlock Red Grid Pro ($9.99) for all report templates, waypoint lists, display themes, and voice readout.\n\nOne-time purchase · No subscription.',
-        [
-          { text: 'Not Now', style: 'cancel' },
-          {
-            text: 'Unlock Pro — $9.99',
-            onPress: () => {
-              if (typeof onShowProGate === 'function') {
-                onShowProGate(report.label);
-              }
-            },
-          },
-        ]
-      );
+      // Show ProGate modal directly — matches ThemeScreen pattern
+      onShowProGate(report.label);
       return;
     }
     tapMedium();
@@ -196,7 +182,7 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
         onPress={handleOpen}
         activeOpacity={0.7}
         accessibilityRole="button"
-        accessibilityState={{ expanded: open, disabled: isLocked }}
+        accessibilityState={{ expanded: open }}
         accessibilityLabel={`${report.label} report. ${report.sub}${isLocked ? '. Pro feature, locked.' : ''}`}
         accessibilityHint={isLocked ? 'Double tap to view upgrade options' : (open ? 'Double tap to collapse' : 'Double tap to expand')}
       >
