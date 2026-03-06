@@ -185,6 +185,7 @@ function App() {
       bearing={bearing} distance={distance} arrowSize={arrowSize}
       onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
       onToggleDemo={toggleDemo} demoMode={demoMode}
+      isPro={activePro} onShowProGate={showProGate}
     />
   ) : (
     <PortraitGrid
@@ -193,6 +194,7 @@ function App() {
       bearing={bearing} distance={distance} arrowSize={arrowSize}
       onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
       onToggleDemo={toggleDemo} demoMode={demoMode}
+      isPro={activePro} onShowProGate={showProGate}
     />
   );
 
@@ -369,7 +371,7 @@ function UpsellScreen({ onUpgrade }) {
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, distance, arrowSize, onAddWaypoint, onClearWaypoint, onToggleDemo, demoMode }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, distance, arrowSize, onAddWaypoint, onClearWaypoint, onToggleDemo, demoMode, isPro, onShowProGate }) {
   const colors = useColors();
   return (
     <View style={staticStyles.portraitRoot}>
@@ -415,12 +417,12 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
       <View style={staticStyles.footer}>
         {mgrsFormatted && (
           <TouchableOpacity
-            style={[staticStyles.voiceBtn, { borderColor: colors.border }]}
-            onPress={() => { tapMedium(); speakMGRS(mgrsFormatted); }}
+            style={[staticStyles.voiceBtn, { borderColor: colors.border }, !isPro && staticStyles.voiceBtnLocked]}
+            onPress={() => { tapMedium(); isPro ? speakMGRS(mgrsFormatted) : onShowProGate('Voice Readout'); }}
             accessibilityRole="button"
-            accessibilityLabel="Speak current grid coordinate"
+            accessibilityLabel={isPro ? 'Speak current grid coordinate' : 'Voice readout. Pro feature, locked. Double tap to view upgrade options'}
           >
-            <Text style={[staticStyles.voiceBtnText, { color: colors.text2 }]}>SPEAK GRID</Text>
+            <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.border }]}>SPEAK GRID{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
           </TouchableOpacity>
         )}
         <Text style={[staticStyles.footerText, { color: colors.text4 }]}>NO DATA STORED · NO NETWORK · OPEN SOURCE</Text>
@@ -430,7 +432,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, distance, arrowSize, onAddWaypoint, onClearWaypoint, onToggleDemo, demoMode }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, distance, arrowSize, onAddWaypoint, onClearWaypoint, onToggleDemo, demoMode, isPro, onShowProGate }) {
   const colors = useColors();
   return (
     <View style={staticStyles.landscapeRoot}>
@@ -466,12 +468,12 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
           </View>
           {mgrsFormatted && (
             <TouchableOpacity
-              style={[staticStyles.voiceBtn, { borderColor: colors.border }]}
-              onPress={() => { tapMedium(); speakMGRS(mgrsFormatted); }}
+              style={[staticStyles.voiceBtn, { borderColor: colors.border }, !isPro && staticStyles.voiceBtnLocked]}
+              onPress={() => { tapMedium(); isPro ? speakMGRS(mgrsFormatted) : onShowProGate('Voice Readout'); }}
               accessibilityRole="button"
-              accessibilityLabel="Speak current grid coordinate"
+              accessibilityLabel={isPro ? 'Speak current grid coordinate' : 'Voice readout. Pro feature, locked. Double tap to view upgrade options'}
             >
-              <Text style={[staticStyles.voiceBtnText, { color: colors.text2 }]}>SPEAK GRID</Text>
+              <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.border }]}>SPEAK GRID{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
             </TouchableOpacity>
           )}
           <Text style={[staticStyles.footerText, { color: colors.text4 }]}>NO DATA STORED · NO NETWORK</Text>
@@ -606,6 +608,7 @@ const staticStyles = StyleSheet.create({
   footer: { marginTop:'auto', paddingTop:16, alignItems:'center' },
   footerText: { fontFamily:'monospace', fontSize:9, letterSpacing:2 },
   voiceBtn: { borderWidth:1, paddingHorizontal:18, paddingVertical:10, minHeight:44, alignItems:'center', marginBottom:8 },
+  voiceBtnLocked: { opacity: 0.6 },
   voiceBtnText: { fontFamily:'monospace', fontSize:10, letterSpacing:3, fontWeight:'700' },
   // Upsell
   upsellRoot: { flex:1, alignItems:'center', justifyContent:'center', gap:16, padding:40 },
