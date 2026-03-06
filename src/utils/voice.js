@@ -1,6 +1,7 @@
 /**
- * voice.js — NATO phonetic voice readout for MGRS coordinates.
- * Uses expo-speech for text-to-speech.
+ * voice.js — NATO/ICAO phonetic voice readout for MGRS coordinates.
+ * Uses expo-speech for text-to-speech with TTS-optimized phonetic spellings
+ * matching military radiotelephony pronunciation standards.
  */
 
 let Speech = null;
@@ -10,26 +11,42 @@ try {
   // expo-speech not available
 }
 
+/**
+ * NATO phonetic alphabet — TTS-optimized spellings.
+ * Most words are standard English and TTS handles them correctly.
+ * Lima and Quebec use phonetic hints to force correct NATO pronunciation.
+ */
 const NATO_ALPHA = {
-  A: 'Alpha',   B: 'Bravo',    C: 'Charlie',  D: 'Delta',
-  E: 'Echo',    F: 'Foxtrot',  G: 'Golf',     H: 'Hotel',
-  I: 'India',   J: 'Juliet',   K: 'Kilo',     L: 'Lima',
-  M: 'Mike',    N: 'November', O: 'Oscar',    P: 'Papa',
-  Q: 'Quebec',  R: 'Romeo',    S: 'Sierra',   T: 'Tango',
-  U: 'Uniform', V: 'Victor',   W: 'Whiskey',  X: 'X-ray',
-  Y: 'Yankee',  Z: 'Zulu',
-};
-
-const NATO_DIGIT = {
-  '0': 'zero',  '1': 'one',   '2': 'two',   '3': 'three',
-  '4': 'four',  '5': 'five',  '6': 'six',   '7': 'seven',
-  '8': 'eight', '9': 'niner',
+  A: 'Alfa',     B: 'Bravo',    C: 'Charlie',  D: 'Delta',
+  E: 'Echo',     F: 'Foxtrot',  G: 'Golf',     H: 'Hotel',
+  I: 'India',    J: 'Juliet',   K: 'Kilo',     L: 'Lee Mah',
+  M: 'Mike',     N: 'November', O: 'Oscar',    P: 'Papa',
+  Q: 'Keh Beck', R: 'Romeo',    S: 'Sierra',   T: 'Tango',
+  U: 'Uniform',  V: 'Victor',   W: 'Whiskey',  X: 'Ecks Ray',
+  Y: 'Yankee',   Z: 'Zulu',
 };
 
 /**
- * Convert MGRS string to NATO phonetic readout.
- * Input: "18S UJ 23456 78901"
- * Output: "one eight Sierra. Uniform Juliet. two three four five six. seven eight niner zero one."
+ * NATO/ICAO standard digit pronunciation for radio comms.
+ * Modified from standard English to avoid ambiguity over noisy radio:
+ *   3 → "tree" (no "th" to get lost in static)
+ *   4 → "fower" (two syllables, distinct from "for")
+ *   5 → "fife" (no "v" to disappear in noise)
+ *   8 → "ait" (clearer than "eight" on radio)
+ *   9 → "niner" (prevents confusion with "no"/"nein")
+ */
+const NATO_DIGIT = {
+  '0': 'zero',   '1': 'wun',    '2': 'too',    '3': 'tree',
+  '4': 'fower',  '5': 'fife',   '6': 'six',    '7': 'seven',
+  '8': 'ait',    '9': 'niner',
+};
+
+/**
+ * Convert MGRS string to NATO phonetic readout string.
+ * Uses radio-standard pacing: "Grid... [GZD]... [Square]... [Easting]... [Northing]"
+ *
+ * Input:  "18S UJ 23456 78901"
+ * Output: "Grid. wun ait Sierra. ... Uniform Juliet. ... too tree fower fife six. ... seven ait niner zero wun."
  */
 export function mgrsToNATO(mgrs) {
   if (!mgrs || typeof mgrs !== 'string') return null;
@@ -43,29 +60,33 @@ export function mgrsToNATO(mgrs) {
 
   const segments = [];
 
-  // Grid Zone Designator
+  // "Grid" prefix — standard radio call opener
+  segments.push('Grid');
+
+  // Grid Zone Designator — digits + letter
   const gzdSpoken = gzd.split('').map(ch => {
     if (/[A-Z]/i.test(ch)) return NATO_ALPHA[ch.toUpperCase()] || ch;
     return NATO_DIGIT[ch] || ch;
-  }).join(', ');
+  }).join(' ... ');
   segments.push(gzdSpoken);
 
-  // 100km Square ID
+  // 100km Square ID — two letters
   const sqSpoken = sq.split('').map(ch =>
     NATO_ALPHA[ch.toUpperCase()] || ch
-  ).join(', ');
+  ).join(' ... ');
   segments.push(sqSpoken);
 
-  // Numeric portion — read digit by digit
+  // Numeric portion — easting then northing, digit by digit
   const numParts = numerics.split(/\s+/);
   numParts.forEach(part => {
     const digitSpoken = part.split('').map(ch =>
       NATO_DIGIT[ch] || ch
-    ).join(', ');
+    ).join(' ... ');
     segments.push(digitSpoken);
   });
 
-  return segments.join('. ');
+  // Join groups with long pauses (period + ellipsis creates ~0.8s gap in TTS)
+  return segments.join('. ... ');
 }
 
 /**
@@ -84,8 +105,8 @@ export function speakMGRS(mgrs) {
 
     Speech.speak(text, {
       language: 'en-US',
-      pitch: 0.95,
-      rate: 0.85,
+      pitch: 0.92,
+      rate: 0.72,
     });
     return true;
   } catch {
