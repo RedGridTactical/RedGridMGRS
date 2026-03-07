@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-8B0000)](LICENSE)
 [![No Tracking](https://img.shields.io/badge/Tracking-None-CC0000)](PRIVACY.md)
 
-The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance. Free download with optional Pro upgrade. No network required. No data collected. Open source.
+The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for $3.99. No network required. No data collected. Open source.
 
 ---
 
@@ -54,12 +54,12 @@ Generate formatted reports ready to transmit over any net:
 
 ## Pricing
 
-### Free
+### Standard — $3.99
 Live MGRS display, 1 theme, 8 tactical tools, 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
 
 ### Pro Upgrade — $9.99 (one-time in-app purchase)
 - **Saved Waypoint Lists** — patrol routes, OBJs, rally points, persisted on device
-- **All 6 Report Templates** — free includes SALUTE, MEDEVAC, SPOT
+- **All 6 Report Templates** — Standard includes SALUTE, MEDEVAC, SPOT
 - **NATO Voice Readout** — hands-free grid calls using phonetic alphabet
 - **4 Display Themes** — red lens, NVG green, day white, blue force
 - **Unlimited Waypoints** — no storage limits
@@ -71,10 +71,10 @@ No subscription. No recurring charges. One purchase, permanent unlock.
 ## Install
 
 ### iOS
-[App Store](https://apps.apple.com/app/id6759629554) — Free with optional $9.99 Pro upgrade.
+[App Store](https://apps.apple.com/app/id6759629554) — $3.99 with optional $9.99 Pro upgrade.
 
 ### Android
-[Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) — Free with optional $9.99 Pro upgrade.
+[Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) — $3.99 with optional $9.99 Pro upgrade.
 
 ### Build from Source
 
