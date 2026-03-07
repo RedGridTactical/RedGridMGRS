@@ -294,5 +294,5 @@ const styles = StyleSheet.create({
   copyBtnText: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', letterSpacing: 3 },
   clearBtn: { flex: 1, borderWidth: 1, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   clearBtnText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3 },
-  footer: { fontFamily: 'monospace', fontSize: 9, textAlign: 'center', marginTop: 20, letterSpacing: 1 },
+  footer: { fontFamily: 'monospace', fontSize: 10, textAlign: 'center', marginTop: 20, letterSpacing: 1 },
 });
