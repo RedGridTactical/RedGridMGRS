@@ -30,7 +30,7 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 
 ## Beyond the DAGR — 8 Tactical Tools
 
-The DAGR hardware doesn't include these. Red Grid does.
+The DAGR hardware doesn't include these. Red Grid MGRS does.
 
 - Back Azimuth calculator
 - Dead Reckoning plotter
@@ -100,7 +100,7 @@ Standard features work from source. Pro features require a valid purchase throug
 | Device identifiers | Never | Never | Never |
 
 No ad networks. No analytics. No crash reporting. No third-party SDKs.
-In-app purchases are processed by Apple or Google — Red Grid never sees your payment details.
+In-app purchases are processed by Apple or Google — Red Grid MGRS never sees your payment details.
 
 Full policy: [Privacy Policy](https://redgridtactical.github.io/RedGridMGRS/privacy.html) | [PRIVACY.md](PRIVACY.md)
 
@@ -108,7 +108,7 @@ Full policy: [Privacy Policy](https://redgridtactical.github.io/RedGridMGRS/priv
 
 ## Built For
 
-Military personnel, search and rescue teams, law enforcement, wildland firefighters, first responders, hunters, and backcountry navigators who depend on accurate grid coordinates in austere environments. Whether you trained on a DAGR or a lensatic compass, Red Grid speaks your language.
+Military personnel, search and rescue teams, law enforcement, wildland firefighters, first responders, hunters, and backcountry navigators who depend on accurate grid coordinates in austere environments. Whether you trained on a DAGR or a lensatic compass, Red Grid MGRS speaks your language.
 
 ---
 
