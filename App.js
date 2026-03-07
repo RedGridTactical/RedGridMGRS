@@ -1,5 +1,5 @@
 /**
- * Red Grid Tactical — Root Application v2.0 (HARDENED)
+ * Red Grid MGRS — Root Application v2.0 (HARDENED)
  * Tabs: GRID · TOOLS · REPORT · LISTS (Pro) · THEME (Pro)
  *
  * Privacy: no location stored, no network (IAP uses Apple/Google native payment only), no analytics.
@@ -364,7 +364,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
   return (
     <View style={staticStyles.portraitRoot}>
       <View style={staticStyles.header}>
-        <Text style={[staticStyles.appTitle, { color: colors.text }]}>RED GRID TACTICAL</Text>
+        <Text style={[staticStyles.appTitle, { color: colors.text }]}>RED GRID MGRS</Text>
         <SignalBadge isLoading={isLoading} location={location} />
       </View>
       <Div />
@@ -429,7 +429,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
     <View style={staticStyles.landscapeRoot}>
       <View style={staticStyles.lsLeft}>
         <View style={staticStyles.lsHeader}>
-          <Text style={[staticStyles.lsTitle, { color: colors.text }]}>RED GRID TACTICAL</Text>
+          <Text style={[staticStyles.lsTitle, { color: colors.text }]}>RED GRID MGRS</Text>
           <SignalBadge isLoading={isLoading} location={location} />
         </View>
         <Div />

@@ -1,6 +1,6 @@
-![Red Grid Tactical](docs/images/banner.png)
+![Red Grid MGRS](docs/images/banner.png)
 
-# Red Grid Tactical
+# Red Grid MGRS
 
 **DAGR-Class MGRS Navigator**
 
@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-8B0000)](LICENSE)
 [![No Tracking](https://img.shields.io/badge/Tracking-None-CC0000)](PRIVACY.md)
 
-The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid Tactical puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for $3.99. No network required. No data collected. Open source.
+The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for $3.99. No network required. No data collected. Open source.
 
 ---
 

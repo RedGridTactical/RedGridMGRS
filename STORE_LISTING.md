@@ -1,13 +1,13 @@
-# Red Grid Tactical - App Store Listing
+# Red Grid MGRS - App Store Listing
 
 ## App Name
-Red Grid Tactical
+Red Grid MGRS
 
 ## Subtitle
 DAGR-Class MGRS Navigator
 
 ## Description
-The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid Tactical puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for $3.99. No network required. No data collected. No accounts to create.
+The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for $3.99. No network required. No data collected. No accounts to create.
 
 YOUR PHONE. DAGR CAPABILITY.
 
@@ -57,7 +57,7 @@ HAPTIC FEEDBACK:
 Tactile confirmation on key actions so you stay oriented without looking at the screen.
 
 BUILT FOR OPERATORS:
-Red Grid Tactical is designed for military personnel, search and rescue teams, law enforcement, wildland firefighters, first responders, hunters, and backcountry hikers who depend on accurate grid coordinates in austere environments. Whether you trained on a DAGR or a lensatic compass, Red Grid speaks your language.
+Red Grid MGRS is designed for military personnel, search and rescue teams, law enforcement, wildland firefighters, first responders, hunters, and backcountry hikers who depend on accurate grid coordinates in austere environments. Whether you trained on a DAGR or a lensatic compass, Red Grid speaks your language.
 
 ZERO FOOTPRINT PRIVACY:
 - No accounts. No sign-up. No login.
@@ -71,7 +71,7 @@ Standard ($3.99) includes live MGRS display, 1 theme, basic tools, and SALUTE re
 mgrs,military,navigation,tactical,grid,gps,land nav,army,dagr,compass
 
 ## What's New (v2.0)
-Red Grid Tactical v2.0 is a complete overhaul:
+Red Grid MGRS v2.0 is a complete overhaul:
 - 4 tactical display themes (red, NVG green, day white, blue force)
 - CASEVAC and ANGUS/CFF report templates added
 - NATO phonetic voice readout for hands-free grid calls
