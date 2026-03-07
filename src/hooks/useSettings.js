@@ -9,12 +9,13 @@
  *   - Callbacks validate input before persisting
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { loadSettings, saveDeclination, savePaceCount, saveTheme } from '../utils/storage';
+import { loadSettings, saveDeclination, savePaceCount, saveTheme, saveCoordFormat } from '../utils/storage';
 
 export function useSettings() {
   const [declination, setDeclinationState] = useState(0);
   const [paceCount, setPaceCountState]     = useState(62);
   const [theme, setThemeState]             = useState('red');
+  const [coordFormat, setCoordFormatState] = useState('mgrs');
   const [loaded, setLoaded]                = useState(false);
   const mounted = useRef(true);
 
@@ -33,6 +34,7 @@ export function useSettings() {
           setDeclinationState(settings.declination ?? 0);
           setPaceCountState(settings.paceCount ?? 62);
           setThemeState(settings.theme ?? 'red');
+          setCoordFormatState(settings.coordFormat ?? 'mgrs');
         }
       } catch (err) {
         // loadSettings already handles errors and returns defaults
@@ -82,5 +84,15 @@ export function useSettings() {
     }
   }, []);
 
-  return { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, loaded };
+  const setCoordFormat = useCallback((val) => {
+    try {
+      const fmt = String(val ?? 'mgrs');
+      setCoordFormatState(fmt);
+      saveCoordFormat(fmt).catch(() => {});
+    } catch (err) {
+      // Input validation failed, just use default
+    }
+  }, []);
+
+  return { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat, loaded };
 }
