@@ -5,7 +5,7 @@
 **DAGR-Class MGRS Navigator**
 
 [![App Store](https://img.shields.io/badge/App%20Store-Download-8B0000?logo=apple)](https://apps.apple.com/app/id6759629554)
-[![Google Play](https://img.shields.io/badge/Google%20Play-Download-CC0000?logo=googleplay)](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical)
+[![Google Play](https://img.shields.io/badge/Google%20Play-Coming%20Soon-555555?logo=googleplay)](#android)
 [![License](https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-8B0000)](LICENSE)
 [![No Tracking](https://img.shields.io/badge/Tracking-None-CC0000)](PRIVACY.md)
 
@@ -74,7 +74,7 @@ No subscription. No recurring charges. One purchase, permanent unlock.
 [App Store](https://apps.apple.com/app/id6759629554) — $3.99 with optional $9.99 Pro upgrade.
 
 ### Android
-[Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) — $3.99 with optional $9.99 Pro upgrade.
+Coming soon. The codebase is cross-platform (React Native / Expo), and Android builds are functional — we're focusing on iOS polish first, with Android launching once the feature set matures. [Watch this repo](https://github.com/RedGridTactical/RedGridMGRS) or check back for updates.
 
 ### Build from Source
 
@@ -100,7 +100,7 @@ Standard features work from source. Pro features require a valid purchase throug
 | Device identifiers | Never | Never | Never |
 
 No ad networks. No analytics. No crash reporting. No third-party SDKs.
-In-app purchases are processed by Apple or Google — Red Grid MGRS never sees your payment details.
+In-app purchases are processed by Apple — Red Grid MGRS never sees your payment details.
 
 Full policy: [Privacy Policy](https://redgridtactical.github.io/RedGridMGRS/privacy.html) | [PRIVACY.md](PRIVACY.md)
 
@@ -114,30 +114,31 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 
 ## Roadmap
 
+> **iOS-first.** We're shipping and polishing on iOS first. Android is cross-platform ready and will launch once the iOS feature set matures.
+
 ### v2.1 — Polish (Spring 2026)
-- Wire coordinate format selector to navigation
 - OLED true black display mode
-- Typography refinement (SF Pro / Roboto Mono)
+- Typography refinement (SF Pro)
 - Refreshed app icon
+- ProGate upsell modal fix
 - One-hand usability audit
 - Smooth tab transitions
 
 ### v2.5 — Pro Features (Summer 2026)
-- StandBy / HUD mode (iOS StandBy + Android always-on display)
+- StandBy / HUD mode (iOS StandBy API)
 - Photo geostamp (MGRS/DTG burned into image)
 - Haptic grid crossing alerts (1km / 100m boundaries)
 - Enhanced voice readout (shake or tap trigger)
-- Android home screen widget (live MGRS)
 
 ### v3.0 — Tactical (Fall/Winter 2026)
-- MGRS grid overlay map (MapKit / Google Maps SDK)
+- MGRS grid overlay map (MapKit)
 - Mission planning (waypoints on map, route plotting)
 - GPX/KML import and export
 - External GPS support (Garmin GLO, Bad Elf via BLE)
 
 ### v3.5+ — Platform Ecosystem (2027)
 - **iOS:** Live Activity + Dynamic Island, Apple Watch companion, Siri Shortcuts, Widgets
-- **Android:** Persistent notification with live MGRS, Wear OS tile, Quick Settings tile
+- **Android launch** — full Play Store release with all features from iOS track
 
 ---
 
