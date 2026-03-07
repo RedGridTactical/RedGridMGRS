@@ -236,5 +236,5 @@ const styles = StyleSheet.create({
 
   noList: { paddingVertical: 30, alignItems: 'center' },
   noListText: { fontFamily: 'monospace', fontSize: 9, textAlign: 'center', letterSpacing: 2, lineHeight: 16 },
-  hint: { marginTop: 20, fontFamily: 'monospace', fontSize: 7, letterSpacing: 1, textAlign: 'center' },
+  hint: { marginTop: 20, fontFamily: 'monospace', fontSize: 10, letterSpacing: 1, textAlign: 'center' },
 });
