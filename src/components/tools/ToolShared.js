@@ -90,7 +90,7 @@ export function ToolHint({ text }) {
 
 const ts = StyleSheet.create({
   inputWrap: { marginBottom: 10 },
-  inputLabel: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 3, marginBottom: 4 },
+  inputLabel: { fontSize: 9, letterSpacing: 3, marginBottom: 4 },
   input: {
     borderWidth: 1,
     fontFamily: 'monospace', fontSize: 14, letterSpacing: 3,
@@ -100,11 +100,11 @@ const ts = StyleSheet.create({
     borderWidth: 1,
     padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  resultLabel: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2 },
+  resultLabel: { fontSize: 9, letterSpacing: 2 },
   resultValue: { fontFamily: 'monospace', fontSize: 18, letterSpacing: 3, fontWeight: '700', flexShrink: 1, textAlign: 'right' },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  rowLabel: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2 },
+  rowLabel: { fontSize: 9, letterSpacing: 2 },
   rowValue: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2 },
   divider: { height: 1, marginVertical: 10 },
-  hint: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 1, marginTop: 8, lineHeight: 14 },
+  hint: { fontSize: 8, letterSpacing: 1, marginTop: 8, lineHeight: 14 },
 });

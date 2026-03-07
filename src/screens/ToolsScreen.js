@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 40 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingTop: 4 },
   title: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', letterSpacing: 5 },
-  subtitle: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 3 },
+  subtitle: { fontSize: 8, letterSpacing: 3 },
 
   card: {
     borderWidth: 1,
@@ -119,12 +119,12 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   cardTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '700', marginBottom: 2 },
-  cardSub:   { fontFamily: 'monospace', fontSize: 9,  letterSpacing: 2 },
+  cardSub:   { fontSize: 9,  letterSpacing: 2 },
   chevron:   { fontFamily: 'monospace', fontSize: 10, transform: [{ rotate: '0deg' }] },
 
   cardBody: { paddingHorizontal: 14, paddingBottom: 16 },
   cardDivider: { height: 1, marginBottom: 14 },
 
   footer: { paddingTop: 24, alignItems: 'center' },
-  footerText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2 },
+  footerText: { fontSize: 10, letterSpacing: 2 },
 });
