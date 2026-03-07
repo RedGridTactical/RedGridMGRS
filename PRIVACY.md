@@ -2,13 +2,13 @@
 
 **Last updated: 2025**
 
-Red Grid Tactical is a free, open-source application. This policy describes exactly what data the app accesses and what it does with it.
+Red Grid MGRS is a free, open-source application. This policy describes exactly what data the app accesses and what it does with it.
 
 ---
 
 ## Location Data
 
-Red Grid Tactical requests access to your device's GPS location **while the app is open** (foreground only). This location data is used solely to calculate and display your current MGRS coordinates on screen.
+Red Grid MGRS requests access to your device's GPS location **while the app is open** (foreground only). This location data is used solely to calculate and display your current MGRS coordinates on screen.
 
 - Location data is **never written to disk**
 - Location data is **never transmitted** over any network
@@ -32,7 +32,7 @@ All stored data lives **on your device only**. None of it is ever transmitted an
 
 ## Network Activity
 
-Red Grid Tactical makes **zero network requests**. There is no:
+Red Grid MGRS makes **zero network requests**. There is no:
 
 - Analytics or usage tracking
 - Crash reporting
@@ -40,7 +40,7 @@ Red Grid Tactical makes **zero network requests**. There is no:
 - Account system or cloud sync
 - Update check or telemetry
 
-In-app purchases (Red Grid Pro) are processed entirely by Apple (App Store) or Google (Play Store). Red Grid Tactical never sees your payment details and receives no personal data from these transactions.
+In-app purchases (Red Grid Pro) are processed entirely by Apple (App Store) or Google (Play Store). Red Grid MGRS never sees your payment details and receives no personal data from these transactions.
 
 You can verify the zero-network claim by reviewing the source code or monitoring network traffic while using the app.
 
@@ -54,7 +54,7 @@ No other permissions are requested.
 
 ## Third Parties
 
-Red Grid Tactical contains no third-party SDKs that collect data. It is built on the Expo runtime framework. In-app purchases use native Apple StoreKit and Google Play Billing APIs — no third-party purchase SDK is included.
+Red Grid MGRS contains no third-party SDKs that collect data. It is built on the Expo runtime framework. In-app purchases use native Apple StoreKit and Google Play Billing APIs — no third-party purchase SDK is included.
 
 ## Children
 

@@ -1,6 +1,6 @@
-# Contributing to Red Grid Tactical
+# Contributing to Red Grid MGRS
 
-Thanks for your interest in contributing to Red Grid Tactical. This guide covers how to get involved.
+Thanks for your interest in contributing to Red Grid MGRS. This guide covers how to get involved.
 
 ## Ways to Contribute
 
