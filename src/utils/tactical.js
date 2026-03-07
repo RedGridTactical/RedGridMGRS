@@ -212,7 +212,7 @@ export function lunarBearing(date, lat, lon) {
   const GMST = (6.697375 + 0.0657098242 * n + UT) % 24;
   const LMST = (GMST + lon / 15 + 24) % 24;
   const RA = Math.atan2(Math.cos(ε) * Math.sin(λ) * Math.cos(β) - Math.sin(ε) * Math.sin(β), Math.cos(λ) * Math.cos(β)) * RAD / 15;
-  const HA = (LMST - (RA + 24)) % 24;
+  const HA = (LMST - RA + 24) % 24;
   const H = HA * 15 * DEG;
 
   const φ = lat * DEG;

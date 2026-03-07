@@ -26,6 +26,7 @@ export function useLocation() {
   const [error, setError] = useState(null);
   const [permissionStatus, setPermissionStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [compassHeading, setCompassHeading] = useState(null);
   const mounted = useRef(true);
   const prevCoords = useRef(null);
 
@@ -134,8 +135,10 @@ export function useLocation() {
       }
 
       // Watch for updates — high accuracy, no background, no storage
+      let posSub = null;
+      let headingSub = null;
       try {
-        const subscription = await Location.watchPositionAsync(
+        posSub = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.BestForNavigation,
             timeInterval: 1000,
@@ -154,21 +157,32 @@ export function useLocation() {
             }
           }
         );
-
-        return () => {
-          try {
-            if (subscription && typeof subscription.remove === 'function') {
-              subscription.remove();
-            }
-          } catch {}
-        };
       } catch (watchErr) {
-        // Watch failed, but position was obtained — continue with static location
         if (mounted.current) {
           setError(`Watch Error: ${watchErr?.message || 'Could not watch position'}`);
         }
-        return undefined;
       }
+
+      // Compass heading from magnetometer — updates as phone rotates, even when stationary
+      try {
+        if (Location.watchHeadingAsync) {
+          headingSub = await Location.watchHeadingAsync((data) => {
+            if (mounted.current) {
+              const h = data?.trueHeading >= 0 ? data.trueHeading : data?.magHeading;
+              if (h !== undefined && h >= 0) {
+                setCompassHeading(h);
+              }
+            }
+          });
+        }
+      } catch {
+        // Magnetometer unavailable — compassHeading stays null, arrow falls back to absolute bearing
+      }
+
+      return () => {
+        try { if (posSub?.remove) posSub.remove(); } catch {}
+        try { if (headingSub?.remove) headingSub.remove(); } catch {}
+      };
     } catch (err) {
       if (mounted.current) {
         setError(`GPS Error: ${err?.message || 'Unknown error'}`);
@@ -208,5 +222,5 @@ export function useLocation() {
     };
   }, [requestAndWatch]);
 
-  return { location, error, permissionStatus, isLoading, retry: requestAndWatch };
+  return { location, error, permissionStatus, isLoading, retry: requestAndWatch, compassHeading };
 }
