@@ -7,6 +7,7 @@
  *   rg_pro_unlocked   — Pro purchase cache (bool string)
  *   rg_waypoint_lists — saved waypoint lists (JSON, Pro only)
  *   rg_theme          — display theme (string, Pro only)
+ *   rg_coord_format   — coordinate format (string, Pro only)
  *
  * NO location data, NO PII, NO tracking ever stored.
  *
@@ -25,6 +26,7 @@ const KEYS = {
   PRO_UNLOCKED:    'rg_pro_unlocked',
   WAYPOINT_LISTS:  'rg_waypoint_lists',
   THEME:           'rg_theme',
+  COORD_FORMAT:    'rg_coord_format',
 };
 
 // ─── SETTINGS ────────────────────────────────────────────────────────────────
@@ -35,12 +37,12 @@ const KEYS = {
 export async function loadSettings() {
   try {
     if (!AsyncStorage || !AsyncStorage.multiGet) {
-      return { declination: 0, paceCount: 62, theme: 'red' };
+      return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs' };
     }
 
     const items = await Promise.race([
       AsyncStorage.multiGet([
-        KEYS.DECLINATION, KEYS.PACE_COUNT, KEYS.THEME,
+        KEYS.DECLINATION, KEYS.PACE_COUNT, KEYS.THEME, KEYS.COORD_FORMAT,
       ]),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Storage timeout')), 5000)
@@ -48,16 +50,18 @@ export async function loadSettings() {
     ]);
 
     if (!items || !Array.isArray(items)) {
-      return { declination: 0, paceCount: 62, theme: 'red' };
+      return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs' };
     }
 
     const dec = items[0];
     const pace = items[1];
     const theme = items[2];
+    const coord = items[3];
 
     let declination = 0;
     let paceCount = 62;
     let themeValue = 'red';
+    let coordFormat = 'mgrs';
 
     if (dec && Array.isArray(dec) && dec[1] !== null) {
       const parsed = parseFloat(dec[1]);
@@ -73,10 +77,14 @@ export async function loadSettings() {
       themeValue = String(theme[1]);
     }
 
-    return { declination, paceCount, theme: themeValue };
+    if (coord && Array.isArray(coord) && coord[1]) {
+      coordFormat = String(coord[1]);
+    }
+
+    return { declination, paceCount, theme: themeValue, coordFormat };
   } catch (err) {
     // AsyncStorage unavailable, corrupted, permission denied, timeout, or parse error
-    return { declination: 0, paceCount: 62, theme: 'red' };
+    return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs' };
   }
 }
 
@@ -125,6 +133,24 @@ export async function saveTheme(value) {
     const stringValue = String(value ?? 'red');
     await Promise.race([
       AsyncStorage.setItem(KEYS.THEME, stringValue),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Save timeout')), 5000)
+      )
+    ]);
+  } catch (err) {
+    // Silent failure — user data stays in memory for this session
+  }
+}
+
+/**
+ * Save coordinate format with error swallowing.
+ */
+export async function saveCoordFormat(value) {
+  try {
+    if (!AsyncStorage || !AsyncStorage.setItem) return;
+    const stringValue = String(value ?? 'mgrs');
+    await Promise.race([
+      AsyncStorage.setItem(KEYS.COORD_FORMAT, stringValue),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Save timeout')), 5000)
       )

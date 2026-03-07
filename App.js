@@ -29,6 +29,7 @@ import { ToolsScreen }    from './src/screens/ToolsScreen';
 import { ReportScreen }   from './src/screens/ReportScreen';
 import { WaypointListsScreen } from './src/screens/WaypointListsScreen';
 import { ThemeScreen }    from './src/screens/ThemeScreen';
+import { CoordFormatsScreen } from './src/screens/CoordFormatsScreen';
 
 import {
   toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance,
@@ -53,6 +54,7 @@ const PRO_TABS = [
   { id: 'tools',  label: 'TOOLS'  },
   { id: 'report', label: 'REPORTS' },
   { id: 'lists',  label: 'LISTS'  },
+  { id: 'coords', label: 'COORDS' },
   { id: 'theme',  label: 'THEME'  },
 ];
 
@@ -104,7 +106,7 @@ function App() {
   const isLandscape = width > height;
 
   const { location, error, isLoading, retry, compassHeading } = useLocation();
-  const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme } = useSettings();
+  const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat } = useSettings();
   const { isPro, isPurchasing, product, purchase, restore } = useIAP();
   const themeData = useTheme(theme || 'red');
 
@@ -225,6 +227,8 @@ function App() {
         restore={restore}
         statusBarStyle={statusBarStyle}
         waypoint={waypoint}
+        coordFormat={coordFormat}
+        setCoordFormat={setCoordFormat}
       />
     </ThemeProvider>
   );
@@ -238,7 +242,7 @@ function AppContent({
   theme, setTheme, setWaypoint,
   showModal, setShowModal, proGateVisible, setProGateVisible,
   proGateFeature, product, isPurchasing, purchase, restore,
-  statusBarStyle, waypoint,
+  statusBarStyle, waypoint, coordFormat, setCoordFormat,
 }) {
   const colors = useColors();
 
@@ -308,8 +312,16 @@ function AppContent({
           />
         )}
 
+        {safeTab === 'coords' && isPro && (
+          <CoordFormatsScreen
+            location={location}
+            coordFormat={coordFormat}
+            setCoordFormat={setCoordFormat}
+          />
+        )}
+
         {/* Upsell tab for non-Pro */}
-        {(safeTab === 'lists' || safeTab === 'theme') && !isPro && (
+        {(safeTab === 'lists' || safeTab === 'theme' || safeTab === 'coords') && !isPro && (
           <UpsellScreen onUpgrade={() => showProGate('Red Grid Pro')} />
         )}
       </View>

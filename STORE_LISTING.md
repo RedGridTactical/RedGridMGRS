@@ -19,6 +19,7 @@ DAGR-EQUIVALENT FEATURES:
 - Waypoint storage with bearing and distance
 - Back azimuth and dead reckoning
 - Speed, elevation, and heading display
+- Multiple coordinate formats (MGRS, UTM, DD, DMS)
 - Full offline operation — zero cloud dependency
 
 BEYOND THE DAGR — 8 TACTICAL TOOLS:
@@ -64,7 +65,7 @@ ZERO FOOTPRINT PRIVACY:
 - No ads. No subscription. No data leaves your device.
 - Location data is held in memory only and never stored or transmitted.
 
-Standard ($3.99) includes live MGRS display, 1 theme, 8 tactical tools, and 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT). Unlock Red Grid Pro ($9.99 one-time in-app purchase) for NATO voice readout, saved waypoint lists, all 6 report templates, display themes, and unlimited waypoints. No subscription. No recurring charges.
+Standard ($3.99) includes live MGRS display, 1 theme, 8 tactical tools, and 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT). Unlock Red Grid Pro ($9.99 one-time in-app purchase) for NATO voice readout, saved waypoint lists, all 6 report templates, display themes, coordinate formats, and unlimited waypoints. No subscription. No recurring charges.
 
 ## Keywords
 mgrs,military,navigation,tactical,grid,gps,land nav,army,dagr,compass
@@ -77,6 +78,7 @@ Red Grid MGRS v2.0 is a complete overhaul:
 - Full accessibility support with VoiceOver and TalkBack
 - Haptic feedback on key interactions
 - Waypoint list organization and management
+- Multiple coordinate formats (MGRS, UTM, DD, DMS)
 - Performance improvements with optimized rendering
 - Enhanced GPS accuracy with smart deduplication
 - Bug fixes and stability improvements across all screens
