@@ -19,7 +19,8 @@ const PRO_FEATURES = [
 
 export function ProGate({ visible, onClose, featureName, product, isPurchasing, onPurchase, onRestore }) {
   const colors = useColors();
-  const priceStr = product?.priceString ?? '$9.99';
+  // expo-iap uses 'displayPrice' not 'priceString'
+  const priceStr = product?.displayPrice ?? '$9.99';
 
   return (
     <Modal
