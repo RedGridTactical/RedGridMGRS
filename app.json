@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Red Grid Tactical",
+    "name": "Red Grid MGRS",
     "slug": "redgrid-tactical",
     "version": "2.0.0",
     "orientation": "default",
@@ -30,8 +30,8 @@
       "bundleIdentifier": "com.redgrid.redgridtactical",
       "buildNumber": "2",
       "infoPlist": {
-        "CFBundleDisplayName": "Red Grid",
-        "NSLocationWhenInUseUsageDescription": "Red Grid Tactical uses your location to display your current grid coordinates. No location data is stored or transmitted.",
+        "CFBundleDisplayName": "Red Grid MGRS",
+        "NSLocationWhenInUseUsageDescription": "Red Grid MGRS uses your location to display your current grid coordinates. No location data is stored or transmitted.",
         "SKAdNetworkItems": [],
         "ITSAppUsesNonExemptEncryption": false
       },
@@ -41,7 +41,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Red Grid Tactical uses your location to display your current grid coordinates. No data is stored or transmitted."
+          "locationWhenInUsePermission": "Red Grid MGRS uses your location to display your current grid coordinates. No data is stored or transmitted."
         }
       ],
       "expo-iap",

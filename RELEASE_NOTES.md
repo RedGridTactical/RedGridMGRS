@@ -1,4 +1,4 @@
-## Red Grid Tactical v1.0.0
+## Red Grid MGRS v1.0.0
 
 First public release.
 
@@ -34,8 +34,8 @@ First public release.
 - Location permission: foreground only
 
 ### Installation
-- **Android:** Download `RedGrid-Tactical.apk` below. Enable "Install from unknown sources" when prompted.
-- **iOS:** Download `RedGrid-Tactical.ipa` below. Install via AltStore (altstore.io).
+- **Android:** Download `RedGrid-MGRS.apk` below. Enable "Install from unknown sources" when prompted.
+- **iOS:** Download `RedGrid-MGRS.ipa` below. Install via AltStore (altstore.io).
 
 ### Permissions
 - Location (while using app) — foreground only, for MGRS display
