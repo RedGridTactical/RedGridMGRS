@@ -2,9 +2,10 @@
  * Shared UI primitives for all tool components.
  * Keeps styling consistent across every tool card.
  */
-import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import React, { useCallback } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, AccessibilityInfo } from 'react-native';
 import { useColors } from '../../utils/ThemeContext';
+import { tapLight, notifySuccess } from '../../utils/haptics';
 
 export function ToolInput({ label, value, onChangeText, placeholder, keyboardType = 'default', autoCapitalize = 'characters' }) {
   const colors = useColors();
@@ -28,15 +29,42 @@ export function ToolInput({ label, value, onChangeText, placeholder, keyboardTyp
 
 export function ToolResult({ label, value, primary = false }) {
   const colors = useColors();
+
+  const handleLongPress = useCallback(async () => {
+    if (!value) return;
+    tapLight();
+    let ExpoClipboard = null;
+    try { ExpoClipboard = require('expo-clipboard'); } catch {}
+    if (ExpoClipboard?.setStringAsync) {
+      await ExpoClipboard.setStringAsync(String(value)).catch(() => {});
+    }
+    notifySuccess();
+    AccessibilityInfo.announceForAccessibility(`${label} copied`);
+  }, [value, label]);
+
   return (
-    <View
-      style={[ts.result, { borderColor: colors.border2, backgroundColor: colors.text5 }, primary && { borderColor: colors.text2, backgroundColor: colors.card }]}
+    <TouchableOpacity
+      onLongPress={handleLongPress}
+      delayLongPress={400}
+      activeOpacity={0.8}
+      accessibilityRole="text"
+      accessibilityLabel={`${label}: ${value}. Long press to copy`}
       accessibilityLiveRegion="polite"
-      accessibilityLabel={`${label}: ${value}`}
     >
-      <Text style={[ts.resultLabel, { color: colors.border }, primary && { color: colors.text2 }]}>{label}</Text>
-      <Text style={[ts.resultValue, { color: colors.text2 }, primary && { fontSize: 22, color: colors.text }]}>{value}</Text>
-    </View>
+      <View
+        style={[ts.result, { borderColor: colors.border2, backgroundColor: colors.text5 }, primary && { borderColor: colors.text2, backgroundColor: colors.card }]}
+      >
+        <Text style={[ts.resultLabel, { color: colors.border }, primary && { color: colors.text2 }]}>{label}</Text>
+        <Text
+          style={[ts.resultValue, { color: colors.text2 }, primary && { fontSize: 22, color: colors.text }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
+          {value}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -73,7 +101,7 @@ const ts = StyleSheet.create({
     padding: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
   resultLabel: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2 },
-  resultValue: { fontFamily: 'monospace', fontSize: 18, letterSpacing: 3, fontWeight: '700' },
+  resultValue: { fontFamily: 'monospace', fontSize: 18, letterSpacing: 3, fontWeight: '700', flexShrink: 1, textAlign: 'right' },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
   rowLabel: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2 },
   rowValue: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2 },

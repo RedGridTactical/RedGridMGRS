@@ -126,5 +126,5 @@ const styles = StyleSheet.create({
   cardDivider: { height: 1, marginBottom: 14 },
 
   footer: { paddingTop: 24, alignItems: 'center' },
-  footerText: { fontFamily: 'monospace', fontSize: 7, letterSpacing: 2 },
+  footerText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2 },
 });

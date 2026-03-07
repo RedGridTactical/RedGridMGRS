@@ -5,6 +5,7 @@ import { useColors } from '../utils/ThemeContext';
 /**
  * MGRSDisplay — Current position in MGRS.
  * compact=true: tighter layout for landscape mode (smaller fonts, less padding).
+ * All Text elements use maxFontSizeMultiplier={1.0} — precision tactical data must never scale.
  */
 export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, altitude, compact = false }) {
   const colors = useColors();
@@ -12,7 +13,7 @@ export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, alt
   if (!mgrs || typeof mgrs !== 'string' || mgrs.trim().split(/\s+/).length < 3) {
     return (
       <View style={[styles.container, compact && styles.containerCompact]} accessibilityRole="text" accessibilityLabel="MGRS grid: no fix">
-        <Text style={[styles.gzd, { color: colors.text2 }]}>---</Text>
+        <Text style={[styles.gzd, { color: colors.text2 }]} maxFontSizeMultiplier={1.0}>---</Text>
       </View>
     );
   }
@@ -30,15 +31,15 @@ export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, alt
     // Landscape: horizontal layout, smaller text
     return (
       <View style={styles.containerCompact} accessibilityRole="text" accessibilityLabel={accLabel} accessibilityLiveRegion="polite">
-        <Text style={[styles.labelCompact, { color: colors.text2 }]} importantForAccessibility="no">GRID</Text>
+        <Text style={[styles.labelCompact, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>GRID</Text>
         <View style={styles.compactRow}>
-          <Text style={[styles.gzdCompact, { color: colors.text2 }]} importantForAccessibility="no">{gzd}</Text>
-          <Text style={[styles.squareCompact, { color: colors.text }]} importantForAccessibility="no">{sq}</Text>
+          <Text style={[styles.gzdCompact, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{gzd}</Text>
+          <Text style={[styles.squareCompact, { color: colors.text }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{sq}</Text>
         </View>
-        <Text style={[styles.eastingCompact, { color: colors.text }]} importantForAccessibility="no">{en}</Text>
+        <Text style={[styles.eastingCompact, { color: colors.text }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{en}</Text>
         <View style={styles.meta}>
-          {accuracy != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no">±{accuracy}m</Text>}
-          {altitude  != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no">ALT {altitude}m</Text>}
+          {accuracy != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>±{accuracy}m</Text>}
+          {altitude  != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>ALT {altitude}m</Text>}
         </View>
       </View>
     );
@@ -47,15 +48,15 @@ export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, alt
   // Portrait: vertical, large
   return (
     <View style={styles.container} accessibilityRole="text" accessibilityLabel={accLabel} accessibilityLiveRegion="polite">
-      <Text style={[styles.label, { color: colors.text2 }]} importantForAccessibility="no">GRID</Text>
+      <Text style={[styles.label, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>GRID</Text>
       <View style={styles.coordBlock}>
-        <Text style={[styles.gzd, { color: colors.text2 }]} importantForAccessibility="no">{gzd}</Text>
-        <Text style={[styles.square, { color: colors.text }]} importantForAccessibility="no">{sq}</Text>
-        <Text style={[styles.easting, { color: colors.text }]} importantForAccessibility="no">{en}</Text>
+        <Text style={[styles.gzd, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{gzd}</Text>
+        <Text style={[styles.square, { color: colors.text }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{sq}</Text>
+        <Text style={[styles.easting, { color: colors.text }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{en}</Text>
       </View>
       <View style={styles.meta}>
-        {accuracy != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no">±{accuracy}m</Text>}
-        {altitude  != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no">ALT {altitude}m</Text>}
+        {accuracy != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>±{accuracy}m</Text>}
+        {altitude  != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>ALT {altitude}m</Text>}
       </View>
     </View>
   );
