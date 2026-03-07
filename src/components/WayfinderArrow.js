@@ -31,6 +31,7 @@ export const WayfinderArrow = React.memo(function WayfinderArrow({ bearing, size
   const rotate = rotateAnim.interpolate({
     inputRange: [-360, 360],
     outputRange: ['-360deg', '360deg'],
+    extrapolate: 'extend',
   });
 
   const arrowSize = size * 0.38;

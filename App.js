@@ -33,7 +33,6 @@ import { ThemeScreen }    from './src/screens/ThemeScreen';
 import {
   toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance,
 } from './src/utils/mgrs';
-import { applyDeclination } from './src/utils/tactical';
 import { tapLight, tapHeavy, tapMedium, notifySuccess } from './src/utils/haptics';
 import { speakMGRS, stopSpeaking } from './src/utils/voice';
 
@@ -104,7 +103,7 @@ function App() {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
 
-  const { location, error, isLoading, retry } = useLocation();
+  const { location, error, isLoading, retry, compassHeading } = useLocation();
   const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme } = useSettings();
   const { isPro, isPurchasing, product, purchase, restore } = useIAP();
   const themeData = useTheme(theme || 'red');
@@ -143,19 +142,26 @@ function App() {
   const mgrsRaw       = useMemo(() => { try { return location ? toMGRS(location.lat, location.lon, 5) : null; } catch { return null; } }, [location]);
   const mgrsFormatted = useMemo(() => { try { return mgrsRaw ? formatMGRS(mgrsRaw) : null; } catch { return null; } }, [mgrsRaw]);
 
-  // Wayfinder
+  // Wayfinder — true bearing (no declination on digital display)
   const { bearing, distance } = useMemo(() => {
     if (!location || !waypoint) return { bearing: null, distance: null };
     try {
-      const raw = calculateBearing(location.lat, location.lon, waypoint.lat, waypoint.lon);
       return {
-        bearing: applyDeclination(raw, declination),
+        bearing: calculateBearing(location.lat, location.lon, waypoint.lat, waypoint.lon),
         distance: calculateDistance(location.lat, location.lon, waypoint.lat, waypoint.lon),
       };
     } catch {
       return { bearing: null, distance: null };
     }
-  }, [location, waypoint, declination]);
+  }, [location, waypoint]);
+
+  // Arrow angle: subtract device heading so arrow points toward waypoint
+  // Falls back to absolute bearing when compass unavailable
+  const arrowAngle = useMemo(() => {
+    if (bearing === null) return null;
+    if (compassHeading === null) return bearing;
+    return ((bearing - compassHeading) + 360) % 360;
+  }, [bearing, compassHeading]);
 
   const waypointMGRS = useMemo(() => { try { return waypoint ? formatMGRS(toMGRS(waypoint.lat, waypoint.lon, 5)) : null; } catch { return null; } }, [waypoint]);
   const arrowSize    = isLandscape ? Math.min(height * 0.52, 190) : 200;
@@ -167,7 +173,7 @@ function App() {
     <LandscapeGrid
       isLoading={isLoading} location={location} error={error} retry={retry}
       mgrsFormatted={mgrsFormatted} waypoint={waypoint} waypointMGRS={waypointMGRS}
-      bearing={bearing} distance={distance} arrowSize={arrowSize}
+      bearing={bearing} arrowAngle={arrowAngle} distance={distance} arrowSize={arrowSize}
       onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
       isPro={isPro} onShowProGate={showProGate}
       onCopyGrid={copyGrid} copyToast={copyToast}
@@ -176,7 +182,7 @@ function App() {
     <PortraitGrid
       isLoading={isLoading} location={location} error={error} retry={retry}
       mgrsFormatted={mgrsFormatted} waypoint={waypoint} waypointMGRS={waypointMGRS}
-      bearing={bearing} distance={distance} arrowSize={arrowSize}
+      bearing={bearing} arrowAngle={arrowAngle} distance={distance} arrowSize={arrowSize}
       onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
       isPro={isPro} onShowProGate={showProGate}
       onCopyGrid={copyGrid} copyToast={copyToast}
@@ -353,7 +359,7 @@ function UpsellScreen({ onUpgrade }) {
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast }) {
   const colors = useColors();
   return (
     <View style={staticStyles.portraitRoot}>
@@ -382,9 +388,9 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
         </View>
       ) : (
         <View style={staticStyles.wpBlock}>
-          {bearing !== null && (
+          {arrowAngle !== null && (
             <View style={staticStyles.arrowWrap}>
-              <WayfinderArrow bearing={bearing} size={arrowSize} />
+              <WayfinderArrow bearing={arrowAngle} size={arrowSize} />
               <Text style={[staticStyles.bearingText, { color: colors.text }]}>{Math.round(bearing)}°</Text>
             </View>
           )}
@@ -417,7 +423,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast }) {
   const colors = useColors();
   return (
     <View style={staticStyles.landscapeRoot}>
@@ -469,9 +475,9 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
       </View>
       <View style={[staticStyles.lsVDiv, { backgroundColor: colors.border2 }]} />
       <View style={staticStyles.lsRight}>
-        {waypoint && bearing !== null ? (
+        {waypoint && arrowAngle !== null ? (
           <View style={staticStyles.lsArrow}>
-            <WayfinderArrow bearing={bearing} size={arrowSize} />
+            <WayfinderArrow bearing={arrowAngle} size={arrowSize} />
             <Text style={[staticStyles.lsBearing, { color: colors.text }]}>{Math.round(bearing)}°</Text>
           </View>
         ) : (
