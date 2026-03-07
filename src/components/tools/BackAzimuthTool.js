@@ -19,7 +19,7 @@ export function BackAzimuthTool({ declination }) {
         <View style={styles.results}>
           <ToolResult label="BACK AZIMUTH" value={`${Math.round(back)}°`} primary />
           {declination !== 0 && (
-            <ToolResult label={`+ ${declination > 0 ? '+' : ''}${declination}° DECLINATION`} value={`${Math.round(backCorrected)}° GRID`} />
+            <ToolResult label={`${declination > 0 ? '+' : ''}${declination}° DECLINATION`} value={`${Math.round(backCorrected)}° GRID`} />
           )}
           <ToolRow label="INPUT" value={`${Math.round(b)}°`} />
         </View>
