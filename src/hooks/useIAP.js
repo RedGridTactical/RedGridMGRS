@@ -71,22 +71,32 @@ export function useIAP() {
     return () => { cancelled = true; };
   }, []);
 
-  // ── Fetch product price from store (non-critical, heavily guarded) ─────────
+  // ── Initialize store connection + fetch product price ──────────────────────
   useEffect(() => {
     if (!IAPModule) return;
 
     let cancelled = false;
 
-    const fetchProduct = async () => {
+    const initAndFetch = async () => {
       try {
-        if (!IAPModule || !IAPModule.getProducts) {
-          return;
+        // expo-iap requires initConnection() before any store operations
+        if (IAPModule.initConnection) {
+          await Promise.race([
+            IAPModule.initConnection(),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Init timeout')), 3000)
+            )
+          ]);
         }
+
+        if (cancelled || !mounted.current) return;
+
+        if (!IAPModule.getProducts) return;
 
         const products = await Promise.race([
           IAPModule.getProducts([PRO_PRODUCT_ID]),
           new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Product fetch timeout')), 2000)
+            setTimeout(() => reject(new Error('Product fetch timeout')), 5000)
           )
         ]);
 
@@ -102,7 +112,7 @@ export function useIAP() {
     // Delay to let native bridge initialize, but use setTimeout safely
     const initialDelay = setTimeout(() => {
       if (!cancelled) {
-        fetchProduct().catch(() => {
+        initAndFetch().catch(() => {
           // Ensure no unhandled rejection
         });
       }
@@ -157,10 +167,13 @@ export function useIAP() {
         return;
       }
 
+      // expo-iap expects { request: { sku, ... }, type?: 'inapp' }
       const result = await Promise.race([
         IAPModule.requestPurchase({
-          sku: PRO_PRODUCT_ID,
-          andDangerouslyFinishTransactionAutomaticallyIOS: false,
+          request: {
+            sku: PRO_PRODUCT_ID,
+            andDangerouslyFinishTransactionAutomaticallyIOS: false,
+          },
         }),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Purchase timeout')), 30000)
@@ -225,8 +238,9 @@ export function useIAP() {
         )
       ]);
 
+      // expo-iap uses 'id' not 'productId'
       const hasPro = purchases?.some?.(p =>
-        p?.productId === PRO_PRODUCT_ID || p?.productId === 'redgrid_pro_lifetime'
+        p?.id === PRO_PRODUCT_ID || p?.id === 'redgrid_pro_lifetime'
       );
 
       if (hasPro) {
