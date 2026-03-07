@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     letterSpacing: 6, marginBottom: 6,
   },
   subtitle: {
-    fontFamily: 'monospace', fontSize: 10,
+    fontSize: 10,
     textAlign: 'center', letterSpacing: 1,
   },
   features: { maxHeight: 180, marginBottom: 16 },
@@ -138,32 +138,32 @@ const styles = StyleSheet.create({
   featureIcon: { fontSize: 18, marginRight: 12, marginTop: 2 },
   featureText: { flex: 1 },
   featureLabel: {
-    fontFamily: 'monospace', fontSize: 11, fontWeight: '700',
+    fontSize: 11, fontWeight: '700',
     letterSpacing: 1, marginBottom: 2,
   },
-  featureSub: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 0.5 },
+  featureSub: { fontSize: 9, letterSpacing: 0.5 },
   divider: { height: 1, marginVertical: 16 },
   price: {
     fontFamily: 'monospace', fontSize: 28, fontWeight: '700',
     textAlign: 'center', letterSpacing: 4, marginBottom: 4,
   },
   priceSub: {
-    fontFamily: 'monospace', fontSize: 8,
+    fontSize: 8,
     textAlign: 'center', letterSpacing: 2, marginBottom: 20,
   },
   purchaseBtn: {
     paddingVertical: 14, alignItems: 'center', marginBottom: 10, minHeight: 44,
   },
   purchaseBtnText: {
-    fontFamily: 'monospace', fontSize: 12, fontWeight: '700',
+    fontSize: 12, fontWeight: '700',
     letterSpacing: 4,
   },
   restoreBtn: { paddingVertical: 10, alignItems: 'center', marginBottom: 4, minHeight: 44 },
-  restoreText: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2 },
+  restoreText: { fontSize: 9, letterSpacing: 2 },
   closeBtn: { paddingVertical: 8, alignItems: 'center', marginBottom: 12, minHeight: 44 },
-  closeText: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 3 },
+  closeText: { fontSize: 9, letterSpacing: 3 },
   legal: {
-    fontFamily: 'monospace', fontSize: 7,
+    fontSize: 7,
     textAlign: 'center', letterSpacing: 0.5, lineHeight: 12,
   },
 });

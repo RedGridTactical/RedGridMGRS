@@ -1,6 +1,6 @@
 /**
- * Red Grid MGRS — Root Application v2.0 (HARDENED)
- * Tabs: GRID · TOOLS · REPORT · LISTS (Pro) · THEME (Pro)
+ * Red Grid MGRS — Root Application v2.1 (HARDENED)
+ * Tabs: GRID · TOOLS · REPORT · LISTS (Pro) · COORDS (Pro) · THEME (Pro)
  *
  * Privacy: no location stored, no network (IAP uses Apple/Google native payment only), no analytics.
  *
@@ -9,9 +9,9 @@
  *   - Graceful fallback UI if startup fails
  *   - All hooks guaranteed to never throw
  */
-import React, { useState, useMemo, useCallback, Component } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect, Component } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity,
+  View, Text, StyleSheet, TouchableOpacity, Animated,
   SafeAreaView, StatusBar, useWindowDimensions, AccessibilityInfo,
 } from 'react-native';
 
@@ -246,36 +246,23 @@ function AppContent({
 }) {
   const colors = useColors();
 
+  // Smooth tab transition — quick fade on content swap
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const prevTab = useRef(safeTab);
+  useEffect(() => {
+    if (prevTab.current !== safeTab) {
+      prevTab.current = safeTab;
+      fadeAnim.setValue(0);
+      Animated.timing(fadeAnim, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+    }
+  }, [safeTab, fadeAnim]);
+
   return (
     <SafeAreaView style={[staticStyles.root, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle={statusBarStyle} backgroundColor={colors.bg} hidden={isLandscape} />
 
-      {/* Tab bar */}
-      <View style={[staticStyles.tabBar, { borderBottomColor: colors.border2, backgroundColor: colors.bg }, isLandscape && staticStyles.tabBarLandscape]} accessibilityRole="tablist">
-        {TABS && Array.isArray(TABS) && TABS.map(t => (
-          <TouchableOpacity
-            key={t?.id || 'unknown'}
-            style={staticStyles.tabItem}
-            onPress={() => { if (t?.id) { tapLight(); setTab(t.id); } }}
-            activeOpacity={0.7}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: safeTab === t?.id }}
-            accessibilityLabel={`${t?.label || ''} tab`}
-          >
-            <Text style={[staticStyles.tabLabel, { color: colors.border }, safeTab === t?.id && { color: colors.text }]}>{t?.label || ''}</Text>
-            {safeTab === t?.id && <View style={[staticStyles.tabIndicator, { backgroundColor: colors.text }]} />}
-          </TouchableOpacity>
-        ))}
-        {/* Pro badge in tab bar */}
-        {isPro && (
-          <View style={[staticStyles.proBadgeBar, { backgroundColor: colors.border2 }]}>
-            <Text style={[staticStyles.proBadgeText, { color: colors.text }]}>PRO</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Screen content */}
-      <View style={staticStyles.screenContent}>
+      {/* Screen content with fade transition */}
+      <Animated.View style={[staticStyles.screenContent, { opacity: fadeAnim }]}>
         {safeTab === 'grid' && gridContent}
 
         {safeTab === 'tools' && (
@@ -324,6 +311,24 @@ function AppContent({
         {(safeTab === 'lists' || safeTab === 'theme' || safeTab === 'coords') && !isPro && (
           <UpsellScreen onUpgrade={() => showProGate('Red Grid Pro')} />
         )}
+      </Animated.View>
+
+      {/* Tab bar — bottom positioned, adaptive spacing for 5+ tabs */}
+      <View style={[staticStyles.tabBar, { borderTopColor: colors.border2, backgroundColor: colors.bg }, isLandscape && staticStyles.tabBarLandscape]} accessibilityRole="tablist">
+        {TABS && Array.isArray(TABS) && TABS.map(t => (
+          <TouchableOpacity
+            key={t?.id || 'unknown'}
+            style={staticStyles.tabItem}
+            onPress={() => { if (t?.id) { tapLight(); setTab(t.id); } }}
+            activeOpacity={0.7}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: safeTab === t?.id }}
+            accessibilityLabel={`${t?.label || ''} tab`}
+          >
+            {safeTab === t?.id && <View style={[staticStyles.tabIndicatorTop, { backgroundColor: colors.text }]} />}
+            <Text style={[staticStyles.tabLabel, TABS.length > 4 && staticStyles.tabLabelCompact, { color: colors.border }, safeTab === t?.id && { color: colors.text }]}>{t?.label || ''}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {/* Waypoint modal */}
@@ -548,21 +553,20 @@ function Crosshair({ size = 50 }) {
 const staticStyles = StyleSheet.create({
   root: { flex:1 },
   // Error boundary fallback (hardcoded red — class component, no hooks)
-  errorRoot: { flex:1, backgroundColor:'#0A0000' },
+  errorRoot: { flex:1, backgroundColor:'#000000' },
   errorContainer: { flex:1, justifyContent:'center', alignItems:'center', padding:20 },
   errorTitle: { fontFamily:'monospace', fontSize:18, fontWeight:'700', letterSpacing:4, color:'#CC0000', marginBottom:16, textAlign:'center' },
-  errorMsg: { fontFamily:'monospace', fontSize:12, color:'#BB3333', textAlign:'center', marginBottom:12, lineHeight:18 },
-  errorDetail: { fontFamily:'monospace', fontSize:10, color:'#AA2222', textAlign:'center', marginBottom:24, lineHeight:14, fontStyle:'italic' },
+  errorMsg: { fontSize:12, color:'#BB3333', textAlign:'center', marginBottom:12, lineHeight:18 },
+  errorDetail: { fontSize:10, color:'#AA2222', textAlign:'center', marginBottom:24, lineHeight:14, fontStyle:'italic' },
   errorRetryBtn: { borderWidth:1, borderColor:'#CC0000', backgroundColor:'#330000', paddingHorizontal:32, paddingVertical:12 },
-  errorRetryText: { fontFamily:'monospace', fontSize:11, color:'#CC0000', letterSpacing:3, fontWeight:'700' },
+  errorRetryText: { fontSize:11, color:'#CC0000', letterSpacing:3, fontWeight:'700' },
   // Tab bar
-  tabBar: { flexDirection:'row', borderBottomWidth:1, alignItems:'center' },
-  tabBarLandscape: { paddingTop: 0 },
+  tabBar: { flexDirection:'row', borderTopWidth:1, alignItems:'center' },
+  tabBarLandscape: { paddingBottom: 0 },
   tabItem: { flex:1, alignItems:'center', paddingVertical:12, position:'relative' },
-  tabLabel: { fontFamily:'monospace', fontSize:10, letterSpacing:3, fontWeight:'700' },
-  tabIndicator: { position:'absolute', bottom:0, left:'10%', right:'10%', height:2 },
-  proBadgeBar: { paddingHorizontal:8, paddingVertical:3, marginRight:8 },
-  proBadgeText: { fontFamily:'monospace', fontSize:9, letterSpacing:3, fontWeight:'700' },
+  tabLabel: { fontSize:10, letterSpacing:3, fontWeight:'700' },
+  tabLabelCompact: { letterSpacing:1, fontSize:9 },
+  tabIndicatorTop: { position:'absolute', top:0, left:'10%', right:'10%', height:2 },
   screenContent: { flex:1 },
   // Portrait
   portraitRoot: { flex:1, paddingHorizontal:20, paddingTop:12, paddingBottom:20 },
@@ -582,23 +586,23 @@ const staticStyles = StyleSheet.create({
   lsBtnWrap: { marginTop:'auto', gap:5 },
   lsBtns: { flexDirection:'row', gap:8 },
   lsBtn: { flex:1, borderWidth:1, paddingVertical:10, alignItems:'center' },
-  lsBtnText: { fontFamily:'monospace', fontSize:10, letterSpacing:3, fontWeight:'700' },
+  lsBtnText: { fontSize:10, letterSpacing:3, fontWeight:'700' },
   lsArrow: { alignItems:'center', gap:8 },
   lsBearing: { fontFamily:'monospace', fontSize:30, letterSpacing:4, fontWeight:'700' },
   lsNoWp: { alignItems:'center', gap:20 },
   // Atoms
   signal: { flexDirection:'row', alignItems:'center', gap:6 },
   signalDot: { width:7, height:7, borderRadius:4 },
-  signalText: { fontFamily:'monospace', fontSize:9, letterSpacing:3 },
+  signalText: { fontSize:9, letterSpacing:3 },
   divider: { height:1, marginVertical:6 },
   errBlock: { paddingVertical:20, alignItems:'center', gap:12 },
-  errText: { fontFamily:'monospace', fontSize:11, textAlign:'center', letterSpacing:1 },
+  errText: { fontSize:11, textAlign:'center', letterSpacing:1 },
   retryBtn: { borderWidth:1, paddingHorizontal:18, paddingVertical:8, minHeight:44 },
-  retryText: { fontFamily:'monospace', fontSize:11, letterSpacing:3 },
+  retryText: { fontSize:11, letterSpacing:3 },
   noWpBlock: { paddingVertical:20, alignItems:'center', gap:16 },
-  noWpText: { fontFamily:'monospace', fontSize:11, letterSpacing:4 },
+  noWpText: { fontSize:11, letterSpacing:4 },
   addBtn: { borderWidth:1, paddingHorizontal:26, paddingVertical:13, minHeight:44 },
-  addBtnText: { fontFamily:'monospace', fontSize:12, letterSpacing:3, fontWeight:'700' },
+  addBtnText: { fontSize:12, letterSpacing:3, fontWeight:'700' },
   wpBlock: { alignItems:'center', paddingVertical:10, gap:12 },
   arrowWrap: { alignItems:'center', gap:6 },
   bearingText: { fontFamily:'monospace', fontSize:26, letterSpacing:4, fontWeight:'700' },
@@ -608,19 +612,19 @@ const staticStyles = StyleSheet.create({
   wpDist: { fontFamily:'monospace', fontSize:22, letterSpacing:4, fontWeight:'700', marginTop:2 },
   wpBtns: { flexDirection:'row', gap:10 },
   editBtn: { borderWidth:1, paddingHorizontal:22, paddingVertical:9, minHeight:44 },
-  editBtnText: { fontFamily:'monospace', fontSize:11, letterSpacing:3 },
+  editBtnText: { fontSize:11, letterSpacing:3 },
   clearBtn: { borderWidth:1, paddingHorizontal:22, paddingVertical:9, minHeight:44 },
-  clearBtnText: { fontFamily:'monospace', fontSize:11, letterSpacing:3 },
+  clearBtnText: { fontSize:11, letterSpacing:3 },
   footer: { marginTop:'auto', paddingTop:16, alignItems:'center' },
-  footerText: { fontFamily:'monospace', fontSize:10, letterSpacing:2 },
-  copyToast: { fontFamily:'monospace', fontSize:9, letterSpacing:2, textAlign:'center', marginTop:4, opacity:0.8 },
+  footerText: { fontSize:10, letterSpacing:2 },
+  copyToast: { fontSize:9, letterSpacing:2, textAlign:'center', marginTop:4, opacity:0.8 },
   voiceBtn: { borderWidth:1, paddingHorizontal:18, paddingVertical:10, minHeight:44, alignItems:'center', marginBottom:8 },
   voiceBtnLocked: { opacity: 0.6 },
-  voiceBtnText: { fontFamily:'monospace', fontSize:10, letterSpacing:3, fontWeight:'700' },
+  voiceBtnText: { fontSize:10, letterSpacing:3, fontWeight:'700' },
   // Upsell
   upsellRoot: { flex:1, alignItems:'center', justifyContent:'center', gap:16, padding:40 },
   upsellTitle: { fontFamily:'monospace', fontSize:24, fontWeight:'700', letterSpacing:6 },
-  upsellSub: { fontFamily:'monospace', fontSize:11, letterSpacing:2 },
+  upsellSub: { fontSize:11, letterSpacing:2 },
   upsellBtn: { borderWidth:1, paddingHorizontal:32, paddingVertical:14 },
-  upsellBtnText: { fontFamily:'monospace', fontSize:12, fontWeight:'700', letterSpacing:4 },
+  upsellBtnText: { fontSize:12, fontWeight:'700', letterSpacing:4 },
 });

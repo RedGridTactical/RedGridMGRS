@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
   title: { fontFamily: 'monospace', fontSize: 16, fontWeight: '700', letterSpacing: 4, marginBottom: 4 },
-  sub: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 1, marginBottom: 20 },
+  sub: { fontSize: 9, letterSpacing: 1, marginBottom: 20 },
   card: {
     flexDirection: 'row', alignItems: 'center', padding: 14, marginBottom: 10,
     borderWidth: 1,
@@ -74,5 +74,5 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace', fontSize: 8,
     borderWidth: 1, paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 2,
   },
-  themeSub: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 0.5 },
+  themeSub: { fontSize: 9, letterSpacing: 0.5 },
 });

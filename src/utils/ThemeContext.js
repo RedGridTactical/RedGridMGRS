@@ -24,14 +24,14 @@ export function useColors() {
   if (!colors) {
     // Fallback: red theme defaults (matches THEMES.red.colors in useTheme.js)
     return {
-      bg:      '#0A0000',
+      bg:      '#000000',
       text:    '#CC0000',
       text2:   '#BB3333',
       text3:   '#AA2222',
       text4:   '#330000',
       text5:   '#1A0000',
       accent:  '#CC0000',
-      card:    '#0D0000',
+      card:    '#0A0000',
       card2:   '#110000',
       border:  '#660000',
       border2: '#330000',
