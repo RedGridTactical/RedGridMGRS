@@ -89,14 +89,12 @@ function latLonToUTM(lat, lon) {
 }
 
 function utmToMGRS(easting, northing, zoneNum, zoneLetter, precision = 5) {
-  // Column letter set
-  const colSets = 6;
+  // Column letter sets cycle every 3 zones; row sets cycle every 2
   const colOrigins = ['ABCDEFGH', 'JKLMNPQR', 'STUVWXYZ'];
   const rowOrigins = ['ABCDEFGHJKLMNPQRSTUV', 'FGHJKLMNPQRSTUVABCDE'];
 
-  const setNum = ((zoneNum - 1) % colSets) + 1;
-  const colSet = colOrigins[Math.floor((setNum - 1) / 2)];
-  const rowSet = rowOrigins[(setNum - 1) % 2];
+  const colSet = colOrigins[(zoneNum - 1) % 3];
+  const rowSet = rowOrigins[(zoneNum - 1) % 2];
 
   const colIdx = Math.floor(easting / 100000) - 1;
   const colLetter = colSet[colIdx];
@@ -205,14 +203,14 @@ export function parseMGRSToLatLon(mgrs) {
     const match = cleaned.match(/^(\d{1,2})([C-HJ-NP-X])([A-HJ-NP-Z]{2})(\d{4,10})$/i);
     if (!match) return null;
     const [, zoneStr, band, sq, nums] = match;
+    if (nums.length % 2 !== 0) return null; // MGRS numeric portion must be even
     const zone = parseInt(zoneStr, 10);
-    const half = Math.floor(nums.length / 2);
+    const half = nums.length / 2;
     const scale = Math.pow(10, 5 - half);
     const easting = parseInt(nums.slice(0, half), 10) * scale;
     const northing = parseInt(nums.slice(half), 10) * scale;
-    const setNum = ((zone - 1) % 6) + 1;
-    const colSet = ['ABCDEFGH', 'JKLMNPQR', 'STUVWXYZ'][Math.floor((setNum - 1) / 2)];
-    const rowSet = ['ABCDEFGHJKLMNPQRSTUV', 'FGHJKLMNPQRSTUVABCDE'][(setNum - 1) % 2];
+    const colSet = ['ABCDEFGH', 'JKLMNPQR', 'STUVWXYZ'][(zone - 1) % 3];
+    const rowSet = ['ABCDEFGHJKLMNPQRSTUV', 'FGHJKLMNPQRSTUVABCDE'][(zone - 1) % 2];
     const colIdx = colSet.indexOf(sq[0].toUpperCase());
     const rowIdx = rowSet.indexOf(sq[1].toUpperCase());
     if (colIdx === -1 || rowIdx === -1) return null;
@@ -221,7 +219,16 @@ export function parseMGRSToLatLon(mgrs) {
     const latRad = ((bandLatMin + 4) * Math.PI) / 180;
     const a = 6378137.0, f = 1 / 298.257223563, e2 = 2 * f - f * f;
     const M_approx = a * ((1 - e2 / 4 - (3 * e2 ** 2) / 64) * latRad - ((3 * e2) / 8 + (3 * e2 ** 2) / 32) * Math.sin(2 * latRad));
-    let fullNorthing = Math.round(M_approx / 2000000) * 2000000 + rowIdx * 100000 + northing;
+    // Approximate UTM northing (includes 10M false northing for southern hemisphere)
+    const approxNorthing = bandLatMin >= 0 ? M_approx : M_approx + 10000000;
+    // Row letters cycle every 2M meters — find the correct cycle for this band
+    const rawNorthing = rowIdx * 100000 + northing;
+    const baseCycle = Math.floor(approxNorthing / 2000000);
+    let fullNorthing = baseCycle * 2000000 + rawNorthing;
+    // Adjust if more than 1M away from band center (wrong cycle)
+    if (fullNorthing - approxNorthing > 1000000) fullNorthing -= 2000000;
+    else if (approxNorthing - fullNorthing > 1000000) fullNorthing += 2000000;
+    // Remove false northing for southern hemisphere
     if (bandLatMin < 0) fullNorthing -= 10000000;
     const k0 = 0.9996, ep2 = e2 / (1 - e2);
     const lonOrigin = ((zone - 1) * 6 - 180 + 3) * (Math.PI / 180);
@@ -237,4 +244,55 @@ export function parseMGRSToLatLon(mgrs) {
     const lon = lonOrigin + (D - ((1 + 2 * T1 + C1) * D ** 3) / 6 + ((5 - 2 * C1 + 28 * T1 - 3 * C1 ** 2 + 8 * ep2 + 24 * T1 ** 2) * D ** 5) / 120) / Math.cos(phi1);
     return { lat: (lat * 180) / Math.PI, lon: (lon * 180) / Math.PI };
   } catch { return null; }
+}
+
+/**
+ * Format lat/lon as UTM string: "18N  583960E  4307305N"
+ */
+export function formatUTM(lat, lon) {
+  const { easting, northing, zoneNum } = latLonToUTM(lat, lon);
+  const hem = lat >= 0 ? 'N' : 'S';
+  return `${zoneNum}${hem}  ${easting}E  ${northing}N`;
+}
+
+/**
+ * Format lat/lon as Decimal Degrees: "38.889500°\n-77.035300°"
+ */
+export function formatDD(lat, lon) {
+  return `${lat.toFixed(6)}°\n${lon.toFixed(6)}°`;
+}
+
+/**
+ * Format lat/lon as Degrees Minutes Seconds: "38° 53' 22.2" N\n77° 2' 7.1" W"
+ */
+export function formatDMS(lat, lon) {
+  function decompose(deg) {
+    const d = Math.floor(Math.abs(deg));
+    const mFull = (Math.abs(deg) - d) * 60;
+    const m = Math.floor(mFull);
+    const s = ((mFull - m) * 60).toFixed(1);
+    return { d, m, s };
+  }
+  const la = decompose(lat), lo = decompose(lon);
+  const latDir = lat >= 0 ? 'N' : 'S', lonDir = lon >= 0 ? 'E' : 'W';
+  return `${la.d}° ${la.m}' ${la.s}" ${latDir}\n${lo.d}° ${lo.m}' ${lo.s}" ${lonDir}`;
+}
+
+/**
+ * Format position for any supported coord format.
+ * @param {number} lat
+ * @param {number} lon
+ * @param {string} format - 'mgrs' | 'utm' | 'dd' | 'dms'
+ * @param {number} precision - MGRS precision (1-5, default 5)
+ * @returns {string} Formatted coordinate string
+ */
+export function formatPosition(lat, lon, format, precision = 5) {
+  try {
+    switch (format) {
+      case 'utm': return formatUTM(lat, lon);
+      case 'dd':  return formatDD(lat, lon);
+      case 'dms': return formatDMS(lat, lon);
+      default:    return formatMGRS(toMGRS(lat, lon, precision));
+    }
+  } catch { return 'ERROR'; }
 }

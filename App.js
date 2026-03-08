@@ -32,7 +32,7 @@ import { ThemeScreen }    from './src/screens/ThemeScreen';
 import { CoordFormatsScreen } from './src/screens/CoordFormatsScreen';
 
 import {
-  toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance,
+  toMGRS, formatMGRS, formatPosition, calculateBearing, calculateDistance, formatDistance,
 } from './src/utils/mgrs';
 import { tapLight, tapHeavy, tapMedium, notifySuccess } from './src/utils/haptics';
 import { speakMGRS, stopSpeaking } from './src/utils/voice';
@@ -119,30 +119,35 @@ function App() {
   const TABS = isPro ? PRO_TABS : FREE_TABS;
 
   const showProGate = useCallback((featureName) => {
-    console.log('[ProGate] showProGate called with:', featureName);
     setProGateFeature(featureName);
     setProGateVisible(true);
   }, []);
 
-  // Tap-to-copy grid
+  // Tap-to-copy grid — copies whatever format is displayed (MGRS, UTM, DD, or DMS)
   const [copyToast, setCopyToast] = useState(false);
   const copyGrid = useCallback(async () => {
-    if (!mgrsFormatted) return;
+    const text = altDisplay || mgrsFormatted;
+    if (!text) return;
     tapLight();
     let ExpoClipboard = null;
     try { ExpoClipboard = require('expo-clipboard'); } catch {}
     if (ExpoClipboard?.setStringAsync) {
-      await ExpoClipboard.setStringAsync(mgrsFormatted).catch(() => {});
+      await ExpoClipboard.setStringAsync(text.replace(/\n/g, '  ')).catch(() => {});
     }
     notifySuccess();
     setCopyToast(true);
     AccessibilityInfo.announceForAccessibility('Grid copied to clipboard');
     setTimeout(() => setCopyToast(false), 1500);
-  }, [mgrsFormatted]);
+  }, [mgrsFormatted, altDisplay]);
 
   // Derived MGRS
   const mgrsRaw       = useMemo(() => { try { return location ? toMGRS(location.lat, location.lon, 5) : null; } catch { return null; } }, [location]);
   const mgrsFormatted = useMemo(() => { try { return mgrsRaw ? formatMGRS(mgrsRaw) : null; } catch { return null; } }, [mgrsRaw]);
+  // Alt format display string (for non-MGRS coordinate formats)
+  const altDisplay = useMemo(() => {
+    if (!location || coordFormat === 'mgrs') return null;
+    try { return formatPosition(location.lat, location.lon, coordFormat); } catch { return null; }
+  }, [location, coordFormat]);
 
   // Wayfinder — true bearing (no declination on digital display)
   const { bearing, distance } = useMemo(() => {
@@ -179,6 +184,7 @@ function App() {
       onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
       isPro={isPro} onShowProGate={showProGate}
       onCopyGrid={copyGrid} copyToast={copyToast}
+      coordFormat={coordFormat} altDisplay={altDisplay}
     />
   ) : (
     <PortraitGrid
@@ -188,6 +194,7 @@ function App() {
       onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
       isPro={isPro} onShowProGate={showProGate}
       onCopyGrid={copyGrid} copyToast={copyToast}
+      coordFormat={coordFormat} altDisplay={altDisplay}
     />
   );
 
@@ -376,7 +383,7 @@ function UpsellScreen({ onUpgrade }) {
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay }) {
   const colors = useColors();
   return (
     <View style={staticStyles.portraitRoot}>
@@ -389,7 +396,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
         ? <ErrBlock error={error} retry={retry} />
         : (
           <TouchableOpacity onPress={onCopyGrid} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Current MGRS grid. Tap to copy">
-            <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact={false} />
+            <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact={false} coordFormat={coordFormat} altDisplay={altDisplay} />
             {copyToast && <Text style={[staticStyles.copyToast, { color: colors.text2 }]}>COPIED TO CLIPBOARD</Text>}
           </TouchableOpacity>
         )
@@ -440,7 +447,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay }) {
   const colors = useColors();
   return (
     <View style={staticStyles.landscapeRoot}>
@@ -452,7 +459,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
         <Div />
         {error ? <ErrBlock error={error} retry={retry} compact /> : (
           <TouchableOpacity onPress={onCopyGrid} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Current MGRS grid. Tap to copy">
-            <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact />
+            <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact coordFormat={coordFormat} altDisplay={altDisplay} />
             {copyToast && <Text style={[staticStyles.copyToast, { color: colors.text2 }]}>COPIED TO CLIPBOARD</Text>}
           </TouchableOpacity>
         )}

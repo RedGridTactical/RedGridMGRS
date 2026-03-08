@@ -4,7 +4,7 @@
  */
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { toMGRS, formatMGRS } from '../utils/mgrs';
+import { formatPosition } from '../utils/mgrs';
 import { useColors } from '../utils/ThemeContext';
 
 const FORMATS = [
@@ -14,33 +14,6 @@ const FORMATS = [
   { id: 'dms',  label: 'DEG MIN SEC',      sub: 'Degrees, minutes, seconds — aviation and nautical standard' },
 ];
 
-function toUTM(lat, lon) {
-  // Simplified UTM display (zone + easting/northing from MGRS math)
-  const zone = Math.floor((lon + 180) / 6) + 1;
-  const mgrs = toMGRS(lat, lon, 5);
-  // Extract easting/northing from MGRS numerics
-  const nums = mgrs.replace(/[^0-9]/g, '');
-  const half = Math.floor(nums.length / 2);
-  const e = parseInt(nums.slice(0, half), 10);
-  const n = parseInt(nums.slice(half), 10);
-  const hem = lat >= 0 ? 'N' : 'S';
-  return `${zone}${hem}  ${e}E  ${n}N`;
-}
-
-function toDMS(deg) {
-  const d = Math.floor(Math.abs(deg));
-  const mFull = (Math.abs(deg) - d) * 60;
-  const m = Math.floor(mFull);
-  const s = ((mFull - m) * 60).toFixed(1);
-  return { d, m, s };
-}
-
-function formatDMS(lat, lon) {
-  const la = toDMS(lat), lo = toDMS(lon);
-  const latDir = lat >= 0 ? 'N' : 'S', lonDir = lon >= 0 ? 'E' : 'W';
-  return `${la.d}° ${la.m}' ${la.s}" ${latDir}\n${lo.d}° ${lo.m}' ${lo.s}" ${lonDir}`;
-}
-
 export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
   const colors = useColors();
   const positions = useMemo(() => {
@@ -48,10 +21,10 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
     const { lat, lon } = location;
     try {
       return {
-        mgrs: formatMGRS(toMGRS(lat, lon, 5)),
-        utm:  toUTM(lat, lon),
-        dd:   `${lat.toFixed(6)}°\n${lon.toFixed(6)}°`,
-        dms:  formatDMS(lat, lon),
+        mgrs: formatPosition(lat, lon, 'mgrs'),
+        utm:  formatPosition(lat, lon, 'utm'),
+        dd:   formatPosition(lat, lon, 'dd'),
+        dms:  formatPosition(lat, lon, 'dms'),
       };
     } catch {
       return null;

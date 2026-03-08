@@ -7,9 +7,43 @@ import { useColors } from '../utils/ThemeContext';
  * compact=true: tighter layout for landscape mode (smaller fonts, less padding).
  * All Text elements use maxFontSizeMultiplier={1.0} — precision tactical data must never scale.
  */
-export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, altitude, compact = false }) {
-  const colors = useColors();
+const FORMAT_LABELS = { mgrs: 'GRID', utm: 'UTM', dd: 'DECIMAL DEG', dms: 'DEG MIN SEC' };
 
+export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, altitude, compact = false, coordFormat = 'mgrs', altDisplay }) {
+  const colors = useColors();
+  const label = FORMAT_LABELS[coordFormat] || 'GRID';
+
+  // If non-MGRS format is selected and altDisplay is provided, render alt format
+  if (coordFormat !== 'mgrs' && altDisplay) {
+    const accLabel = `${label}: ${altDisplay.replace(/\n/g, ', ')}` +
+      (accuracy != null ? `, accuracy plus or minus ${accuracy} meters` : '') +
+      (altitude != null ? `, altitude ${altitude} meters` : '');
+
+    if (compact) {
+      return (
+        <View style={styles.containerCompact} accessibilityRole="text" accessibilityLabel={accLabel} accessibilityLiveRegion="polite">
+          <Text style={[styles.labelCompact, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{label}</Text>
+          <Text style={[styles.altValueCompact, { color: colors.text }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{altDisplay}</Text>
+          <View style={styles.meta}>
+            {accuracy != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>±{accuracy}m</Text>}
+            {altitude  != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>ALT {altitude}m</Text>}
+          </View>
+        </View>
+      );
+    }
+    return (
+      <View style={styles.container} accessibilityRole="text" accessibilityLabel={accLabel} accessibilityLiveRegion="polite">
+        <Text style={[styles.label, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{label}</Text>
+        <Text style={[styles.altValue, { color: colors.text }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{altDisplay}</Text>
+        <View style={styles.meta}>
+          {accuracy != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>±{accuracy}m</Text>}
+          {altitude  != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>ALT {altitude}m</Text>}
+        </View>
+      </View>
+    );
+  }
+
+  // MGRS format (default)
   if (!mgrs || typeof mgrs !== 'string' || mgrs.trim().split(/\s+/).length < 3) {
     return (
       <View style={[styles.container, compact && styles.containerCompact]} accessibilityRole="text" accessibilityLabel="MGRS grid: no fix">
@@ -28,7 +62,6 @@ export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, alt
     (altitude != null ? `, altitude ${altitude} meters` : '');
 
   if (compact) {
-    // Landscape: horizontal layout, smaller text
     return (
       <View style={styles.containerCompact} accessibilityRole="text" accessibilityLabel={accLabel} accessibilityLiveRegion="polite">
         <Text style={[styles.labelCompact, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>GRID</Text>
@@ -45,7 +78,6 @@ export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, alt
     );
   }
 
-  // Portrait: vertical, large
   return (
     <View style={styles.container} accessibilityRole="text" accessibilityLabel={accLabel} accessibilityLiveRegion="polite">
       <Text style={[styles.label, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>GRID</Text>
@@ -70,6 +102,10 @@ const styles = StyleSheet.create({
   gzd:     { fontFamily: 'monospace', fontSize: 22, letterSpacing: 3, fontWeight: '600' },
   square:  { fontFamily: 'monospace', fontSize: 36, letterSpacing: 6, fontWeight: '700' },
   easting: { fontFamily: 'monospace', fontSize: 32, letterSpacing: 8, fontWeight: '600' },
+
+  // ── Alt format (non-MGRS) ──
+  altValue: { fontFamily: 'monospace', fontSize: 26, letterSpacing: 4, fontWeight: '700', textAlign: 'center', lineHeight: 36 },
+  altValueCompact: { fontFamily: 'monospace', fontSize: 18, letterSpacing: 3, fontWeight: '700', lineHeight: 26 },
 
   // ── Compact / Landscape ──
   containerCompact: { paddingVertical: 8 },
