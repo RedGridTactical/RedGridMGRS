@@ -14,6 +14,7 @@ const PRO_FEATURES = [
   { icon: '🗣️', label: 'Voice Readout', sub: 'NATO phonetic grid readout — hands-free operation' },
   { icon: '📍', label: 'Saved Waypoint Lists', sub: 'Save named patrol routes, OBJs, and rally points' },
   { icon: '📋', label: 'Tactical Reports', sub: 'ICS 201, CASEVAC, ANGUS/CFF, and custom templates' },
+  { icon: '🧭', label: 'Coordinate Formats', sub: 'UTM, decimal degrees, DMS — on the main grid display' },
   { icon: '🔴', label: 'Display Themes', sub: 'NVG green, day white, blue-force — preserve night vision' },
 ];
 
@@ -28,7 +29,7 @@ export function ProGate({ visible, onClose, featureName, product, isPurchasing, 
       transparent
       animationType="fade"
       onRequestClose={onClose}
-      onShow={() => console.log('[ProGate] Modal onShow fired — visible:', visible)}
+      onShow={() => {}}
     >
       <View style={styles.overlay}>
         <View style={[styles.modal, { backgroundColor: colors.card, borderColor: colors.text2 }]} accessibilityViewIsModal={true}>

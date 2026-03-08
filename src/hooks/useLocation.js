@@ -123,9 +123,9 @@ export function useLocation() {
         updateLocationIfChanged({
           lat: initial.coords.latitude,
           lon: initial.coords.longitude,
-          accuracy: initial.coords.accuracy,
+          accuracy: Math.round(initial.coords.accuracy),
           heading: initial.coords.heading,
-          altitude: initial.coords.altitude,
+          altitude: initial.coords.altitude ? Math.round(initial.coords.altitude) : null,
           speed: initial.coords.speed,
         });
       }

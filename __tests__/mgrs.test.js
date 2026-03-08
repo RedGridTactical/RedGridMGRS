@@ -9,6 +9,7 @@ const {
   calculateBearing,
   calculateDistance,
   formatDistance,
+  parseMGRSToLatLon,
 } = require('../src/utils/mgrs');
 
 describe('mgrs.js - MGRS Coordinate Conversion', () => {
@@ -238,6 +239,175 @@ describe('mgrs.js - MGRS Coordinate Conversion', () => {
       const result = formatDistance(2500);
       expect(result).not.toContain('undefined');
       expect(result).not.toContain('NaN');
+    });
+  });
+
+  // ─── Ground-truth MGRS validation (column letter sets across zones) ──
+  describe('toMGRS ground-truth: column letter set per zone', () => {
+
+    // Column letters cycle every 3 zones: A-H, J-R, S-Z
+    // These tests verify the correct 100km grid square for known locations
+    // Reference: NGA MGRS grid — validated against geotrans/NGA tools
+
+    test('Zone 10 (San Francisco, 37.7749 -122.4194) → column from A-H set', () => {
+      const mgrs = toMGRS(37.7749, -122.4194, 5);
+      expect(mgrs).toMatch(/^10S/);
+      // Zone 10: (10-1)%3=0 → A-H. Column letter must be in A-H
+      const colLetter = mgrs[3];
+      expect('ABCDEFGH').toContain(colLetter);
+    });
+
+    test('Zone 11 (Las Vegas, 36.1699 -115.1398) → column from J-R set', () => {
+      const mgrs = toMGRS(36.1699, -115.1398, 5);
+      expect(mgrs).toMatch(/^11S/);
+      const colLetter = mgrs[3];
+      expect('JKLMNPQR').toContain(colLetter);
+    });
+
+    test('Zone 12 (Salt Lake City, 40.7608 -111.8910) → column from S-Z set', () => {
+      const mgrs = toMGRS(40.7608, -111.8910, 5);
+      expect(mgrs).toMatch(/^12T/);
+      const colLetter = mgrs[3];
+      expect('STUVWXYZ').toContain(colLetter);
+    });
+
+    test('Zone 13 (Denver, 39.7392 -104.9903) → column from A-H set', () => {
+      const mgrs = toMGRS(39.7392, -104.9903, 5);
+      expect(mgrs).toMatch(/^13S/);
+      const colLetter = mgrs[3];
+      expect('ABCDEFGH').toContain(colLetter);
+    });
+
+    test('Zone 14 (Fort Hood TX, 31.1344 -97.7765) → column from J-R set', () => {
+      const mgrs = toMGRS(31.1344, -97.7765, 5);
+      expect(mgrs).toMatch(/^14R/);
+      const colLetter = mgrs[3];
+      expect('JKLMNPQR').toContain(colLetter);
+    });
+
+    test('Zone 15 (Minneapolis, 44.9778 -93.2650) → column from S-Z set', () => {
+      const mgrs = toMGRS(44.9778, -93.2650, 5);
+      expect(mgrs).toMatch(/^15T/);
+      const colLetter = mgrs[3];
+      expect('STUVWXYZ').toContain(colLetter);
+    });
+
+    test('Zone 16 (Nashville, 36.1627 -86.7816) → column from A-H set', () => {
+      const mgrs = toMGRS(36.1627, -86.7816, 5);
+      expect(mgrs).toMatch(/^16S/);
+      const colLetter = mgrs[3];
+      expect('ABCDEFGH').toContain(colLetter);
+    });
+
+    test('Zone 17 (Fort Liberty NC, 35.1397 -79.0078) → column from J-R set', () => {
+      const mgrs = toMGRS(35.1397, -79.0078, 5);
+      expect(mgrs).toMatch(/^17S/);
+      const colLetter = mgrs[3];
+      expect('JKLMNPQR').toContain(colLetter);
+    });
+
+    test('Zone 18 (Washington DC, 38.8895 -77.0353) → column from S-Z set', () => {
+      const mgrs = toMGRS(38.8895, -77.0353, 5);
+      expect(mgrs).toMatch(/^18S/);
+      const colLetter = mgrs[3];
+      expect('STUVWXYZ').toContain(colLetter);
+    });
+
+    test('Zone 19 (Boston, 42.3601 -71.0589) → column from A-H set', () => {
+      const mgrs = toMGRS(42.3601, -71.0589, 5);
+      expect(mgrs).toMatch(/^19T/);
+      const colLetter = mgrs[3];
+      expect('ABCDEFGH').toContain(colLetter);
+    });
+  });
+
+  // ─── parseMGRSToLatLon ─────────────────────────────────────────────
+  describe('parseMGRSToLatLon(mgrsString)', () => {
+
+    test('Valid 10-digit MGRS should parse to lat/lon', () => {
+      const result = parseMGRSToLatLon('18SUJ2348005997');
+      expect(result).not.toBeNull();
+      expect(result.lat).toBeCloseTo(38.89, 1);
+      expect(result.lon).toBeCloseTo(-77.04, 1);
+    });
+
+    test('Valid 8-digit MGRS should parse', () => {
+      const result = parseMGRSToLatLon('18SUJ23480599');
+      expect(result).not.toBeNull();
+      expect(result.lat).toBeCloseTo(38.89, 0);
+    });
+
+    test('Valid 6-digit MGRS should parse', () => {
+      const result = parseMGRSToLatLon('18SUJ234059');
+      expect(result).not.toBeNull();
+    });
+
+    test('Valid 4-digit MGRS should parse', () => {
+      const result = parseMGRSToLatLon('18SUJ2305');
+      expect(result).not.toBeNull();
+    });
+
+    test('MGRS with spaces should parse (strips whitespace)', () => {
+      const result = parseMGRSToLatLon('18S UJ 23480 05997');
+      expect(result).not.toBeNull();
+      expect(result.lat).toBeCloseTo(38.89, 1);
+    });
+
+    test('Odd digit count should return null (invalid split)', () => {
+      const result = parseMGRSToLatLon('18SUJ12345');
+      expect(result).toBeNull();
+    });
+
+    test('Invalid MGRS string should return null', () => {
+      expect(parseMGRSToLatLon('NOTMGRS')).toBeNull();
+      expect(parseMGRSToLatLon('')).toBeNull();
+      expect(parseMGRSToLatLon('123')).toBeNull();
+    });
+
+    test('Zone 17 MGRS should parse (column from J-R set)', () => {
+      // Fort Liberty NC area — column letter must be from J-R
+      const mgrs = toMGRS(35.1397, -79.0078, 5);
+      const parsed = parseMGRSToLatLon(mgrs);
+      expect(parsed).not.toBeNull();
+      expect(parsed.lat).toBeCloseTo(35.14, 1);
+      expect(parsed.lon).toBeCloseTo(-79.01, 1);
+    });
+
+    test('Zone 14 MGRS should parse (column from J-R set)', () => {
+      const mgrs = toMGRS(31.1344, -97.7765, 5);
+      const parsed = parseMGRSToLatLon(mgrs);
+      expect(parsed).not.toBeNull();
+      expect(parsed.lat).toBeCloseTo(31.13, 1);
+    });
+
+    test('Zone 16 MGRS should parse (column from A-H set)', () => {
+      const mgrs = toMGRS(36.1627, -86.7816, 5);
+      const parsed = parseMGRSToLatLon(mgrs);
+      expect(parsed).not.toBeNull();
+      expect(parsed.lat).toBeCloseTo(36.16, 1);
+    });
+
+    test('Round-trip all US zones: toMGRS → parseMGRSToLatLon ≈ original', () => {
+      // Test zones 10-19 covering CONUS
+      const testPoints = [
+        { lat: 37.77, lon: -122.42, zone: 10 }, // San Francisco
+        { lat: 36.17, lon: -115.14, zone: 11 }, // Las Vegas
+        { lat: 40.76, lon: -111.89, zone: 12 }, // Salt Lake City
+        { lat: 39.74, lon: -104.99, zone: 13 }, // Denver
+        { lat: 31.13, lon: -97.78, zone: 14 },  // Fort Hood
+        { lat: 44.98, lon: -93.27, zone: 15 },  // Minneapolis
+        { lat: 36.16, lon: -86.78, zone: 16 },  // Nashville
+        { lat: 35.14, lon: -79.01, zone: 17 },  // Fort Liberty
+        { lat: 38.89, lon: -77.04, zone: 18 },  // Washington DC
+        { lat: 42.36, lon: -71.06, zone: 19 },  // Boston
+      ];
+      for (const pt of testPoints) {
+        const mgrs = toMGRS(pt.lat, pt.lon, 5);
+        const parsed = parseMGRSToLatLon(mgrs);
+        expect(parsed).not.toBeNull();
+        expect(parsed.lat).toBeCloseTo(pt.lat, 1);
+        expect(parsed.lon).toBeCloseTo(pt.lon, 1);
+      }
     });
   });
 
