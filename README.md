@@ -61,6 +61,7 @@ Live MGRS display, 1 theme, 8 tactical tools, 3 report templates (SALUTE, 9-Line
 - **Saved Waypoint Lists** — patrol routes, OBJs, rally points, persisted on device
 - **All 6 Report Templates** — Standard includes SALUTE, MEDEVAC, SPOT
 - **NATO Voice Readout** — hands-free grid calls using phonetic alphabet
+- **Coordinate Formats** — UTM, decimal degrees, DMS on the main grid display
 - **4 Display Themes** — red lens, NVG green, day white, blue force
 - **Unlimited Waypoints** — no storage limits
 
@@ -116,13 +117,14 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 
 > **iOS-first.** We're shipping and polishing on iOS first. Android is cross-platform ready and will launch once the iOS feature set matures.
 
-### v2.1 — Polish (Spring 2026)
-- OLED true black display mode
-- Typography refinement (SF Pro)
-- Refreshed app icon
-- ProGate upsell modal fix
-- One-hand usability audit
-- Smooth tab transitions
+### v2.1 — Polish ✅ (Shipped March 2026)
+- ~~OLED true black display mode~~ ✅
+- ~~Typography refinement (SF Pro)~~ ✅
+- ~~Refreshed app icon~~ ✅
+- ~~ProGate upsell modal~~ ✅
+- ~~6-tab bottom navigation~~ ✅
+- ~~Coordinate format selector (UTM/DD/DMS)~~ ✅
+- ~~Wayfinder arrow compass heading~~ ✅
 
 ### v2.5 — Pro Features (Summer 2026)
 - StandBy / HUD mode (iOS StandBy API)
