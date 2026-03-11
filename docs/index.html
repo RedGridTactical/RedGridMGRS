@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Red Grid MGRS — DAGR-Class Military GPS Navigator</title>
+<meta name="description" content="Red Grid MGRS is a DAGR-class military GPS navigator. Live MGRS coordinates, magnetic declination, waypoints, and tactical tools. Zero tracking. $3.99 on the App Store.">
+<meta name="keywords" content="MGRS, military GPS, DAGR, land navigation, tactical GPS, grid coordinates, military app, waypoint, compass, bearing, azimuth, SALUTE report, MEDEVAC, Army, Marine Corps">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Red Grid MGRS — DAGR-Class Military GPS Navigator">
+<meta property="og:description" content="The military's DAGR costs $2,500. Red Grid MGRS puts the same core land nav capabilities in your pocket for $3.99. Zero tracking. Open source.">
+<meta property="og:image" content="https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png">
+<meta property="og:url" content="https://redgridtactical.github.io/RedGridMGRS/">
+<meta property="og:type" content="website">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Red Grid MGRS — DAGR-Class Military GPS Navigator">
+<meta name="twitter:description" content="Live MGRS coordinates, waypoints, tactical tools. Zero tracking. $3.99.">
+<meta name="twitter:image" content="https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png">
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MobileApplication",
+  "name": "Red Grid MGRS",
+  "operatingSystem": "iOS",
+  "applicationCategory": "NavigationApplication",
+  "offers": {
+    "@type": "Offer",
+    "price": "3.99",
+    "priceCurrency": "USD"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "5",
+    "ratingCount": "1"
+  },
+  "description": "DAGR-class military GPS navigator with live MGRS coordinates, magnetic declination, waypoints, and tactical tools. Zero network calls. Zero tracking.",
+  "url": "https://redgridtactical.github.io/RedGridMGRS/",
+  "downloadUrl": "https://apps.apple.com/app/id6759629554",
+  "softwareVersion": "2.0.0",
+  "author": {
+    "@type": "Organization",
+    "name": "Red Grid Tactical"
+  }
+}
+</script>
+
+<style>
+  :root {
+    --red: #8B0000;
+    --red-light: #A50000;
+    --dark: #0a0a0a;
+    --gray: #1a1a1a;
+    --gray-light: #666;
+    --bg: #fafafa;
+    --card-bg: #fff;
+    --border: #e0e0e0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    color: var(--gray);
+    line-height: 1.6;
+    background: var(--bg);
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 50%, #2a0000 100%);
+    color: #fff;
+    text-align: center;
+    padding: 3rem 1.5rem 2.5rem;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 0.25rem;
+    color: #fff;
+  }
+
+  .hero h1 span { color: #cc3333; }
+
+  .hero .tagline {
+    font-size: 1.1rem;
+    color: #cc9999;
+    font-weight: 500;
+    margin-bottom: 1.25rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .hero .pitch {
+    font-size: 1.15rem;
+    color: #ccc;
+    max-width: 640px;
+    margin: 0 auto 1.5rem;
+    line-height: 1.7;
+  }
+
+  .hero .pitch strong { color: #fff; }
+
+  .cta-row {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+
+  .cta-primary {
+    background: #fff;
+    color: var(--dark);
+  }
+
+  .cta-secondary {
+    background: transparent;
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.3);
+  }
+
+  .cta-btn svg { width: 20px; height: 20px; }
+
+  .badges {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+  }
+
+  .badges img { height: 22px; }
+
+  /* SCREENSHOTS */
+  .screenshots {
+    padding: 2rem 1rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .screenshots-inner {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .screenshots-inner img {
+    width: 200px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    flex-shrink: 0;
+  }
+
+  /* SECTIONS */
+  section {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+  }
+
+  section h2 {
+    font-size: 1.6rem;
+    color: var(--red);
+    margin-bottom: 1rem;
+    font-weight: 700;
+  }
+
+  section h3 {
+    font-size: 1.1rem;
+    color: var(--gray);
+    margin: 1.25rem 0 0.5rem;
+    font-weight: 600;
+  }
+
+  /* FEATURES GRID */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .feature-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+
+  .feature-card .icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-card h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    color: var(--gray);
+  }
+
+  .feature-card p {
+    font-size: 0.85rem;
+    color: var(--gray-light);
+    line-height: 1.5;
+  }
+
+  /* COMPARISON TABLE */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .compare-table th, .compare-table td {
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .compare-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-light);
+  }
+
+  .compare-table td:first-child { font-weight: 600; }
+
+  .check { color: #2e7d32; font-weight: 700; }
+  .cross { color: #999; }
+
+  /* PRICING */
+  .pricing-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .price-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+  }
+
+  .price-card.featured {
+    border-color: var(--red);
+    box-shadow: 0 0 0 1px var(--red);
+  }
+
+  .price-card .price {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--gray);
+  }
+
+  .price-card .price-label {
+    font-size: 0.85rem;
+    color: var(--gray-light);
+    margin-bottom: 0.75rem;
+  }
+
+  .price-card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .price-card li {
+    font-size: 0.9rem;
+    padding: 0.25rem 0;
+    color: var(--gray);
+  }
+
+  .price-card li::before {
+    content: "\2713 ";
+    color: var(--red);
+    font-weight: 700;
+  }
+
+  /* PRIVACY STRIP */
+  .privacy-strip {
+    background: var(--dark);
+    color: #ccc;
+    text-align: center;
+    padding: 2rem 1.5rem;
+  }
+
+  .privacy-strip h2 { color: #cc3333; margin-bottom: 0.75rem; }
+
+  .privacy-grid {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+
+  .privacy-item {
+    text-align: center;
+    max-width: 160px;
+  }
+
+  .privacy-item .icon { font-size: 1.5rem; margin-bottom: 0.35rem; }
+  .privacy-item strong { display: block; color: #fff; font-size: 0.9rem; }
+  .privacy-item span { font-size: 0.8rem; color: #999; }
+
+  /* FAQ */
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 0;
+  }
+
+  .faq-item h4 {
+    font-size: 0.95rem;
+    color: var(--gray);
+    margin-bottom: 0.35rem;
+  }
+
+  .faq-item p {
+    font-size: 0.9rem;
+    color: var(--gray-light);
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--gray-light);
+    font-size: 0.85rem;
+  }
+
+  footer a { color: var(--red); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 1.8rem; }
+    .hero .pitch { font-size: 1rem; }
+    .screenshots-inner img { width: 150px; }
+    section { padding: 2rem 1rem; }
+    .privacy-grid { gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <h1><span>Red Grid</span> MGRS</h1>
+  <div class="tagline">DAGR-Class Military GPS Navigator</div>
+  <p class="pitch">
+    The military's DAGR costs <strong>$2,500</strong> and weighs a pound.
+    Red Grid MGRS puts the same core land navigation capabilities in your pocket
+    for <strong>$3.99</strong>. Zero network. Zero tracking. Open source.
+  </p>
+
+  <div class="cta-row">
+    <a href="https://apps.apple.com/app/id6759629554" class="cta-btn cta-primary">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      App Store — $3.99
+    </a>
+    <a href="https://github.com/RedGridTactical/RedGridMGRS" class="cta-btn cta-secondary">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+      View Source
+    </a>
+  </div>
+
+  <div class="badges">
+    <a href="https://www.producthunt.com/products/red-grid-mgrs"><img src="https://img.shields.io/badge/Product%20Hunt-Launch%20Day-DA552F?logo=producthunt&logoColor=white" alt="Product Hunt"></a>
+    <img src="https://img.shields.io/badge/Tracking-None-CC0000" alt="No Tracking">
+    <img src="https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-8B0000" alt="License">
+  </div>
+</div>
+
+<!-- SCREENSHOTS -->
+<div class="screenshots">
+  <div class="screenshots-inner">
+    <img src="images/screenshot_1_grid.png" alt="Live MGRS grid display" loading="lazy">
+    <img src="images/screenshot_2_tools.png" alt="Tactical tools" loading="lazy">
+    <img src="images/screenshot_3_report.png" alt="Report templates" loading="lazy">
+    <img src="images/screenshot_4_landscape.png" alt="Landscape mode" loading="lazy">
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section>
+  <h2>DAGR Capabilities in Your Pocket</h2>
+  <div class="features">
+    <div class="feature-card">
+      <div class="icon">&#127759;</div>
+      <h4>Live MGRS Coordinates</h4>
+      <p>4/6/8/10-digit precision. 1-meter resolution. Tap to copy any grid to clipboard.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">&#129517;</div>
+      <h4>Magnetic Declination</h4>
+      <p>WMM 2025 model (same as DoD). Auto-calculate or manual offset.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">&#128205;</div>
+      <h4>Waypoints + Wayfinder</h4>
+      <p>Save positions. Get bearing, distance, and a compass-relative arrow to any waypoint.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">&#128736;</div>
+      <h4>8 Tactical Tools</h4>
+      <p>Back azimuth, dead reckoning, resection, pace count, TDS, sun/moon, precision selector.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">&#128220;</div>
+      <h4>6 Report Templates</h4>
+      <p>SALUTE, 9-Line MEDEVAC, SPOT, CASEVAC, ICS 201, CFF. Fill and copy, radio-ready.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">&#128274;</div>
+      <h4>Zero Network Calls</h4>
+      <p>No analytics. No tracking. No accounts. GPS coordinates never leave your device.</p>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section>
+  <h2>Red Grid MGRS vs. The Competition</h2>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Red Grid MGRS</th>
+        <th>DAGR (AN/PSN-13)</th>
+        <th>Tactical NAV</th>
+        <th>MilGPS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Price</td>
+        <td><strong>$3.99</strong></td>
+        <td>$2,500</td>
+        <td>$4.99+</td>
+        <td>$4.99</td>
+      </tr>
+      <tr>
+        <td>Live MGRS</td>
+        <td class="check">&#10003;</td>
+        <td class="check">&#10003;</td>
+        <td class="check">&#10003;</td>
+        <td class="check">&#10003;</td>
+      </tr>
+      <tr>
+        <td>Magnetic Declination</td>
+        <td class="check">&#10003; WMM 2025</td>
+        <td class="check">&#10003;</td>
+        <td class="check">&#10003;</td>
+        <td class="cross">&#10007;</td>
+      </tr>
+      <tr>
+        <td>Report Templates</td>
+        <td class="check">&#10003; 6 types</td>
+        <td class="cross">&#10007;</td>
+        <td class="cross">&#10007;</td>
+        <td class="cross">&#10007;</td>
+      </tr>
+      <tr>
+        <td>Open Source</td>
+        <td class="check">&#10003;</td>
+        <td class="cross">&#10007;</td>
+        <td class="cross">&#10007;</td>
+        <td class="cross">&#10007;</td>
+      </tr>
+      <tr>
+        <td>Zero Network / Tracking</td>
+        <td class="check">&#10003; Verified</td>
+        <td class="check">&#10003;</td>
+        <td>Unknown</td>
+        <td>Unknown</td>
+      </tr>
+      <tr>
+        <td>Tactical Tools</td>
+        <td class="check">&#10003; 8 tools</td>
+        <td>Limited</td>
+        <td>Some</td>
+        <td>Basic</td>
+      </tr>
+      <tr>
+        <td>Weighs</td>
+        <td>0 lbs (your phone)</td>
+        <td>1.0 lb</td>
+        <td>0 lbs</td>
+        <td>0 lbs</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- PRIVACY -->
+<div class="privacy-strip">
+  <h2>Zero-Network Architecture</h2>
+  <p>Red Grid MGRS makes zero HTTP requests during normal operation. Your position data exists in memory only.</p>
+  <div class="privacy-grid">
+    <div class="privacy-item">
+      <div class="icon">&#128274;</div>
+      <strong>No Analytics</strong>
+      <span>No SDK. No telemetry.</span>
+    </div>
+    <div class="privacy-item">
+      <div class="icon">&#128225;</div>
+      <strong>No Network</strong>
+      <span>Works in airplane mode.</span>
+    </div>
+    <div class="privacy-item">
+      <div class="icon">&#128100;</div>
+      <strong>No Accounts</strong>
+      <span>No login. No passwords.</span>
+    </div>
+    <div class="privacy-item">
+      <div class="icon">&#128187;</div>
+      <strong>Open Source</strong>
+      <span>Verify every claim.</span>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<section>
+  <h2>Pricing</h2>
+  <div class="pricing-cards">
+    <div class="price-card">
+      <div class="price">$3.99</div>
+      <div class="price-label">Standard</div>
+      <ul>
+        <li>Live MGRS display (all precisions)</li>
+        <li>All 8 tactical tools</li>
+        <li>3 report templates (SALUTE, MEDEVAC, SPOT)</li>
+        <li>1 waypoint</li>
+        <li>Day White theme</li>
+      </ul>
+    </div>
+    <div class="price-card featured">
+      <div class="price">$9.99</div>
+      <div class="price-label">Pro Upgrade (one-time)</div>
+      <ul>
+        <li>Unlimited saved waypoint lists</li>
+        <li>All 6 report templates</li>
+        <li>NATO voice readout</li>
+        <li>UTM, DD, DMS coordinate formats</li>
+        <li>4 themes: Red Lens, NVG, Blue Force, Day</li>
+        <li>No subscription. Ever.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section>
+  <h2>Frequently Asked Questions</h2>
+
+  <div class="faq-item">
+    <h4>Does this replace my DAGR?</h4>
+    <p>For training, STXs, ruck marches, and permissive GPS environments: yes. The DAGR's SAASM module matters in contested environments, but for the other 90% of use, Red Grid MGRS delivers the same core land nav capabilities.</p>
+  </div>
+
+  <div class="faq-item">
+    <h4>Does it work without cell service?</h4>
+    <p>Yes. The app uses your phone's GPS receiver, which communicates directly with satellites. No cell tower, no Wi-Fi, no internet required. Works in airplane mode.</p>
+  </div>
+
+  <div class="faq-item">
+    <h4>What data do you collect?</h4>
+    <p>None. Zero analytics, zero tracking, zero crash reporting. GPS coordinates exist in memory only. Read the source code to verify.</p>
+  </div>
+
+  <div class="faq-item">
+    <h4>Is MGRS the same as UTM?</h4>
+    <p>MGRS is built on UTM but adds a grid zone designator and 100km square identification. Red Grid MGRS shows both formats (Pro feature), plus decimal degrees and DMS.</p>
+  </div>
+
+  <div class="faq-item">
+    <h4>How accurate is it compared to the DAGR?</h4>
+    <p>Red Grid MGRS uses the DMA (Defense Mapping Agency) MGRS algorithm with the Vincenty formula for bearing/distance calculations (sub-millimeter accuracy on the WGS84 ellipsoid). The same math the DAGR uses. GPS accuracy depends on your phone's receiver chip and satellite geometry.</p>
+  </div>
+
+  <div class="faq-item">
+    <h4>Is there a subscription?</h4>
+    <p>No. $3.99 buys the app. $9.99 Pro upgrade is one-time. No recurring charges, ever.</p>
+  </div>
+
+  <div class="faq-item">
+    <h4>When is Android coming?</h4>
+    <p>The codebase is cross-platform (React Native / Expo). Android builds work today. We're polishing the iOS experience first and will launch Android once the feature set matures. Star the GitHub repo to stay updated.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-links">
+    <a href="https://apps.apple.com/app/id6759629554">App Store</a>
+    <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>
+    <a href="https://www.producthunt.com/products/red-grid-mgrs">Product Hunt</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="support.html">Support</a>
+    <a href="mailto:redgridtactical@gmail.com">Contact</a>
+  </div>
+  <p>&copy; 2026 Red Grid Tactical. MIT + Commons Clause License.</p>
+</footer>
+
+</body>
+</html>

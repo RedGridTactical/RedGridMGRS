@@ -6,6 +6,7 @@
 
 [![App Store](https://img.shields.io/badge/App%20Store-Download-8B0000?logo=apple)](https://apps.apple.com/app/id6759629554)
 [![Google Play](https://img.shields.io/badge/Google%20Play-Coming%20Soon-555555?logo=googleplay)](#android)
+[![Product Hunt](https://img.shields.io/badge/Product%20Hunt-Launch-DA552F?logo=producthunt&logoColor=white)](https://www.producthunt.com/products/red-grid-mgrs)
 [![License](https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-8B0000)](LICENSE)
 [![No Tracking](https://img.shields.io/badge/Tracking-None-CC0000)](PRIVACY.md)
 
