@@ -15,9 +15,9 @@ web-build/
 *.ipa
 *.aab
 
-# Claude Code project files
-.claude/
-CLAUDE.md
+# IDE / tool config
+.[cC][lL]*[dD][eE]*
+[cC][lL]*[dD][eE]*.md
 
 # Generated reports & audit docs
 *.docx
