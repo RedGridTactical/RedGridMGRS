@@ -8,9 +8,10 @@ import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
   ScrollView, Alert,
 } from 'react-native';
-import { loadWaypointLists, saveWaypointLists } from '../utils/storage';
-import { toMGRS, formatMGRS } from '../utils/mgrs';
+import { loadWaypointLists, saveWaypointLists, trackActionAndMaybeReview } from '../utils/storage';
+import { toMGRS, formatMGRS, parseMGRSToLatLon } from '../utils/mgrs';
 import { useColors } from '../utils/ThemeContext';
+import { notifyWarning } from '../utils/haptics';
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
@@ -20,6 +21,10 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
   const [activeList,  setActiveList]  = useState(null); // list id
   const [newListName, setNewListName] = useState('');
   const [addingList,  setAddingList]  = useState(false);
+  const [enteringGrid, setEnteringGrid] = useState(false);
+  const [gridInput,    setGridInput]    = useState('');
+  const [gridLabel,    setGridLabel]    = useState('');
+  const [gridError,    setGridError]    = useState('');
 
   useEffect(() => {
     loadWaypointLists().then(setLists).catch(() => {});
@@ -64,6 +69,24 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
     const wp = { id: uid(), label: `WP ${list.waypoints.length + 1}`, lat: location.lat, lon: location.lon, mgrs };
     const updated = lists.map(l => l.id === listId ? { ...l, waypoints: [...l.waypoints, wp] } : l);
     persist(updated).catch(() => {});
+    trackActionAndMaybeReview();
+  };
+
+  // ── Add custom MGRS grid as waypoint ──
+  const addCustomGrid = (listId) => {
+    const cleaned = gridInput.replace(/\s+/g, '').toUpperCase();
+    if (cleaned.length < 6) { notifyWarning(); setGridError('INVALID — ENTER FULL MGRS GRID'); return; }
+    const parsed = parseMGRSToLatLon(cleaned);
+    if (!parsed) { notifyWarning(); setGridError('COULD NOT PARSE MGRS COORDINATE'); return; }
+    const list = lists.find(l => l.id === listId);
+    if (!list) return;
+    if (list.waypoints.length >= 20) { Alert.alert('Limit reached', 'Maximum 20 waypoints per list.'); return; }
+    const mgrs = formatMGRS(toMGRS(parsed.lat, parsed.lon, 5));
+    const wp = { id: uid(), label: gridLabel.trim().toUpperCase() || `WP ${list.waypoints.length + 1}`, lat: parsed.lat, lon: parsed.lon, mgrs };
+    const updated = lists.map(l => l.id === listId ? { ...l, waypoints: [...l.waypoints, wp] } : l);
+    persist(updated).catch(() => {});
+    setGridInput(''); setGridLabel(''); setGridError(''); setEnteringGrid(false);
+    trackActionAndMaybeReview();
   };
 
   // ── Rename waypoint ──
@@ -146,12 +169,54 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
         <View style={styles.wpSection}>
           <View style={styles.wpHeader}>
             <Text style={[styles.wpHeaderText, { color: colors.border }]}>{currentList.name} — {currentList.waypoints.length} WAYPOINTS</Text>
-            {location && (
-              <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.text2 }]} onPress={() => addCurrentPosition(currentList.id)} accessibilityRole="button" accessibilityLabel="Mark current position as waypoint">
-                <Text style={[styles.addWpBtnText, { color: colors.text2 }]}>+ MARK POSITION</Text>
+            <View style={styles.wpHeaderBtns}>
+              <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.text2 }]} onPress={() => { setEnteringGrid(true); setGridError(''); }} accessibilityRole="button" accessibilityLabel="Enter MGRS grid manually">
+                <Text style={[styles.addWpBtnText, { color: colors.text2 }]}>+ ENTER GRID</Text>
               </TouchableOpacity>
-            )}
+              {location && (
+                <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.border }]} onPress={() => addCurrentPosition(currentList.id)} accessibilityRole="button" accessibilityLabel="Mark current position as waypoint">
+                  <Text style={[styles.addWpBtnText, { color: colors.border }]}>+ MARK POS</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
+
+          {/* Manual MGRS grid entry */}
+          {enteringGrid && (
+            <View style={[styles.gridEntryBox, { borderColor: colors.border2, backgroundColor: colors.card }]}>
+              <TextInput
+                style={[styles.gridEntryInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }]}
+                value={gridInput}
+                onChangeText={t => { setGridInput(t); setGridError(''); }}
+                placeholder="18S UJ 12345 67890"
+                placeholderTextColor={colors.text4}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                autoFocus
+                maxLength={20}
+                accessibilityLabel="MGRS coordinate"
+              />
+              <TextInput
+                style={[styles.gridLabelInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }]}
+                value={gridLabel}
+                onChangeText={setGridLabel}
+                placeholder="LABEL (OPTIONAL)"
+                placeholderTextColor={colors.text4}
+                autoCapitalize="characters"
+                maxLength={16}
+                accessibilityLabel="Waypoint label"
+              />
+              {gridError ? <Text style={[styles.gridError, { color: colors.text }]}>{gridError}</Text> : null}
+              <View style={styles.gridEntryBtns}>
+                <TouchableOpacity style={[styles.gridSaveBtn, { borderColor: colors.text2 }]} onPress={() => addCustomGrid(currentList.id)} accessibilityRole="button" accessibilityLabel="Add grid waypoint">
+                  <Text style={[styles.gridSaveBtnText, { color: colors.text2 }]}>ADD</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.gridCancelBtn} onPress={() => { setEnteringGrid(false); setGridInput(''); setGridLabel(''); setGridError(''); }} accessibilityRole="button" accessibilityLabel="Cancel grid entry">
+                  <Text style={[styles.gridCancelBtnText, { color: colors.border }]}>CANCEL</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
           {currentList.waypoints.length === 0 && (
             <Text style={[styles.emptyText, { color: colors.text4 }]}>NO WAYPOINTS — TAP MARK POSITION TO ADD YOUR CURRENT GRID</Text>
@@ -233,6 +298,18 @@ const styles = StyleSheet.create({
   wpNavText: { fontSize: 9, letterSpacing: 2 },
   wpDel: { paddingHorizontal: 8, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
   wpDelText: { fontSize: 12 },
+
+  wpHeaderBtns: { flexDirection: 'row', gap: 6 },
+
+  gridEntryBox: { borderWidth: 1, padding: 10, gap: 8, marginBottom: 8 },
+  gridEntryInput: { borderWidth: 1, fontFamily: 'monospace', fontSize: 16, letterSpacing: 4, paddingHorizontal: 10, paddingVertical: 8 },
+  gridLabelInput: { borderWidth: 1, fontFamily: 'monospace', fontSize: 11, letterSpacing: 2, paddingHorizontal: 10, paddingVertical: 6 },
+  gridError: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2, textAlign: 'center' },
+  gridEntryBtns: { flexDirection: 'row', gap: 8 },
+  gridSaveBtn: { flex: 1, borderWidth: 1, paddingVertical: 8, alignItems: 'center', minHeight: 44, justifyContent: 'center' },
+  gridSaveBtnText: { fontSize: 10, letterSpacing: 3, fontWeight: '700' },
+  gridCancelBtn: { paddingHorizontal: 12, paddingVertical: 8, minHeight: 44, justifyContent: 'center' },
+  gridCancelBtnText: { fontSize: 10, letterSpacing: 2 },
 
   noList: { paddingVertical: 30, alignItems: 'center' },
   noListText: { fontSize: 9, textAlign: 'center', letterSpacing: 2, lineHeight: 16 },

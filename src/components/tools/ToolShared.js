@@ -85,7 +85,7 @@ export function ToolDivider() {
 
 export function ToolHint({ text }) {
   const colors = useColors();
-  return <Text style={[ts.hint, { color: colors.text4 }]}>{text}</Text>;
+  return <Text style={[ts.hint, { color: colors.text4 }]} maxFontSizeMultiplier={1.3}>{text}</Text>;
 }
 
 const ts = StyleSheet.create({

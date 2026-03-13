@@ -40,7 +40,7 @@ const TOOLS = [
   { id: 'prec',     label: 'MGRS PRECISION',   sub: 'Convert grid to reporting precision',   Component: PrecisionTool     },
 ];
 
-export function ToolsScreen({ location, declination, paceCount, setDeclination, setPaceCount }) {
+export function ToolsScreen({ location, declination, paceCount, setDeclination, setPaceCount, compassHeading }) {
   const colors = useColors();
   const [openTool, setOpenTool] = useState(null);
 
@@ -86,6 +86,7 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
                   paceCount={paceCount}
                   setDeclination={setDeclination}
                   setPaceCount={setPaceCount}
+                  compassHeading={compassHeading}
                 />
               </View>
             )}
