@@ -36,12 +36,14 @@ import {
 } from './src/utils/mgrs';
 import { tapLight, tapHeavy, tapMedium, notifySuccess } from './src/utils/haptics';
 import { speakMGRS, stopSpeaking } from './src/utils/voice';
+import { trackActionAndMaybeReview } from './src/utils/storage';
 
 // ─── GLOBAL TEXT SCALING CAP ────────────────────────────────────────────────
-// Prevent system font-size settings from breaking tactical layout.
-// MGRS grid display overrides to 1.0 (precision data must never scale).
+// Prevent system font-size from breaking tactical layout.
+// Two-tier: structural UI locked via per-component caps, body text gets some room.
+// MGRSDisplay overrides to 1.0 (precision data must never scale).
 Text.defaultProps = Text.defaultProps || {};
-Text.defaultProps.maxFontSizeMultiplier = 1.2;
+Text.defaultProps.maxFontSizeMultiplier = 1.0;
 
 const FREE_TABS = [
   { id: 'grid',   label: 'GRID'   },
@@ -138,6 +140,7 @@ function App() {
     setCopyToast(true);
     AccessibilityInfo.announceForAccessibility('Grid copied to clipboard');
     setTimeout(() => setCopyToast(false), 1500);
+    trackActionAndMaybeReview(); // fire-and-forget, never blocks UI
   }, [mgrsFormatted, altDisplay]);
 
   // Derived MGRS
@@ -236,6 +239,7 @@ function App() {
         waypoint={waypoint}
         coordFormat={coordFormat}
         setCoordFormat={setCoordFormat}
+        compassHeading={compassHeading}
       />
     </ThemeProvider>
   );
@@ -250,6 +254,7 @@ function AppContent({
   showModal, setShowModal, proGateVisible, setProGateVisible,
   proGateFeature, product, isPurchasing, purchase, restore,
   statusBarStyle, waypoint, coordFormat, setCoordFormat,
+  compassHeading,
 }) {
   const colors = useColors();
 
@@ -279,6 +284,7 @@ function AppContent({
             paceCount={paceCount}
             setDeclination={setDeclination}
             setPaceCount={setPaceCount}
+            compassHeading={compassHeading}
           />
         )}
 
@@ -388,7 +394,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
   return (
     <View style={staticStyles.portraitRoot}>
       <View style={staticStyles.header}>
-        <Text style={[staticStyles.appTitle, { color: colors.text }]}>RED GRID MGRS</Text>
+        <Text style={[staticStyles.appTitle, { color: colors.text }]} suppressHighlighting={true}>RED GRID MGRS</Text>
         <SignalBadge isLoading={isLoading} location={location} />
       </View>
       <Div />
@@ -440,7 +446,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
             <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.border }]}>SPEAK GRID{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
           </TouchableOpacity>
         )}
-        <Text style={[staticStyles.footerText, { color: colors.text4 }]}>NO DATA STORED · NO NETWORK · OPEN SOURCE</Text>
+        <Text style={[staticStyles.footerText, { color: colors.text4 }]} maxFontSizeMultiplier={1.3}>NO DATA STORED · NO NETWORK · OPEN SOURCE</Text>
       </View>
     </View>
   );
@@ -453,7 +459,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
     <View style={staticStyles.landscapeRoot}>
       <View style={staticStyles.lsLeft}>
         <View style={staticStyles.lsHeader}>
-          <Text style={[staticStyles.lsTitle, { color: colors.text }]}>RED GRID MGRS</Text>
+          <Text style={[staticStyles.lsTitle, { color: colors.text }]} suppressHighlighting={true}>RED GRID MGRS</Text>
           <SignalBadge isLoading={isLoading} location={location} />
         </View>
         <Div />
@@ -494,7 +500,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
               <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.border }]}>SPEAK GRID{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
             </TouchableOpacity>
           )}
-          <Text style={[staticStyles.footerText, { color: colors.text4 }]}>NO DATA STORED · NO NETWORK</Text>
+          <Text style={[staticStyles.footerText, { color: colors.text4 }]} maxFontSizeMultiplier={1.3}>NO DATA STORED · NO NETWORK</Text>
         </View>
       </View>
       <View style={[staticStyles.lsVDiv, { backgroundColor: colors.border2 }]} />
@@ -537,7 +543,7 @@ function ErrBlock({ error, retry, compact }) {
   const colors = useColors();
   return (
     <View style={[staticStyles.errBlock, compact && { paddingVertical: 10 }]}>
-      <Text style={[staticStyles.errText, { color: colors.text2 }]}>{error}</Text>
+      <Text style={[staticStyles.errText, { color: colors.text2 }]} maxFontSizeMultiplier={1.3}>{error}</Text>
       <TouchableOpacity style={[staticStyles.retryBtn, { borderColor: colors.border }]} onPress={retry} accessibilityRole="button" accessibilityLabel="Retry GPS signal acquisition">
         <Text style={[staticStyles.retryText, { color: colors.text2 }]}>RETRY</Text>
       </TouchableOpacity>
