@@ -19,6 +19,7 @@ import { useLocation }  from './src/hooks/useLocation';
 import { useSettings }  from './src/hooks/useSettings';
 import { useIAP }       from './src/hooks/useIAP';
 import { useTheme }     from './src/hooks/useTheme';
+import { useStoreReview } from './src/hooks/useStoreReview';
 import { ThemeProvider, useColors } from './src/utils/ThemeContext';
 
 import { MGRSDisplay }    from './src/components/MGRSDisplay';
@@ -36,7 +37,6 @@ import {
 } from './src/utils/mgrs';
 import { tapLight, tapHeavy, tapMedium, notifySuccess } from './src/utils/haptics';
 import { speakMGRS, stopSpeaking } from './src/utils/voice';
-import { trackActionAndMaybeReview } from './src/utils/storage';
 
 // ─── GLOBAL TEXT SCALING CAP ────────────────────────────────────────────────
 // Prevent system font-size from breaking tactical layout.
@@ -111,6 +111,10 @@ function App() {
   const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat } = useSettings();
   const { isPro, isPurchasing, product, purchase, restore } = useIAP();
   const themeData = useTheme(theme || 'red');
+  const { checkAndPromptReview } = useStoreReview();
+
+  // Prompt for App Store review on mount (gated by open count, install age, cooldown)
+  useEffect(() => { checkAndPromptReview(); }, []);
 
   const [tab, setTab]               = useState('grid');
   const [waypoint, setWaypoint]     = useState(null);
@@ -140,7 +144,6 @@ function App() {
     setCopyToast(true);
     AccessibilityInfo.announceForAccessibility('Grid copied to clipboard');
     setTimeout(() => setCopyToast(false), 1500);
-    trackActionAndMaybeReview(); // fire-and-forget, never blocks UI
   }, [mgrsFormatted, altDisplay]);
 
   // Derived MGRS
@@ -188,6 +191,7 @@ function App() {
       isPro={isPro} onShowProGate={showProGate}
       onCopyGrid={copyGrid} copyToast={copyToast}
       coordFormat={coordFormat} altDisplay={altDisplay}
+      compassHeading={compassHeading}
     />
   ) : (
     <PortraitGrid
@@ -198,6 +202,7 @@ function App() {
       isPro={isPro} onShowProGate={showProGate}
       onCopyGrid={copyGrid} copyToast={copyToast}
       coordFormat={coordFormat} altDisplay={altDisplay}
+      compassHeading={compassHeading}
     />
   );
 
@@ -389,13 +394,16 @@ function UpsellScreen({ onUpgrade }) {
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading }) {
   const colors = useColors();
   return (
     <View style={staticStyles.portraitRoot}>
       <View style={staticStyles.header}>
         <Text style={[staticStyles.appTitle, { color: colors.text }]} suppressHighlighting={true}>RED GRID MGRS</Text>
-        <SignalBadge isLoading={isLoading} location={location} />
+        <View style={staticStyles.headerRight}>
+          {compassHeading !== null && <Text style={[staticStyles.headingText, { color: colors.text2 }]}>HDG {Math.round(compassHeading)}°</Text>}
+          <SignalBadge isLoading={isLoading} location={location} />
+        </View>
       </View>
       <Div />
       {error
@@ -453,14 +461,17 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading }) {
   const colors = useColors();
   return (
     <View style={staticStyles.landscapeRoot}>
       <View style={staticStyles.lsLeft}>
         <View style={staticStyles.lsHeader}>
           <Text style={[staticStyles.lsTitle, { color: colors.text }]} suppressHighlighting={true}>RED GRID MGRS</Text>
-          <SignalBadge isLoading={isLoading} location={location} />
+          <View style={staticStyles.headerRight}>
+            {compassHeading !== null && <Text style={[staticStyles.headingText, { color: colors.text2 }]}>HDG {Math.round(compassHeading)}°</Text>}
+            <SignalBadge isLoading={isLoading} location={location} />
+          </View>
         </View>
         <Div />
         {error ? <ErrBlock error={error} retry={retry} compact /> : (
@@ -603,6 +614,9 @@ const staticStyles = StyleSheet.create({
   lsArrow: { alignItems:'center', gap:8 },
   lsBearing: { fontFamily:'monospace', fontSize:30, letterSpacing:4, fontWeight:'700' },
   lsNoWp: { alignItems:'center', gap:20 },
+  // Header right cluster (heading + signal badge)
+  headerRight: { flexDirection:'row', alignItems:'center', gap:10 },
+  headingText: { fontFamily:'monospace', fontSize:10, letterSpacing:2, fontWeight:'600' },
   // Atoms
   signal: { flexDirection:'row', alignItems:'center', gap:6 },
   signalDot: { width:7, height:7, borderRadius:4 },
