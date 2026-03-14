@@ -9,6 +9,9 @@
 [![Product Hunt](https://img.shields.io/badge/Product%20Hunt-Launch-DA552F?logo=producthunt&logoColor=white)](https://www.producthunt.com/products/red-grid-mgrs)
 [![License](https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-8B0000)](LICENSE)
 [![No Tracking](https://img.shields.io/badge/Tracking-None-CC0000)](PRIVACY.md)
+[![GitHub stars](https://img.shields.io/github/stars/RedGridTactical/RedGridMGRS)](https://github.com/RedGridTactical/RedGridMGRS/stargazers)
+
+> ⭐ If you find this useful, consider [starring the repo](https://github.com/RedGridTactical/RedGridMGRS) — it helps others discover it.
 
 The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for $3.99. No network required. No data collected. Open source.
 

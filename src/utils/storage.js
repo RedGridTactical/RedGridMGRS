@@ -8,8 +8,6 @@
  *   rg_waypoint_lists — saved waypoint lists (JSON, Pro only)
  *   rg_theme          — display theme (string, Pro only)
  *   rg_coord_format   — coordinate format (string, Pro only)
- *   rg_review_actions  — count of meaningful user actions (int)
- *   rg_review_done     — whether review has been requested (bool string)
  *
  * NO location data, NO PII, NO tracking ever stored.
  *
@@ -29,8 +27,6 @@ const KEYS = {
   WAYPOINT_LISTS:  'rg_waypoint_lists',
   THEME:           'rg_theme',
   COORD_FORMAT:    'rg_coord_format',
-  REVIEW_ACTIONS:  'rg_review_actions',
-  REVIEW_DONE:     'rg_review_done',
 };
 
 // ─── SETTINGS ────────────────────────────────────────────────────────────────
@@ -211,44 +207,6 @@ export async function saveWaypointLists(lists) {
     ]);
   } catch (err) {
     // Silent failure — in-memory data persists for this session
-  }
-}
-
-// ─── REVIEW PROMPT ──────────────────────────────────────────────────────────
-/**
- * Track a meaningful user action (grid copy, waypoint save, tool use).
- * After 5+ actions, request an App Store review via SKStoreReviewController.
- * Apple controls actual display (max 3/year). We only call once per install.
- */
-const REVIEW_THRESHOLD = 5;
-
-export async function trackActionAndMaybeReview() {
-  try {
-    if (!AsyncStorage || !AsyncStorage.getItem) return;
-
-    // Already requested? Don't ask again.
-    const done = await AsyncStorage.getItem(KEYS.REVIEW_DONE);
-    if (done === 'true') return;
-
-    // Increment action count
-    const raw = await AsyncStorage.getItem(KEYS.REVIEW_ACTIONS);
-    const count = (parseInt(raw, 10) || 0) + 1;
-    await AsyncStorage.setItem(KEYS.REVIEW_ACTIONS, String(count));
-
-    if (count < REVIEW_THRESHOLD) return;
-
-    // Threshold met — request review
-    let StoreReview = null;
-    try { StoreReview = require('expo-store-review'); } catch { return; }
-    if (!StoreReview?.isAvailableAsync) return;
-
-    const available = await StoreReview.isAvailableAsync();
-    if (!available) return;
-
-    await StoreReview.requestReview();
-    await AsyncStorage.setItem(KEYS.REVIEW_DONE, 'true');
-  } catch {
-    // Silent — never interrupt the user experience for review tracking
   }
 }
 

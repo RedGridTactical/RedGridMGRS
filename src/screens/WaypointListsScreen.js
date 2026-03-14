@@ -3,15 +3,17 @@
  * Save named waypoint lists (e.g. "PATROL ROUTE", "OBJ SET ALPHA").
  * Up to 10 lists, 20 waypoints each. All stored locally, never transmitted.
  */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
   ScrollView, Alert,
 } from 'react-native';
-import { loadWaypointLists, saveWaypointLists, trackActionAndMaybeReview } from '../utils/storage';
+import { loadWaypointLists, saveWaypointLists } from '../utils/storage';
 import { toMGRS, formatMGRS, parseMGRSToLatLon } from '../utils/mgrs';
 import { useColors } from '../utils/ThemeContext';
-import { notifyWarning } from '../utils/haptics';
+import { notifyWarning, notifySuccess, tapLight } from '../utils/haptics';
+
+let Clipboard; try { Clipboard = require('expo-clipboard'); } catch {}
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
@@ -25,6 +27,10 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
   const [gridInput,    setGridInput]    = useState('');
   const [gridLabel,    setGridLabel]    = useState('');
   const [gridError,    setGridError]    = useState('');
+  const [editingWpId,  setEditingWpId]  = useState(null);
+  const [editMgrsInput, setEditMgrsInput] = useState('');
+  const [copiedWpId,   setCopiedWpId]   = useState(null);
+  const copiedTimer = useRef(null);
 
   useEffect(() => {
     loadWaypointLists().then(setLists).catch(() => {});
@@ -69,7 +75,6 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
     const wp = { id: uid(), label: `WP ${list.waypoints.length + 1}`, lat: location.lat, lon: location.lon, mgrs };
     const updated = lists.map(l => l.id === listId ? { ...l, waypoints: [...l.waypoints, wp] } : l);
     persist(updated).catch(() => {});
-    trackActionAndMaybeReview();
   };
 
   // ── Add custom MGRS grid as waypoint ──
@@ -86,7 +91,6 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
     const updated = lists.map(l => l.id === listId ? { ...l, waypoints: [...l.waypoints, wp] } : l);
     persist(updated).catch(() => {});
     setGridInput(''); setGridLabel(''); setGridError(''); setEnteringGrid(false);
-    trackActionAndMaybeReview();
   };
 
   // ── Rename waypoint ──
@@ -104,6 +108,50 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
       ...l, waypoints: l.waypoints.filter(w => w.id !== wpId),
     });
     persist(updated).catch(() => {});
+  };
+
+  // ── Edit waypoint MGRS ──
+  const startEditWaypoint = (wp) => {
+    setEditingWpId(wp.id);
+    setEditMgrsInput(wp.mgrs);
+  };
+
+  const cancelEditWaypoint = () => {
+    setEditingWpId(null);
+    setEditMgrsInput('');
+  };
+
+  const saveEditWaypoint = (listId, wpId) => {
+    try {
+      const cleaned = editMgrsInput.replace(/\s+/g, '').toUpperCase();
+      if (!cleaned) { cancelEditWaypoint(); return; }
+      const parsed = parseMGRSToLatLon(cleaned);
+      if (!parsed) { notifyWarning(); return; }
+      const mgrs = formatMGRS(toMGRS(parsed.lat, parsed.lon, 5));
+      const updated = lists.map(l => l.id !== listId ? l : {
+        ...l,
+        waypoints: l.waypoints.map(w => w.id === wpId ? { ...w, lat: parsed.lat, lon: parsed.lon, mgrs } : w),
+      });
+      persist(updated).catch(() => {});
+      notifySuccess();
+      setEditingWpId(null);
+      setEditMgrsInput('');
+    } catch { notifyWarning(); }
+  };
+
+  // ── Copy waypoint MGRS ──
+  const copyWaypointMgrs = async (wp) => {
+    try {
+      if (Clipboard?.setStringAsync) {
+        await Clipboard.setStringAsync(wp.mgrs);
+      } else if (Clipboard?.setString) {
+        Clipboard.setString(wp.mgrs);
+      }
+      tapLight();
+      setCopiedWpId(wp.id);
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+      copiedTimer.current = setTimeout(() => setCopiedWpId(null), 1500);
+    } catch {}
   };
 
   const currentList = lists.find(l => l.id === activeList);
@@ -224,25 +272,62 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
 
           {currentList.waypoints.map((wp, i) => (
             <View key={wp.id} style={[styles.wpRow, { borderColor: colors.border2, backgroundColor: colors.card }]}>
-              <View style={styles.wpInfo}>
-                <TextInput
-                  style={[styles.wpLabel, { color: colors.text }]}
-                  value={wp.label}
-                  onChangeText={t => renameWaypoint(currentList.id, wp.id, t)}
-                  autoCapitalize="characters"
-                  autoCorrect={false}
-                  accessibilityLabel={`Waypoint ${i + 1} label`}
-                />
-                <Text style={[styles.wpMgrs, { color: colors.text2 }]}>{wp.mgrs}</Text>
-              </View>
-              <View style={styles.wpBtns}>
-                <TouchableOpacity style={[styles.wpNav, { borderColor: colors.text2 }]} onPress={() => onSelectWaypoint?.(wp)} accessibilityRole="button" accessibilityLabel={`Navigate to ${wp.label}`}>
-                  <Text style={[styles.wpNavText, { color: colors.text2 }]}>NAV</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.wpDel} onPress={() => deleteWaypoint(currentList.id, wp.id)} accessibilityRole="button" accessibilityLabel={`Delete ${wp.label}`}>
-                  <Text style={[styles.wpDelText, { color: colors.border }]}>✕</Text>
-                </TouchableOpacity>
-              </View>
+              {editingWpId === wp.id ? (
+                <View style={styles.wpEditContainer}>
+                  <Text style={[styles.wpLabel, { color: colors.text }]}>{wp.label}</Text>
+                  <TextInput
+                    style={[styles.wpEditInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }]}
+                    value={editMgrsInput}
+                    onChangeText={setEditMgrsInput}
+                    autoCapitalize="characters"
+                    autoCorrect={false}
+                    autoFocus
+                    maxLength={20}
+                    onSubmitEditing={() => saveEditWaypoint(currentList.id, wp.id)}
+                    accessibilityLabel="Edit MGRS coordinate"
+                  />
+                  <View style={styles.wpEditBtns}>
+                    <TouchableOpacity style={[styles.wpEditSave, { borderColor: colors.text2 }]} onPress={() => saveEditWaypoint(currentList.id, wp.id)} accessibilityRole="button" accessibilityLabel="Save edited coordinate">
+                      <Text style={[styles.wpEditSaveText, { color: colors.text2 }]}>SAVE</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.wpEditCancel} onPress={cancelEditWaypoint} accessibilityRole="button" accessibilityLabel="Cancel editing">
+                      <Text style={[styles.wpEditCancelText, { color: colors.border }]}>CANCEL</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <>
+                  <View style={styles.wpInfo}>
+                    <TextInput
+                      style={[styles.wpLabel, { color: colors.text }]}
+                      value={wp.label}
+                      onChangeText={t => renameWaypoint(currentList.id, wp.id, t)}
+                      autoCapitalize="characters"
+                      autoCorrect={false}
+                      accessibilityLabel={`Waypoint ${i + 1} label`}
+                    />
+                    <View style={styles.wpMgrsRow}>
+                      <Text style={[styles.wpMgrs, { color: colors.text2 }]}>{wp.mgrs}</Text>
+                      <TouchableOpacity style={[styles.wpCopyBtn, { borderColor: colors.border2 }]} onPress={() => copyWaypointMgrs(wp)} accessibilityRole="button" accessibilityLabel={`Copy ${wp.label} MGRS`}>
+                        <Text style={[styles.wpCopyBtnText, { color: copiedWpId === wp.id ? colors.text2 : colors.border }]}>
+                          {copiedWpId === wp.id ? 'COPIED' : 'COPY'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <View style={styles.wpBtns}>
+                    <TouchableOpacity style={[styles.wpNav, { borderColor: colors.border2 }]} onPress={() => startEditWaypoint(wp)} accessibilityRole="button" accessibilityLabel={`Edit ${wp.label} coordinate`}>
+                      <Text style={[styles.wpNavText, { color: colors.border }]}>EDIT</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[styles.wpNav, { borderColor: colors.text2 }]} onPress={() => onSelectWaypoint?.(wp)} accessibilityRole="button" accessibilityLabel={`Navigate to ${wp.label}`}>
+                      <Text style={[styles.wpNavText, { color: colors.text2 }]}>NAV</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.wpDel} onPress={() => deleteWaypoint(currentList.id, wp.id)} accessibilityRole="button" accessibilityLabel={`Delete ${wp.label}`}>
+                      <Text style={[styles.wpDelText, { color: colors.border }]}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
             </View>
           ))}
         </View>
@@ -293,11 +378,21 @@ const styles = StyleSheet.create({
   wpInfo: { flex: 1, gap: 3 },
   wpLabel: { fontFamily: 'monospace', fontSize: 11, fontWeight: '700', letterSpacing: 3, paddingVertical: 0 },
   wpMgrs: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2 },
+  wpMgrsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  wpCopyBtn: { borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2 },
+  wpCopyBtnText: { fontFamily: 'monospace', fontSize: 7, letterSpacing: 1 },
   wpBtns: { flexDirection: 'row', gap: 6 },
   wpNav: { borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
   wpNavText: { fontSize: 9, letterSpacing: 2 },
   wpDel: { paddingHorizontal: 8, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
   wpDelText: { fontSize: 12 },
+  wpEditContainer: { flex: 1, gap: 6 },
+  wpEditInput: { borderWidth: 1, fontFamily: 'monospace', fontSize: 14, letterSpacing: 3, paddingHorizontal: 10, paddingVertical: 6 },
+  wpEditBtns: { flexDirection: 'row', gap: 8 },
+  wpEditSave: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
+  wpEditSaveText: { fontSize: 10, letterSpacing: 2, fontWeight: '700' },
+  wpEditCancel: { paddingHorizontal: 12, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
+  wpEditCancelText: { fontSize: 10, letterSpacing: 2 },
 
   wpHeaderBtns: { flexDirection: 'row', gap: 6 },
 
