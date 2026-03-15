@@ -9,13 +9,15 @@
  *   - Callbacks validate input before persisting
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { loadSettings, saveDeclination, savePaceCount, saveTheme, saveCoordFormat } from '../utils/storage';
+import { loadSettings, saveDeclination, savePaceCount, saveTheme, saveCoordFormat, saveShakeToSpeak, saveGridCrossing } from '../utils/storage';
 
 export function useSettings() {
   const [declination, setDeclinationState] = useState(0);
   const [paceCount, setPaceCountState]     = useState(62);
   const [theme, setThemeState]             = useState('red');
   const [coordFormat, setCoordFormatState] = useState('mgrs');
+  const [shakeToSpeak, setShakeToSpeakState] = useState(true);
+  const [gridCrossing, setGridCrossingState] = useState(true);
   const [loaded, setLoaded]                = useState(false);
   const mounted = useRef(true);
 
@@ -35,6 +37,8 @@ export function useSettings() {
           setPaceCountState(settings.paceCount ?? 62);
           setThemeState(settings.theme ?? 'red');
           setCoordFormatState(settings.coordFormat ?? 'mgrs');
+          setShakeToSpeakState(settings.shakeToSpeak ?? true);
+          setGridCrossingState(settings.gridCrossing ?? true);
         }
       } catch (err) {
         // loadSettings already handles errors and returns defaults
@@ -55,33 +59,24 @@ export function useSettings() {
     try {
       const n = parseFloat(val) || 0;
       setDeclinationState(n);
-      // Fire and forget — don't block on storage
       saveDeclination(n).catch(() => {});
-    } catch (err) {
-      // Input validation failed, just use default
-    }
+    } catch (err) {}
   }, []);
 
   const setPaceCount = useCallback((val) => {
     try {
       const n = parseInt(val, 10) || 62;
       setPaceCountState(n);
-      // Fire and forget — don't block on storage
       savePaceCount(n).catch(() => {});
-    } catch (err) {
-      // Input validation failed, just use default
-    }
+    } catch (err) {}
   }, []);
 
   const setTheme = useCallback((val) => {
     try {
       const themeStr = String(val ?? 'red');
       setThemeState(themeStr);
-      // Fire and forget — don't block on storage
       saveTheme(themeStr).catch(() => {});
-    } catch (err) {
-      // Input validation failed, just use default
-    }
+    } catch (err) {}
   }, []);
 
   const setCoordFormat = useCallback((val) => {
@@ -89,10 +84,32 @@ export function useSettings() {
       const fmt = String(val ?? 'mgrs');
       setCoordFormatState(fmt);
       saveCoordFormat(fmt).catch(() => {});
-    } catch (err) {
-      // Input validation failed, just use default
-    }
+    } catch (err) {}
   }, []);
 
-  return { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat, loaded };
+  const setShakeToSpeak = useCallback((val) => {
+    try {
+      const bool = !!val;
+      setShakeToSpeakState(bool);
+      saveShakeToSpeak(bool).catch(() => {});
+    } catch (err) {}
+  }, []);
+
+  const setGridCrossing = useCallback((val) => {
+    try {
+      const bool = !!val;
+      setGridCrossingState(bool);
+      saveGridCrossing(bool).catch(() => {});
+    } catch (err) {}
+  }, []);
+
+  return {
+    declination, setDeclination,
+    paceCount, setPaceCount,
+    theme, setTheme,
+    coordFormat, setCoordFormat,
+    shakeToSpeak, setShakeToSpeak,
+    gridCrossing, setGridCrossing,
+    loaded,
+  };
 }

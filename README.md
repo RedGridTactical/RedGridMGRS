@@ -32,7 +32,7 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 - **Speed, elevation, heading** — real-time sensor display
 - **Full offline operation** — zero cloud dependency
 
-## Beyond the DAGR — 8 Tactical Tools
+## Beyond the DAGR — 9 Tactical Tools
 
 The DAGR hardware doesn't include these. Red Grid MGRS does.
 
@@ -44,6 +44,7 @@ The DAGR hardware doesn't include these. Red Grid MGRS does.
 - Time-Distance-Speed solver
 - Sun & Moon position data
 - MGRS Precision selector (1m to 100km)
+- Photo Geostamp — burn MGRS + DTG onto any photo (Pro)
 
 ## 6 Radio-Ready Report Templates
 
@@ -65,6 +66,10 @@ Live MGRS display, 1 theme, 8 tactical tools, 3 report templates (SALUTE, 9-Line
 - **Saved Waypoint Lists** — patrol routes, OBJs, rally points, persisted on device
 - **All 6 Report Templates** — Standard includes SALUTE, MEDEVAC, SPOT
 - **NATO Voice Readout** — hands-free grid calls using phonetic alphabet
+- **Shake to Speak** — shake device for hands-free NATO grid readout
+- **HUD Mode** — full-screen tactical display with compass and wayfinder
+- **Photo Geostamp** — burn MGRS grid + DTG onto any photo, saved to camera roll
+- **Grid Crossing Alerts** — haptic feedback at 1km and 100m boundaries
 - **Coordinate Formats** — UTM, decimal degrees, DMS on the main grid display
 - **4 Display Themes** — red lens, NVG green, day white, blue force
 - **Unlimited Waypoints** — no storage limits
@@ -130,15 +135,16 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - ~~Coordinate format selector (UTM/DD/DMS)~~ ✅
 - ~~Wayfinder arrow compass heading~~ ✅
 
-### v2.5 — Pro Features (Summer 2026)
-- StandBy / HUD mode (iOS StandBy API)
-- Photo geostamp (MGRS/DTG burned into image)
-- Haptic grid crossing alerts (1km / 100m boundaries)
-- Enhanced voice readout (shake or tap trigger)
+### v2.5 — Pro Features ✅ (March 2026)
+- ~~HUD mode — full-screen tactical display~~ ✅
+- ~~Photo geostamp (MGRS/DTG burned into image)~~ ✅
+- ~~Haptic grid crossing alerts (1km / 100m boundaries)~~ ✅
+- ~~Shake-to-speak voice readout~~ ✅
 
 ### v3.0 — Tactical (Fall/Winter 2026)
 - MGRS grid overlay map (MapKit)
 - Mission planning (waypoints on map, route plotting)
+- Photo geostamp map inset (topo layer via MapKit snapshot)
 - GPX/KML import and export
 - External GPS support (Garmin GLO, Bad Elf via BLE)
 

@@ -20,6 +20,8 @@ import { useSettings }  from './src/hooks/useSettings';
 import { useIAP }       from './src/hooks/useIAP';
 import { useTheme }     from './src/hooks/useTheme';
 import { useStoreReview } from './src/hooks/useStoreReview';
+import { useShakeToSpeak } from './src/hooks/useShakeToSpeak';
+import { useGridCrossing } from './src/hooks/useGridCrossing';
 import { ThemeProvider, useColors } from './src/utils/ThemeContext';
 
 import { MGRSDisplay }    from './src/components/MGRSDisplay';
@@ -108,10 +110,10 @@ function App() {
   const isLandscape = width > height;
 
   const { location, error, isLoading, retry, compassHeading } = useLocation();
-  const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat } = useSettings();
+  const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing } = useSettings();
   const { isPro, isPurchasing, product, purchase, restore } = useIAP();
   const themeData = useTheme(theme || 'red');
-  const { checkAndPromptReview } = useStoreReview();
+  const { checkAndPromptReview, openStoreReview } = useStoreReview();
 
   // Prompt for App Store review on mount (gated by open count, install age, cooldown)
   useEffect(() => { checkAndPromptReview(); }, []);
@@ -121,6 +123,7 @@ function App() {
   const [showModal, setShowModal]   = useState(false);
   const [proGateVisible, setProGateVisible] = useState(false);
   const [proGateFeature, setProGateFeature] = useState('');
+  const [hudMode, setHudMode]       = useState(false);
 
   const TABS = isPro ? PRO_TABS : FREE_TABS;
 
@@ -128,6 +131,15 @@ function App() {
     setProGateFeature(featureName);
     setProGateVisible(true);
   }, []);
+
+  // Derived MGRS
+  const mgrsRaw       = useMemo(() => { try { return location ? toMGRS(location.lat, location.lon, 5) : null; } catch { return null; } }, [location]);
+  const mgrsFormatted = useMemo(() => { try { return mgrsRaw ? formatMGRS(mgrsRaw) : null; } catch { return null; } }, [mgrsRaw]);
+  // Alt format display string (for non-MGRS coordinate formats)
+  const altDisplay = useMemo(() => {
+    if (!location || coordFormat === 'mgrs') return null;
+    try { return formatPosition(location.lat, location.lon, coordFormat); } catch { return null; }
+  }, [location, coordFormat]);
 
   // Tap-to-copy grid — copies whatever format is displayed (MGRS, UTM, DD, or DMS)
   const [copyToast, setCopyToast] = useState(false);
@@ -146,14 +158,9 @@ function App() {
     setTimeout(() => setCopyToast(false), 1500);
   }, [mgrsFormatted, altDisplay]);
 
-  // Derived MGRS
-  const mgrsRaw       = useMemo(() => { try { return location ? toMGRS(location.lat, location.lon, 5) : null; } catch { return null; } }, [location]);
-  const mgrsFormatted = useMemo(() => { try { return mgrsRaw ? formatMGRS(mgrsRaw) : null; } catch { return null; } }, [mgrsRaw]);
-  // Alt format display string (for non-MGRS coordinate formats)
-  const altDisplay = useMemo(() => {
-    if (!location || coordFormat === 'mgrs') return null;
-    try { return formatPosition(location.lat, location.lon, coordFormat); } catch { return null; }
-  }, [location, coordFormat]);
+  // v2.5 Pro features: shake-to-speak and grid crossing haptics
+  useShakeToSpeak(mgrsFormatted, isPro && shakeToSpeak);
+  useGridCrossing(mgrsFormatted, isPro && gridCrossing);
 
   // Wayfinder — true bearing (no declination on digital display)
   const { bearing, distance } = useMemo(() => {
@@ -182,6 +189,12 @@ function App() {
   // Dynamic StatusBar style: white theme uses dark content, others use light
   const statusBarStyle = themeData.id === 'white' ? 'dark-content' : 'light-content';
 
+  const onEnterHud = useCallback(() => {
+    if (!isPro) { showProGate('HUD Mode'); return; }
+    tapHeavy();
+    setHudMode(true);
+  }, [isPro, showProGate]);
+
   const gridContent = isLandscape ? (
     <LandscapeGrid
       isLoading={isLoading} location={location} error={error} retry={retry}
@@ -192,6 +205,8 @@ function App() {
       onCopyGrid={copyGrid} copyToast={copyToast}
       coordFormat={coordFormat} altDisplay={altDisplay}
       compassHeading={compassHeading}
+      onRateApp={openStoreReview}
+      onEnterHud={onEnterHud}
     />
   ) : (
     <PortraitGrid
@@ -203,6 +218,8 @@ function App() {
       onCopyGrid={copyGrid} copyToast={copyToast}
       coordFormat={coordFormat} altDisplay={altDisplay}
       compassHeading={compassHeading}
+      onRateApp={openStoreReview}
+      onEnterHud={onEnterHud}
     />
   );
 
@@ -245,6 +262,15 @@ function App() {
         coordFormat={coordFormat}
         setCoordFormat={setCoordFormat}
         compassHeading={compassHeading}
+        shakeToSpeak={shakeToSpeak}
+        setShakeToSpeak={setShakeToSpeak}
+        gridCrossing={gridCrossing}
+        setGridCrossing={setGridCrossing}
+        hudMode={hudMode}
+        setHudMode={setHudMode}
+        bearing={bearing}
+        arrowAngle={arrowAngle}
+        distance={distance}
       />
     </ThemeProvider>
   );
@@ -260,6 +286,8 @@ function AppContent({
   proGateFeature, product, isPurchasing, purchase, restore,
   statusBarStyle, waypoint, coordFormat, setCoordFormat,
   compassHeading,
+  shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing,
+  hudMode, setHudMode, bearing, arrowAngle, distance,
 }) {
   const colors = useColors();
 
@@ -275,8 +303,9 @@ function AppContent({
   }, [safeTab, fadeAnim]);
 
   return (
+    <View style={staticStyles.root}>
     <SafeAreaView style={[staticStyles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle={statusBarStyle} backgroundColor={colors.bg} hidden={isLandscape} />
+      <StatusBar barStyle={statusBarStyle} backgroundColor={colors.bg} hidden={isLandscape || hudMode} />
 
       {/* Screen content with fade transition */}
       <Animated.View style={[staticStyles.screenContent, { opacity: fadeAnim }]}>
@@ -290,6 +319,8 @@ function AppContent({
             setDeclination={setDeclination}
             setPaceCount={setPaceCount}
             compassHeading={compassHeading}
+            isPro={isPro}
+            onShowProGate={showProGate}
           />
         )}
 
@@ -314,6 +345,10 @@ function AppContent({
             isPro={isPro}
             onSelectTheme={setTheme}
             onShowProGate={showProGate}
+            shakeToSpeak={shakeToSpeak}
+            setShakeToSpeak={setShakeToSpeak}
+            gridCrossing={gridCrossing}
+            setGridCrossing={setGridCrossing}
           />
         )}
 
@@ -367,7 +402,22 @@ function AppContent({
         onPurchase={purchase}
         onRestore={restore}
       />
+
     </SafeAreaView>
+
+    {/* HUD Mode — full-screen simplified display (Pro), rendered above SafeAreaView for true full-screen */}
+    {hudMode && (
+      <HUDOverlay
+        mgrsFormatted={mgrsFormatted}
+        bearing={bearing}
+        arrowAngle={arrowAngle}
+        distance={distance}
+        compassHeading={compassHeading}
+        waypoint={waypoint}
+        onExit={() => { stopSpeaking(); tapMedium(); setHudMode(false); }}
+      />
+    )}
+    </View>
   );
 }
 
@@ -394,7 +444,7 @@ function UpsellScreen({ onUpgrade }) {
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud }) {
   const colors = useColors();
   return (
     <View style={staticStyles.portraitRoot}>
@@ -454,6 +504,14 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
             <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.border }]}>SPEAK GRID{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
           </TouchableOpacity>
         )}
+        <View style={staticStyles.footerRow}>
+          <TouchableOpacity onPress={onEnterHud} accessibilityRole="button" accessibilityLabel={isPro ? 'Enter HUD mode' : 'HUD mode. Pro feature'}>
+            <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>◈ HUD MODE{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => { tapLight(); onRateApp(); }} accessibilityRole="button" accessibilityLabel="Rate this app on the App Store">
+            <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>★ RATE THIS APP</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={[staticStyles.footerText, { color: colors.text4 }]} maxFontSizeMultiplier={1.3}>NO DATA STORED · NO NETWORK · OPEN SOURCE</Text>
       </View>
     </View>
@@ -461,7 +519,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud }) {
   const colors = useColors();
   return (
     <View style={staticStyles.landscapeRoot}>
@@ -511,6 +569,14 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
               <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.border }]}>SPEAK GRID{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
             </TouchableOpacity>
           )}
+          <View style={staticStyles.footerRow}>
+            <TouchableOpacity onPress={onEnterHud} accessibilityRole="button" accessibilityLabel={isPro ? 'Enter HUD mode' : 'HUD mode. Pro feature'}>
+              <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>◈ HUD{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { tapLight(); onRateApp(); }} accessibilityRole="button" accessibilityLabel="Rate this app on the App Store">
+              <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>★ RATE</Text>
+            </TouchableOpacity>
+          </View>
           <Text style={[staticStyles.footerText, { color: colors.text4 }]} maxFontSizeMultiplier={1.3}>NO DATA STORED · NO NETWORK</Text>
         </View>
       </View>
@@ -569,6 +635,47 @@ function Crosshair({ size = 50 }) {
       <View style={{ position:'absolute', height:1, width:size, top:size/2, backgroundColor:colors.text2 }} />
       <View style={{ position:'absolute', top:size*.2, left:size*.2, right:size*.2, bottom:size*.2, borderRadius:size, borderWidth:1, borderColor:colors.text2 }} />
     </View>
+  );
+}
+
+// ─── HUD OVERLAY ────────────────────────────────────────────────────────────
+// Full-screen simplified display: large MGRS + optional waypoint arrow.
+// Tap anywhere to exit. Black background for maximum contrast.
+function HUDOverlay({ mgrsFormatted, bearing, arrowAngle, distance, compassHeading, waypoint, onExit }) {
+  const colors = useColors();
+  return (
+    <TouchableOpacity
+      style={staticStyles.hudRoot}
+      activeOpacity={1}
+      onPress={onExit}
+      accessibilityRole="button"
+      accessibilityLabel="HUD mode. Tap anywhere to exit"
+    >
+      <View style={staticStyles.hudContent}>
+        {compassHeading !== null && (
+          <Text style={[staticStyles.hudHeading, { color: colors.text2 }]}>HDG {Math.round(compassHeading)}°</Text>
+        )}
+        <Text
+          style={[staticStyles.hudMgrs, { color: colors.text }]}
+          numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.5}
+        >
+          {mgrsFormatted || '—'}
+        </Text>
+        {waypoint && arrowAngle !== null && (
+          <View style={staticStyles.hudWpSection}>
+            <WayfinderArrow bearing={arrowAngle} size={140} />
+            {bearing !== null && <Text style={[staticStyles.hudBearing, { color: colors.text }]}>{Math.round(bearing)}°</Text>}
+            {distance !== null && (
+              <Text style={[staticStyles.hudDist, { color: colors.text2 }]}>{formatDistance(distance)}</Text>
+            )}
+            <Text style={[staticStyles.hudWpLabel, { color: colors.text3 }]}>{waypoint.label}</Text>
+          </View>
+        )}
+      </View>
+      <Text style={[staticStyles.hudExit, { color: colors.text4 }]}>TAP TO EXIT</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -648,10 +755,22 @@ const staticStyles = StyleSheet.create({
   voiceBtn: { borderWidth:1, paddingHorizontal:18, paddingVertical:10, minHeight:44, alignItems:'center', marginBottom:8 },
   voiceBtnLocked: { opacity: 0.6 },
   voiceBtnText: { fontSize:10, letterSpacing:3, fontWeight:'700' },
+  rateLink: { fontSize:10, letterSpacing:2, paddingVertical:6 },
+  footerRow: { flexDirection:'row', justifyContent:'center', gap:20, marginBottom:2 },
   // Upsell
   upsellRoot: { flex:1, alignItems:'center', justifyContent:'center', gap:16, padding:40 },
   upsellTitle: { fontFamily:'monospace', fontSize:24, fontWeight:'700', letterSpacing:6 },
   upsellSub: { fontSize:11, letterSpacing:2 },
   upsellBtn: { borderWidth:1, paddingHorizontal:32, paddingVertical:14 },
   upsellBtnText: { fontSize:12, fontWeight:'700', letterSpacing:4 },
+  // HUD overlay
+  hudRoot: { ...StyleSheet.absoluteFillObject, backgroundColor:'#000000', zIndex:100, justifyContent:'center', alignItems:'center', padding:24 },
+  hudContent: { flex:1, justifyContent:'center', alignItems:'center', width:'100%' },
+  hudHeading: { fontFamily:'monospace', fontSize:14, letterSpacing:4, fontWeight:'600', marginBottom:12 },
+  hudMgrs: { fontFamily:'monospace', fontSize:48, fontWeight:'700', letterSpacing:6, textAlign:'center', marginBottom:20 },
+  hudWpSection: { alignItems:'center', gap:8 },
+  hudBearing: { fontFamily:'monospace', fontSize:36, fontWeight:'700', letterSpacing:4 },
+  hudDist: { fontFamily:'monospace', fontSize:24, letterSpacing:3, fontWeight:'700' },
+  hudWpLabel: { fontFamily:'monospace', fontSize:12, letterSpacing:4, marginTop:4 },
+  hudExit: { fontSize:10, letterSpacing:4, paddingBottom:20 },
 });

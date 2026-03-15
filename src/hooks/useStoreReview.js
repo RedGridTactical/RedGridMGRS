@@ -19,7 +19,10 @@
  *   - Mounted check prevents state updates after unmount
  */
 import { useCallback, useRef, useEffect } from 'react';
+import { Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const APP_STORE_ID = '6759629554';
 
 const KEYS = {
   APP_OPENS:          'rg_app_opens',
@@ -90,5 +93,23 @@ export function useStoreReview() {
     }
   }, []);
 
-  return { checkAndPromptReview };
+  /**
+   * Opens the App Store review page directly — for a manual "Rate This App" button.
+   * Uses the itms-apps:// deep link on iOS, Play Store link on Android.
+   */
+  const openStoreReview = useCallback(async () => {
+    try {
+      const url = Platform.OS === 'ios'
+        ? `itms-apps://apps.apple.com/app/id${APP_STORE_ID}?action=write-review`
+        : `market://details?id=com.redgrid.redgridtactical`;
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      }
+    } catch {
+      // Silent — don't disrupt the user
+    }
+  }, []);
+
+  return { checkAndPromptReview, openStoreReview };
 }

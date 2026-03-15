@@ -1,13 +1,14 @@
 /**
- * ThemeScreen — Pro feature. Select display theme.
+ * ThemeScreen — Pro settings. Display themes + Pro feature toggles.
  * Free users see the selector but are gated to the red theme.
  */
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { THEMES } from '../hooks/useTheme';
 import { useColors } from '../utils/ThemeContext';
+import { tapLight } from '../utils/haptics';
 
-export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate }) {
+export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing }) {
   const colors = useColors();
 
   return (
@@ -43,8 +44,48 @@ export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate 
             </TouchableOpacity>
           );
         })}
+
+        {/* ─── PRO FEATURE TOGGLES ──────────────────────────────────── */}
+        <View style={[styles.divider, { backgroundColor: colors.border2 }]} />
+        <Text style={[styles.title, { color: colors.text }]}>PRO FEATURES</Text>
+        <Text style={[styles.sub, { color: colors.text3 }]}>Configure haptic and voice feedback</Text>
+
+        <ToggleRow
+          label="SHAKE TO SPEAK"
+          sub="Shake device to hear NATO grid readout"
+          value={shakeToSpeak}
+          onToggle={() => { tapLight(); setShakeToSpeak(!shakeToSpeak); }}
+        />
+        <ToggleRow
+          label="GRID CROSSING ALERTS"
+          sub="Haptic feedback at 1km and 100m boundaries"
+          value={gridCrossing}
+          onToggle={() => { tapLight(); setGridCrossing(!gridCrossing); }}
+        />
       </ScrollView>
     </View>
+  );
+}
+
+function ToggleRow({ label, sub, value, onToggle }) {
+  const colors = useColors();
+  return (
+    <TouchableOpacity
+      style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }, value && { borderColor: colors.text }]}
+      onPress={onToggle}
+      activeOpacity={0.8}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+      accessibilityLabel={`${label}. ${sub}`}
+    >
+      <View style={[styles.toggleIndicator, { borderColor: colors.border }, value && { backgroundColor: colors.text, borderColor: colors.text }]}>
+        <Text style={[styles.toggleText, { color: value ? colors.bg : colors.border }]}>{value ? 'ON' : 'OFF'}</Text>
+      </View>
+      <View style={styles.info}>
+        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+        <Text style={[styles.themeSub, { color: colors.text3 }]}>{sub}</Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -53,6 +94,7 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 40 },
   title: { fontFamily: 'monospace', fontSize: 16, fontWeight: '700', letterSpacing: 4, marginBottom: 4 },
   sub: { fontSize: 9, letterSpacing: 1, marginBottom: 20 },
+  divider: { height: 1, marginVertical: 20 },
   card: {
     flexDirection: 'row', alignItems: 'center', padding: 14, marginBottom: 10,
     borderWidth: 1,
@@ -75,4 +117,9 @@ const styles = StyleSheet.create({
     borderWidth: 1, paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 2,
   },
   themeSub: { fontSize: 9, letterSpacing: 0.5 },
+  toggleIndicator: {
+    width: 48, height: 28, borderWidth: 1, borderRadius: 2,
+    alignItems: 'center', justifyContent: 'center', marginRight: 14,
+  },
+  toggleText: { fontFamily: 'monospace', fontSize: 9, fontWeight: '700', letterSpacing: 2 },
 });
