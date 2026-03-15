@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I Built a GPS App That Makes Zero Network Calls</title>
+<meta name="description" content="How and why I built a military GPS navigator with zero analytics, zero tracking, and zero HTTP requests. Architecture decisions for a zero-network React Native app.">
+
+<!-- Open Graph -->
+<meta property="og:title" content="I Built a GPS App That Makes Zero Network Calls">
+<meta property="og:description" content="No analytics. No tracking. No crash reporting. Not even a health check ping. Here's the architecture behind a truly offline-first mobile app.">
+<meta property="og:url" content="https://redgridtactical.github.io/RedGridMGRS/blog/zero-network-architecture.html">
+<meta property="og:type" content="article">
+
+<style>
+  :root {
+    --red: #8B0000;
+    --dark: #0a0a0a;
+    --gray: #1a1a1a;
+    --gray-light: #666;
+    --bg: #fafafa;
+    --border: #e0e0e0;
+    --code-bg: #f4f4f4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    color: var(--gray);
+    line-height: 1.8;
+    background: var(--bg);
+  }
+
+  .header {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 50%, #2a0000 100%);
+    color: #fff;
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+
+  .header a {
+    color: #cc9999;
+    text-decoration: none;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .header a:hover { color: #fff; }
+
+  article {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+  }
+
+  .meta {
+    font-size: 0.9rem;
+    color: var(--gray-light);
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 2.5rem 0 0.75rem;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--gray);
+    margin: 2rem 0 0.5rem;
+  }
+
+  p {
+    margin-bottom: 1.25rem;
+    font-size: 1.05rem;
+  }
+
+  a { color: var(--red); }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    margin: 1.25rem 0;
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  code {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9em;
+  }
+
+  p code, li code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  ul, ol {
+    margin: 0.75rem 0 1.25rem 1.5rem;
+    font-size: 1.05rem;
+  }
+
+  li { margin-bottom: 0.4rem; }
+
+  blockquote {
+    border-left: 3px solid var(--red);
+    margin: 1.5rem 0;
+    padding: 0.75rem 1.25rem;
+    background: #fff;
+    color: var(--gray);
+    font-style: italic;
+  }
+
+  .callout {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--red);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+  }
+
+  .callout strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--red);
+  }
+
+  .file-tree {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    margin: 1.25rem 0;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--gray-light);
+    font-size: 0.85rem;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  footer a { color: var(--red); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 1.6rem; }
+    article { padding: 1.5rem 1rem 3rem; }
+    pre { font-size: 0.8rem; padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../">Red Grid MGRS</a>
+</div>
+
+<article>
+
+<h1>I Built a GPS App That Makes Zero Network Calls</h1>
+<div class="meta">March 2026 &middot; 8 min read</div>
+
+<p>Red Grid MGRS is a military GPS navigator for iOS. It shows your position in MGRS coordinates, computes magnetic declination, runs dead reckoning and resection calculations, and generates tactical report templates. It does all of this without making a single HTTP request.</p>
+
+<p>Not "minimal tracking." Not "privacy-focused." Zero. The app has no analytics SDK, no crash reporter, no telemetry endpoint, no health check ping, no update check. Put your phone in airplane mode and every feature works identically. There is no degraded state because there's nothing to degrade.</p>
+
+<p>This wasn't the path of least resistance. Here's how the architecture works and what I had to solve to make it viable.</p>
+
+<h2>Why Zero Network?</h2>
+
+<p>The app is built for military users running land navigation. These are people who operate in environments where network connectivity is either unavailable or actively dangerous. A GPS app that phones home is a liability.</p>
+
+<p>But beyond the tactical use case, I think most mobile apps have no business making the network calls they make. Your calculator app doesn't need analytics. Your flashlight doesn't need a crash reporter. And a GPS app that streams your coordinates to a telemetry server is doing something fundamentally hostile to the user, even if it's "anonymized."</p>
+
+<p>So the rule was simple: the app makes zero outbound connections during normal operation. The only exception is the App Store IAP flow, which is initiated by the user tapping a purchase button and handled entirely by Apple's StoreKit framework.</p>
+
+<h2>The Architecture</h2>
+
+<p>The app is React Native (Expo SDK 52), pure JavaScript, hooks-based. About 3,500 lines of application code across ~25 files. Here's the structure that matters:</p>
+
+<div class="file-tree">
+src/<br>
+&nbsp;&nbsp;hooks/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;useLocation.js&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← GPS (ephemeral, in-memory only)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;useSettings.js&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← loads from AsyncStorage<br>
+&nbsp;&nbsp;&nbsp;&nbsp;useGridCrossing.js&nbsp;&nbsp;← derived from useLocation<br>
+&nbsp;&nbsp;&nbsp;&nbsp;useShakeToSpeak.js&nbsp;&nbsp;← accelerometer listener<br>
+&nbsp;&nbsp;utils/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mgrs.js&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← DMA TM 8358.1 conversion (pure math)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tactical.js&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← geodetic calculations (pure math)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;storage.js&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;← AsyncStorage wrapper (never stores location)<br>
+</div>
+
+<p>The key insight: location data and persisted data live in completely separate worlds.</p>
+
+<h3>GPS data is ephemeral</h3>
+
+<p>Your coordinates exist in React state and nowhere else. When the component unmounts, the data is gone. There's no location history, no breadcrumb trail, no last-known-position cache.</p>
+
+<pre><code>// useLocation.js — data flow
+//
+// GPS satellite → phone receiver → expo-location → React state → render
+//                                                              → gone
+//
+// That's it. No fork in the pipeline. No "also send to..."</code></pre>
+
+<p>The <code>useLocation</code> hook watches the device GPS at 1-second intervals with a 1-meter distance threshold. It updates React state. The state drives the UI. When the app closes, the state is garbage collected. At no point does a coordinate touch AsyncStorage, a file, or a network socket.</p>
+
+<p>There's a subtlety here that matters: I suppress redundant re-renders by comparing incoming coordinates against the previous position with a threshold of ~0.1 meters. If you're standing still, the GPS jitter doesn't cause a render cascade. This is a performance optimization, but it also means the app isn't even processing your position data more than necessary.</p>
+
+<pre><code>const COORD_THRESHOLD = 0.000001; // ~0.1m at equator
+
+const updateLocationIfChanged = useCallback((newLoc) => {
+  const prev = prevCoords.current;
+  if (
+    prev &&
+    Math.abs(newLoc.lat - prev.lat) < COORD_THRESHOLD &&
+    Math.abs(newLoc.lon - prev.lon) < COORD_THRESHOLD
+  ) {
+    return; // Position unchanged, skip re-render
+  }
+  prevCoords.current = { lat: newLoc.lat, lon: newLoc.lon };
+  setLocation(newLoc);
+}, []);</code></pre>
+
+<h3>Persisted data is never location</h3>
+
+<p>The app does persist some data using AsyncStorage. Here's the complete list:</p>
+
+<ul>
+  <li>Magnetic declination offset (a single float)</li>
+  <li>Pace count calibration (a single integer)</li>
+  <li>Pro purchase status (a boolean)</li>
+  <li>Waypoint lists (user-created, manually saved)</li>
+  <li>Theme selection</li>
+  <li>Coordinate format preference</li>
+  <li>Feature toggles (shake-to-speak, grid alerts)</li>
+</ul>
+
+<p>That's it. Seven keys. No location history. No session data. No device fingerprint. No user ID.</p>
+
+<p>Waypoints are the one case where a coordinate hits disk — but only when the user explicitly taps "Save Waypoint" and names it. It's user-initiated, user-labeled, and user-deletable. It's their data, stored on their device, for their use.</p>
+
+<h3>All math is local</h3>
+
+<p>The MGRS conversion is implemented from the DMA (Defense Mapping Agency) Technical Manual 8358.1. It's about 300 lines of pure math — WGS84 ellipsoid constants, UTM projection, zone letter assignment, 100km square identification. Zero dependencies. No geocoding API. No coordinate lookup service.</p>
+
+<pre><code>// The entire MGRS pipeline is deterministic pure functions:
+//   latitude, longitude → UTM easting/northing → zone + square + digits
+//
+// Input: two floats
+// Output: a string like "18S UJ 23456 78901"
+// Side effects: none</code></pre>
+
+<p>Same story for magnetic declination (WMM 2025 coefficients baked in), dead reckoning (Vincenty formula on WGS84), resection (two-bearing intersection), and solar calculations. Every computation runs locally, deterministically, with no external data.</p>
+
+<h2>What You Give Up</h2>
+
+<p>This architecture has real costs. I want to be honest about them.</p>
+
+<p><strong>No crash reporting.</strong> When the app crashes, I don't know about it unless a user emails me. I can't see stack traces, device models, or OS versions. I compensate with aggressive defensive coding — every async call is wrapped in try/catch with timeouts, every external module is lazy-loaded with fallbacks, every JSON parse has corruption protection. The app has never crashed in production (that I know of), but I also can't prove that.</p>
+
+<p><strong>No usage analytics.</strong> I don't know how many people use the app daily. I don't know which features are popular. I don't know if anyone uses the resection tool or if the pace counter is just noise. I make product decisions based on what I think is useful, not data. App Store Connect gives me download counts and that's about it.</p>
+
+<p><strong>No remote configuration.</strong> If I bake in a wrong constant — say, a WMM coefficient — I can't hot-fix it. I have to push an App Store update and wait for review. This means I test math functions obsessively. The test suite has 142 tests, and the MGRS converter alone has edge cases for every UTM zone boundary, the Norway/Svalbard special zones, and both poles.</p>
+
+<p><strong>No A/B testing.</strong> I can't test two different UIs against each other. The version I ship is the version everyone gets. This is honestly fine for a utility app, but it means design decisions are based on gut feel.</p>
+
+<h2>What You Get Back</h2>
+
+<p>The benefits are less obvious but, I think, more important.</p>
+
+<p><strong>Absolute trust.</strong> The app is open source. Anyone can verify the zero-network claim by reading the code. There's no "trust us, we anonymize it." There's nothing to anonymize because there's nothing to collect. For military users operating in sensitive environments, this matters.</p>
+
+<p><strong>Works everywhere.</strong> Underground parking garage. Middle of the ocean. Remote mountainside with no cell coverage. Airplane mode. The app doesn't care. There's no loading spinner waiting for a server. There's no "requires internet connection" disclaimer in the App Store listing.</p>
+
+<p><strong>No ongoing cost.</strong> The app has no backend. No server to maintain. No database to scale. No API rate limits to worry about. My infrastructure cost is $0/month. The only recurring cost is the Apple Developer Program at $99/year. This means the app can exist forever without generating revenue, which is a luxury that changes how you make product decisions.</p>
+
+<p><strong>Faster than you'd expect.</strong> No network waterfall means the app is ready the instant it launches. GPS lock depends on satellite geometry, but the UI is interactive immediately. There's no "connecting to server" state. The coordinate display shows a placeholder until the first GPS fix, then it's real-time at 1Hz.</p>
+
+<h2>The Hard Part: Hardening Without Telemetry</h2>
+
+<p>When you can't see production errors, you have to prevent them. Every I/O boundary in the app is wrapped defensively:</p>
+
+<pre><code>// Every AsyncStorage call: existence check → try/catch → timeout → default
+export async function loadSettings() {
+  try {
+    if (!AsyncStorage || !AsyncStorage.multiGet) {
+      return DEFAULTS;  // Module missing? Return defaults.
+    }
+
+    const items = await Promise.race([
+      AsyncStorage.multiGet([...keys]),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Storage timeout')), 5000)
+      )
+    ]);
+
+    if (!items || !Array.isArray(items)) return DEFAULTS;
+
+    // Parse each value individually — one corrupted key
+    // doesn't take down the others
+    // ...
+  } catch (err) {
+    return DEFAULTS;  // Total failure? Still works.
+  }
+}</code></pre>
+
+<p>The pattern is the same everywhere: check if the module exists, wrap the call, race against a timeout, validate the response shape, fall back to a sensible default. The app should never show the user an error screen. If storage is corrupted, you get default settings. If GPS fails, you get a clear message and a retry button. If the magnetometer is unavailable, the compass arrow degrades to absolute bearing.</p>
+
+<p>This is more work than dropping in Sentry and calling it a day. But it produces a fundamentally more resilient app.</p>
+
+<h2>Should You Do This?</h2>
+
+<p>For most apps, probably not. If you're running a SaaS product with user accounts, you need a backend. If you're a team of 50, you need crash reporting to stay sane. If your business model depends on understanding user behavior, you need some form of analytics.</p>
+
+<p>But if you're building a utility — a calculator, a converter, a reference tool, a sensor reader — ask yourself: does this actually need a network connection? If the answer is "only for analytics," maybe the answer is that it doesn't need one at all.</p>
+
+<p>The bar should be higher than "well, everyone adds analytics." Your user's data is theirs. If you don't need it, don't take it.</p>
+
+<div class="callout">
+  <strong>Red Grid MGRS</strong>
+  Free on the <a href="https://apps.apple.com/app/id6759629554">App Store</a>. Source code on <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>.
+</div>
+
+</article>
+
+<footer>
+  <a href="../">Red Grid MGRS</a> &middot;
+  <a href="../privacy.html">Privacy</a> &middot;
+  <a href="../support.html">Support</a> &middot;
+  <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>
+  <p style="margin-top: 0.5rem;">&copy; 2026 Red Grid Tactical</p>
+</footer>
+
+</body>
+</html>
