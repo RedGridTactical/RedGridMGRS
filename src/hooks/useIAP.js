@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PRO_KEY         = 'rg_pro_unlocked';
 const PRO_RECEIPT_KEY = 'rg_pro_receipt';
+const PRO_VALIDATED   = 'rg_pro_validated_v2';
 export const PRO_PRODUCT_ID = 'redgrid_pro_lifetime';
 
 // Safely require expo-iap — handles unavailability on iOS beta
@@ -47,23 +48,84 @@ export function useIAP() {
     return () => { mounted.current = false; };
   }, []);
 
-  // ── Load persisted Pro status ──────────────────────────────────────────────
-  // Wrapped to ensure AsyncStorage doesn't crash startup
+  // ── Load persisted Pro status + one-time stale-key migration ───────────────
+  // On v2.1.4+, validates rg_pro_unlocked against StoreKit to clear stale
+  // keys left by TestFlight/dev builds. Runs once per install.
   useEffect(() => {
     let cancelled = false;
 
     const loadProStatus = async () => {
       try {
-        if (!AsyncStorage) {
+        if (!AsyncStorage) return;
+
+        const [proFlag, receipt, validated] = await Promise.all([
+          AsyncStorage.getItem(PRO_KEY).catch(() => null),
+          AsyncStorage.getItem(PRO_RECEIPT_KEY).catch(() => null),
+          AsyncStorage.getItem(PRO_VALIDATED).catch(() => null),
+        ]);
+
+        // Already validated in a previous launch — trust the stored flag
+        if (validated === 'true') {
+          if (!cancelled && mounted.current && proFlag === 'true') {
+            setIsPro(true);
+          }
           return;
         }
-        const v = await AsyncStorage.getItem(PRO_KEY);
-        if (!cancelled && mounted.current && v === 'true') {
-          setIsPro(true);
+
+        // No Pro flag set — nothing to validate, mark migration done
+        if (proFlag !== 'true') {
+          await AsyncStorage.setItem(PRO_VALIDATED, 'true').catch(() => {});
+          return;
         }
-      } catch (err) {
-        // AsyncStorage unavailable, corrupted, or permission denied — stay free
-        // Do not throw, just silently continue
+
+        // Pro flag is set AND has a receipt — legitimate purchase, trust it
+        if (receipt) {
+          if (!cancelled && mounted.current) setIsPro(true);
+          await AsyncStorage.setItem(PRO_VALIDATED, 'true').catch(() => {});
+          return;
+        }
+
+        // Pro flag is set but NO receipt — could be stale dev/TestFlight data.
+        // Verify against StoreKit before trusting.
+        if (IAPModule && IAPModule.getAvailablePurchases) {
+          try {
+            if (IAPModule.initConnection) {
+              await Promise.race([
+                IAPModule.initConnection(),
+                new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 3000))
+              ]);
+            }
+
+            const purchases = await Promise.race([
+              IAPModule.getAvailablePurchases(),
+              new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000))
+            ]);
+
+            const hasPro = purchases?.some?.(p =>
+              p?.id === PRO_PRODUCT_ID || p?.id === 'redgrid_pro_lifetime'
+            );
+
+            if (hasPro) {
+              // Verified — legitimate purchase, keep Pro and stamp receipt
+              if (!cancelled && mounted.current) setIsPro(true);
+              await AsyncStorage.setItem(PRO_RECEIPT_KEY, 'verified').catch(() => {});
+            } else {
+              // No purchase found — stale key, clear it
+              if (!cancelled && mounted.current) setIsPro(false);
+              await AsyncStorage.removeItem(PRO_KEY).catch(() => {});
+            }
+          } catch {
+            // StoreKit unavailable — err on the side of the user, keep Pro
+            if (!cancelled && mounted.current) setIsPro(true);
+          }
+        } else {
+          // IAP module unavailable — can't validate, keep Pro
+          if (!cancelled && mounted.current) setIsPro(true);
+        }
+
+        await AsyncStorage.setItem(PRO_VALIDATED, 'true').catch(() => {});
+      } catch {
+        // Total failure — stay free, don't crash
       }
     };
 

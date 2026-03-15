@@ -27,6 +27,8 @@ const KEYS = {
   WAYPOINT_LISTS:  'rg_waypoint_lists',
   THEME:           'rg_theme',
   COORD_FORMAT:    'rg_coord_format',
+  SHAKE_TO_SPEAK:  'rg_shake_to_speak',
+  GRID_CROSSING:   'rg_grid_crossing',
 };
 
 // ─── SETTINGS ────────────────────────────────────────────────────────────────
@@ -37,12 +39,13 @@ const KEYS = {
 export async function loadSettings() {
   try {
     if (!AsyncStorage || !AsyncStorage.multiGet) {
-      return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs' };
+      return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true };
     }
 
     const items = await Promise.race([
       AsyncStorage.multiGet([
         KEYS.DECLINATION, KEYS.PACE_COUNT, KEYS.THEME, KEYS.COORD_FORMAT,
+        KEYS.SHAKE_TO_SPEAK, KEYS.GRID_CROSSING,
       ]),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Storage timeout')), 5000)
@@ -50,7 +53,7 @@ export async function loadSettings() {
     ]);
 
     if (!items || !Array.isArray(items)) {
-      return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs' };
+      return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true };
     }
 
     const dec = items[0];
@@ -62,6 +65,8 @@ export async function loadSettings() {
     let paceCount = 62;
     let themeValue = 'red';
     let coordFormat = 'mgrs';
+    let shakeToSpeak = true;
+    let gridCrossing = true;
 
     if (dec && Array.isArray(dec) && dec[1] !== null) {
       const parsed = parseFloat(dec[1]);
@@ -81,10 +86,20 @@ export async function loadSettings() {
       coordFormat = String(coord[1]);
     }
 
-    return { declination, paceCount, theme: themeValue, coordFormat };
+    const shake = items[4];
+    if (shake && Array.isArray(shake) && shake[1] !== null) {
+      shakeToSpeak = shake[1] !== 'false';
+    }
+
+    const crossing = items[5];
+    if (crossing && Array.isArray(crossing) && crossing[1] !== null) {
+      gridCrossing = crossing[1] !== 'false';
+    }
+
+    return { declination, paceCount, theme: themeValue, coordFormat, shakeToSpeak, gridCrossing };
   } catch (err) {
     // AsyncStorage unavailable, corrupted, permission denied, timeout, or parse error
-    return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs' };
+    return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true };
   }
 }
 
@@ -158,6 +173,26 @@ export async function saveCoordFormat(value) {
   } catch (err) {
     // Silent failure — user data stays in memory for this session
   }
+}
+
+/**
+ * Save shake-to-speak toggle with error swallowing.
+ */
+export async function saveShakeToSpeak(value) {
+  try {
+    if (!AsyncStorage || !AsyncStorage.setItem) return;
+    await AsyncStorage.setItem(KEYS.SHAKE_TO_SPEAK, String(value));
+  } catch {}
+}
+
+/**
+ * Save grid crossing alerts toggle with error swallowing.
+ */
+export async function saveGridCrossing(value) {
+  try {
+    if (!AsyncStorage || !AsyncStorage.setItem) return;
+    await AsyncStorage.setItem(KEYS.GRID_CROSSING, String(value));
+  } catch {}
 }
 
 // ─── WAYPOINT LISTS (PRO) ────────────────────────────────────────────────────

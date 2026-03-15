@@ -1,5 +1,5 @@
 /**
- * ToolsScreen — Six tactical tools, each as an expandable card.
+ * ToolsScreen — Nine tactical tools, each as an expandable card.
  * All computation is local. No network. No location data stored.
  */
 import React, { useState, useCallback } from 'react';
@@ -28,6 +28,7 @@ import { DeclinationTool }   from '../components/tools/DeclinationTool';
 import { TDSTool }           from '../components/tools/TDSTool';
 import { SolarTool }         from '../components/tools/SolarTool';
 import { PrecisionTool }     from '../components/tools/PrecisionTool';
+import { GeostampTool }      from '../components/tools/GeostampTool';
 
 const TOOLS = [
   { id: 'backaz',   label: 'BACK AZIMUTH',    sub: 'Reciprocal bearing calculator',         Component: BackAzimuthTool   },
@@ -38,9 +39,10 @@ const TOOLS = [
   { id: 'tds',      label: 'TIME·DIST·SPEED',  sub: 'Movement planning calculator',          Component: TDSTool           },
   { id: 'solar',    label: 'SUN / MOON',        sub: 'Celestial bearing & orientation',       Component: SolarTool         },
   { id: 'prec',     label: 'MGRS PRECISION',   sub: 'Convert grid to reporting precision',   Component: PrecisionTool     },
+  { id: 'geostamp', label: 'PHOTO GEOSTAMP',   sub: 'Burn MGRS + DTG onto a photo',         Component: GeostampTool,  pro: true },
 ];
 
-export function ToolsScreen({ location, declination, paceCount, setDeclination, setPaceCount, compassHeading }) {
+export function ToolsScreen({ location, declination, paceCount, setDeclination, setPaceCount, compassHeading, isPro, onShowProGate }) {
   const colors = useColors();
   const [openTool, setOpenTool] = useState(null);
 
@@ -57,21 +59,28 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
         <Text style={[styles.subtitle, { color: colors.text3 }]}>TAP TO EXPAND</Text>
       </View>
 
-      {TOOLS.map(({ id, label, sub, Component }) => {
+      {TOOLS.map(({ id, label, sub, Component, pro }) => {
         const isOpen = openTool === id;
+        const isLocked = pro && !isPro;
         return (
-          <View key={id} style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }, isOpen && { borderColor: colors.text2 }]}>
+          <View key={id} style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }, isOpen && { borderColor: colors.text2 }, isLocked && styles.cardLocked]}>
             <TouchableOpacity
               style={styles.cardHeader}
-              onPress={() => toggle(id)}
+              onPress={() => {
+                if (isLocked) { tapMedium(); onShowProGate?.(label); return; }
+                toggle(id);
+              }}
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityState={{ expanded: isOpen }}
-              accessibilityLabel={`${label}, ${sub}`}
-              accessibilityHint={isOpen ? 'Double tap to collapse' : 'Double tap to expand'}
+              accessibilityLabel={`${label}, ${sub}${isLocked ? '. Pro feature, locked.' : ''}`}
+              accessibilityHint={isLocked ? 'Double tap to view upgrade options' : (isOpen ? 'Double tap to collapse' : 'Double tap to expand')}
             >
               <View>
-                <Text style={[styles.cardTitle, { color: colors.text }]}>{label}</Text>
+                <View style={styles.labelRow}>
+                  <Text style={[styles.cardTitle, { color: colors.text }]}>{label}</Text>
+                  {isLocked && <Text style={[styles.proBadge, { color: colors.bg, backgroundColor: colors.text }]}>PRO</Text>}
+                </View>
                 <Text style={[styles.cardSub, { color: colors.text3 }]}>{sub}</Text>
               </View>
               <Text style={[styles.chevron, { color: colors.border }, isOpen && { color: colors.text, transform: [{ rotate: '90deg' }] }]} importantForAccessibility="no" accessibilityElementsHidden={true}>▶</Text>
@@ -119,7 +128,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 14,
   },
-  cardTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '700', marginBottom: 2 },
+  cardLocked: { opacity: 0.7 },
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
+  proBadge: { fontFamily: 'monospace', fontSize: 8, paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 2 },
+  cardTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '700' },
   cardSub:   { fontSize: 9,  letterSpacing: 2 },
   chevron:   { fontFamily: 'monospace', fontSize: 10, transform: [{ rotate: '0deg' }] },
 
