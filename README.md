@@ -158,7 +158,7 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 
 - [Report an issue](https://github.com/RedGridTactical/RedGridMGRS/issues)
 - [Support page](https://redgridtactical.github.io/RedGridMGRS/support.html)
-- Email: redgridtactical@gmail.com
+- Email: support@redgridtactical.com
 
 ---
 
