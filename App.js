@@ -33,6 +33,7 @@ import { ReportScreen }   from './src/screens/ReportScreen';
 import { WaypointListsScreen } from './src/screens/WaypointListsScreen';
 import { ThemeScreen }    from './src/screens/ThemeScreen';
 import { CoordFormatsScreen } from './src/screens/CoordFormatsScreen';
+import { SupportScreen } from './src/screens/SupportScreen';
 
 import {
   toMGRS, formatMGRS, formatPosition, calculateBearing, calculateDistance, formatDistance,
@@ -124,6 +125,7 @@ function App() {
   const [proGateVisible, setProGateVisible] = useState(false);
   const [proGateFeature, setProGateFeature] = useState('');
   const [hudMode, setHudMode]       = useState(false);
+  const [showSupport, setShowSupport] = useState(false);
 
   const TABS = isPro ? PRO_TABS : FREE_TABS;
 
@@ -207,6 +209,7 @@ function App() {
       compassHeading={compassHeading}
       onRateApp={openStoreReview}
       onEnterHud={onEnterHud}
+      onShowSupport={() => setShowSupport(true)}
     />
   ) : (
     <PortraitGrid
@@ -220,6 +223,7 @@ function App() {
       compassHeading={compassHeading}
       onRateApp={openStoreReview}
       onEnterHud={onEnterHud}
+      onShowSupport={() => setShowSupport(true)}
     />
   );
 
@@ -271,6 +275,8 @@ function App() {
         bearing={bearing}
         arrowAngle={arrowAngle}
         distance={distance}
+        showSupport={showSupport}
+        setShowSupport={setShowSupport}
       />
     </ThemeProvider>
   );
@@ -288,6 +294,7 @@ function AppContent({
   compassHeading,
   shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing,
   hudMode, setHudMode, bearing, arrowAngle, distance,
+  showSupport, setShowSupport,
 }) {
   const colors = useColors();
 
@@ -403,6 +410,12 @@ function AppContent({
         onRestore={restore}
       />
 
+      {/* Help & Support */}
+      <SupportScreen
+        visible={showSupport}
+        onClose={() => setShowSupport(false)}
+      />
+
     </SafeAreaView>
 
     {/* HUD Mode — full-screen simplified display (Pro), rendered above SafeAreaView for true full-screen */}
@@ -444,7 +457,7 @@ function UpsellScreen({ onUpgrade }) {
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport }) {
   const colors = useColors();
   return (
     <View style={staticStyles.portraitRoot}>
@@ -508,6 +521,9 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
           <TouchableOpacity onPress={onEnterHud} accessibilityRole="button" accessibilityLabel={isPro ? 'Enter HUD mode' : 'HUD mode. Pro feature'}>
             <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>◈ HUD MODE{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => { tapLight(); onShowSupport(); }} accessibilityRole="button" accessibilityLabel="Help and support">
+            <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>? HELP</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => { tapLight(); onRateApp(); }} accessibilityRole="button" accessibilityLabel="Rate this app on the App Store">
             <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>★ RATE THIS APP</Text>
           </TouchableOpacity>
@@ -519,7 +535,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport }) {
   const colors = useColors();
   return (
     <View style={staticStyles.landscapeRoot}>
@@ -572,6 +588,9 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
           <View style={staticStyles.footerRow}>
             <TouchableOpacity onPress={onEnterHud} accessibilityRole="button" accessibilityLabel={isPro ? 'Enter HUD mode' : 'HUD mode. Pro feature'}>
               <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>◈ HUD{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { tapLight(); onShowSupport(); }} accessibilityRole="button" accessibilityLabel="Help and support">
+              <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>? HELP</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => { tapLight(); onRateApp(); }} accessibilityRole="button" accessibilityLabel="Rate this app on the App Store">
               <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>★ RATE</Text>
