@@ -70,7 +70,7 @@ npx jest --no-cache --verbose
 
 ### Becoming a Tester
 We need closed testing participants, especially on Android (Google Play requires 12 testers before production release). To join:
-- Email redgridtactical@gmail.com with your Google Play email
+- Email support@redgridtactical.com with your Google Play email
 - Or open an issue requesting tester access
 
 ## Pull Request Guidelines
@@ -98,4 +98,4 @@ By contributing, you agree that your contributions will be licensed under the [M
 
 - [Discussions](https://github.com/RedGridTactical/RedGridMGRS/discussions)
 - [Issues](https://github.com/RedGridTactical/RedGridMGRS/issues)
-- Email: redgridtactical@gmail.com
+- Email: support@redgridtactical.com

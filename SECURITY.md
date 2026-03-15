@@ -46,7 +46,7 @@ User input → AsyncStorage (device only) → Display
 
 ## Reporting vulnerabilities
 
-Email: redgridtactical@gmail.com
+Email: support@redgridtactical.com
 GitHub: https://github.com/RedGridTactical/RedGridMGRS/issues
 
 Please do not publicly disclose security issues before they are addressed.
