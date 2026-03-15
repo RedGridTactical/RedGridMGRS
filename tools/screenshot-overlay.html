@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Red Grid MGRS — Screenshot Overlay Tool</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --text: #e0e0e0;
+    --text-dim: #888;
+    --red: #8B0000;
+    --red-light: #b91c1c;
+    --accent: #dc2626;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--red) 0%, #4a0000 100%);
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .header .subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 2px;
+  }
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { background: #ef4444; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: #2a2a2a; }
+
+  /* Controls bar */
+  .controls {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .control-group label {
+    font-size: 12px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .control-group input[type="range"] {
+    width: 100px;
+    accent-color: var(--accent);
+  }
+  .control-group input[type="color"] {
+    width: 32px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: none;
+    cursor: pointer;
+  }
+  .control-group select {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  .control-value {
+    font-size: 12px;
+    color: var(--text-dim);
+    min-width: 30px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Drop zone */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 48px;
+    text-align: center;
+    margin: 24px 32px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: rgba(220, 38, 38, 0.05);
+  }
+  .dropzone h3 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .dropzone p {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .dropzone.has-images {
+    padding: 16px 32px;
+    border-style: solid;
+    border-color: var(--border);
+  }
+  .dropzone.has-images h3,
+  .dropzone.has-images p:not(.drop-hint) { display: none; }
+  .drop-hint {
+    display: none;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 8px;
+  }
+  .dropzone.has-images .drop-hint { display: block; }
+
+  /* Screenshot grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    padding: 8px 0;
+  }
+
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.15s;
+  }
+  .card:hover { border-color: #444; }
+  .card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+  .card-preview {
+    position: relative;
+    aspect-ratio: 1320/2868;
+    background: #000;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .card-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .card-overlay-preview {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8px 6px;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    pointer-events: none;
+    line-height: 1.15;
+  }
+
+  .card-footer {
+    padding: 10px 12px;
+  }
+  .card-footer input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .card-footer input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .card-number {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card-remove {
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--text-dim);
+    background: none;
+    border: none;
+    padding: 0 2px;
+    line-height: 1;
+  }
+  .card-remove:hover { color: var(--accent); }
+
+  /* Selected preview */
+  .preview-panel {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+  }
+  .preview-panel.open { display: flex; }
+  .preview-container {
+    max-height: 90vh;
+    max-width: 450px;
+    position: relative;
+  }
+  .preview-container canvas {
+    max-height: 90vh;
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .preview-close {
+    position: absolute;
+    top: -16px;
+    right: -16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .preview-close:hover { background: var(--accent); }
+
+  /* Progress */
+  .progress-bar {
+    display: none;
+    margin: 0 32px 16px;
+    background: var(--surface2);
+    border-radius: 6px;
+    overflow: hidden;
+    height: 6px;
+  }
+  .progress-bar.active { display: block; }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s;
+    width: 0%;
+  }
+
+  /* Status */
+  .status {
+    padding: 8px 32px;
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Hidden file input */
+  #fileInput { display: none; }
+
+  /* Preset row */
+  .preset-row {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+  }
+  .preset-btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--surface2);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .preset-btn:hover { color: var(--text); border-color: #444; }
+  .preset-btn.active { color: var(--accent); border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>RED GRID MGRS — Screenshot Overlay Tool</h1>
+    <div class="subtitle">App Store screenshot compositing with marketing text overlays</div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary" onclick="exportSingle()" id="btnExportOne" disabled>Export Selected</button>
+    <button class="btn btn-primary" onclick="exportAll()" id="btnExportAll" disabled>Export All PNGs</button>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="control-group">
+    <label>Overlay Height</label>
+    <input type="range" min="8" max="25" value="15" id="overlayHeight" oninput="updateSetting()">
+    <span class="control-value" id="overlayHeightVal">15%</span>
+  </div>
+  <div class="control-group">
+    <label>Font Size</label>
+    <input type="range" min="40" max="120" value="72" id="fontSize" oninput="updateSetting()">
+    <span class="control-value" id="fontSizeVal">72</span>
+  </div>
+  <div class="control-group">
+    <label>BG Color</label>
+    <input type="color" value="#8B0000" id="bgColor" oninput="updateSetting()">
+  </div>
+  <div class="control-group">
+    <label>Opacity</label>
+    <input type="range" min="60" max="100" value="95" id="bgOpacity" oninput="updateSetting()">
+    <span class="control-value" id="bgOpacityVal">95%</span>
+  </div>
+  <div class="control-group">
+    <label>Style</label>
+    <select id="overlayStyle" onchange="updateSetting()">
+      <option value="solid">Solid Bar</option>
+      <option value="gradient" selected>Gradient Fade</option>
+      <option value="banner">Banner + Shift</option>
+    </select>
+  </div>
+  <div class="preset-row">
+    <button class="preset-btn active" onclick="applyPreset('tactical')">Tactical</button>
+    <button class="preset-btn" onclick="applyPreset('stealth')">Stealth</button>
+    <button class="preset-btn" onclick="applyPreset('clean')">Clean</button>
+  </div>
+</div>
+
+<div class="progress-bar" id="progressBar">
+  <div class="progress-fill" id="progressFill"></div>
+</div>
+
+<div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+  <h3>Drop up to 10 iPhone screenshots here</h3>
+  <p>Or click to browse. Supports PNG/JPG. Recommended: 1320 x 2868 (6.9" display)</p>
+  <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)">
+  <div class="grid" id="grid"></div>
+  <p class="drop-hint">Drop more screenshots or click to add (10 max)</p>
+</div>
+
+<div class="status" id="status"></div>
+
+<div class="preview-panel" id="previewPanel" onclick="closePreview(event)">
+  <div class="preview-container" id="previewContainer">
+    <button class="preview-close" onclick="closePreview()">&times;</button>
+    <canvas id="previewCanvas"></canvas>
+  </div>
+</div>
+
+<script>
+const DEFAULTS = {
+  overlayHeight: 15,
+  fontSize: 72,
+  bgColor: '#8B0000',
+  bgOpacity: 95,
+  overlayStyle: 'gradient'
+};
+
+const OVERLAY_TEXTS = [
+  "Live 10-Digit MGRS Grid",
+  "Military-Grade Compass & Bearing",
+  "SALUTE, MEDEVAC, CFF Reports",
+  "DAGR-Class Navigation",
+  "Zero Tracking, Zero Network",
+  "Waypoint Storage & Wayfinder",
+  "WMM 2025 Magnetic Declination",
+  "Dead Reckoning & Resection",
+  "Red Lens & NVG Themes",
+  "Free \u2014 No Subscription"
+];
+
+const PRESETS = {
+  tactical: { overlayHeight: 15, fontSize: 72, bgColor: '#8B0000', bgOpacity: 95, overlayStyle: 'gradient' },
+  stealth:  { overlayHeight: 12, fontSize: 64, bgColor: '#111111', bgOpacity: 90, overlayStyle: 'solid' },
+  clean:    { overlayHeight: 18, fontSize: 80, bgColor: '#1a1a2e', bgOpacity: 100, overlayStyle: 'banner' },
+};
+
+const W = 1320, H = 2868;
+let screenshots = []; // { img: Image, text: string, file: File }
+let selectedIdx = -1;
+
+// Drag & drop
+const dropzone = document.getElementById('dropzone');
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+function handleFiles(files) {
+  const remaining = 10 - screenshots.length;
+  const toAdd = Array.from(files).slice(0, remaining);
+  let loaded = 0;
+
+  toAdd.forEach((file, i) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const idx = screenshots.length;
+        screenshots.push({
+          img,
+          text: OVERLAY_TEXTS[idx] || `Screenshot ${idx + 1}`,
+          file
+        });
+        loaded++;
+        if (loaded === toAdd.length) {
+          renderGrid();
+          updateButtons();
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function getSettings() {
+  return {
+    overlayHeight: parseInt(document.getElementById('overlayHeight').value),
+    fontSize: parseInt(document.getElementById('fontSize').value),
+    bgColor: document.getElementById('bgColor').value,
+    bgOpacity: parseInt(document.getElementById('bgOpacity').value) / 100,
+    overlayStyle: document.getElementById('overlayStyle').value,
+  };
+}
+
+function updateSetting() {
+  const s = getSettings();
+  document.getElementById('overlayHeightVal').textContent = s.overlayHeight + '%';
+  document.getElementById('fontSizeVal').textContent = s.fontSize;
+  document.getElementById('bgOpacityVal').textContent = Math.round(s.bgOpacity * 100) + '%';
+
+  // Update preset highlight
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+
+  renderGrid();
+}
+
+function applyPreset(name) {
+  const p = PRESETS[name];
+  document.getElementById('overlayHeight').value = p.overlayHeight;
+  document.getElementById('fontSize').value = p.fontSize;
+  document.getElementById('bgColor').value = p.bgColor;
+  document.getElementById('bgOpacity').value = p.bgOpacity;
+  document.getElementById('overlayStyle').value = p.overlayStyle;
+
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[onclick="applyPreset('${name}')"]`).classList.add('active');
+
+  updateSetting();
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return { r, g, b };
+}
+
+function renderComposite(canvas, idx, scale) {
+  const s = getSettings();
+  const ss = screenshots[idx];
+  const ctx = canvas.getContext('2d');
+
+  const cw = scale ? W : canvas.width;
+  const ch = scale ? H : canvas.height;
+  if (scale) { canvas.width = cw; canvas.height = ch; }
+
+  const overlayH = Math.round(ch * s.overlayHeight / 100);
+  const { r, g, b } = hexToRgb(s.bgColor);
+
+  if (s.overlayStyle === 'banner') {
+    // Draw screenshot shifted down
+    ctx.fillStyle = `rgba(${r},${g},${b},${s.bgOpacity})`;
+    ctx.fillRect(0, 0, cw, ch);
+    const imgH = ch - overlayH;
+    ctx.drawImage(ss.img, 0, 0, ss.img.width, ss.img.height, 0, overlayH, cw, imgH);
+    // Banner bg
+    ctx.fillStyle = `rgba(${r},${g},${b},${s.bgOpacity})`;
+    ctx.fillRect(0, 0, cw, overlayH);
+  } else {
+    // Draw screenshot full
+    ctx.drawImage(ss.img, 0, 0, ss.img.width, ss.img.height, 0, 0, cw, ch);
+
+    if (s.overlayStyle === 'gradient') {
+      const grad = ctx.createLinearGradient(0, 0, 0, overlayH * 1.4);
+      grad.addColorStop(0, `rgba(${r},${g},${b},${s.bgOpacity})`);
+      grad.addColorStop(0.7, `rgba(${r},${g},${b},${s.bgOpacity * 0.6})`);
+      grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, cw, overlayH * 1.4);
+    } else {
+      ctx.fillStyle = `rgba(${r},${g},${b},${s.bgOpacity})`;
+      ctx.fillRect(0, 0, cw, overlayH);
+    }
+  }
+
+  // Text
+  const fSize = scale ? s.fontSize : Math.round(s.fontSize * (cw / W));
+  ctx.font = `700 ${fSize}px -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Text shadow
+  ctx.shadowColor = 'rgba(0,0,0,0.4)';
+  ctx.shadowBlur = scale ? 8 : 3;
+  ctx.shadowOffsetY = scale ? 3 : 1;
+
+  // Word wrap
+  const maxWidth = cw * 0.85;
+  const text = ss.text;
+  const words = text.split(' ');
+  let lines = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    const test = currentLine ? currentLine + ' ' + word : word;
+    if (ctx.measureText(test).width > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = test;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+
+  const lineHeight = fSize * 1.2;
+  const totalTextH = lines.length * lineHeight;
+  const textY = overlayH / 2 - totalTextH / 2 + lineHeight / 2;
+
+  ctx.fillStyle = 'white';
+  lines.forEach((line, i) => {
+    ctx.fillText(line, cw / 2, textY + i * lineHeight);
+  });
+
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+}
+
+function renderGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  if (screenshots.length > 0) {
+    dropzone.classList.add('has-images');
+  } else {
+    dropzone.classList.remove('has-images');
+  }
+
+  screenshots.forEach((ss, idx) => {
+    const card = document.createElement('div');
+    card.className = 'card' + (idx === selectedIdx ? ' selected' : '');
+
+    const preview = document.createElement('div');
+    preview.className = 'card-preview';
+    preview.onclick = () => openPreview(idx);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 264;
+    canvas.height = Math.round(264 * H / W);
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    renderComposite(canvas, idx, false);
+    preview.appendChild(canvas);
+    card.appendChild(preview);
+
+    const footer = document.createElement('div');
+    footer.className = 'card-footer';
+
+    const num = document.createElement('div');
+    num.className = 'card-number';
+    num.innerHTML = `<span>SCREENSHOT ${idx + 1}</span>`;
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'card-remove';
+    removeBtn.innerHTML = '&times;';
+    removeBtn.onclick = (e) => { e.stopPropagation(); removeScreenshot(idx); };
+    num.appendChild(removeBtn);
+    footer.appendChild(num);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = ss.text;
+    input.oninput = (e) => {
+      screenshots[idx].text = e.target.value;
+      // Re-render just this card's canvas
+      renderComposite(canvas, idx, false);
+    };
+    footer.appendChild(input);
+
+    card.appendChild(footer);
+    grid.appendChild(card);
+  });
+
+  updateStatus();
+}
+
+function removeScreenshot(idx) {
+  screenshots.splice(idx, 1);
+  if (selectedIdx >= screenshots.length) selectedIdx = -1;
+  renderGrid();
+  updateButtons();
+}
+
+function updateButtons() {
+  document.getElementById('btnExportAll').disabled = screenshots.length === 0;
+  document.getElementById('btnExportOne').disabled = selectedIdx < 0;
+}
+
+function updateStatus() {
+  const el = document.getElementById('status');
+  if (screenshots.length === 0) {
+    el.textContent = '';
+    return;
+  }
+  const s = getSettings();
+  el.innerHTML = `<span>${screenshots.length}/10 screenshots loaded</span><span>Overlay: ${s.overlayHeight}% height, ${s.fontSize}px font, ${s.overlayStyle} style</span>`;
+}
+
+function openPreview(idx) {
+  selectedIdx = idx;
+  const canvas = document.getElementById('previewCanvas');
+  renderComposite(canvas, idx, true);
+  document.getElementById('previewPanel').classList.add('open');
+  updateButtons();
+  renderGrid();
+}
+
+function closePreview(e) {
+  if (e && e.target !== document.getElementById('previewPanel')) return;
+  document.getElementById('previewPanel').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePreview();
+});
+
+async function exportSingle() {
+  if (selectedIdx < 0) return;
+  const canvas = document.createElement('canvas');
+  renderComposite(canvas, selectedIdx, true);
+  downloadCanvas(canvas, `redgrid_screenshot_${selectedIdx + 1}.png`);
+}
+
+async function exportAll() {
+  if (screenshots.length === 0) return;
+
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  bar.classList.add('active');
+
+  for (let i = 0; i < screenshots.length; i++) {
+    fill.style.width = ((i + 1) / screenshots.length * 100) + '%';
+
+    const canvas = document.createElement('canvas');
+    renderComposite(canvas, i, true);
+    downloadCanvas(canvas, `redgrid_screenshot_${i + 1}.png`);
+
+    // Small delay between downloads so browser doesn't choke
+    await new Promise(r => setTimeout(r, 400));
+  }
+
+  setTimeout(() => {
+    bar.classList.remove('active');
+    fill.style.width = '0%';
+  }, 1000);
+}
+
+function downloadCanvas(canvas, filename) {
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// Init
+updateSetting();
+</script>
+</body>
+</html>

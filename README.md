@@ -13,7 +13,7 @@
 
 > ⭐ If you find this useful, consider [starring the repo](https://github.com/RedGridTactical/RedGridMGRS) — it helps others discover it.
 
-The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for $3.99. No network required. No data collected. Open source.
+The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for free. No network required. No data collected. Open source.
 
 ---
 
@@ -58,7 +58,7 @@ Generate formatted reports ready to transmit over any net:
 
 ## Pricing
 
-### Standard — $3.99
+### Free
 Live MGRS display, 1 theme, 8 tactical tools, 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
 
 ### Pro Upgrade — $9.99 (one-time in-app purchase)
@@ -76,7 +76,7 @@ No subscription. No recurring charges. One purchase, permanent unlock.
 ## Install
 
 ### iOS
-[App Store](https://apps.apple.com/app/id6759629554) — $3.99 with optional $9.99 Pro upgrade.
+[App Store](https://apps.apple.com/app/id6759629554) — Free with optional $9.99 Pro upgrade.
 
 ### Android
 Coming soon. The codebase is cross-platform (React Native / Expo), and Android builds are functional — we're focusing on iOS polish first, with Android launching once the feature set matures. [Watch this repo](https://github.com/RedGridTactical/RedGridMGRS) or check back for updates.
