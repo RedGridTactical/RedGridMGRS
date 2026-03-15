@@ -41,7 +41,7 @@
   "description": "DAGR-class military GPS navigator with live MGRS coordinates, magnetic declination, waypoints, and tactical tools. Zero network calls. Zero tracking.",
   "url": "https://redgridtactical.github.io/RedGridMGRS/",
   "downloadUrl": "https://apps.apple.com/app/id6759629554",
-  "softwareVersion": "2.0.0",
+  "softwareVersion": "2.5.0",
   "author": {
     "@type": "Organization",
     "name": "Red Grid Tactical"
@@ -369,13 +369,40 @@
     margin-bottom: 0.75rem;
   }
 
+  /* TABLE WRAPPER */
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 1rem;
+  }
+
+  .compare-table { min-width: 520px; }
+
+  /* BLOG LINK */
+  .blog-link {
+    display: inline-block;
+    margin-top: 1.25rem;
+    color: #cc9999;
+    text-decoration: none;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(204,153,153,0.3);
+    transition: color 0.15s;
+  }
+
+  .blog-link:hover { color: #fff; }
+
   /* RESPONSIVE */
   @media (max-width: 600px) {
     .hero h1 { font-size: 1.8rem; }
     .hero .pitch { font-size: 1rem; }
-    .screenshots-inner img { width: 150px; }
+    .screenshots-inner img { width: 130px; border-radius: 12px; }
+    .screenshots-inner { gap: 0.6rem; }
     section { padding: 2rem 1rem; }
     .privacy-grid { gap: 1rem; }
+    .features { grid-template-columns: 1fr; }
+    .pricing-cards { grid-template-columns: 1fr; }
+    .cta-btn { padding: 0.65rem 1.25rem; font-size: 0.9rem; }
+    .footer-links { gap: 1rem; }
   }
 </style>
 </head>
@@ -440,8 +467,8 @@
     </div>
     <div class="feature-card">
       <div class="icon">&#128736;</div>
-      <h4>8 Tactical Tools</h4>
-      <p>Back azimuth, dead reckoning, resection, pace count, TDS, sun/moon, precision selector.</p>
+      <h4>9 Tactical Tools</h4>
+      <p>Back azimuth, dead reckoning, resection, pace count, TDS, sun/moon, precision selector, photo geostamp.</p>
     </div>
     <div class="feature-card">
       <div class="icon">&#128220;</div>
@@ -453,12 +480,28 @@
       <h4>Zero Network Calls</h4>
       <p>No analytics. No tracking. No accounts. GPS coordinates never leave your device.</p>
     </div>
+    <div class="feature-card">
+      <div class="icon">&#128248;</div>
+      <h4>Photo Geostamp</h4>
+      <p>Burn MGRS grid + DTG onto any photo. Evidence-grade location proof, no metadata stripping. Pro feature.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">&#128483;</div>
+      <h4>Shake to Speak</h4>
+      <p>Shake your phone to hear your current grid in NATO phonetics. Eyes-free position readout. Pro feature.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">&#9888;</div>
+      <h4>Grid Crossing Alerts</h4>
+      <p>Haptic feedback when crossing MGRS grid boundaries. 100m and 1km alerts. Pro feature.</p>
+    </div>
   </div>
 </section>
 
 <!-- COMPARISON -->
 <section>
   <h2>Red Grid MGRS vs. The Competition</h2>
+  <div class="table-wrap">
   <table class="compare-table">
     <thead>
       <tr>
@@ -514,7 +557,7 @@
       </tr>
       <tr>
         <td>Tactical Tools</td>
-        <td class="check">&#10003; 8 tools</td>
+        <td class="check">&#10003; 9 tools</td>
         <td>Limited</td>
         <td>Some</td>
         <td>Basic</td>
@@ -528,12 +571,14 @@
       </tr>
     </tbody>
   </table>
+  </div>
 </section>
 
 <!-- PRIVACY -->
 <div class="privacy-strip">
   <h2>Zero-Network Architecture</h2>
   <p>Red Grid MGRS makes zero HTTP requests during normal operation. Your position data exists in memory only.</p>
+  <a href="blog/zero-network-architecture.html" class="blog-link">Read: How the zero-network architecture works &rarr;</a>
   <div class="privacy-grid">
     <div class="privacy-item">
       <div class="icon">&#128274;</div>
@@ -567,7 +612,7 @@
       <div class="price-label">Standard</div>
       <ul>
         <li>Live MGRS display (all precisions)</li>
-        <li>All 8 tactical tools</li>
+        <li>All 9 tactical tools</li>
         <li>3 report templates (SALUTE, MEDEVAC, SPOT)</li>
         <li>1 waypoint</li>
         <li>Day White theme</li>
@@ -579,7 +624,10 @@
       <ul>
         <li>Unlimited saved waypoint lists</li>
         <li>All 6 report templates</li>
-        <li>NATO voice readout</li>
+        <li>Shake to Speak (NATO phonetic grid readout)</li>
+        <li>Photo Geostamp (burn MGRS + DTG onto photos)</li>
+        <li>Grid Crossing Alerts (haptic boundary warnings)</li>
+        <li>HUD Mode (heads-up compass overlay)</li>
         <li>UTM, DD, DMS coordinate formats</li>
         <li>4 themes: Red Lens, NVG, Blue Force, Day</li>
         <li>No subscription. Ever.</li>
@@ -634,6 +682,7 @@
     <a href="https://apps.apple.com/app/id6759629554">App Store</a>
     <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>
     <a href="https://www.producthunt.com/products/red-grid-mgrs">Product Hunt</a>
+    <a href="blog/zero-network-architecture.html">Blog</a>
     <a href="privacy.html">Privacy Policy</a>
     <a href="support.html">Support</a>
     <a href="mailto:redgridtactical@gmail.com">Contact</a>
