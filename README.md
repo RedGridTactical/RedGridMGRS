@@ -116,6 +116,14 @@ Full policy: [Privacy Policy](https://redgridtactical.github.io/RedGridMGRS/priv
 
 ---
 
+## Need Team Tracking?
+
+**[Red Grid Link](https://github.com/RedGridTactical/RedGridLink)** adds encrypted peer-to-peer team sync to the same MGRS engine. Your whole team shows up on the map over Bluetooth. No servers, no cell service. Team roles, boundary alerts, waypoint sharing, NATO voice callouts. Free on [iOS](https://apps.apple.com/app/red-grid-link/id6760084718).
+
+> Red Grid MGRS = solo navigator. Red Grid Link = team coordinator. Same engine, same precision.
+
+---
+
 ## Built For
 
 Military personnel, search and rescue teams, law enforcement, wildland firefighters, first responders, hunters, and backcountry navigators who depend on accurate grid coordinates in austere environments. Whether you trained on a DAGR or a lensatic compass, Red Grid MGRS speaks your language.
@@ -159,6 +167,17 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - [Report an issue](https://github.com/RedGridTactical/RedGridMGRS/issues)
 - [Support page](https://redgridtactical.github.io/RedGridMGRS/support.html)
 - Email: support@redgridtactical.com
+
+---
+
+## Red Grid Tactical Ecosystem
+
+| App | Purpose | Platform | Link |
+|-----|---------|----------|------|
+| **Red Grid MGRS** | Solo MGRS navigator (DAGR-class) | iOS | [GitHub](https://github.com/RedGridTactical/RedGridMGRS) · [App Store](https://apps.apple.com/app/id6759629554) |
+| **Red Grid Link** | Team coordination + encrypted sync | iOS | [GitHub](https://github.com/RedGridTactical/RedGridLink) · [App Store](https://apps.apple.com/app/red-grid-link/id6760084718) |
+
+Website: [redgridtactical.com](https://redgridtactical.com)
 
 ---
 
