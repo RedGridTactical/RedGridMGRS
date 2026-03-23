@@ -1,6 +1,6 @@
 /**
- * ProGate — Paywall overlay shown when a free user taps a Pro feature.
- * Displays the feature name, benefit list, price, and purchase/restore buttons.
+ * ProGate — Paywall overlay with 3-tier pricing (Monthly / Annual / Lifetime).
+ * Shows feature list, tier selector, and purchase/restore buttons.
  */
 import React from 'react';
 import {
@@ -9,19 +9,37 @@ import {
 } from 'react-native';
 import { useColors } from '../utils/ThemeContext';
 import { tapMedium, tapLight } from '../utils/haptics';
+import { useTranslation } from '../hooks/useTranslation';
 
 const PRO_FEATURES = [
-  { icon: '🗣️', label: 'Voice Readout', sub: 'NATO phonetic grid readout — hands-free operation' },
-  { icon: '📍', label: 'Saved Waypoint Lists', sub: 'Save named patrol routes, OBJs, and rally points' },
-  { icon: '📋', label: 'Tactical Reports', sub: 'ICS 201, CASEVAC, ANGUS/CFF, and custom templates' },
-  { icon: '🧭', label: 'Coordinate Formats', sub: 'UTM, decimal degrees, DMS — on the main grid display' },
-  { icon: '🔴', label: 'Display Themes', sub: 'NVG green, day white, blue-force — preserve night vision' },
+  { icon: '\ud83d\udde3\ufe0f', labelKey: 'proGate.voiceReadout', subKey: 'proGate.voiceReadoutSub' },
+  { icon: '\ud83d\udccd', labelKey: 'proGate.savedWaypoints', subKey: 'proGate.savedWaypointsSub' },
+  { icon: '\ud83d\udccb', labelKey: 'proGate.tacticalReports', subKey: 'proGate.tacticalReportsSub' },
+  { icon: '\ud83e\udded', labelKey: 'proGate.coordFormats', subKey: 'proGate.coordFormatsSub' },
+  { icon: '\ud83d\udd34', labelKey: 'proGate.displayThemes', subKey: 'proGate.displayThemesSub' },
 ];
 
-export function ProGate({ visible, onClose, featureName, product, isPurchasing, onPurchase, onRestore }) {
+const TIERS = [
+  { id: 'monthly',  labelKey: 'proGate.tierMonthly',  periodKey: 'proGate.perMonth' },
+  { id: 'annual',   labelKey: 'proGate.tierAnnual',   periodKey: 'proGate.perYear', badge: 'proGate.bestValue' },
+  { id: 'lifetime', labelKey: 'proGate.tierLifetime', periodKey: 'proGate.oneTime' },
+];
+
+export function ProGate({
+  visible, onClose, featureName, product, products,
+  isPurchasing, onPurchase, onRestore, selectedTier, onSelectTier,
+}) {
   const colors = useColors();
-  // expo-iap uses 'displayPrice' not 'priceString'
-  const priceStr = product?.displayPrice ?? '$9.99';
+  const { t } = useTranslation();
+
+  const getPriceForTier = (tier) => {
+    if (products?.[tier]?.displayPrice) return products[tier].displayPrice;
+    if (tier === 'monthly') return '$3.99';
+    if (tier === 'annual') return '$29.99';
+    return product?.displayPrice ?? '$49.99';
+  };
+
+  const activeTier = selectedTier || 'annual';
 
   return (
     <Modal
@@ -36,12 +54,12 @@ export function ProGate({ visible, onClose, featureName, product, isPurchasing, 
 
           {/* Header */}
           <View style={styles.header}>
-            <Text style={[styles.badge, { color: colors.bg, backgroundColor: colors.text }]}>PRO</Text>
-            <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">RED GRID PRO</Text>
+            <Text style={[styles.badge, { color: colors.bg, backgroundColor: colors.text }]}>{t('proGate.badge')}</Text>
+            <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">{t('proGate.title')}</Text>
             <Text style={[styles.subtitle, { color: colors.text3 }]}>
               {featureName
-                ? `${featureName} is a Pro feature`
-                : 'Unlock the full Red Grid experience'}
+                ? t('proGate.subtitleFeature', { feature: featureName })
+                : t('proGate.subtitleGeneric')}
             </Text>
           </View>
 
@@ -51,8 +69,8 @@ export function ProGate({ visible, onClose, featureName, product, isPurchasing, 
               <View key={i} style={[styles.featureRow, { borderBottomColor: colors.text5 }]}>
                 <Text style={styles.featureIcon} importantForAccessibility="no" accessibilityElementsHidden={true}>{f.icon}</Text>
                 <View style={styles.featureText}>
-                  <Text style={[styles.featureLabel, { color: colors.text }]}>{f.label}</Text>
-                  <Text style={[styles.featureSub, { color: colors.text3 }]}>{f.sub}</Text>
+                  <Text style={[styles.featureLabel, { color: colors.text }]}>{t(f.labelKey)}</Text>
+                  <Text style={[styles.featureSub, { color: colors.text3 }]}>{t(f.subKey)}</Text>
                 </View>
               </View>
             ))}
@@ -61,40 +79,65 @@ export function ProGate({ visible, onClose, featureName, product, isPurchasing, 
           {/* Divider */}
           <View style={[styles.divider, { backgroundColor: colors.border2 }]} />
 
-          {/* Price */}
-          <Text style={[styles.price, { color: colors.text }]}>{priceStr}</Text>
-          <Text style={[styles.priceSub, { color: colors.text3 }]}>ONE-TIME PURCHASE · NO SUBSCRIPTION · NO ADS</Text>
+          {/* Tier selector */}
+          <View style={styles.tierRow}>
+            {TIERS.map((tier) => {
+              const isActive = activeTier === tier.id;
+              return (
+                <TouchableOpacity
+                  key={tier.id}
+                  style={[
+                    styles.tierCard,
+                    { borderColor: isActive ? colors.text : colors.text5 },
+                    isActive && { backgroundColor: colors.text + '12' },
+                  ]}
+                  onPress={() => { tapLight(); onSelectTier?.(tier.id); }}
+                  activeOpacity={0.7}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: isActive }}
+                  accessibilityLabel={`${t(tier.labelKey)} ${getPriceForTier(tier.id)}`}
+                >
+                  {tier.badge && (
+                    <Text style={[styles.tierBadge, { color: colors.bg, backgroundColor: colors.text }]}>
+                      {t(tier.badge)}
+                    </Text>
+                  )}
+                  <Text style={[styles.tierPrice, { color: colors.text }]}>{getPriceForTier(tier.id)}</Text>
+                  <Text style={[styles.tierPeriod, { color: colors.text3 }]}>{t(tier.periodKey)}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
           {/* Purchase button */}
           <TouchableOpacity
             style={[styles.purchaseBtn, { backgroundColor: colors.text }, isPurchasing && { backgroundColor: colors.border }]}
-            onPress={() => { tapMedium(); onPurchase(); }}
+            onPress={() => { tapMedium(); onPurchase(activeTier); }}
             disabled={isPurchasing}
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel={`Unlock Red Grid Pro for ${priceStr}`}
+            accessibilityLabel={`${t('proGate.unlockButton')} ${getPriceForTier(activeTier)}`}
             accessibilityState={{ disabled: isPurchasing }}
           >
             {isPurchasing
               ? <ActivityIndicator color={colors.bg} />
-              : <Text style={[styles.purchaseBtnText, { color: colors.bg }]}>UNLOCK RED GRID PRO</Text>
+              : <Text style={[styles.purchaseBtnText, { color: colors.bg }]}>{t('proGate.unlockButton')}</Text>
             }
           </TouchableOpacity>
 
           {/* Restore */}
-          <TouchableOpacity style={styles.restoreBtn} onPress={() => { tapLight(); onRestore(); }} disabled={isPurchasing} accessibilityRole="button" accessibilityLabel="Restore previous purchase">
-            <Text style={[styles.restoreText, { color: colors.text3 }]}>RESTORE PREVIOUS PURCHASE</Text>
+          <TouchableOpacity style={styles.restoreBtn} onPress={() => { tapLight(); onRestore(); }} disabled={isPurchasing} accessibilityRole="button" accessibilityLabel={t('proGate.restore')}>
+            <Text style={[styles.restoreText, { color: colors.text3 }]}>{t('proGate.restore')}</Text>
           </TouchableOpacity>
 
           {/* Close */}
-          <TouchableOpacity style={styles.closeBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close, not now">
-            <Text style={[styles.closeText, { color: colors.text4 }]}>NOT NOW</Text>
+          <TouchableOpacity style={styles.closeBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel={t('proGate.notNow')}>
+            <Text style={[styles.closeText, { color: colors.text4 }]}>{t('proGate.notNow')}</Text>
           </TouchableOpacity>
 
           {/* Legal */}
           <Text style={[styles.legal, { color: colors.text4 }]}>
-            Payment charged to your App Store / Google Play account at confirmation.
-            No recurring charges. No subscription.
+            {t('proGate.legal')}
           </Text>
 
         </View>
@@ -131,7 +174,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     textAlign: 'center', letterSpacing: 1,
   },
-  features: { maxHeight: 180, marginBottom: 16 },
+  features: { maxHeight: 160, marginBottom: 12 },
   featureRow: {
     flexDirection: 'row', alignItems: 'flex-start',
     paddingVertical: 8, borderBottomWidth: 1,
@@ -143,14 +186,30 @@ const styles = StyleSheet.create({
     letterSpacing: 1, marginBottom: 2,
   },
   featureSub: { fontSize: 9, letterSpacing: 0.5 },
-  divider: { height: 1, marginVertical: 16 },
-  price: {
-    fontFamily: 'monospace', fontSize: 28, fontWeight: '700',
-    textAlign: 'center', letterSpacing: 4, marginBottom: 4,
+  divider: { height: 1, marginVertical: 12 },
+  // Tier selector
+  tierRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
   },
-  priceSub: {
-    fontSize: 8,
-    textAlign: 'center', letterSpacing: 2, marginBottom: 20,
+  tierCard: {
+    flex: 1,
+    borderWidth: 1,
+    padding: 10,
+    alignItems: 'center',
+  },
+  tierBadge: {
+    fontSize: 7, fontWeight: '700', letterSpacing: 2,
+    paddingHorizontal: 6, paddingVertical: 2,
+    marginBottom: 6,
+  },
+  tierPrice: {
+    fontFamily: 'monospace', fontSize: 16, fontWeight: '700',
+    letterSpacing: 1, marginBottom: 2,
+  },
+  tierPeriod: {
+    fontSize: 8, letterSpacing: 1,
   },
   purchaseBtn: {
     paddingVertical: 14, alignItems: 'center', marginBottom: 10, minHeight: 44,

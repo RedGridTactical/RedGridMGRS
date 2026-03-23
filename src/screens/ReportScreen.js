@@ -17,6 +17,7 @@ try {
 }
 import { useColors } from '../utils/ThemeContext';
 import { tapMedium, notifySuccess, notifyWarning } from '../utils/haptics';
+import { useTranslation } from '../hooks/useTranslation';
 
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
@@ -94,12 +95,12 @@ const CASEVAC_FIELDS = [
 ];
 
 const REPORTS = [
-  { id: 'salute',   label: 'SALUTE',          sub: 'Enemy contact report',       fields: SALUTE_FIELDS,   pro: false },
-  { id: 'medevac',  label: '9-LINE MEDEVAC',  sub: 'Medical evacuation request', fields: MEDEVAC_FIELDS,  pro: false },
-  { id: 'spot',     label: 'SPOT REPORT',     sub: 'Observation report',         fields: SPOT_FIELDS,     pro: false },
-  { id: 'ics201',   label: 'ICS 201',         sub: 'Incident command briefing',  fields: ICS201_FIELDS,   pro: true  },
-  { id: 'casevac',  label: 'CASEVAC',         sub: 'Casualty evacuation request', fields: CASEVAC_FIELDS, pro: true  },
-  { id: 'angus',    label: 'ANGUS / CFF',     sub: 'Call for fire — artillery',  fields: ANGUS_FIELDS,    pro: true  },
+  { id: 'salute',   label: 'SALUTE',          labelKey: 'reports.salute',    subKey: 'reports.saluteSub',    fields: SALUTE_FIELDS,   pro: false },
+  { id: 'medevac',  label: '9-LINE MEDEVAC',  labelKey: 'reports.medevac',   subKey: 'reports.medevacSub',   fields: MEDEVAC_FIELDS,  pro: false },
+  { id: 'spot',     label: 'SPOT REPORT',     labelKey: 'reports.spotReport', subKey: 'reports.spotReportSub', fields: SPOT_FIELDS,   pro: false },
+  { id: 'ics201',   label: 'ICS 201',         labelKey: 'reports.ics201',    subKey: 'reports.ics201Sub',    fields: ICS201_FIELDS,   pro: true  },
+  { id: 'casevac',  label: 'CASEVAC',         labelKey: 'reports.casevac',   subKey: 'reports.casevacSub',   fields: CASEVAC_FIELDS, pro: true  },
+  { id: 'angus',    label: 'ANGUS / CFF',     labelKey: 'reports.angusCff',  subKey: 'reports.angusCffSub',  fields: ANGUS_FIELDS,    pro: true  },
 ];
 
 function getNowDTG() {
@@ -119,6 +120,7 @@ function buildReport(reportId, fields, values) {
 
 function ReportCard({ report, mgrs, isPro, onShowProGate }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const initVals = useCallback(() => {
     const v = {};
     report.fields.forEach(f => {
@@ -164,14 +166,14 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
       ExpoClipboard.setStringAsync(text).catch(() => {});
     }
     notifySuccess();
-    AccessibilityInfo.announceForAccessibility('Report copied to clipboard');
-    Alert.alert('Copied', 'Report copied to clipboard.');
+    AccessibilityInfo.announceForAccessibility(t('reports.reportCopied'));
+    Alert.alert(t('reports.copied'), t('reports.copiedMsg'));
   };
 
   const clear = () => {
-    Alert.alert('Clear Report?', 'Reset all fields to defaults?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Clear', style: 'destructive', onPress: () => { notifyWarning(); setVals(initVals()); } },
+    Alert.alert(t('reports.clearReport'), t('reports.clearReportMsg'), [
+      { text: t('reports.cancel'), style: 'cancel' },
+      { text: t('reports.clear'), style: 'destructive', onPress: () => { notifyWarning(); setVals(initVals()); } },
     ]);
   };
 
@@ -183,15 +185,15 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
-        accessibilityLabel={`${report.label} report. ${report.sub}${isLocked ? '. Pro feature, locked.' : ''}`}
+        accessibilityLabel={`${t(report.labelKey)} report. ${t(report.subKey)}${isLocked ? '. Pro feature, locked.' : ''}`}
         accessibilityHint={isLocked ? 'Double tap to view upgrade options' : (open ? 'Double tap to collapse' : 'Double tap to expand')}
       >
         <View>
           <View style={styles.labelRow}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>{report.label}</Text>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>{t(report.labelKey)}</Text>
             {isLocked && <Text style={[styles.proBadge, { color: colors.bg, backgroundColor: colors.text }]} importantForAccessibility="no">PRO</Text>}
           </View>
-          <Text style={[styles.cardSub, { color: colors.text3 }]}>{report.sub}</Text>
+          <Text style={[styles.cardSub, { color: colors.text3 }]}>{t(report.subKey)}</Text>
         </View>
         <Text style={[styles.chevron, { color: colors.border }, open && { transform: [{ rotate: '90deg' }] }]} importantForAccessibility="no">▶</Text>
       </TouchableOpacity>
@@ -216,11 +218,11 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
             );
           })}
           <View style={styles.reportBtns}>
-            <TouchableOpacity style={[styles.copyBtn, { backgroundColor: colors.border }]} onPress={copy} accessibilityRole="button" accessibilityLabel="Copy report to clipboard">
-              <Text style={[styles.copyBtnText, { color: colors.text }]}>COPY REPORT</Text>
+            <TouchableOpacity style={[styles.copyBtn, { backgroundColor: colors.border }]} onPress={copy} accessibilityRole="button" accessibilityLabel={t('reports.copyReport')}>
+              <Text style={[styles.copyBtnText, { color: colors.text }]}>{t('reports.copyReport')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.clearBtn, { borderColor: colors.border }]} onPress={clear} accessibilityRole="button" accessibilityLabel="Clear all report fields">
-              <Text style={[styles.clearBtnText, { color: colors.border }]}>CLEAR</Text>
+            <TouchableOpacity style={[styles.clearBtn, { borderColor: colors.border }]} onPress={clear} accessibilityRole="button" accessibilityLabel={t('reports.clear')}>
+              <Text style={[styles.clearBtnText, { color: colors.border }]}>{t('reports.clear')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -231,16 +233,17 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
 
 export function ReportScreen({ mgrs, isPro, onShowProGate }) {
   const colors = useColors();
+  const { t } = useTranslation();
   return (
     <ScrollView style={[styles.root, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>REPORTS</Text>
-        <Text style={[styles.subtitle, { color: colors.text3 }]}>RADIO-READY TEMPLATES</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('reports.title')}</Text>
+        <Text style={[styles.subtitle, { color: colors.text3 }]}>{t('reports.subtitle')}</Text>
       </View>
 
       {mgrs && (
         <View style={[styles.autoBanner, { borderColor: colors.border, backgroundColor: colors.text5 }]}>
-          <Text style={[styles.autoText, { color: colors.text2 }]}>AUTO-FILLING GRID: {mgrs}</Text>
+          <Text style={[styles.autoText, { color: colors.text2 }]}>{t('reports.autoFilling')}: {mgrs}</Text>
         </View>
       )}
 
@@ -254,7 +257,7 @@ export function ReportScreen({ mgrs, isPro, onShowProGate }) {
         />
       ))}
 
-      <Text style={[styles.footer, { color: colors.text4 }]}>REPORTS ARE EPHEMERAL · CLEARED ON EXIT · NO DATA STORED</Text>
+      <Text style={[styles.footer, { color: colors.text4 }]}>{t('reports.footer')}</Text>
     </ScrollView>
   );
 }

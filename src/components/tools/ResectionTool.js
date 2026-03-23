@@ -4,9 +4,11 @@ import { resection } from '../../utils/tactical';
 import { parseMGRSToLatLon } from '../../utils/mgrs';
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export function ResectionTool() {
   const colors = useColors();
+  const { t } = useTranslation();
   const [pt1MGRS, setPt1MGRS]   = useState('');
   const [bearing1, setBearing1] = useState('');
   const [pt2MGRS, setPt2MGRS]   = useState('');
@@ -26,23 +28,23 @@ export function ResectionTool() {
 
   return (
     <View>
-      <ToolHint text={'Identify two terrain features on your map.\nTake a compass bearing to each.\nEnter their MGRS and your bearing — app computes your position.'} />
+      <ToolHint text={t('toolLabels.resectionHint')} />
       <ToolDivider />
-      <Text style={[styles.ptLabel, { color: colors.border }]}>POINT 1</Text>
-      <ToolInput label="KNOWN POINT 1 — MGRS" value={pt1MGRS} onChangeText={setPt1MGRS} placeholder="18S UJ 12345 67890" />
-      <ToolInput label="YOUR BEARING TO PT 1 (°)" value={bearing1} onChangeText={setBearing1} placeholder="0 – 360" keyboardType="numeric" />
+      <Text style={[styles.ptLabel, { color: colors.border }]}>{t('toolLabels.point1')}</Text>
+      <ToolInput label={t('toolLabels.knownPoint1')} value={pt1MGRS} onChangeText={setPt1MGRS} placeholder="18S UJ 12345 67890" />
+      <ToolInput label={t('toolLabels.bearingToPt1')} value={bearing1} onChangeText={setBearing1} placeholder="0 – 360" keyboardType="numeric" />
       <ToolDivider />
-      <Text style={[styles.ptLabel, { color: colors.border }]}>POINT 2</Text>
-      <ToolInput label="KNOWN POINT 2 — MGRS" value={pt2MGRS} onChangeText={setPt2MGRS} placeholder="18S UJ 98765 43210" />
-      <ToolInput label="YOUR BEARING TO PT 2 (°)" value={bearing2} onChangeText={setBearing2} placeholder="0 – 360" keyboardType="numeric" />
+      <Text style={[styles.ptLabel, { color: colors.border }]}>{t('toolLabels.point2')}</Text>
+      <ToolInput label={t('toolLabels.knownPoint2')} value={pt2MGRS} onChangeText={setPt2MGRS} placeholder="18S UJ 98765 43210" />
+      <ToolInput label={t('toolLabels.bearingToPt2')} value={bearing2} onChangeText={setBearing2} placeholder="0 – 360" keyboardType="numeric" />
 
       {result && (
         <View style={styles.results}>
-          <ToolResult label="YOUR POSITION" value={result.mgrsFormatted} primary />
+          <ToolResult label={t('toolLabels.yourPosition')} value={result.mgrsFormatted} primary />
         </View>
       )}
       {!result && pt1MGRS && bearing1 && pt2MGRS && bearing2 && (
-        <ToolHint text="COULD NOT SOLVE — CHECK INPUTS. BEARINGS MAY BE PARALLEL." />
+        <ToolHint text={t('toolLabels.couldNotSolve')} />
       )}
     </View>
   );

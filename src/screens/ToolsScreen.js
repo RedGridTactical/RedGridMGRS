@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useColors } from '../utils/ThemeContext';
 import { tapMedium } from '../utils/haptics';
+import { useTranslation } from '../hooks/useTranslation';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -31,19 +32,20 @@ import { PrecisionTool }     from '../components/tools/PrecisionTool';
 import { GeostampTool }      from '../components/tools/GeostampTool';
 
 const TOOLS = [
-  { id: 'backaz',   label: 'BACK AZIMUTH',    sub: 'Reciprocal bearing calculator',         Component: BackAzimuthTool   },
-  { id: 'dr',       label: 'DEAD RECKONING',   sub: 'Estimate position from heading+dist',   Component: DeadReckoningTool },
-  { id: 'resect',   label: 'RESECTION',        sub: 'Fix position from two known points',    Component: ResectionTool     },
-  { id: 'pace',     label: 'PACE COUNT',       sub: 'Paces ↔ distance converter',           Component: PaceCountTool     },
-  { id: 'declin',   label: 'DECLINATION',      sub: 'Magnetic correction offset',            Component: DeclinationTool   },
-  { id: 'tds',      label: 'TIME·DIST·SPEED',  sub: 'Movement planning calculator',          Component: TDSTool           },
-  { id: 'solar',    label: 'SUN / MOON',        sub: 'Celestial bearing & orientation',       Component: SolarTool         },
-  { id: 'prec',     label: 'MGRS PRECISION',   sub: 'Convert grid to reporting precision',   Component: PrecisionTool     },
-  { id: 'geostamp', label: 'PHOTO GEOSTAMP',   sub: 'Burn MGRS + DTG onto a photo',         Component: GeostampTool,  pro: true },
+  { id: 'backaz',   labelKey: 'tools.backAzimuth',    subKey: 'tools.backAzimuthSub',         Component: BackAzimuthTool   },
+  { id: 'dr',       labelKey: 'tools.deadReckoning',   subKey: 'tools.deadReckoningSub',       Component: DeadReckoningTool },
+  { id: 'resect',   labelKey: 'tools.resection',       subKey: 'tools.resectionSub',           Component: ResectionTool     },
+  { id: 'pace',     labelKey: 'tools.paceCount',       subKey: 'tools.paceCountSub',           Component: PaceCountTool     },
+  { id: 'declin',   labelKey: 'tools.declination',     subKey: 'tools.declinationSub',         Component: DeclinationTool   },
+  { id: 'tds',      labelKey: 'tools.timeDistSpeed',   subKey: 'tools.timeDistSpeedSub',       Component: TDSTool           },
+  { id: 'solar',    labelKey: 'tools.sunMoon',          subKey: 'tools.sunMoonSub',             Component: SolarTool         },
+  { id: 'prec',     labelKey: 'tools.mgrsPrecision',   subKey: 'tools.mgrsPrecisionSub',       Component: PrecisionTool     },
+  { id: 'geostamp', labelKey: 'tools.photoGeostamp',   subKey: 'tools.photoGeostampSub',       Component: GeostampTool,  pro: true },
 ];
 
 export function ToolsScreen({ location, declination, paceCount, setDeclination, setPaceCount, compassHeading, isPro, onShowProGate }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const [openTool, setOpenTool] = useState(null);
 
   const toggle = useCallback((id) => {
@@ -55,11 +57,13 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
   return (
     <ScrollView style={[styles.root, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>TOOLS</Text>
-        <Text style={[styles.subtitle, { color: colors.text3 }]}>TAP TO EXPAND</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('tools.title')}</Text>
+        <Text style={[styles.subtitle, { color: colors.text3 }]}>{t('tools.tapToExpand')}</Text>
       </View>
 
-      {TOOLS.map(({ id, label, sub, Component, pro }) => {
+      {TOOLS.map(({ id, labelKey, subKey, Component, pro }) => {
+        const label = t(labelKey);
+        const sub = t(subKey);
         const isOpen = openTool === id;
         const isLocked = pro && !isPro;
         return (
@@ -104,7 +108,7 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
       })}
 
       <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.text4 }]}>ALL COMPUTATIONS LOCAL · NO NETWORK · NO STORAGE</Text>
+        <Text style={[styles.footerText, { color: colors.text4 }]}>{t('tools.footer')}</Text>
       </View>
     </ScrollView>
   );

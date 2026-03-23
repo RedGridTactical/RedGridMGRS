@@ -9,11 +9,13 @@
  *   - Graceful fallback UI if startup fails
  *   - All hooks guaranteed to never throw
  */
+import './src/i18n';
 import React, { useState, useMemo, useCallback, useRef, useEffect, Component } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated,
   SafeAreaView, StatusBar, useWindowDimensions, AccessibilityInfo,
 } from 'react-native';
+import { useTranslation } from './src/hooks/useTranslation';
 
 import { useLocation }  from './src/hooks/useLocation';
 import { useSettings }  from './src/hooks/useSettings';
@@ -48,20 +50,24 @@ import { speakMGRS, stopSpeaking } from './src/utils/voice';
 Text.defaultProps = Text.defaultProps || {};
 Text.defaultProps.maxFontSizeMultiplier = 1.0;
 
-const FREE_TABS = [
-  { id: 'grid',   label: 'GRID'   },
-  { id: 'tools',  label: 'TOOLS'  },
-  { id: 'report', label: 'REPORTS' },
-];
-
-const PRO_TABS = [
-  { id: 'grid',   label: 'GRID'   },
-  { id: 'tools',  label: 'TOOLS'  },
-  { id: 'report', label: 'REPORTS' },
-  { id: 'lists',  label: 'LISTS'  },
-  { id: 'coords', label: 'COORDS' },
-  { id: 'theme',  label: 'THEME'  },
-];
+function useTabDefs() {
+  const { t } = useTranslation();
+  return useMemo(() => ({
+    free: [
+      { id: 'grid',   label: t('tabs.grid')   },
+      { id: 'tools',  label: t('tabs.tools')  },
+      { id: 'report', label: t('tabs.reports') },
+    ],
+    pro: [
+      { id: 'grid',   label: t('tabs.grid')   },
+      { id: 'tools',  label: t('tabs.tools')  },
+      { id: 'report', label: t('tabs.reports') },
+      { id: 'lists',  label: t('tabs.lists')  },
+      { id: 'coords', label: t('tabs.coords') },
+      { id: 'theme',  label: t('tabs.theme')  },
+    ],
+  }), [t]);
+}
 
 // ─── ERROR BOUNDARY ──────────────────────────────────────────────────────────
 // Catches any unhandled errors during render or hook execution and shows safe UI
@@ -112,7 +118,7 @@ function App() {
 
   const { location, error, isLoading, retry, compassHeading } = useLocation();
   const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing } = useSettings();
-  const { isPro, isPurchasing, product, purchase, restore } = useIAP();
+  const { isPro, isPurchasing, product, products, selectedTier, setSelectedTier, purchase, restore } = useIAP();
   const themeData = useTheme(theme || 'red');
   const { checkAndPromptReview, openStoreReview } = useStoreReview();
 
@@ -127,7 +133,8 @@ function App() {
   const [hudMode, setHudMode]       = useState(false);
   const [showSupport, setShowSupport] = useState(false);
 
-  const TABS = isPro ? PRO_TABS : FREE_TABS;
+  const tabDefs = useTabDefs();
+  const TABS = isPro ? tabDefs.pro : tabDefs.free;
 
   const showProGate = useCallback((featureName) => {
     setProGateFeature(featureName);
@@ -156,7 +163,7 @@ function App() {
     }
     notifySuccess();
     setCopyToast(true);
-    AccessibilityInfo.announceForAccessibility('Grid copied to clipboard');
+    AccessibilityInfo.announceForAccessibility('Grid copied');
     setTimeout(() => setCopyToast(false), 1500);
   }, [mgrsFormatted, altDisplay]);
 
@@ -405,9 +412,12 @@ function AppContent({
         onClose={() => setProGateVisible(false)}
         featureName={proGateFeature}
         product={product}
+        products={products}
         isPurchasing={isPurchasing}
         onPurchase={purchase}
         onRestore={restore}
+        selectedTier={selectedTier}
+        onSelectTier={setSelectedTier}
       />
 
       {/* Help & Support */}
@@ -445,12 +455,13 @@ export default function AppWithErrorBoundary() {
 
 function UpsellScreen({ onUpgrade }) {
   const colors = useColors();
+  const { t } = useTranslation();
   return (
     <View style={staticStyles.upsellRoot}>
-      <Text style={[staticStyles.upsellTitle, { color: colors.text }]}>RED GRID PRO</Text>
-      <Text style={[staticStyles.upsellSub, { color: colors.text3 }]}>Unlock the full experience</Text>
-      <TouchableOpacity style={[staticStyles.upsellBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]} onPress={onUpgrade} accessibilityRole="button" accessibilityLabel="Unlock Red Grid Pro">
-        <Text style={[staticStyles.upsellBtnText, { color: colors.text }]}>UNLOCK PRO</Text>
+      <Text style={[staticStyles.upsellTitle, { color: colors.text }]}>{t('upsell.title')}</Text>
+      <Text style={[staticStyles.upsellSub, { color: colors.text3 }]}>{t('upsell.subtitle')}</Text>
+      <TouchableOpacity style={[staticStyles.upsellBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]} onPress={onUpgrade} accessibilityRole="button" accessibilityLabel={t('upsell.button')}>
+        <Text style={[staticStyles.upsellBtnText, { color: colors.text }]}>{t('upsell.button')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -459,6 +470,7 @@ function UpsellScreen({ onUpgrade }) {
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
 function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport }) {
   const colors = useColors();
+  const { t } = useTranslation();
   return (
     <View style={staticStyles.portraitRoot}>
       <View style={staticStyles.header}>
@@ -474,7 +486,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
         : (
           <TouchableOpacity onPress={onCopyGrid} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Current MGRS grid. Tap to copy">
             <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact={false} coordFormat={coordFormat} altDisplay={altDisplay} />
-            {copyToast && <Text style={[staticStyles.copyToast, { color: colors.text2 }]}>COPIED TO CLIPBOARD</Text>}
+            {copyToast && <Text style={[staticStyles.copyToast, { color: colors.text2 }]}>{t('grid.copiedToClipboard')}</Text>}
           </TouchableOpacity>
         )
       }
@@ -482,9 +494,9 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
       {!waypoint ? (
         <View style={staticStyles.noWpBlock}>
           <Crosshair size={50} />
-          <Text style={[staticStyles.noWpText, { color: colors.border }]}>NO WAYPOINT SET</Text>
-          <TouchableOpacity style={[staticStyles.addBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel="Add waypoint">
-            <Text style={[staticStyles.addBtnText, { color: colors.text }]}>+ ADD WAYPOINT</Text>
+          <Text style={[staticStyles.noWpText, { color: colors.border }]}>{t('grid.noWaypoint')}</Text>
+          <TouchableOpacity style={[staticStyles.addBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel={t('grid.addWaypoint')}>
+            <Text style={[staticStyles.addBtnText, { color: colors.text }]}>{t('grid.addWaypoint')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -501,8 +513,8 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
             {distance !== null && <Text style={[staticStyles.wpDist, { color: colors.text }]}>{formatDistance(distance)}</Text>}
           </View>
           <View style={staticStyles.wpBtns}>
-            <TouchableOpacity style={[staticStyles.editBtn, { borderColor: colors.border }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel="Edit waypoint"><Text style={[staticStyles.editBtnText, { color: colors.text2 }]}>EDIT</Text></TouchableOpacity>
-            <TouchableOpacity style={[staticStyles.clearBtn, { borderColor: colors.border, backgroundColor: colors.border2 }]} onPress={onClearWaypoint} accessibilityRole="button" accessibilityLabel="Clear waypoint"><Text style={[staticStyles.clearBtnText, { color: colors.text2 }]}>CLEAR</Text></TouchableOpacity>
+            <TouchableOpacity style={[staticStyles.editBtn, { borderColor: colors.border }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel={t('grid.edit')}><Text style={[staticStyles.editBtnText, { color: colors.text2 }]}>{t('grid.edit')}</Text></TouchableOpacity>
+            <TouchableOpacity style={[staticStyles.clearBtn, { borderColor: colors.border, backgroundColor: colors.border2 }]} onPress={onClearWaypoint} accessibilityRole="button" accessibilityLabel={t('grid.clear')}><Text style={[staticStyles.clearBtnText, { color: colors.text2 }]}>{t('grid.clear')}</Text></TouchableOpacity>
           </View>
         </View>
       )}
@@ -512,23 +524,23 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
             style={[staticStyles.voiceBtn, { borderColor: colors.border }, !isPro && staticStyles.voiceBtnLocked]}
             onPress={() => { tapMedium(); isPro ? speakMGRS(mgrsFormatted) : onShowProGate('Voice Readout'); }}
             accessibilityRole="button"
-            accessibilityLabel={isPro ? 'Speak current grid coordinate' : 'Voice readout. Pro feature, locked. Double tap to view upgrade options'}
+            accessibilityLabel={isPro ? t('grid.speakGrid') : 'Voice readout. Pro feature, locked.'}
           >
-            <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.border }]}>SPEAK GRID{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
+            <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.border }]}>{t('grid.speakGrid')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
           </TouchableOpacity>
         )}
         <View style={staticStyles.footerRow}>
-          <TouchableOpacity onPress={onEnterHud} accessibilityRole="button" accessibilityLabel={isPro ? 'Enter HUD mode' : 'HUD mode. Pro feature'}>
-            <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>◈ HUD MODE{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
+          <TouchableOpacity onPress={onEnterHud} accessibilityRole="button" accessibilityLabel={isPro ? t('grid.hudMode') : 'HUD mode. Pro feature'}>
+            <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>◈ {t('grid.hudMode')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { tapLight(); onShowSupport(); }} accessibilityRole="button" accessibilityLabel="Help and support">
-            <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>? HELP</Text>
+          <TouchableOpacity onPress={() => { tapLight(); onShowSupport(); }} accessibilityRole="button" accessibilityLabel={t('grid.help')}>
+            <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>? {t('grid.help')}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { tapLight(); onRateApp(); }} accessibilityRole="button" accessibilityLabel="Rate this app on the App Store">
-            <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>★ RATE THIS APP</Text>
+          <TouchableOpacity onPress={() => { tapLight(); onRateApp(); }} accessibilityRole="button" accessibilityLabel={t('grid.rateApp')}>
+            <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>★ {t('grid.rateApp')}</Text>
           </TouchableOpacity>
         </View>
-        <Text style={[staticStyles.footerText, { color: colors.text4 }]} maxFontSizeMultiplier={1.3}>NO DATA STORED · NO NETWORK · OPEN SOURCE</Text>
+        <Text style={[staticStyles.footerText, { color: colors.text4 }]} maxFontSizeMultiplier={1.3}>{t('grid.footer')}</Text>
       </View>
     </View>
   );
@@ -537,6 +549,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
 function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport }) {
   const colors = useColors();
+  const { t } = useTranslation();
   return (
     <View style={staticStyles.landscapeRoot}>
       <View style={staticStyles.lsLeft}>
@@ -551,7 +564,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
         {error ? <ErrBlock error={error} retry={retry} compact /> : (
           <TouchableOpacity onPress={onCopyGrid} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Current MGRS grid. Tap to copy">
             <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact coordFormat={coordFormat} altDisplay={altDisplay} />
-            {copyToast && <Text style={[staticStyles.copyToast, { color: colors.text2 }]}>COPIED TO CLIPBOARD</Text>}
+            {copyToast && <Text style={[staticStyles.copyToast, { color: colors.text2 }]}>{t('grid.copiedToClipboard')}</Text>}
           </TouchableOpacity>
         )}
         <Div />
@@ -562,16 +575,16 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
             {distance !== null && <Text style={[staticStyles.lsWpDist, { color: colors.text }]}>{formatDistance(distance)}</Text>}
           </View>
         ) : (
-          <Text style={[staticStyles.noWpText, { color: colors.border }]}>NO WAYPOINT SET</Text>
+          <Text style={[staticStyles.noWpText, { color: colors.border }]}>{t('grid.noWaypoint')}</Text>
         )}
         <View style={staticStyles.lsBtnWrap}>
           <View style={staticStyles.lsBtns}>
-            <TouchableOpacity style={[staticStyles.lsBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel={waypoint ? 'Edit waypoint' : 'Add waypoint'}>
-              <Text style={[staticStyles.lsBtnText, { color: colors.text }]}>{waypoint ? 'EDIT WP' : '+ WAYPOINT'}</Text>
+            <TouchableOpacity style={[staticStyles.lsBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel={waypoint ? t('grid.edit') : t('grid.addWaypoint')}>
+              <Text style={[staticStyles.lsBtnText, { color: colors.text }]}>{waypoint ? t('grid.editWp') : t('grid.plusWaypoint')}</Text>
             </TouchableOpacity>
             {waypoint && (
-              <TouchableOpacity style={[staticStyles.lsBtn, { borderColor: colors.border, backgroundColor: 'transparent' }]} onPress={onClearWaypoint} accessibilityRole="button" accessibilityLabel="Clear waypoint">
-                <Text style={[staticStyles.lsBtnText, { color: colors.border }]}>CLEAR</Text>
+              <TouchableOpacity style={[staticStyles.lsBtn, { borderColor: colors.border, backgroundColor: 'transparent' }]} onPress={onClearWaypoint} accessibilityRole="button" accessibilityLabel={t('grid.clear')}>
+                <Text style={[staticStyles.lsBtnText, { color: colors.border }]}>{t('grid.clear')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -580,23 +593,23 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
               style={[staticStyles.voiceBtn, { borderColor: colors.border }, !isPro && staticStyles.voiceBtnLocked]}
               onPress={() => { tapMedium(); isPro ? speakMGRS(mgrsFormatted) : onShowProGate('Voice Readout'); }}
               accessibilityRole="button"
-              accessibilityLabel={isPro ? 'Speak current grid coordinate' : 'Voice readout. Pro feature, locked. Double tap to view upgrade options'}
+              accessibilityLabel={isPro ? t('grid.speakGrid') : 'Voice readout. Pro feature, locked.'}
             >
-              <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.border }]}>SPEAK GRID{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
+              <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.border }]}>{t('grid.speakGrid')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
             </TouchableOpacity>
           )}
           <View style={staticStyles.footerRow}>
-            <TouchableOpacity onPress={onEnterHud} accessibilityRole="button" accessibilityLabel={isPro ? 'Enter HUD mode' : 'HUD mode. Pro feature'}>
-              <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>◈ HUD{!isPro ? '  ᴾᴿᴼ' : ''}</Text>
+            <TouchableOpacity onPress={onEnterHud} accessibilityRole="button" accessibilityLabel={isPro ? t('grid.hud') : 'HUD mode. Pro feature'}>
+              <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>◈ {t('grid.hud')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => { tapLight(); onShowSupport(); }} accessibilityRole="button" accessibilityLabel="Help and support">
-              <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>? HELP</Text>
+            <TouchableOpacity onPress={() => { tapLight(); onShowSupport(); }} accessibilityRole="button" accessibilityLabel={t('grid.help')}>
+              <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>? {t('grid.help')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => { tapLight(); onRateApp(); }} accessibilityRole="button" accessibilityLabel="Rate this app on the App Store">
-              <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>★ RATE</Text>
+            <TouchableOpacity onPress={() => { tapLight(); onRateApp(); }} accessibilityRole="button" accessibilityLabel={t('grid.rate')}>
+              <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>★ {t('grid.rate')}</Text>
             </TouchableOpacity>
           </View>
-          <Text style={[staticStyles.footerText, { color: colors.text4 }]} maxFontSizeMultiplier={1.3}>NO DATA STORED · NO NETWORK</Text>
+          <Text style={[staticStyles.footerText, { color: colors.text4 }]} maxFontSizeMultiplier={1.3}>{t('grid.footerShort')}</Text>
         </View>
       </View>
       <View style={[staticStyles.lsVDiv, { backgroundColor: colors.border2 }]} />
@@ -609,8 +622,8 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
         ) : (
           <View style={staticStyles.lsNoWp}>
             <Crosshair size={72} />
-            <TouchableOpacity style={[staticStyles.addBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel="Add waypoint">
-              <Text style={[staticStyles.addBtnText, { color: colors.text }]}>+ ADD WAYPOINT</Text>
+            <TouchableOpacity style={[staticStyles.addBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel={t('grid.addWaypoint')}>
+              <Text style={[staticStyles.addBtnText, { color: colors.text }]}>{t('grid.addWaypoint')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -622,8 +635,9 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
 // ─── ATOMS ───────────────────────────────────────────────────────────────────
 function SignalBadge({ isLoading, location }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const color = isLoading ? colors.border : location ? colors.text : colors.border;
-  const label = isLoading ? 'ACQUIRING' : location ? 'GPS FIX' : 'NO SIGNAL';
+  const label = isLoading ? t('gps.acquiring') : location ? t('gps.gpsFix') : t('gps.noSignal');
   return (
     <View style={staticStyles.signal} accessibilityRole="status" accessibilityLiveRegion="polite" accessibilityLabel={`GPS status: ${label}`}>
       <View style={[staticStyles.signalDot, { backgroundColor: color }]} />
@@ -662,13 +676,14 @@ function Crosshair({ size = 50 }) {
 // Tap anywhere to exit. Black background for maximum contrast.
 function HUDOverlay({ mgrsFormatted, bearing, arrowAngle, distance, compassHeading, waypoint, onExit }) {
   const colors = useColors();
+  const { t } = useTranslation();
   return (
     <TouchableOpacity
       style={staticStyles.hudRoot}
       activeOpacity={1}
       onPress={onExit}
       accessibilityRole="button"
-      accessibilityLabel="HUD mode. Tap anywhere to exit"
+      accessibilityLabel={t('grid.tapToExit')}
     >
       <View style={staticStyles.hudContent}>
         {compassHeading !== null && (
@@ -680,11 +695,11 @@ function HUDOverlay({ mgrsFormatted, bearing, arrowAngle, distance, compassHeadi
           adjustsFontSizeToFit
           minimumFontScale={0.5}
         >
-          {mgrsFormatted || '—'}
+          {mgrsFormatted || '\u2014'}
         </Text>
         {waypoint && arrowAngle !== null && (
           <View style={staticStyles.hudWpSection}>
-            <WayfinderArrow bearing={arrowAngle} size={140} />
+            <WayfinderArrow bearing={arrowAngle} size={120} />
             {bearing !== null && <Text style={[staticStyles.hudBearing, { color: colors.text }]}>{Math.round(bearing)}°</Text>}
             {distance !== null && (
               <Text style={[staticStyles.hudDist, { color: colors.text2 }]}>{formatDistance(distance)}</Text>
@@ -693,7 +708,7 @@ function HUDOverlay({ mgrsFormatted, bearing, arrowAngle, distance, compassHeadi
           </View>
         )}
       </View>
-      <Text style={[staticStyles.hudExit, { color: colors.text4 }]}>TAP TO EXIT</Text>
+      <Text style={[staticStyles.hudExit, { color: colors.text4 }]}>{t('grid.tapToExit')}</Text>
     </TouchableOpacity>
   );
 }
@@ -787,9 +802,9 @@ const staticStyles = StyleSheet.create({
   hudContent: { flex:1, justifyContent:'center', alignItems:'center', width:'100%' },
   hudHeading: { fontFamily:'monospace', fontSize:14, letterSpacing:4, fontWeight:'600', marginBottom:12 },
   hudMgrs: { fontFamily:'monospace', fontSize:48, fontWeight:'700', letterSpacing:6, textAlign:'center', marginBottom:20 },
-  hudWpSection: { alignItems:'center', gap:8 },
-  hudBearing: { fontFamily:'monospace', fontSize:36, fontWeight:'700', letterSpacing:4 },
-  hudDist: { fontFamily:'monospace', fontSize:24, letterSpacing:3, fontWeight:'700' },
-  hudWpLabel: { fontFamily:'monospace', fontSize:12, letterSpacing:4, marginTop:4 },
-  hudExit: { fontSize:10, letterSpacing:4, paddingBottom:20 },
+  hudWpSection: { alignItems:'center', gap:8, marginTop:16 },
+  hudBearing: { fontFamily:'monospace', fontSize:28, fontWeight:'700', letterSpacing:4, marginTop:12 },
+  hudDist: { fontFamily:'monospace', fontSize:20, letterSpacing:3, fontWeight:'700', marginTop:4 },
+  hudWpLabel: { fontFamily:'monospace', fontSize:12, letterSpacing:4, marginTop:6, opacity:0.7 },
+  hudExit: { fontSize:10, letterSpacing:4, paddingBottom:40, opacity:0.5 },
 });

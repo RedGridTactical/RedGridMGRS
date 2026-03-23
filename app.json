@@ -2,7 +2,7 @@
   "expo": {
     "name": "Red Grid MGRS",
     "slug": "redgrid-tactical",
-    "version": "2.1.6",
+    "version": "2.3.0",
     "orientation": "default",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#000000",
@@ -70,7 +70,8 @@
             "kotlinVersion": "1.9.25"
           }
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "extra": {
       "eas": {

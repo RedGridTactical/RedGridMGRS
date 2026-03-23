@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useColors } from '../utils/ThemeContext';
 import { tapLight } from '../utils/haptics';
+import { useTranslation } from '../hooks/useTranslation';
 
 const APP_VERSION = '2.5.0';
 const SUPPORT_EMAIL = 'support@redgridtactical.com';
@@ -31,6 +32,7 @@ function FAQItem({ q, a, colors }) {
 
 export function SupportScreen({ visible, onClose }) {
   const colors = useColors();
+  const { t } = useTranslation();
 
   return (
     <Modal
@@ -42,25 +44,25 @@ export function SupportScreen({ visible, onClose }) {
       <View style={[styles.root, { backgroundColor: colors.bg }]}>
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.border2 }]}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>HELP & SUPPORT</Text>
-          <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="Close help screen">
-            <Text style={[styles.closeBtn, { color: colors.text2 }]}>CLOSE</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t('support.title')}</Text>
+          <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel={t('support.close')}>
+            <Text style={[styles.closeBtn, { color: colors.text2 }]}>{t('support.close')}</Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
           {/* Quick Links */}
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>CONTACT</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('support.contact')}</Text>
           <TouchableOpacity
             style={[styles.linkCard, { borderColor: colors.border, backgroundColor: colors.card }]}
             onPress={() => { tapLight(); openLink(`mailto:${SUPPORT_EMAIL}`); }}
             accessibilityRole="button"
-            accessibilityLabel="Email support"
+            accessibilityLabel={t('support.emailSupport')}
           >
             <Text style={[styles.linkIcon]}>&#9993;</Text>
             <View style={styles.linkInfo}>
-              <Text style={[styles.linkTitle, { color: colors.text }]}>Email Support</Text>
+              <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.emailSupport')}</Text>
               <Text style={[styles.linkSub, { color: colors.text3 }]}>{SUPPORT_EMAIL}</Text>
             </View>
           </TouchableOpacity>
@@ -69,12 +71,12 @@ export function SupportScreen({ visible, onClose }) {
             style={[styles.linkCard, { borderColor: colors.border, backgroundColor: colors.card }]}
             onPress={() => { tapLight(); openLink(GITHUB_URL + '/issues'); }}
             accessibilityRole="button"
-            accessibilityLabel="Report a bug on GitHub"
+            accessibilityLabel={t('support.reportBug')}
           >
             <Text style={[styles.linkIcon]}>&#128027;</Text>
             <View style={styles.linkInfo}>
-              <Text style={[styles.linkTitle, { color: colors.text }]}>Report a Bug</Text>
-              <Text style={[styles.linkSub, { color: colors.text3 }]}>Open a GitHub issue</Text>
+              <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.reportBug')}</Text>
+              <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('support.reportBugSub')}</Text>
             </View>
           </TouchableOpacity>
 
@@ -82,63 +84,45 @@ export function SupportScreen({ visible, onClose }) {
             style={[styles.linkCard, { borderColor: colors.border, backgroundColor: colors.card }]}
             onPress={() => { tapLight(); openLink(GITHUB_URL); }}
             accessibilityRole="button"
-            accessibilityLabel="View source code on GitHub"
+            accessibilityLabel={t('support.sourceCode')}
           >
             <Text style={[styles.linkIcon]}>&#128193;</Text>
             <View style={styles.linkInfo}>
-              <Text style={[styles.linkTitle, { color: colors.text }]}>Source Code</Text>
-              <Text style={[styles.linkSub, { color: colors.text3 }]}>Open source on GitHub</Text>
+              <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.sourceCode')}</Text>
+              <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('support.sourceCodeSub')}</Text>
             </View>
           </TouchableOpacity>
 
           {/* FAQ */}
-          <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>FAQ</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>{t('support.faq')}</Text>
 
-          <FAQItem colors={colors}
-            q="Does this work without cell service?"
-            a="Yes. The app uses your phone's GPS receiver, which communicates directly with satellites. No cell tower, Wi-Fi, or internet required. Works in airplane mode."
-          />
-          <FAQItem colors={colors}
-            q="How do I restore my Pro purchase?"
-            a="Pro purchases are tied to your Apple ID. If you reinstall or switch devices, the app will automatically detect your purchase. If it doesn't, go to the THEME tab and look for a Restore option."
-          />
-          <FAQItem colors={colors}
-            q="What data does this app collect?"
-            a="None. Zero analytics, zero tracking, zero crash reporting. GPS coordinates exist in memory only and are discarded when you close the app."
-          />
-          <FAQItem colors={colors}
-            q="How accurate is the MGRS grid?"
-            a="Red Grid uses the DMA (Defense Mapping Agency) MGRS algorithm from TM 8358.1 with Vincenty bearing/distance calculations. Accuracy depends on your phone's GPS chip and satellite geometry."
-          />
-          <FAQItem colors={colors}
-            q="What is MGRS?"
-            a="Military Grid Reference System. A geocoordinate standard used by NATO militaries. It's built on UTM but adds a grid zone designator and 100km square identification for unambiguous position reporting."
-          />
-          <FAQItem colors={colors}
-            q="Does it replace my DAGR?"
-            a="For training, STXs, ruck marches, and permissive GPS environments: yes. The DAGR's SAASM module matters in contested environments, but for most use cases Red Grid delivers the same core land nav capabilities."
-          />
+          <FAQItem colors={colors} q={t('support.faqCellService')} a={t('support.faqCellServiceA')} />
+          <FAQItem colors={colors} q={t('support.faqRestore')} a={t('support.faqRestoreA')} />
+          <FAQItem colors={colors} q={t('support.faqData')} a={t('support.faqDataA')} />
+          <FAQItem colors={colors} q={t('support.faqAccuracy')} a={t('support.faqAccuracyA')} />
+          <FAQItem colors={colors} q={t('support.faqWhatIsMgrs')} a={t('support.faqWhatIsMgrsA')} />
+          <FAQItem colors={colors} q={t('support.faqDagr')} a={t('support.faqDagrA')} />
 
           {/* Privacy & Legal */}
-          <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>PRIVACY & LEGAL</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>{t('support.privacyLegal')}</Text>
           <TouchableOpacity
             style={[styles.linkCard, { borderColor: colors.border, backgroundColor: colors.card }]}
             onPress={() => { tapLight(); openLink(PRIVACY_URL); }}
             accessibilityRole="button"
-            accessibilityLabel="View privacy policy"
+            accessibilityLabel={t('support.privacyPolicy')}
           >
             <Text style={[styles.linkIcon]}>&#128274;</Text>
             <View style={styles.linkInfo}>
-              <Text style={[styles.linkTitle, { color: colors.text }]}>Privacy Policy</Text>
-              <Text style={[styles.linkSub, { color: colors.text3 }]}>Zero data collection. Verified.</Text>
+              <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.privacyPolicy')}</Text>
+              <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('support.privacySub')}</Text>
             </View>
           </TouchableOpacity>
 
           {/* Version Info */}
           <View style={[styles.versionBlock, { borderTopColor: colors.border2 }]}>
             <Text style={[styles.versionText, { color: colors.text4 }]}>Red Grid MGRS v{APP_VERSION}</Text>
-            <Text style={[styles.versionText, { color: colors.text4 }]}>MIT + Commons Clause License</Text>
-            <Text style={[styles.versionText, { color: colors.text4 }]}>{'\u00A9'} 2026 Red Grid Tactical</Text>
+            <Text style={[styles.versionText, { color: colors.text4 }]}>{t('support.license')}</Text>
+            <Text style={[styles.versionText, { color: colors.text4 }]}>{t('support.copyright')}</Text>
           </View>
 
         </ScrollView>

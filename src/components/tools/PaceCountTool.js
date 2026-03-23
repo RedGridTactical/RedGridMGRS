@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { pacesToDistance, distanceToPaces } from '../../utils/tactical';
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export function PaceCountTool({ paceCount, setPaceCount }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const [mode, setMode] = useState('p2d'); // p2d = paces->dist, d2p = dist->paces
   const [paces, setPaces] = useState('');
   const [distance, setDistance] = useState('');
@@ -24,41 +26,41 @@ export function PaceCountTool({ paceCount, setPaceCount }) {
   return (
     <View>
       {/* Calibration */}
-      <Text style={[styles.sectionLabel, { color: colors.border }]}>CALIBRATION (PACES / 100m)</Text>
+      <Text style={[styles.sectionLabel, { color: colors.border }]}>{t('toolLabels.calibration')}</Text>
       <View style={styles.calibRow}>
         <View style={{ flex: 1 }}>
           <ToolInput label="" value={calibInput} onChangeText={setCalibInput} placeholder="62" keyboardType="numeric" />
         </View>
         <TouchableOpacity style={[styles.saveBtn, { borderColor: colors.border }]} onPress={saveCalib}>
-          <Text style={[styles.saveBtnText, { color: colors.border }]}>SAVE</Text>
+          <Text style={[styles.saveBtnText, { color: colors.border }]}>{t('toolLabels.save')}</Text>
         </TouchableOpacity>
       </View>
-      <ToolHint text={`SAVED: ${paceCount} paces/100m  ·  Typical: 62-66`} />
+      <ToolHint text={`${t('toolLabels.saved')}: ${paceCount} paces/100m  ·  ${t('toolLabels.typical')}`} />
 
       <ToolDivider />
 
       {/* Mode toggle */}
       <View style={styles.modeRow}>
         <TouchableOpacity style={[styles.modeBtn, { borderColor: colors.border2 }, mode==='p2d' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setMode('p2d')}>
-          <Text style={[styles.modeBtnText, { color: colors.border2 }, mode==='p2d' && { color: colors.text }]}>PACES -> DIST</Text>
+          <Text style={[styles.modeBtnText, { color: colors.border2 }, mode==='p2d' && { color: colors.text }]}>{t('toolLabels.pacesToDist')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.modeBtn, { borderColor: colors.border2 }, mode==='d2p' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setMode('d2p')}>
-          <Text style={[styles.modeBtnText, { color: colors.border2 }, mode==='d2p' && { color: colors.text }]}>DIST -> PACES</Text>
+          <Text style={[styles.modeBtnText, { color: colors.border2 }, mode==='d2p' && { color: colors.text }]}>{t('toolLabels.distToPaces')}</Text>
         </TouchableOpacity>
       </View>
 
       {mode === 'p2d' ? (
         <View>
-          <ToolInput label="PACES COUNTED" value={paces} onChangeText={setPaces} placeholder="e.g. 310" keyboardType="numeric" />
+          <ToolInput label={t('toolLabels.pacesCounted')} value={paces} onChangeText={setPaces} placeholder="e.g. 310" keyboardType="numeric" />
           {distResult !== null && !isNaN(distResult) && (
-            <ToolResult label="DISTANCE" value={`${Math.round(distResult)}m`} primary />
+            <ToolResult label={t('toolLabels.distanceResult')} value={`${Math.round(distResult)}m`} primary />
           )}
         </View>
       ) : (
         <View>
-          <ToolInput label="DISTANCE (METRES)" value={distance} onChangeText={setDistance} placeholder="e.g. 500" keyboardType="numeric" />
+          <ToolInput label={t('toolLabels.distanceMetres')} value={distance} onChangeText={setDistance} placeholder="e.g. 500" keyboardType="numeric" />
           {paceResult !== null && !isNaN(paceResult) && (
-            <ToolResult label="PACES REQUIRED" value={String(paceResult)} primary />
+            <ToolResult label={t('toolLabels.pacesRequired')} value={String(paceResult)} primary />
           )}
         </View>
       )}

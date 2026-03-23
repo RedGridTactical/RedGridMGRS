@@ -6,16 +6,18 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { formatPosition } from '../utils/mgrs';
 import { useColors } from '../utils/ThemeContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 const FORMATS = [
-  { id: 'mgrs', label: 'MGRS',             sub: 'Military Grid Reference System — standard tactical format' },
-  { id: 'utm',  label: 'UTM',              sub: 'Universal Transverse Mercator — zone/easting/northing' },
-  { id: 'dd',   label: 'DECIMAL DEGREES',  sub: 'Decimal latitude / longitude — Google Maps compatible' },
-  { id: 'dms',  label: 'DEG MIN SEC',      sub: 'Degrees, minutes, seconds — aviation and nautical standard' },
+  { id: 'mgrs', labelKey: 'coords.mgrs', subKey: 'coords.mgrsSub' },
+  { id: 'utm',  labelKey: 'coords.utm',  subKey: 'coords.utmSub' },
+  { id: 'dd',   labelKey: 'coords.dd',   subKey: 'coords.ddSub' },
+  { id: 'dms',  labelKey: 'coords.dms',  subKey: 'coords.dmsSub' },
 ];
 
 export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const positions = useMemo(() => {
     if (!location || typeof location.lat !== 'number' || typeof location.lon !== 'number') return null;
     const { lat, lon } = location;
@@ -33,7 +35,7 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
 
   return (
     <ScrollView style={[styles.root, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content}>
-      <Text style={[styles.hint, { color: colors.text3 }]}>SELECT COORDINATE FORMAT — APPLIES TO MAIN GRID DISPLAY</Text>
+      <Text style={[styles.hint, { color: colors.text3 }]}>{t('coords.hint')}</Text>
 
       {FORMATS.map(f => {
         const isActive = coordFormat === f.id;
@@ -46,8 +48,8 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
           >
             <View style={styles.cardTop}>
               <View>
-                <Text style={[styles.cardTitle, { color: colors.text }]}>{f.label}</Text>
-                <Text style={[styles.cardSub, { color: colors.text3 }]}>{f.sub}</Text>
+                <Text style={[styles.cardTitle, { color: colors.text }]}>{t(f.labelKey)}</Text>
+                <Text style={[styles.cardSub, { color: colors.text3 }]}>{t(f.subKey)}</Text>
               </View>
               <View style={[styles.radio, { borderColor: colors.border }, isActive && { borderColor: colors.text }]}>
                 {isActive && <View style={[styles.radioDot, { backgroundColor: colors.text }]} />}
@@ -56,7 +58,7 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
 
             {positions && isActive && (
               <View style={[styles.preview, { borderTopColor: colors.border2 }]}>
-                <Text style={[styles.previewLabel, { color: colors.border }]}>YOUR POSITION</Text>
+                <Text style={[styles.previewLabel, { color: colors.border }]}>{t('coords.yourPosition')}</Text>
                 <Text style={[styles.previewValue, { color: colors.text }]}>{positions[f.id]}</Text>
               </View>
             )}
@@ -65,7 +67,7 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
       })}
 
       {!location && (
-        <Text style={[styles.noFix, { color: colors.text4 }]}>NO GPS FIX — ACQUIRE POSITION TO SEE FORMAT PREVIEW</Text>
+        <Text style={[styles.noFix, { color: colors.text4 }]}>{t('gps.noFixFormatPreview')}</Text>
       )}
     </ScrollView>
   );

@@ -3,16 +3,18 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { timeToTravel, formatMinutes } from '../../utils/tactical';
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const PRESETS = [
-  { label: 'OPEN TERRAIN', kmh: 4.0 },
-  { label: 'WOOD LINE',    kmh: 2.5 },
-  { label: 'URBAN',        kmh: 3.0 },
-  { label: 'VEHICLE',      kmh: 30   },
+  { labelKey: 'toolLabels.openTerrain', kmh: 4.0 },
+  { labelKey: 'toolLabels.woodLine',    kmh: 2.5 },
+  { labelKey: 'toolLabels.urban',       kmh: 3.0 },
+  { labelKey: 'toolLabels.vehicle',     kmh: 30   },
 ];
 
 export function TDSTool({ location }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const [distance, setDistance] = useState('');
   const [speed, setSpeed]       = useState('');
 
@@ -30,30 +32,30 @@ export function TDSTool({ location }) {
 
   return (
     <View>
-      <ToolInput label="DISTANCE (METRES)" value={distance} onChangeText={setDistance} placeholder="e.g. 1500" keyboardType="numeric" />
+      <ToolInput label={t('toolLabels.distanceMetres')} value={distance} onChangeText={setDistance} placeholder="e.g. 1500" keyboardType="numeric" />
 
-      <Text style={[styles.presetsLabel, { color: colors.border }]}>SPEED PRESETS</Text>
+      <Text style={[styles.presetsLabel, { color: colors.border }]}>{t('toolLabels.speedPresets')}</Text>
       <View style={styles.presets}>
         {PRESETS.map(p => (
           <TouchableOpacity
-            key={p.label}
+            key={p.labelKey}
             style={[styles.preset, { borderColor: colors.border2 }, speed === String(p.kmh) && { borderColor: colors.text2, backgroundColor: colors.text5 }]}
             onPress={() => setSpeed(String(p.kmh))}
           >
-            <Text style={[styles.presetLabel, { color: colors.border2 }, speed === String(p.kmh) && { color: colors.text2 }]}>{p.label}</Text>
+            <Text style={[styles.presetLabel, { color: colors.border2 }, speed === String(p.kmh) && { color: colors.text2 }]}>{t(p.labelKey)}</Text>
             <Text style={[styles.presetVal, { color: colors.border2 }, speed === String(p.kmh) && { color: colors.text }]}>{p.kmh}km/h</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <ToolInput label="OR ENTER SPEED (KM/H)" value={speed} onChangeText={setSpeed} placeholder="e.g. 3.5" keyboardType="numeric" />
+      <ToolInput label={t('toolLabels.orEnterSpeed')} value={speed} onChangeText={setSpeed} placeholder="e.g. 3.5" keyboardType="numeric" />
 
       {time !== null && (
         <View style={styles.results}>
-          <ToolResult label="TRAVEL TIME" value={formatMinutes(time)} primary />
-          {eta && <ToolResult label="ETA (LOCAL)" value={eta} />}
-          <ToolRow label="DISTANCE" value={`${d}m`} />
-          <ToolRow label="SPEED"    value={`${s}km/h`} />
+          <ToolResult label={t('toolLabels.travelTime')} value={formatMinutes(time)} primary />
+          {eta && <ToolResult label={t('toolLabels.etaLocal')} value={eta} />}
+          <ToolRow label={t('toolLabels.distance')} value={`${d}m`} />
+          <ToolRow label={t('toolLabels.speed')}    value={`${s}km/h`} />
         </View>
       )}
     </View>

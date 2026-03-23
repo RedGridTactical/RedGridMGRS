@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput } from 'react-native';
 import { backAzimuth, applyDeclination } from '../../utils/tactical';
 import { ToolInput, ToolResult, ToolRow } from './ToolShared';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export function BackAzimuthTool({ declination }) {
+  const { t } = useTranslation();
   const [bearing, setBearing] = useState('');
 
   const b = parseFloat(bearing);
@@ -13,15 +15,15 @@ export function BackAzimuthTool({ declination }) {
 
   return (
     <View>
-      <ToolInput label="MAGNETIC BEARING (°)" value={bearing} onChangeText={setBearing} placeholder="0 – 360" keyboardType="numeric" />
+      <ToolInput label={t('toolLabels.magneticBearing')} value={bearing} onChangeText={setBearing} placeholder="0 – 360" keyboardType="numeric" />
 
       {back !== null && (
         <View style={styles.results}>
-          <ToolResult label="BACK AZIMUTH" value={`${Math.round(back)}°`} primary />
+          <ToolResult label={t('toolLabels.backAzimuthResult')} value={`${Math.round(back)}°`} primary />
           {declination !== 0 && (
-            <ToolResult label={`${declination > 0 ? '+' : ''}${declination}° DECLINATION`} value={`${Math.round(backCorrected)}° GRID`} />
+            <ToolResult label={`${declination > 0 ? '+' : ''}${declination}° ${t('toolLabels.declinationLabel')}`} value={`${Math.round(backCorrected)}° ${t('toolLabels.gridBearing')}`} />
           )}
-          <ToolRow label="INPUT" value={`${Math.round(b)}°`} />
+          <ToolRow label={t('toolLabels.input')} value={`${Math.round(b)}°`} />
         </View>
       )}
     </View>

@@ -5,9 +5,11 @@ import { toMGRS, formatMGRS } from '../../utils/mgrs';
 import { useColors } from '../../utils/ThemeContext';
 import { tapLight } from '../../utils/haptics';
 import { ToolInput, ToolResult, ToolRow, ToolHint } from './ToolShared';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export function DeadReckoningTool({ location, compassHeading }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const [heading, setHeading]     = useState('');
   const [distance, setDistance]   = useState('');
 
@@ -33,11 +35,11 @@ export function DeadReckoningTool({ location, compassHeading }) {
 
   return (
     <View>
-      <ToolHint text={liveMGRS ? `CURRENT POSITION: ${liveMGRS}` : 'NO GPS FIX — DR FROM LAST KNOWN'} />
+      <ToolHint text={liveMGRS ? `${t('toolLabels.currentPosition')}: ${liveMGRS}` : t('gps.noFixDR')} />
 
       <View style={styles.headingRow}>
         <View style={styles.headingInput}>
-          <ToolInput label="HEADING (°  GRID NORTH)" value={heading} onChangeText={setHeading} placeholder="0 – 360" keyboardType="numeric" />
+          <ToolInput label={t('toolLabels.headingGridNorth')} value={heading} onChangeText={setHeading} placeholder="0 – 360" keyboardType="numeric" />
         </View>
         <TouchableOpacity
           style={[styles.compassBtn, { borderColor: hasCompass ? colors.text2 : colors.border2 }]}
@@ -47,21 +49,21 @@ export function DeadReckoningTool({ location, compassHeading }) {
           accessibilityRole="button"
           accessibilityLabel={hasCompass ? `Use current compass heading ${Math.round(compassHeading)} degrees` : 'Compass unavailable'}
         >
-          <Text style={[styles.compassBtnLabel, { color: hasCompass ? colors.border : colors.text4 }]}>COMPASS</Text>
+          <Text style={[styles.compassBtnLabel, { color: hasCompass ? colors.border : colors.text4 }]}>{t('toolLabels.compass')}</Text>
           <Text style={[styles.compassBtnValue, { color: hasCompass ? colors.text : colors.text4 }]}>
             {hasCompass ? `${Math.round(compassHeading)}°` : '---'}
           </Text>
         </TouchableOpacity>
       </View>
 
-      <ToolInput label="DISTANCE (METRES)" value={distance} onChangeText={setDistance} placeholder="e.g. 850" keyboardType="numeric" />
+      <ToolInput label={t('toolLabels.distanceMetres')} value={distance} onChangeText={setDistance} placeholder="e.g. 850" keyboardType="numeric" />
 
       {result && (
         <View style={styles.results}>
-          <ToolResult label="ESTIMATED POSITION" value={result.mgrsFormatted} primary />
-          <ToolRow label="FROM" value={liveMGRS || '---'} />
-          <ToolRow label="HEADING" value={`${heading}°`} />
-          <ToolRow label="DISTANCE" value={`${distance}m`} />
+          <ToolResult label={t('toolLabels.estimatedPosition')} value={result.mgrsFormatted} primary />
+          <ToolRow label={t('toolLabels.from')} value={liveMGRS || '---'} />
+          <ToolRow label={t('toolLabels.heading')} value={`${heading}°`} />
+          <ToolRow label={t('toolLabels.distance')} value={`${distance}m`} />
         </View>
       )}
     </View>

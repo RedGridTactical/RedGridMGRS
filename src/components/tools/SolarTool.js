@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { solarBearing, lunarBearing } from '../../utils/tactical';
 import { ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export function SolarTool({ location }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const [now, setNow] = useState(new Date());
   const [body, setBody] = useState('sun');
 
@@ -16,7 +18,7 @@ export function SolarTool({ location }) {
   }, []);
 
   if (!location || typeof location.lat !== 'number' || typeof location.lon !== 'number') {
-    return <ToolHint text="NO GPS FIX — LOCATION REQUIRED FOR SOLAR BEARING" />;
+    return <ToolHint text={t('gps.noFixSolar')} />;
   }
 
   let sun, moon;
@@ -24,11 +26,11 @@ export function SolarTool({ location }) {
     sun  = solarBearing(now, location.lat, location.lon);
     moon = lunarBearing(now, location.lat, location.lon);
   } catch {
-    return <ToolHint text="CALCULATION ERROR — COULD NOT COMPUTE SOLAR POSITION" />;
+    return <ToolHint text={t('toolLabels.calcError')} />;
   }
 
   if (!sun || !moon) {
-    return <ToolHint text="CALCULATION ERROR — COULD NOT COMPUTE SOLAR POSITION" />;
+    return <ToolHint text={t('toolLabels.calcError')} />;
   }
 
   const data = body === 'sun' ? sun : moon;
@@ -48,26 +50,26 @@ export function SolarTool({ location }) {
     <View>
       <View style={styles.toggle}>
         <TouchableOpacity style={[styles.toggleBtn, { borderColor: colors.border2 }, body==='sun' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setBody('sun')}>
-          <Text style={[styles.toggleText, { color: colors.border2 }, body==='sun' && { color: colors.text }]}>☀ SUN</Text>
+          <Text style={[styles.toggleText, { color: colors.border2 }, body==='sun' && { color: colors.text }]}>☀ {t('toolLabels.sun')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.toggleBtn, { borderColor: colors.border2 }, body==='moon' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setBody('moon')}>
-          <Text style={[styles.toggleText, { color: colors.border2 }, body==='moon' && { color: colors.text }]}>☽ MOON</Text>
+          <Text style={[styles.toggleText, { color: colors.border2 }, body==='moon' && { color: colors.text }]}>☽ {t('toolLabels.moon')}</Text>
         </TouchableOpacity>
       </View>
 
       <ToolHint text={`AS OF ${timeStr} · ${location.lat.toFixed(4)}°, ${location.lon.toFixed(4)}°`} />
 
       {!visible && (
-        <ToolHint text={body === 'sun' ? 'SUN BELOW HORIZON — NIGHT' : 'MOON BELOW HORIZON'} />
+        <ToolHint text={body === 'sun' ? t('toolLabels.sunBelowHorizon') : t('toolLabels.moonBelowHorizon')} />
       )}
 
       <View style={styles.results}>
-        <ToolResult label={`${body.toUpperCase()} BEARING`} value={`${az}° (${cardinal})`} primary />
-        <ToolResult label="ELEVATION" value={`${alt}°`} />
+        <ToolResult label={body === 'sun' ? t('toolLabels.sunBearing') : t('toolLabels.moonBearing')} value={`${az}° (${cardinal})`} primary />
+        <ToolResult label={t('toolLabels.elevation')} value={`${alt}°`} />
         <ToolDivider />
         <ToolHint text={body === 'sun'
-          ? 'FACE THE SUN · SUBTRACT BEARING FROM 180 TO FIND SOUTH · ROTATE FOR NORTH'
-          : 'USE MOON AS BEARING REFERENCE · LESS PRECISE THAN SOLAR'
+          ? t('toolLabels.sunHint')
+          : t('toolLabels.moonHint')
         } />
       </View>
     </View>

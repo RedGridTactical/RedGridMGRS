@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { applyDeclination, removeDeclination } from '../../utils/tactical';
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
+import { useTranslation } from '../../hooks/useTranslation';
 
 export function DeclinationTool({ declination, setDeclination }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const [decInput, setDecInput]   = useState(String(declination));
   const [bearing, setBearing]     = useState('');
   const [mode, setMode]           = useState('mag2grid'); // mag2grid | grid2mag
@@ -25,31 +27,31 @@ export function DeclinationTool({ declination, setDeclination }) {
 
   return (
     <View>
-      <Text style={[styles.sectionLabel, { color: colors.border }]}>LOCAL DECLINATION (SAVED)</Text>
+      <Text style={[styles.sectionLabel, { color: colors.border }]}>{t('toolLabels.localDeclination')}</Text>
       <View style={styles.calibRow}>
         <View style={{ flex: 1 }}>
           <ToolInput label="" value={decInput} onChangeText={setDecInput} placeholder="+5 or -12" keyboardType="numbers-and-punctuation" />
         </View>
         <TouchableOpacity style={[styles.saveBtn, { borderColor: colors.border }]} onPress={saveDec}>
-          <Text style={[styles.saveBtnText, { color: colors.border }]}>SAVE</Text>
+          <Text style={[styles.saveBtnText, { color: colors.border }]}>{t('toolLabels.save')}</Text>
         </TouchableOpacity>
       </View>
-      <ToolHint text={`SAVED: ${declination > 0 ? '+' : ''}${declination}° (${dir})  ·  + = EAST, - = WEST\nApplied automatically to wayfinder bearing.`} />
+      <ToolHint text={`${t('toolLabels.saved')}: ${declination > 0 ? '+' : ''}${declination}° (${dir})  ·  + = EAST, - = WEST`} />
 
       <ToolDivider />
-      <Text style={[styles.sectionLabel, { color: colors.border }]}>BEARING CONVERTER</Text>
+      <Text style={[styles.sectionLabel, { color: colors.border }]}>{t('toolLabels.bearingConverter')}</Text>
 
       <View style={styles.modeRow}>
         <TouchableOpacity style={[styles.modeBtn, { borderColor: colors.border2 }, mode==='mag2grid' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setMode('mag2grid')}>
-          <Text style={[styles.modeBtnText, { color: colors.border2 }, mode==='mag2grid' && { color: colors.text }]}>MAG -> GRID</Text>
+          <Text style={[styles.modeBtnText, { color: colors.border2 }, mode==='mag2grid' && { color: colors.text }]}>{t('toolLabels.magToGrid')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.modeBtn, { borderColor: colors.border2 }, mode==='grid2mag' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setMode('grid2mag')}>
-          <Text style={[styles.modeBtnText, { color: colors.border2 }, mode==='grid2mag' && { color: colors.text }]}>GRID -> MAG</Text>
+          <Text style={[styles.modeBtnText, { color: colors.border2 }, mode==='grid2mag' && { color: colors.text }]}>{t('toolLabels.gridToMag')}</Text>
         </TouchableOpacity>
       </View>
 
       <ToolInput
-        label={mode === 'mag2grid' ? 'MAGNETIC BEARING (°)' : 'GRID BEARING (°)'}
+        label={mode === 'mag2grid' ? t('toolLabels.magneticBearingInput') : t('toolLabels.gridBearingInput')}
         value={bearing}
         onChangeText={setBearing}
         placeholder="0 – 360"
@@ -58,7 +60,7 @@ export function DeclinationTool({ declination, setDeclination }) {
 
       {converted !== null && (
         <ToolResult
-          label={mode === 'mag2grid' ? 'GRID BEARING' : 'MAGNETIC BEARING'}
+          label={mode === 'mag2grid' ? t('toolLabels.gridBearingResult') : t('toolLabels.magneticBearingResult')}
           value={`${Math.round(converted)}°`}
           primary
         />

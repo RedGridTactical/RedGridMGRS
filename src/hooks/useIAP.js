@@ -19,6 +19,12 @@ const PRO_RECEIPT_KEY = 'rg_pro_receipt';
 const PRO_VALIDATED   = 'rg_pro_validated_v2';
 export const PRO_PRODUCT_ID = 'redgrid_pro_lifetime';
 
+// Subscription product IDs (same tier, different billing)
+const SUB_MONTHLY_ID = 'redgrid_mgrs_pro_monthly';
+const SUB_ANNUAL_ID  = 'redgrid_mgrs_pro_annual';
+const ALL_PRODUCT_IDS = [PRO_PRODUCT_ID, SUB_MONTHLY_ID, SUB_ANNUAL_ID];
+const SUB_IDS = [SUB_MONTHLY_ID, SUB_ANNUAL_ID];
+
 // Safely require expo-iap — handles unavailability on iOS beta
 let IAPModule = null;
 try {
@@ -39,7 +45,9 @@ export function useIAP() {
   const [isPro,        setIsPro]        = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring,  setIsRestoring]  = useState(false);
-  const [product,      setProduct]      = useState(null);
+  const [product,      setProduct]      = useState(null);      // lifetime (legacy)
+  const [products,     setProducts]     = useState({});         // { lifetime, monthly, annual }
+  const [selectedTier, setSelectedTier] = useState('annual');   // default selection
   const mounted = useRef(true);
 
   // Cleanup on unmount
@@ -102,7 +110,7 @@ export function useIAP() {
             ]);
 
             const hasPro = purchases?.some?.(p =>
-              p?.id === PRO_PRODUCT_ID || p?.id === 'redgrid_pro_lifetime'
+              ALL_PRODUCT_IDS.includes(p?.id)
             );
 
             if (hasPro) {
@@ -155,15 +163,21 @@ export function useIAP() {
 
         if (!IAPModule.getProducts) return;
 
-        const products = await Promise.race([
-          IAPModule.getProducts([PRO_PRODUCT_ID]),
+        const fetched = await Promise.race([
+          IAPModule.getProducts(ALL_PRODUCT_IDS),
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Product fetch timeout')), 5000)
           )
         ]);
 
-        if (!cancelled && mounted.current && products?.[0]) {
-          setProduct(products[0]);
+        if (!cancelled && mounted.current && fetched?.length) {
+          const map = {};
+          for (const p of fetched) {
+            if (p?.id === PRO_PRODUCT_ID) { map.lifetime = p; setProduct(p); }
+            else if (p?.id === SUB_MONTHLY_ID) map.monthly = p;
+            else if (p?.id === SUB_ANNUAL_ID) map.annual = p;
+          }
+          setProducts(map);
         }
       } catch (err) {
         // Product fetch failed — ProGate will show fallback price $9.99
@@ -209,8 +223,8 @@ export function useIAP() {
     }
   }, []);
 
-  // ── Purchase ───────────────────────────────────────────────────────────────
-  const purchase = useCallback(async () => {
+  // ── Purchase (supports lifetime IAP + subscriptions) ──────────────────────
+  const purchase = useCallback(async (tier) => {
     if (!IAPModule) {
       try {
         Alert.alert(
@@ -223,20 +237,28 @@ export function useIAP() {
 
     if (mounted.current) setIsPurchasing(true);
 
+    const effectiveTier = tier || selectedTier;
+    const isSub = effectiveTier === 'monthly' || effectiveTier === 'annual';
+    let sku = PRO_PRODUCT_ID;
+    if (effectiveTier === 'monthly') sku = SUB_MONTHLY_ID;
+    else if (effectiveTier === 'annual') sku = SUB_ANNUAL_ID;
+
     try {
       if (!IAPModule || !IAPModule.requestPurchase) {
         if (mounted.current) setIsPurchasing(false);
         return;
       }
 
-      // expo-iap expects { request: { sku, ... }, type?: 'inapp' }
+      const purchaseRequest = {
+        request: {
+          sku,
+          andDangerouslyFinishTransactionAutomaticallyIOS: false,
+        },
+      };
+      if (isSub) purchaseRequest.type = 'subs';
+
       const result = await Promise.race([
-        IAPModule.requestPurchase({
-          request: {
-            sku: PRO_PRODUCT_ID,
-            andDangerouslyFinishTransactionAutomaticallyIOS: false,
-          },
-        }),
+        IAPModule.requestPurchase(purchaseRequest),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Purchase timeout')), 30000)
         )
@@ -257,13 +279,13 @@ export function useIAP() {
         }
       }
     } catch (e) {
-      const cancelled =
+      const wasCancelled =
         e?.code === 'E_USER_CANCELLED' ||
         e?.code === 'user_cancelled' ||
-        e?.userInfo?.code === 2 || // StoreKit user cancelled
+        e?.userInfo?.code === 2 ||
         e?.message?.includes('timeout');
 
-      if (!cancelled && e?.message !== 'Purchase timeout') {
+      if (!wasCancelled && e?.message !== 'Purchase timeout') {
         try {
           Alert.alert('Purchase failed', e?.message || 'Please try again.');
         } catch {}
@@ -271,7 +293,7 @@ export function useIAP() {
     } finally {
       if (mounted.current) setIsPurchasing(false);
     }
-  }, [persistPro]);
+  }, [persistPro, selectedTier]);
 
   // ── Restore ────────────────────────────────────────────────────────────────
   const restore = useCallback(async () => {
@@ -300,9 +322,9 @@ export function useIAP() {
         )
       ]);
 
-      // expo-iap uses 'id' not 'productId'
+      // expo-iap uses 'id' not 'productId' — check lifetime + subs
       const hasPro = purchases?.some?.(p =>
-        p?.id === PRO_PRODUCT_ID || p?.id === 'redgrid_pro_lifetime'
+        ALL_PRODUCT_IDS.includes(p?.id)
       );
 
       if (hasPro) {
@@ -331,6 +353,9 @@ export function useIAP() {
     isPro,
     isPurchasing: isPurchasing || isRestoring,
     product,
+    products,
+    selectedTier,
+    setSelectedTier,
     purchase,
     restore,
   };

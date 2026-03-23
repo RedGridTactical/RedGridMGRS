@@ -7,15 +7,17 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { THEMES } from '../hooks/useTheme';
 import { useColors } from '../utils/ThemeContext';
 import { tapLight } from '../utils/haptics';
+import { useTranslation } from '../hooks/useTranslation';
 
 export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing }) {
   const colors = useColors();
+  const { t } = useTranslation();
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <Text style={[styles.title, { color: colors.text }]}>DISPLAY THEMES</Text>
-        <Text style={[styles.sub, { color: colors.text3 }]}>Choose a colour scheme for your environment</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('theme.displayThemes')}</Text>
+        <Text style={[styles.sub, { color: colors.text3 }]}>{t('theme.chooseScheme')}</Text>
 
         {Object.values(THEMES).map(theme => {
           const isActive  = currentTheme === theme.id;
@@ -37,7 +39,7 @@ export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate,
                 <View style={styles.labelRow}>
                   <Text style={[styles.label, { color: colors.text }]}>{theme.label}</Text>
                   {isLocked && <Text style={[styles.proBadge, { color: colors.bg, backgroundColor: colors.text }]}>PRO</Text>}
-                  {isActive  && <Text style={[styles.activeBadge, { color: colors.text, borderColor: colors.text }]}>ACTIVE</Text>}
+                  {isActive  && <Text style={[styles.activeBadge, { color: colors.text, borderColor: colors.text }]}>{t('theme.active')}</Text>}
                 </View>
                 <Text style={[styles.themeSub, { color: colors.text3 }]}>{theme.sub}</Text>
               </View>
@@ -47,18 +49,18 @@ export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate,
 
         {/* ─── PRO FEATURE TOGGLES ──────────────────────────────────── */}
         <View style={[styles.divider, { backgroundColor: colors.border2 }]} />
-        <Text style={[styles.title, { color: colors.text }]}>PRO FEATURES</Text>
-        <Text style={[styles.sub, { color: colors.text3 }]}>Configure haptic and voice feedback</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('theme.proFeatures')}</Text>
+        <Text style={[styles.sub, { color: colors.text3 }]}>{t('theme.configureHaptic')}</Text>
 
         <ToggleRow
-          label="SHAKE TO SPEAK"
-          sub="Shake device to hear NATO grid readout"
+          label={t('theme.shakeToSpeak')}
+          sub={t('theme.shakeToSpeakSub')}
           value={shakeToSpeak}
           onToggle={() => { tapLight(); setShakeToSpeak(!shakeToSpeak); }}
         />
         <ToggleRow
-          label="GRID CROSSING ALERTS"
-          sub="Haptic feedback at 1km and 100m boundaries"
+          label={t('theme.gridCrossingAlerts')}
+          sub={t('theme.gridCrossingAlertsSub')}
           value={gridCrossing}
           onToggle={() => { tapLight(); setGridCrossing(!gridCrossing); }}
         />
@@ -69,6 +71,7 @@ export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate,
 
 function ToggleRow({ label, sub, value, onToggle }) {
   const colors = useColors();
+  const { t } = useTranslation();
   return (
     <TouchableOpacity
       style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }, value && { borderColor: colors.text }]}
@@ -79,7 +82,7 @@ function ToggleRow({ label, sub, value, onToggle }) {
       accessibilityLabel={`${label}. ${sub}`}
     >
       <View style={[styles.toggleIndicator, { borderColor: colors.border }, value && { backgroundColor: colors.text, borderColor: colors.text }]}>
-        <Text style={[styles.toggleText, { color: value ? colors.bg : colors.border }]}>{value ? 'ON' : 'OFF'}</Text>
+        <Text style={[styles.toggleText, { color: value ? colors.bg : colors.border }]}>{value ? t('theme.on') : t('theme.off')}</Text>
       </View>
       <View style={styles.info}>
         <Text style={[styles.label, { color: colors.text }]}>{label}</Text>

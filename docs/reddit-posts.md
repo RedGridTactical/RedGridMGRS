@@ -147,7 +147,6 @@ Full technical writeup: https://dev.to/redgridtactical/how-i-built-a-military-gr
 
 **Where I'm at today:**
 - iOS App Store: live
-- Product Hunt: launched today
 - Hacker News: front page of /new
 - Dev.to: technical writeup published
 - Android: cross-platform ready, launching after iOS matures
@@ -156,7 +155,6 @@ The niche is small (military, SAR, backcountry nav) but underserved. There's no 
 
 Links:
 - App Store: https://apps.apple.com/app/id6759629554
-- Product Hunt: https://www.producthunt.com/products/red-grid-mgrs
 - GitHub: https://github.com/RedGridTactical/RedGridMGRS
 - Dev.to writeup: https://dev.to/redgridtactical/how-i-built-a-military-grade-gps-app-with-react-native-zero-cloud-zero-tracking-399-2klf
 
@@ -190,7 +188,6 @@ The tradeoff: no server-side receipt validation means a determined user could sp
 
 **Launch day (today):**
 - iOS App Store: live
-- Product Hunt: https://www.producthunt.com/products/red-grid-mgrs
 - Hacker News: submitted the Dev.to technical writeup
 - Dev.to: https://dev.to/redgridtactical/how-i-built-a-military-grade-gps-app-with-react-native-zero-cloud-zero-tracking-399-2klf
 

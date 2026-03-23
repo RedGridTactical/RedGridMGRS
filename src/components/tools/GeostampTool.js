@@ -20,6 +20,7 @@ import {
 import { useColors } from '../../utils/ThemeContext';
 import { tapMedium, tapHeavy, notifySuccess, notifyWarning } from '../../utils/haptics';
 import { toMGRS, formatMGRS } from '../../utils/mgrs';
+import { useTranslation } from '../../hooks/useTranslation';
 
 // ─── Defensive module loading ────────────────────────────────────────────────
 let ImagePicker = null;
@@ -46,6 +47,7 @@ function getDTG() {
 
 export function GeostampTool({ location }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const [photoUri, setPhotoUri] = useState(null);
   const [photoDims, setPhotoDims] = useState({ width: 1, height: 1 });
   const [saving, setSaving] = useState(false);
@@ -73,7 +75,7 @@ export function GeostampTool({ location }) {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Camera access is needed to take geostamped photos. Enable it in Settings.');
+        Alert.alert(t('toolLabels.permissionRequired'), t('toolLabels.cameraPermission'));
         return;
       }
 
@@ -96,7 +98,7 @@ export function GeostampTool({ location }) {
       tapMedium();
     } catch (err) {
       if (mounted.current) {
-        Alert.alert('Camera Error', err?.message || 'Could not take photo.');
+        Alert.alert(t('toolLabels.cameraError'), err?.message || 'Could not take photo.');
       }
     }
   }, [mgrsNow]);
@@ -107,7 +109,7 @@ export function GeostampTool({ location }) {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Photo library access is needed. Enable it in Settings.');
+        Alert.alert(t('toolLabels.permissionRequired'), t('toolLabels.libraryPermission'));
         return;
       }
 
@@ -130,7 +132,7 @@ export function GeostampTool({ location }) {
       tapMedium();
     } catch (err) {
       if (mounted.current) {
-        Alert.alert('Library Error', err?.message || 'Could not pick photo.');
+        Alert.alert(t('toolLabels.libraryError'), err?.message || 'Could not pick photo.');
       }
     }
   }, [mgrsNow]);
@@ -145,7 +147,7 @@ export function GeostampTool({ location }) {
       // Request media library write permission
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Photo library write access is needed to save. Enable it in Settings.');
+        Alert.alert(t('toolLabels.permissionRequired'), t('toolLabels.writePermission'));
         if (mounted.current) setSaving(false);
         return;
       }
@@ -166,11 +168,11 @@ export function GeostampTool({ location }) {
       }
       tapHeavy();
       notifySuccess();
-      Alert.alert('Saved', 'Geostamped photo saved to your photo library.');
+      Alert.alert(t('toolLabels.saved'), t('toolLabels.photoSaved'));
     } catch (err) {
       if (mounted.current) setSaving(false);
       notifyWarning();
-      Alert.alert('Save Error', err?.message || 'Could not save photo.');
+      Alert.alert(t('toolLabels.saveError'), err?.message || 'Could not save photo.');
     }
   }, []);
 
@@ -187,7 +189,7 @@ export function GeostampTool({ location }) {
     return (
       <View style={styles.unavailable}>
         <Text style={[styles.unavailableText, { color: colors.text3 }]}>
-          Photo geostamp requires camera and photo library modules. Rebuild the app to enable.
+          {t('toolLabels.modulesUnavailable')}
         </Text>
       </View>
     );
@@ -198,7 +200,7 @@ export function GeostampTool({ location }) {
     return (
       <View style={styles.unavailable}>
         <Text style={[styles.unavailableText, { color: colors.text3 }]}>
-          WAITING FOR GPS FIX — Grid coordinate required for geostamp
+          {t('gps.waitingForFix')}
         </Text>
       </View>
     );
@@ -223,18 +225,18 @@ export function GeostampTool({ location }) {
             accessibilityRole="button"
             accessibilityLabel="Take photo with camera"
           >
-            <Text style={[styles.sourceBtnText, { color: colors.text }]}>📷  TAKE PHOTO</Text>
+            <Text style={[styles.sourceBtnText, { color: colors.text }]}>{'\ud83d\udcf7'}  {t('toolLabels.takePhoto')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.sourceBtn, { borderColor: colors.border }]}
             onPress={pickPhoto}
             accessibilityRole="button"
-            accessibilityLabel="Choose photo from library"
+            accessibilityLabel={t('toolLabels.fromLibrary')}
           >
-            <Text style={[styles.sourceBtnText, { color: colors.text2 }]}>🖼  FROM LIBRARY</Text>
+            <Text style={[styles.sourceBtnText, { color: colors.text2 }]}>{'\ud83d\uddbc'}  {t('toolLabels.fromLibrary')}</Text>
           </TouchableOpacity>
           <Text style={[styles.hint, { color: colors.text4 }]}>
-            Current grid: {mgrsNow || '—'}
+            {t('toolLabels.currentGrid')}: {mgrsNow || '\u2014'}
           </Text>
         </View>
       ) : (
@@ -271,21 +273,21 @@ export function GeostampTool({ location }) {
                   accessibilityRole="button"
                   accessibilityLabel={saved ? 'Photo already saved' : 'Save geostamped photo'}
                 >
-                  <Text style={[styles.saveBtnText, { color: colors.bg }]}>{saved ? 'SAVED ✓' : 'SAVE TO PHOTOS'}</Text>
+                  <Text style={[styles.saveBtnText, { color: colors.bg }]}>{saved ? t('toolLabels.savedCheck') : t('toolLabels.saveToPhotos')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.clearBtn, { borderColor: colors.border }]}
                   onPress={clearPhoto}
                   accessibilityRole="button"
-                  accessibilityLabel="Discard and start over"
+                  accessibilityLabel={t('toolLabels.discard')}
                 >
-                  <Text style={[styles.clearBtnText, { color: colors.border }]}>DISCARD</Text>
+                  <Text style={[styles.clearBtnText, { color: colors.border }]}>{t('toolLabels.discard')}</Text>
                 </TouchableOpacity>
               </>
             )}
           </View>
           <Text style={[styles.hint, { color: colors.text4 }]}>
-            PHOTO STAYS ON DEVICE · NEVER UPLOADED
+            {t('toolLabels.photoOnDevice')}
           </Text>
         </View>
       )}

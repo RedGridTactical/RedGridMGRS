@@ -93,7 +93,7 @@ More than 25% of users discover apps through Google search, not app stores. You 
 - Dev.to has a built-in trending algorithm — high-performing posts get boosted automatically.
 
 **C. Backlinks**
-- Submit to app directories: AlternativeTo, Product Hunt (done), AppSumo marketplace, SaaSHub
+- Submit to app directories: AlternativeTo, AppSumo marketplace, SaaSHub
 - Get listed on awesome-react-native GitHub list (submit PR)
 - Submit to military/tactical gear review sites
 
@@ -169,7 +169,7 @@ HN front page can deliver 10,000-30,000 visitors in 24 hours, but 90% of attempt
 
 **C. Cross-Link Comment (Once Karma Allows)**
 - Comment on your Dev.to article post with:
-  "Maker here. Happy to answer questions about the MGRS math, the zero-network architecture, or shipping a niche Expo app. App Store: [link] | Product Hunt: [link] | GitHub: [link]"
+  "Maker here. Happy to answer questions about the MGRS math, the zero-network architecture, or shipping a niche Expo app. App Store: [link] | GitHub: [link]"
 
 ### Anti-Gaming Warnings
 - HN detects coordinated upvoting with as few as 5-6 people
@@ -179,30 +179,7 @@ HN front page can deliver 10,000-30,000 visitors in 24 hours, but 90% of attempt
 
 ---
 
-## 5. PRODUCT HUNT — OPTIMIZE POST-LAUNCH
-
-PH ranking is based on *points* not raw upvotes. Votes from verified, active users count more. 500 upvotes + 0 comments ranks lower than 300 upvotes + active discussions.
-
-### Immediate Actions
-
-**A. Optimize the Existing Launch**
-- Your launch is live. Respond to every comment within 10 minutes.
-- Post your maker's comment if you haven't: introduce yourself, share the backstory (paratrooper angle), and ask a question to spark discussion.
-- Share the PH link in your Dev.to article, HN comment (once unlocked), and all social channels.
-
-**B. Rally Your Network**
-- Ask people to VISIT AND COMMENT (not "upvote" — PH penalizes explicit upvote asks)
-- Upvotes from accounts created in the last 30 days are heavily discounted
-- Encourage genuine feedback: "What feature would you add?" generates discussion
-
-**C. Post-Launch Leverage**
-- If you earn a badge (Product of the Day/Week), prominently display it on your landing page and README
-- Repurpose PH comments as social proof on your App Store description
-- PH launches remain discoverable for months — optimize the listing for long-tail discovery
-
----
-
-## 6. GITHUB STARS & TRAFFIC
+## 5. GITHUB STARS & TRAFFIC
 
 GitHub stars act as social proof and improve search ranking within GitHub. The first 100 stars establish minimum credibility. Your README is already strong.
 
@@ -399,7 +376,6 @@ App Store description → GitHub (open source badge)
 ## TIMELINE
 
 **Week 1 (Now)**
-- [x] Product Hunt launch
 - [x] Dev.to article published
 - [x] HN submission
 - [x] Reddit posts drafted
