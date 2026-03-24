@@ -61,7 +61,14 @@ Generate formatted reports ready to transmit over any net:
 ### Free
 Live MGRS display, 1 theme, 8 tactical tools, 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
 
-### Pro Upgrade — $9.99 (one-time in-app purchase)
+### Pro — 3 tiers
+| Tier | Price |
+|------|-------|
+| Monthly | $3.99/mo |
+| Annual | $29.99/yr (best value) |
+| Lifetime | $49.99 one-time |
+
+All Pro tiers unlock:
 - **Saved Waypoint Lists** — patrol routes, OBJs, rally points, persisted on device
 - **All 6 Report Templates** — Standard includes SALUTE, MEDEVAC, SPOT
 - **NATO Voice Readout** — hands-free grid calls using phonetic alphabet
@@ -73,14 +80,12 @@ Live MGRS display, 1 theme, 8 tactical tools, 3 report templates (SALUTE, 9-Line
 - **4 Display Themes** — red lens, NVG green, day white, blue force
 - **Unlimited Waypoints** — no storage limits
 
-No subscription. No recurring charges. One purchase, permanent unlock.
-
 ---
 
 ## Install
 
 ### iOS
-[App Store](https://apps.apple.com/app/id6759629554) — Free with optional $9.99 Pro upgrade.
+[App Store](https://apps.apple.com/app/id6759629554) — Free with optional Pro upgrade ($3.99/mo, $29.99/yr, or $49.99 lifetime).
 
 ### Android
 Coming soon. The codebase is cross-platform (React Native / Expo), and Android builds are functional — we're focusing on iOS polish first, with Android launching once the feature set matures. [Watch this repo](https://github.com/RedGridTactical/RedGridMGRS) or check back for updates.
