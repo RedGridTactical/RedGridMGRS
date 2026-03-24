@@ -268,6 +268,9 @@ function App() {
         isPurchasing={isPurchasing}
         purchase={purchase}
         restore={restore}
+        products={products}
+        selectedTier={selectedTier}
+        setSelectedTier={setSelectedTier}
         statusBarStyle={statusBarStyle}
         waypoint={waypoint}
         coordFormat={coordFormat}
@@ -296,7 +299,8 @@ function AppContent({
   setDeclination, setPaceCount, mgrsFormatted, showProGate,
   theme, setTheme, setWaypoint,
   showModal, setShowModal, proGateVisible, setProGateVisible,
-  proGateFeature, product, isPurchasing, purchase, restore,
+  proGateFeature, product, products, isPurchasing, purchase, restore,
+  selectedTier, setSelectedTier,
   statusBarStyle, waypoint, coordFormat, setCoordFormat,
   compassHeading,
   shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing,
@@ -802,9 +806,9 @@ const staticStyles = StyleSheet.create({
   hudContent: { flex:1, justifyContent:'center', alignItems:'center', width:'100%' },
   hudHeading: { fontFamily:'monospace', fontSize:14, letterSpacing:4, fontWeight:'600', marginBottom:12 },
   hudMgrs: { fontFamily:'monospace', fontSize:48, fontWeight:'700', letterSpacing:6, textAlign:'center', marginBottom:20 },
-  hudWpSection: { alignItems:'center', gap:8, marginTop:16 },
-  hudBearing: { fontFamily:'monospace', fontSize:28, fontWeight:'700', letterSpacing:4, marginTop:12 },
-  hudDist: { fontFamily:'monospace', fontSize:20, letterSpacing:3, fontWeight:'700', marginTop:4 },
-  hudWpLabel: { fontFamily:'monospace', fontSize:12, letterSpacing:4, marginTop:6, opacity:0.7 },
-  hudExit: { fontSize:10, letterSpacing:4, paddingBottom:40, opacity:0.5 },
+  hudWpSection: { alignItems:'center', gap:4, marginTop:20 },
+  hudBearing: { fontFamily:'monospace', fontSize:24, fontWeight:'700', letterSpacing:4, marginTop:16 },
+  hudDist: { fontFamily:'monospace', fontSize:18, letterSpacing:3, fontWeight:'700', marginTop:6 },
+  hudWpLabel: { fontFamily:'monospace', fontSize:11, letterSpacing:4, marginTop:8, opacity:0.7 },
+  hudExit: { fontSize:10, letterSpacing:4, paddingBottom:44, opacity:0.4 },
 });

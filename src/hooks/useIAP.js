@@ -52,7 +52,6 @@ export function useIAP() {
 
   // Cleanup on unmount
   useEffect(() => {
-    mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
 
@@ -282,12 +281,16 @@ export function useIAP() {
       const wasCancelled =
         e?.code === 'E_USER_CANCELLED' ||
         e?.code === 'user_cancelled' ||
-        e?.userInfo?.code === 2 ||
-        e?.message?.includes('timeout');
+        e?.userInfo?.code === 2;
 
-      if (!wasCancelled && e?.message !== 'Purchase timeout') {
+      const wasTimeout = e?.message === 'Purchase timeout';
+
+      if (!wasCancelled) {
         try {
-          Alert.alert('Purchase failed', e?.message || 'Please try again.');
+          Alert.alert(
+            wasTimeout ? 'Purchase timed out' : 'Purchase failed',
+            wasTimeout ? 'The App Store did not respond. Please try again.' : (e?.message || 'Please try again.')
+          );
         } catch {}
       }
     } finally {
