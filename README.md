@@ -175,9 +175,9 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 
 ### v3.2 — Polish & Scale ✅ (March 2026)
 - Adjustable grid display scale
-- All v2.5–v3.0 features shipped together as v3.2.0 build 50
 
 ### v3.5+ — Platform Ecosystem (2027)
+- Android public release on Google Play
 - iOS Live Activity + Dynamic Island, StandBy mode, Apple Watch, Widgets, Siri Shortcuts
 
 ---
