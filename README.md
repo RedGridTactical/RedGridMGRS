@@ -153,18 +153,29 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 ### v2.3 — Global Expansion ✅ (March 2026)
 - 3-tier subscriptions ($3.99/mo, $29.99/yr, $49.99 lifetime), 6-language i18n, 26-locale ASC listings, Android closed testing, startup crash fix
 
-### v3.2 — Tactical Maps & Mesh ✅ (March 2026)
-- Offline OpenStreetMap with MGRS grid overlay and tile caching
-- Meshtastic/LoRa BLE mesh networking for off-grid position sharing
-- External GPS support (Garmin GLO, Bad Elf) via BLE
-- Mission planning with route overlay and nearest-neighbor optimization
-- GPX/KML import and export
+### v2.5 — Interoperability ✅ (March 2026)
 - FixPhrase integration (open-source, patent-free What3Words alternative)
-- Elevation/slope calculator tool (10 tools total)
+- GPX/KML waypoint export via Share sheet
+- Elevation and slope calculator tool
+- OLED true black themes (pure #000000)
+- [MGRS Tactical Toolkit](https://redgridtactical.github.io/RedGridMGRS/tools.html) — web-based converter, single HTML file, zero dependencies
+
+### v2.6 — Open Source Library ✅ (March 2026)
+- `@redgrid/mgrs` npm package — DMA TM 8358.1 compliant MGRS library
+- Standalone conversion, bearing, distance, dead reckoning, FixPhrase
+- Zero dependencies, ~15 KB
+
+### v3.0 — Tactical Map ✅ (March 2026)
+- Offline OpenStreetMap tiles (no API key, fully local)
+- MGRS grid overlay on map
+- Mission planning (waypoints on map, route plotting, nearest-neighbor optimization)
+- GPX/KML import
+- External GPS support (Garmin GLO, Bad Elf via BLE)
+- Meshtastic/LoRa off-grid position sharing
+
+### v3.2 — Polish & Scale ✅ (March 2026)
 - Adjustable grid display scale
-- OLED true black themes
-- `@redgrid/mgrs` standalone npm package (DMA TM 8358.1 compliant, zero deps)
-- [MGRS Tactical Toolkit](https://redgridtactical.github.io/RedGridMGRS/tools.html) — web-based converter, single HTML file
+- All v2.5–v3.0 features shipped together as v3.2.0 build 50
 
 ### v3.5+ — Platform Ecosystem (2027)
 - iOS Live Activity + Dynamic Island, StandBy mode, Apple Watch, Widgets, Siri Shortcuts
