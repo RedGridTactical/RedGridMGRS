@@ -136,33 +136,39 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 
 ## Roadmap
 
-> **iOS-first.** We're shipping and polishing on iOS first. Android is cross-platform ready and will launch once the iOS feature set matures.
+> **iOS live, Android in closed testing.** Cross-platform (React Native/Expo). Full roadmap at [redgridtactical.com/roadmap](https://redgridtactical.com/roadmap.html).
 
-### v2.1 — Polish ✅ (Shipped March 2026)
-- ~~OLED true black display mode~~ ✅
-- ~~Typography refinement (SF Pro)~~ ✅
-- ~~Refreshed app icon~~ ✅
-- ~~ProGate upsell modal~~ ✅
-- ~~6-tab bottom navigation~~ ✅
-- ~~Coordinate format selector (UTM/DD/DMS)~~ ✅
-- ~~Wayfinder arrow compass heading~~ ✅
+### v1.0 — Foundation ✅ (February 2026)
+- Real-time MGRS coordinates (1m precision), wayfinder arrow, 8 tactical tools, 3 report templates, red-on-black display, zero-network architecture
 
-### v2.5 — Pro Features ✅ (March 2026)
-- ~~HUD mode — full-screen tactical display~~ ✅
-- ~~Photo geostamp (MGRS/DTG burned into image)~~ ✅
-- ~~Haptic grid crossing alerts (1km / 100m boundaries)~~ ✅
-- ~~Shake-to-speak voice readout~~ ✅
+### v2.0 — Pro Launch ✅ (March 2026)
+- Pro IAP, 4 themes, 6 reports, unlimited waypoints, coordinate formats, magnetic declination, haptics, accessibility
 
-### v3.0 — Tactical (Fall/Winter 2026)
-- MGRS grid overlay map (MapKit)
+### v2.1 — Polish ✅ (March 2026)
+- Custom grid input, compass heading, waypoint coordinate editing, copy-to-clipboard
+
+### v2.2 — Pro Features ✅ (March 2026)
+- HUD mode, photo geostamp, shake-to-speak, grid crossing alerts, in-app support
+
+### v2.3 — Global Expansion ✅ (March 2026)
+- 3-tier subscriptions ($3.99/mo, $29.99/yr, $49.99 lifetime), 6-language i18n, 26-locale ASC listings, Android closed testing, startup crash fix
+
+### v2.5 — Interoperability (April 2026)
+- FixPhrase integration (open-source What3Words alternative)
+- GPX/KML waypoint export via Share sheet
+- Elevation and slope calculator tool
+- OLED true black theme option
+- Grid display scale option
+
+### v3.0 — Tactical Map (Summer 2026)
+- Offline OpenStreetMap tiles (no API key, fully local)
+- MGRS grid overlay on map
 - Mission planning (waypoints on map, route plotting)
-- Photo geostamp map inset (topo layer via MapKit snapshot)
-- GPX/KML import and export
+- GPX/KML import
 - External GPS support (Garmin GLO, Bad Elf via BLE)
 
 ### v3.5+ — Platform Ecosystem (2027)
-- **iOS:** Live Activity + Dynamic Island, Apple Watch companion, Siri Shortcuts, Widgets
-- **Android launch** — full Play Store release with all features from iOS track
+- iOS Live Activity + Dynamic Island, Apple Watch, Widgets, Siri Shortcuts, Share Extension
 
 ---
 
