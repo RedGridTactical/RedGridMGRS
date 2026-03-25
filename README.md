@@ -154,11 +154,16 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - 3-tier subscriptions ($3.99/mo, $29.99/yr, $49.99 lifetime), 6-language i18n, 26-locale ASC listings, Android closed testing, startup crash fix
 
 ### v2.5 — Interoperability (April 2026)
-- FixPhrase integration (open-source What3Words alternative)
+- FixPhrase integration (open-source, patent-free What3Words alternative)
 - GPX/KML waypoint export via Share sheet
 - Elevation and slope calculator tool
-- OLED true black theme option
-- Grid display scale option
+- OLED true black themes (pure #000000)
+- [MGRS Tactical Toolkit](https://redgridtactical.com/tools) — web-based converter, single HTML file, zero dependencies
+
+### v2.6 — Open Source Library (May 2026)
+- `@redgrid/mgrs` npm package — DMA TM 8358.1 compliant MGRS library
+- Standalone conversion, bearing, distance, dead reckoning, FixPhrase
+- Zero dependencies, ~15 KB
 
 ### v3.0 — Tactical Map (Summer 2026)
 - Offline OpenStreetMap tiles (no API key, fully local)
@@ -166,9 +171,10 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Mission planning (waypoints on map, route plotting)
 - GPX/KML import
 - External GPS support (Garmin GLO, Bad Elf via BLE)
+- Meshtastic/LoRa off-grid position sharing
 
 ### v3.5+ — Platform Ecosystem (2027)
-- iOS Live Activity + Dynamic Island, Apple Watch, Widgets, Siri Shortcuts, Share Extension
+- iOS Live Activity + Dynamic Island, StandBy mode, Apple Watch, Widgets, Siri Shortcuts
 
 ---
 
