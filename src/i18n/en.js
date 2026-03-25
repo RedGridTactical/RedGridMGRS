@@ -11,6 +11,21 @@ export default {
     lists: 'LISTS',
     coords: 'COORDS',
     theme: 'THEME',
+    map: 'MAP',
+    mesh: 'MESH',
+  },
+
+  // ─── Map screen ─────────────────────────────────────────────────────
+  map: {
+    center: 'CENTER',
+    addWaypoint: 'ADD WAYPOINT',
+    waypointAdded: 'WAYPOINT ADDED',
+    route: 'ROUTE',
+    addToRoute: 'ADD TO ROUTE',
+    totalDistance: 'TOTAL DISTANCE',
+    estimatedTime: 'ESTIMATED TIME',
+    optimizeRoute: 'OPTIMIZE ROUTE',
+    legs: 'LEGS',
   },
 
   // ─── GPS / Signal ─────────────────────────────────────────────────────
@@ -214,6 +229,22 @@ export default {
     gridCrossingAlertsSub: 'Haptic feedback at 1km and 100m boundaries',
   },
 
+  // ─── Settings ───────────────────────────────────────────────────────
+  settings: {
+    gridScale: 'GRID DISPLAY SCALE',
+    gridScaleSub: 'Adjust MGRS font size on the main grid display',
+    gpsSource: 'GPS SOURCE',
+    gpsInternal: 'Internal GPS',
+    gpsExternal: 'External: {{name}}',
+    gpsScan: 'SCAN FOR GPS',
+    gpsConnected: 'CONNECTED',
+    gpsSatellites: '{{count}} SATELLITES',
+    gpsDisconnect: 'DISCONNECT',
+    gpsScanning: 'SCANNING...',
+    gpsConnecting: 'CONNECTING...',
+    gpsNoDevices: 'No devices found — ensure GPS is powered on',
+  },
+
   // ─── Coord formats screen ─────────────────────────────────────────────
   coords: {
     hint: 'SELECT COORDINATE FORMAT \u2014 APPLIES TO MAIN GRID DISPLAY',
@@ -291,6 +322,17 @@ export default {
     delete: 'Delete',
     invalidMgrs: 'INVALID \u2014 ENTER FULL MGRS GRID',
     couldNotParse: 'COULD NOT PARSE MGRS COORDINATE',
+    import: 'IMPORT',
+    importLabel: 'Import waypoints from file',
+    importSuccess: 'Import Complete',
+    importedCount: '{{count}} waypoints imported.',
+    importedTruncated: '{{count}} of {{total}} waypoints imported (list limit reached).',
+    importEmpty: 'No Waypoints Found',
+    importNoWaypoints: 'The file contained no valid waypoints.',
+    importFailed: 'Import Failed',
+    importError: 'Could not import waypoints from file.',
+    importUnavailable: 'Import Unavailable',
+    importRequires: 'expo-document-picker and expo-file-system are required for import.',
   },
 
   // ─── ProGate / paywall ────────────────────────────────────────────────
@@ -322,6 +364,30 @@ export default {
     coordFormatsSub: 'UTM, decimal degrees, DMS \u2014 on the main grid display',
     displayThemes: 'Display Themes',
     displayThemesSub: 'NVG green, day white, blue-force \u2014 preserve night vision',
+  },
+
+  // ─── Mesh / Meshtastic ───────────────────────────────────────────────
+  mesh: {
+    title: 'MESH',
+    disconnected: 'DISCONNECTED',
+    scanning: 'SCANNING',
+    connecting: 'CONNECTING',
+    connected: 'CONNECTED',
+    connectedTo: 'Connected via BLE',
+    disconnect: 'DISCONNECT',
+    scan: 'SCAN FOR RADIOS',
+    scanHint: 'POWER ON MESHTASTIC RADIO AND ENABLE BLE',
+    nearbyDevices: 'NEARBY DEVICES',
+    connect: 'CONNECT',
+    connectTo: 'Connect to',
+    meshNodes: 'MESH NODES',
+    node: 'NODE',
+    ago: 'AGO',
+    autoShare: 'AUTO-SHARE POSITION',
+    autoShareSub: 'Broadcast your position every 30s',
+    on: 'ON',
+    off: 'OFF',
+    footer: 'BLE ONLY \u00b7 NO INTERNET \u00b7 MESH RADIO REQUIRED',
   },
 
   // ─── Waypoint modal ───────────────────────────────────────────────────

@@ -28,7 +28,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.redgrid.redgridtactical",
-      "buildNumber": "47",
+      "buildNumber": "49",
       "infoPlist": {
         "CFBundleDisplayName": "Red Grid MGRS",
         "NSLocationWhenInUseUsageDescription": "Red Grid MGRS uses your location to display your current grid coordinates. No location data is stored or transmitted.",
@@ -71,7 +71,8 @@
           }
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "react-native-ble-plx"
     ],
     "extra": {
       "eas": {

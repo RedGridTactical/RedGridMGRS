@@ -1,6 +1,6 @@
 /**
  * Red Grid MGRS — Root Application v2.1 (HARDENED)
- * Tabs: GRID · TOOLS · REPORT · LISTS (Pro) · COORDS (Pro) · THEME (Pro)
+ * Tabs: GRID · MAP · TOOLS · REPORT · LISTS (Pro) · COORDS (Pro) · THEME (Pro)
  *
  * Privacy: no location stored, no network (IAP uses Apple/Google native payment only), no analytics.
  *
@@ -36,6 +36,9 @@ import { WaypointListsScreen } from './src/screens/WaypointListsScreen';
 import { ThemeScreen }    from './src/screens/ThemeScreen';
 import { CoordFormatsScreen } from './src/screens/CoordFormatsScreen';
 import { SupportScreen } from './src/screens/SupportScreen';
+import { MapScreen }     from './src/screens/MapScreen';
+import { MeshScreen }    from './src/screens/MeshScreen';
+import { useMeshtastic } from './src/hooks/useMeshtastic';
 
 import {
   toMGRS, formatMGRS, formatPosition, calculateBearing, calculateDistance, formatDistance,
@@ -55,16 +58,19 @@ function useTabDefs() {
   return useMemo(() => ({
     free: [
       { id: 'grid',   label: t('tabs.grid')   },
+      { id: 'map',    label: t('tabs.map')    },
       { id: 'tools',  label: t('tabs.tools')  },
       { id: 'report', label: t('tabs.reports') },
     ],
     pro: [
       { id: 'grid',   label: t('tabs.grid')   },
+      { id: 'map',    label: t('tabs.map')    },
       { id: 'tools',  label: t('tabs.tools')  },
       { id: 'report', label: t('tabs.reports') },
       { id: 'lists',  label: t('tabs.lists')  },
       { id: 'coords', label: t('tabs.coords') },
       { id: 'theme',  label: t('tabs.theme')  },
+      { id: 'mesh',   label: t('tabs.mesh')   },
     ],
   }), [t]);
 }
@@ -117,10 +123,11 @@ function App() {
   const isLandscape = width > height;
 
   const { location, error, isLoading, retry, compassHeading } = useLocation();
-  const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing } = useSettings();
+  const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing, gridScale, setGridScale } = useSettings();
   const { isPro, isPurchasing, product, products, selectedTier, setSelectedTier, purchase, restore } = useIAP();
   const themeData = useTheme(theme || 'red');
   const { checkAndPromptReview, openStoreReview } = useStoreReview();
+  const mesh = useMeshtastic();
 
   // Prompt for App Store review on mount (gated by open count, install age, cooldown)
   useEffect(() => { checkAndPromptReview(); }, []);
@@ -217,6 +224,7 @@ function App() {
       onRateApp={openStoreReview}
       onEnterHud={onEnterHud}
       onShowSupport={() => setShowSupport(true)}
+      gridScale={gridScale}
     />
   ) : (
     <PortraitGrid
@@ -231,6 +239,7 @@ function App() {
       onRateApp={openStoreReview}
       onEnterHud={onEnterHud}
       onShowSupport={() => setShowSupport(true)}
+      gridScale={gridScale}
     />
   );
 
@@ -280,6 +289,8 @@ function App() {
         setShakeToSpeak={setShakeToSpeak}
         gridCrossing={gridCrossing}
         setGridCrossing={setGridCrossing}
+        gridScale={gridScale}
+        setGridScale={setGridScale}
         hudMode={hudMode}
         setHudMode={setHudMode}
         bearing={bearing}
@@ -287,6 +298,7 @@ function App() {
         distance={distance}
         showSupport={showSupport}
         setShowSupport={setShowSupport}
+        mesh={mesh}
       />
     </ThemeProvider>
   );
@@ -304,8 +316,10 @@ function AppContent({
   statusBarStyle, waypoint, coordFormat, setCoordFormat,
   compassHeading,
   shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing,
+  gridScale, setGridScale,
   hudMode, setHudMode, bearing, arrowAngle, distance,
   showSupport, setShowSupport,
+  mesh,
 }) {
   const colors = useColors();
 
@@ -328,6 +342,14 @@ function AppContent({
       {/* Screen content with fade transition */}
       <Animated.View style={[staticStyles.screenContent, { opacity: fadeAnim }]}>
         {safeTab === 'grid' && gridContent}
+
+        {safeTab === 'map' && (
+          <MapScreen
+            location={location}
+            isPro={isPro}
+            onShowProGate={showProGate}
+          />
+        )}
 
         {safeTab === 'tools' && (
           <ToolsScreen
@@ -367,6 +389,8 @@ function AppContent({
             setShakeToSpeak={setShakeToSpeak}
             gridCrossing={gridCrossing}
             setGridCrossing={setGridCrossing}
+            gridScale={gridScale}
+            setGridScale={setGridScale}
           />
         )}
 
@@ -378,8 +402,24 @@ function AppContent({
           />
         )}
 
+        {safeTab === 'mesh' && isPro && (
+          <MeshScreen
+            location={location}
+            connectionState={mesh.connectionState}
+            nearbyDevices={mesh.nearbyDevices}
+            connectedDevice={mesh.connectedDevice}
+            meshPositions={mesh.meshPositions}
+            autoShare={mesh.autoShare}
+            scanError={mesh.scanError}
+            onScan={mesh.scan}
+            onConnect={mesh.connect}
+            onDisconnect={mesh.disconnect}
+            onToggleAutoShare={mesh.toggleAutoShare}
+          />
+        )}
+
         {/* Upsell tab for non-Pro */}
-        {(safeTab === 'lists' || safeTab === 'theme' || safeTab === 'coords') && !isPro && (
+        {(safeTab === 'lists' || safeTab === 'theme' || safeTab === 'coords' || safeTab === 'mesh') && !isPro && (
           <UpsellScreen onUpgrade={() => showProGate('Red Grid Pro')} />
         )}
       </Animated.View>
@@ -472,7 +512,7 @@ function UpsellScreen({ onUpgrade }) {
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport, gridScale }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -489,7 +529,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
         ? <ErrBlock error={error} retry={retry} />
         : (
           <TouchableOpacity onPress={onCopyGrid} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Current MGRS grid. Tap to copy">
-            <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact={false} coordFormat={coordFormat} altDisplay={altDisplay} />
+            <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact={false} coordFormat={coordFormat} altDisplay={altDisplay} gridScale={gridScale} />
             {copyToast && <Text style={[staticStyles.copyToast, { color: colors.text2 }]}>{t('grid.copiedToClipboard')}</Text>}
           </TouchableOpacity>
         )
@@ -551,7 +591,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport, gridScale }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -567,7 +607,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
         <Div />
         {error ? <ErrBlock error={error} retry={retry} compact /> : (
           <TouchableOpacity onPress={onCopyGrid} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Current MGRS grid. Tap to copy">
-            <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact coordFormat={coordFormat} altDisplay={altDisplay} />
+            <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact coordFormat={coordFormat} altDisplay={altDisplay} gridScale={gridScale} />
             {copyToast && <Text style={[staticStyles.copyToast, { color: colors.text2 }]}>{t('grid.copiedToClipboard')}</Text>}
           </TouchableOpacity>
         )}

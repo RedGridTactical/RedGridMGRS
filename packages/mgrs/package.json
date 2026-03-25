@@ -1,0 +1,10 @@
+{
+  "name": "@redgrid/mgrs",
+  "version": "1.0.0",
+  "description": "DMA TM 8358.1 compliant MGRS library — truncation, not rounding",
+  "main": "index.js",
+  "license": "MIT",
+  "keywords": ["mgrs", "utm", "coordinates", "military", "grid", "navigation", "dma", "gps"],
+  "repository": { "type": "git", "url": "https://github.com/RedGridTactical/RedGridMGRS" },
+  "files": ["index.js", "fixphrase.js", "wordlist.json"]
+}

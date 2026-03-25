@@ -11,6 +11,7 @@ import {
 import { loadWaypointLists, saveWaypointLists } from '../utils/storage';
 import { toMGRS, formatMGRS, parseMGRSToLatLon } from '../utils/mgrs';
 import { exportAsGPX, exportAsKML } from '../utils/gpxExport';
+import { parseGPX, parseKML } from '../utils/gpxImport';
 import { useColors } from '../utils/ThemeContext';
 import { notifyWarning, notifySuccess, tapLight } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
@@ -18,6 +19,7 @@ import { useTranslation } from '../hooks/useTranslation';
 let Clipboard; try { Clipboard = require('expo-clipboard'); } catch {}
 let FileSystem; try { FileSystem = require('expo-file-system'); } catch {}
 let Sharing; try { Sharing = require('expo-sharing'); } catch {}
+let DocumentPicker; try { DocumentPicker = require('expo-document-picker'); } catch {}
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
@@ -204,6 +206,67 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
     ]);
   };
 
+  // ── Import waypoints from GPX/KML file ──
+  const importFile = async () => {
+    if (!currentList) return;
+    try {
+      if (!DocumentPicker || !FileSystem) {
+        Alert.alert(t('waypoints.importUnavailable'), t('waypoints.importRequires'));
+        return;
+      }
+
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/gpx+xml', 'application/vnd.google-earth.kml+xml', '*/*'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) return;
+
+      const file = result.assets[0];
+      const uri = file.uri;
+      const name = (file.name || '').toLowerCase();
+
+      const content = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.UTF8 });
+
+      let parsed = [];
+      if (name.endsWith('.kml') || content.includes('<kml')) {
+        parsed = parseKML(content);
+      } else {
+        parsed = parseGPX(content);
+      }
+
+      if (parsed.length === 0) {
+        Alert.alert(t('waypoints.importEmpty'), t('waypoints.importNoWaypoints'));
+        return;
+      }
+
+      const available = 20 - currentList.waypoints.length;
+      const toImport = parsed.slice(0, available);
+
+      const newWaypoints = toImport.map((wp, i) => ({
+        id: uid(),
+        label: (wp.name || `WP ${currentList.waypoints.length + i + 1}`).toUpperCase(),
+        lat: wp.lat,
+        lon: wp.lon,
+        mgrs: formatMGRS(toMGRS(wp.lat, wp.lon, 5)),
+      }));
+
+      const updated = lists.map(l => l.id === currentList.id
+        ? { ...l, waypoints: [...l.waypoints, ...newWaypoints] }
+        : l
+      );
+      await persist(updated);
+      notifySuccess();
+
+      const msg = toImport.length < parsed.length
+        ? t('waypoints.importedTruncated', { count: toImport.length, total: parsed.length })
+        : t('waypoints.importedCount', { count: toImport.length });
+      Alert.alert(t('waypoints.importSuccess'), msg);
+    } catch (e) {
+      Alert.alert(t('waypoints.importFailed'), e.message || t('waypoints.importError'));
+    }
+  };
+
   const currentList = lists.find(l => l.id === activeList);
 
   return (
@@ -268,6 +331,9 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
           <View style={styles.wpHeader}>
             <Text style={[styles.wpHeaderText, { color: colors.border }]}>{currentList.name} — {currentList.waypoints.length} {t('waypoints.waypoints')}</Text>
             <View style={styles.wpHeaderBtns}>
+              <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.border }]} onPress={importFile} accessibilityRole="button" accessibilityLabel={t('waypoints.importLabel')}>
+                <Text style={[styles.addWpBtnText, { color: colors.border }]}>{t('waypoints.import')}</Text>
+              </TouchableOpacity>
               <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.border }]} onPress={showExportMenu} accessibilityRole="button" accessibilityLabel="Export waypoint list">
                 <Text style={[styles.addWpBtnText, { color: colors.border }]}>EXPORT</Text>
               </TouchableOpacity>

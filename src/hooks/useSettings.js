@@ -9,7 +9,7 @@
  *   - Callbacks validate input before persisting
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { loadSettings, saveDeclination, savePaceCount, saveTheme, saveCoordFormat, saveShakeToSpeak, saveGridCrossing } from '../utils/storage';
+import { loadSettings, saveDeclination, savePaceCount, saveTheme, saveCoordFormat, saveShakeToSpeak, saveGridCrossing, saveGridScale } from '../utils/storage';
 
 export function useSettings() {
   const [declination, setDeclinationState] = useState(0);
@@ -18,6 +18,7 @@ export function useSettings() {
   const [coordFormat, setCoordFormatState] = useState('mgrs');
   const [shakeToSpeak, setShakeToSpeakState] = useState(true);
   const [gridCrossing, setGridCrossingState] = useState(true);
+  const [gridScale, setGridScaleState]     = useState(1.0);
   const [loaded, setLoaded]                = useState(false);
   const mounted = useRef(true);
 
@@ -39,6 +40,7 @@ export function useSettings() {
           setCoordFormatState(settings.coordFormat ?? 'mgrs');
           setShakeToSpeakState(settings.shakeToSpeak ?? true);
           setGridCrossingState(settings.gridCrossing ?? true);
+          setGridScaleState(settings.gridScale ?? 1.0);
         }
       } catch (err) {
         // loadSettings already handles errors and returns defaults
@@ -103,6 +105,15 @@ export function useSettings() {
     } catch (err) {}
   }, []);
 
+  const setGridScale = useCallback((val) => {
+    try {
+      const n = parseFloat(val) || 1.0;
+      const clamped = Math.min(1.5, Math.max(0.7, Math.round(n * 10) / 10));
+      setGridScaleState(clamped);
+      saveGridScale(clamped).catch(() => {});
+    } catch (err) {}
+  }, []);
+
   return {
     declination, setDeclination,
     paceCount, setPaceCount,
@@ -110,6 +121,7 @@ export function useSettings() {
     coordFormat, setCoordFormat,
     shakeToSpeak, setShakeToSpeak,
     gridCrossing, setGridCrossing,
+    gridScale, setGridScale,
     loaded,
   };
 }

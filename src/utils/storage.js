@@ -29,6 +29,7 @@ const KEYS = {
   COORD_FORMAT:    'rg_coord_format',
   SHAKE_TO_SPEAK:  'rg_shake_to_speak',
   GRID_CROSSING:   'rg_grid_crossing',
+  GRID_SCALE:      'rg_grid_scale',
 };
 
 // ─── SETTINGS ────────────────────────────────────────────────────────────────
@@ -39,13 +40,13 @@ const KEYS = {
 export async function loadSettings() {
   try {
     if (!AsyncStorage || !AsyncStorage.multiGet) {
-      return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true };
+      return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true, gridScale: 1.0 };
     }
 
     const items = await Promise.race([
       AsyncStorage.multiGet([
         KEYS.DECLINATION, KEYS.PACE_COUNT, KEYS.THEME, KEYS.COORD_FORMAT,
-        KEYS.SHAKE_TO_SPEAK, KEYS.GRID_CROSSING,
+        KEYS.SHAKE_TO_SPEAK, KEYS.GRID_CROSSING, KEYS.GRID_SCALE,
       ]),
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Storage timeout')), 5000)
@@ -53,7 +54,7 @@ export async function loadSettings() {
     ]);
 
     if (!items || !Array.isArray(items)) {
-      return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true };
+      return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true, gridScale: 1.0 };
     }
 
     const dec = items[0];
@@ -67,6 +68,7 @@ export async function loadSettings() {
     let coordFormat = 'mgrs';
     let shakeToSpeak = true;
     let gridCrossing = true;
+    let gridScale = 1.0;
 
     if (dec && Array.isArray(dec) && dec[1] !== null) {
       const parsed = parseFloat(dec[1]);
@@ -96,10 +98,16 @@ export async function loadSettings() {
       gridCrossing = crossing[1] !== 'false';
     }
 
-    return { declination, paceCount, theme: themeValue, coordFormat, shakeToSpeak, gridCrossing };
+    const scale = items[6];
+    if (scale && Array.isArray(scale) && scale[1] !== null) {
+      const parsed = parseFloat(scale[1]);
+      if (!isNaN(parsed) && parsed >= 0.7 && parsed <= 1.5) gridScale = parsed;
+    }
+
+    return { declination, paceCount, theme: themeValue, coordFormat, shakeToSpeak, gridCrossing, gridScale };
   } catch (err) {
     // AsyncStorage unavailable, corrupted, permission denied, timeout, or parse error
-    return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true };
+    return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true, gridScale: 1.0 };
   }
 }
 
@@ -192,6 +200,16 @@ export async function saveGridCrossing(value) {
   try {
     if (!AsyncStorage || !AsyncStorage.setItem) return;
     await AsyncStorage.setItem(KEYS.GRID_CROSSING, String(value));
+  } catch {}
+}
+
+/**
+ * Save grid scale multiplier with error swallowing.
+ */
+export async function saveGridScale(value) {
+  try {
+    if (!AsyncStorage || !AsyncStorage.setItem) return;
+    await AsyncStorage.setItem(KEYS.GRID_SCALE, String(value ?? '1'));
   } catch {}
 }
 

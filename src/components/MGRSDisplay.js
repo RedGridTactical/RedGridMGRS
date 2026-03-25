@@ -9,9 +9,10 @@ import { useColors } from '../utils/ThemeContext';
  */
 const FORMAT_LABELS = { mgrs: 'GRID', utm: 'UTM', dd: 'DECIMAL DEG', dms: 'DEG MIN SEC' };
 
-export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, altitude, compact = false, coordFormat = 'mgrs', altDisplay }) {
+export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, altitude, compact = false, coordFormat = 'mgrs', altDisplay, gridScale = 1.0 }) {
   const colors = useColors();
   const label = FORMAT_LABELS[coordFormat] || 'GRID';
+  const s = gridScale;
 
   // If non-MGRS format is selected and altDisplay is provided, render alt format
   if (coordFormat !== 'mgrs' && altDisplay) {
@@ -23,7 +24,7 @@ export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, alt
       return (
         <View style={styles.containerCompact} accessibilityRole="text" accessibilityLabel={accLabel} accessibilityLiveRegion="polite">
           <Text style={[styles.labelCompact, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{label}</Text>
-          <Text style={[styles.altValueCompact, { color: colors.text }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{altDisplay}</Text>
+          <Text style={[styles.altValueCompact, { color: colors.text, fontSize: 18 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{altDisplay}</Text>
           <View style={styles.meta}>
             {accuracy != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>±{accuracy}m</Text>}
             {altitude  != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>ALT {altitude}m</Text>}
@@ -34,7 +35,7 @@ export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, alt
     return (
       <View style={styles.container} accessibilityRole="text" accessibilityLabel={accLabel} accessibilityLiveRegion="polite">
         <Text style={[styles.label, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{label}</Text>
-        <Text style={[styles.altValue, { color: colors.text }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{altDisplay}</Text>
+        <Text style={[styles.altValue, { color: colors.text, fontSize: 26 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{altDisplay}</Text>
         <View style={styles.meta}>
           {accuracy != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>±{accuracy}m</Text>}
           {altitude  != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>ALT {altitude}m</Text>}
@@ -66,10 +67,10 @@ export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, alt
       <View style={styles.containerCompact} accessibilityRole="text" accessibilityLabel={accLabel} accessibilityLiveRegion="polite">
         <Text style={[styles.labelCompact, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>GRID</Text>
         <View style={styles.compactRow}>
-          <Text style={[styles.gzdCompact, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{gzd}</Text>
-          <Text style={[styles.squareCompact, { color: colors.text }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{sq}</Text>
+          <Text style={[styles.gzdCompact, { color: colors.text2, fontSize: 16 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{gzd}</Text>
+          <Text style={[styles.squareCompact, { color: colors.text, fontSize: 26 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{sq}</Text>
         </View>
-        <Text style={[styles.eastingCompact, { color: colors.text }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{en}</Text>
+        <Text style={[styles.eastingCompact, { color: colors.text, fontSize: 22 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{en}</Text>
         <View style={styles.meta}>
           {accuracy != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>±{accuracy}m</Text>}
           {altitude  != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>ALT {altitude}m</Text>}
@@ -82,9 +83,9 @@ export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, alt
     <View style={styles.container} accessibilityRole="text" accessibilityLabel={accLabel} accessibilityLiveRegion="polite">
       <Text style={[styles.label, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>GRID</Text>
       <View style={styles.coordBlock}>
-        <Text style={[styles.gzd, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{gzd}</Text>
-        <Text style={[styles.square, { color: colors.text }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{sq}</Text>
-        <Text style={[styles.easting, { color: colors.text }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{en}</Text>
+        <Text style={[styles.gzd, { color: colors.text2, fontSize: 22 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{gzd}</Text>
+        <Text style={[styles.square, { color: colors.text, fontSize: 36 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{sq}</Text>
+        <Text style={[styles.easting, { color: colors.text, fontSize: 32 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{en}</Text>
       </View>
       <View style={styles.meta}>
         {accuracy != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>±{accuracy}m</Text>}
