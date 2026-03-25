@@ -204,6 +204,8 @@ export default {
     ddSub: '\u5341\u9032\u7def\u5ea6 / \u7d4c\u5ea6 \u2014 Google Maps\u4e92\u63db',
     dms: '\u5ea6\u5206\u79d2',
     dmsSub: '\u5ea6\u3001\u5206\u3001\u79d2 \u2014 \u822a\u7a7a\u30fb\u822a\u6d77\u6a19\u6e96',
+    fixphrase: 'FIXPHRASE',
+    fixphraseSub: '4\u5358\u8a9e\u306e\u4f4d\u7f6e\u30d5\u30ec\u30fc\u30ba \u2014 \u7d0411m\u7cbe\u5ea6',
   },
   support: {
     title: '\u30d8\u30eb\u30d7 & \u30b5\u30dd\u30fc\u30c8',

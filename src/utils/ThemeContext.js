@@ -31,7 +31,7 @@ export function useColors() {
       text4:   '#330000',
       text5:   '#1A0000',
       accent:  '#CC0000',
-      card:    '#0A0000',
+      card:    '#000000',
       card2:   '#110000',
       border:  '#660000',
       border2: '#330000',

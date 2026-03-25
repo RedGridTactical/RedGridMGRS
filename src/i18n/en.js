@@ -85,6 +85,8 @@ export default {
     sunMoonSub: 'Celestial bearing & orientation',
     mgrsPrecision: 'MGRS PRECISION',
     mgrsPrecisionSub: 'Convert grid to reporting precision',
+    elevation: 'ELEVATION / SLOPE',
+    elevationSub: 'Altitude, slope angle & grade',
     photoGeostamp: 'PHOTO GEOSTAMP',
     photoGeostampSub: 'Burn MGRS + DTG onto a photo',
   },
@@ -224,6 +226,8 @@ export default {
     ddSub: 'Decimal latitude / longitude \u2014 Google Maps compatible',
     dms: 'DEG MIN SEC',
     dmsSub: 'Degrees, minutes, seconds \u2014 aviation and nautical standard',
+    fixphrase: 'FIXPHRASE',
+    fixphraseSub: '4-word location phrase \u2014 ~11m accuracy, order-independent',
   },
 
   // ─── Support / Help screen ────────────────────────────────────────────

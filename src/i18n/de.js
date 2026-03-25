@@ -204,6 +204,8 @@ export default {
     ddSub: 'Dezimale Breite / L\u00e4nge \u2014 Google Maps kompatibel',
     dms: 'GRAD MIN SEK',
     dmsSub: 'Grad, Minuten, Sekunden \u2014 Luftfahrt- und Seefahrtstandard',
+    fixphrase: 'FIXPHRASE',
+    fixphraseSub: '4-Wort-Standortphrase \u2014 ~11m Genauigkeit',
   },
   support: {
     title: 'HILFE & SUPPORT',

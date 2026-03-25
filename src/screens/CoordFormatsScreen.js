@@ -9,10 +9,11 @@ import { useColors } from '../utils/ThemeContext';
 import { useTranslation } from '../hooks/useTranslation';
 
 const FORMATS = [
-  { id: 'mgrs', labelKey: 'coords.mgrs', subKey: 'coords.mgrsSub' },
-  { id: 'utm',  labelKey: 'coords.utm',  subKey: 'coords.utmSub' },
-  { id: 'dd',   labelKey: 'coords.dd',   subKey: 'coords.ddSub' },
-  { id: 'dms',  labelKey: 'coords.dms',  subKey: 'coords.dmsSub' },
+  { id: 'mgrs',      labelKey: 'coords.mgrs',      subKey: 'coords.mgrsSub' },
+  { id: 'utm',       labelKey: 'coords.utm',       subKey: 'coords.utmSub' },
+  { id: 'dd',        labelKey: 'coords.dd',        subKey: 'coords.ddSub' },
+  { id: 'dms',       labelKey: 'coords.dms',       subKey: 'coords.dmsSub' },
+  { id: 'fixphrase', labelKey: 'coords.fixphrase', subKey: 'coords.fixphraseSub' },
 ];
 
 export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
@@ -23,10 +24,11 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
     const { lat, lon } = location;
     try {
       return {
-        mgrs: formatPosition(lat, lon, 'mgrs'),
-        utm:  formatPosition(lat, lon, 'utm'),
-        dd:   formatPosition(lat, lon, 'dd'),
-        dms:  formatPosition(lat, lon, 'dms'),
+        mgrs:      formatPosition(lat, lon, 'mgrs'),
+        utm:       formatPosition(lat, lon, 'utm'),
+        dd:        formatPosition(lat, lon, 'dd'),
+        dms:       formatPosition(lat, lon, 'dms'),
+        fixphrase: formatPosition(lat, lon, 'fixphrase'),
       };
     } catch {
       return null;

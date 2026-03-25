@@ -204,6 +204,8 @@ export default {
     ddSub: 'Latitude / longitude d\u00e9cimale \u2014 compatible Google Maps',
     dms: 'DEG MIN SEC',
     dmsSub: 'Degr\u00e9s, minutes, secondes \u2014 standard aviation et maritime',
+    fixphrase: 'FIXPHRASE',
+    fixphraseSub: 'Phrase de 4 mots \u2014 ~11m de pr\u00e9cision',
   },
   support: {
     title: 'AIDE & SUPPORT',

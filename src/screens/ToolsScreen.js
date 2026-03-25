@@ -30,6 +30,7 @@ import { TDSTool }           from '../components/tools/TDSTool';
 import { SolarTool }         from '../components/tools/SolarTool';
 import { PrecisionTool }     from '../components/tools/PrecisionTool';
 import { GeostampTool }      from '../components/tools/GeostampTool';
+import { ElevationTool }     from '../components/tools/ElevationTool';
 
 const TOOLS = [
   { id: 'backaz',   labelKey: 'tools.backAzimuth',    subKey: 'tools.backAzimuthSub',         Component: BackAzimuthTool   },
@@ -40,6 +41,7 @@ const TOOLS = [
   { id: 'tds',      labelKey: 'tools.timeDistSpeed',   subKey: 'tools.timeDistSpeedSub',       Component: TDSTool           },
   { id: 'solar',    labelKey: 'tools.sunMoon',          subKey: 'tools.sunMoonSub',             Component: SolarTool         },
   { id: 'prec',     labelKey: 'tools.mgrsPrecision',   subKey: 'tools.mgrsPrecisionSub',       Component: PrecisionTool     },
+  { id: 'elev',     labelKey: 'tools.elevation',         subKey: 'tools.elevationSub',           Component: ElevationTool  },
   { id: 'geostamp', labelKey: 'tools.photoGeostamp',   subKey: 'tools.photoGeostampSub',       Component: GeostampTool,  pro: true },
 ];
 

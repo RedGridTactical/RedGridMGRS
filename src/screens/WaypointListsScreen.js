@@ -10,11 +10,14 @@ import {
 } from 'react-native';
 import { loadWaypointLists, saveWaypointLists } from '../utils/storage';
 import { toMGRS, formatMGRS, parseMGRSToLatLon } from '../utils/mgrs';
+import { exportAsGPX, exportAsKML } from '../utils/gpxExport';
 import { useColors } from '../utils/ThemeContext';
 import { notifyWarning, notifySuccess, tapLight } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
 
 let Clipboard; try { Clipboard = require('expo-clipboard'); } catch {}
+let FileSystem; try { FileSystem = require('expo-file-system'); } catch {}
+let Sharing; try { Sharing = require('expo-sharing'); } catch {}
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
@@ -156,6 +159,51 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
     } catch {}
   };
 
+  // ── Export list as GPX or KML ──
+  const exportList = async (format) => {
+    if (!currentList || currentList.waypoints.length === 0) {
+      Alert.alert('No Waypoints', 'Add waypoints before exporting.');
+      return;
+    }
+    try {
+      const xml = format === 'kml'
+        ? exportAsKML(currentList.waypoints, currentList.name)
+        : exportAsGPX(currentList.waypoints, currentList.name);
+      const ext = format === 'kml' ? 'kml' : 'gpx';
+      const mime = format === 'kml' ? 'application/vnd.google-earth.kml+xml' : 'application/gpx+xml';
+
+      if (!FileSystem || !Sharing) {
+        Alert.alert('Export Unavailable', 'expo-file-system and expo-sharing are required for export.');
+        return;
+      }
+
+      const path = `${FileSystem.cacheDirectory}${currentList.name.replace(/[^A-Z0-9]/gi, '_')}.${ext}`;
+      await FileSystem.writeAsStringAsync(path, xml, { encoding: FileSystem.EncodingType.UTF8 });
+
+      const available = await Sharing.isAvailableAsync();
+      if (!available) {
+        Alert.alert('Sharing Unavailable', 'Sharing is not available on this device.');
+        return;
+      }
+      await Sharing.shareAsync(path, { mimeType: mime, dialogTitle: `Export ${currentList.name}` });
+      notifySuccess();
+    } catch (e) {
+      Alert.alert('Export Failed', e.message || 'Could not export waypoints.');
+    }
+  };
+
+  const showExportMenu = () => {
+    if (!currentList || currentList.waypoints.length === 0) {
+      Alert.alert('No Waypoints', 'Add waypoints before exporting.');
+      return;
+    }
+    Alert.alert('Export Format', `Export "${currentList.name}" as:`, [
+      { text: 'GPX', onPress: () => exportList('gpx') },
+      { text: 'KML', onPress: () => exportList('kml') },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
   const currentList = lists.find(l => l.id === activeList);
 
   return (
@@ -220,6 +268,9 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
           <View style={styles.wpHeader}>
             <Text style={[styles.wpHeaderText, { color: colors.border }]}>{currentList.name} — {currentList.waypoints.length} {t('waypoints.waypoints')}</Text>
             <View style={styles.wpHeaderBtns}>
+              <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.border }]} onPress={showExportMenu} accessibilityRole="button" accessibilityLabel="Export waypoint list">
+                <Text style={[styles.addWpBtnText, { color: colors.border }]}>EXPORT</Text>
+              </TouchableOpacity>
               <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.text2 }]} onPress={() => { setEnteringGrid(true); setGridError(''); }} accessibilityRole="button" accessibilityLabel="Enter MGRS grid manually">
                 <Text style={[styles.addWpBtnText, { color: colors.text2 }]}>{t('waypoints.enterGrid')}</Text>
               </TouchableOpacity>

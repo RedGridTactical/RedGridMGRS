@@ -204,6 +204,8 @@ export default {
     ddSub: '\uc2ed\uc9c4 \uc704\ub3c4 / \uacbd\ub3c4 \u2014 Google Maps \ud638\ud658',
     dms: '\ub3c4 \ubd84 \ucd08',
     dmsSub: '\ub3c4, \ubd84, \ucd08 \u2014 \ud56d\uacf5 \ubc0f \ud574\uc0c1 \ud45c\uc900',
+    fixphrase: 'FIXPHRASE',
+    fixphraseSub: '4\ub2e8\uc5b4 \uc704\uce58 \ubb38\uad6c \u2014 ~11m \uc815\ud655\ub3c4',
   },
   support: {
     title: '\ub3c4\uc6c0\ub9d0 & \uc9c0\uc6d0',

@@ -292,6 +292,10 @@ export function formatPosition(lat, lon, format, precision = 5) {
       case 'utm': return formatUTM(lat, lon);
       case 'dd':  return formatDD(lat, lon);
       case 'dms': return formatDMS(lat, lon);
+      case 'fixphrase': {
+        const { formatFixPhrase } = require('./fixphrase');
+        return formatFixPhrase(lat, lon);
+      }
       default:    return formatMGRS(toMGRS(lat, lon, precision));
     }
   } catch { return 'ERROR'; }
