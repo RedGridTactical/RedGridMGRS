@@ -36,7 +36,7 @@ export function ProGate({
     if (products?.[tier]?.displayPrice) return products[tier].displayPrice;
     if (tier === 'monthly') return '$3.99';
     if (tier === 'annual') return '$29.99';
-    return product?.displayPrice ?? '$49.99';
+    return product?.displayPrice ?? '$149.99';
   };
 
   const activeTier = selectedTier || 'annual';

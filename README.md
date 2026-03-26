@@ -66,7 +66,7 @@ Live MGRS display, 1 theme, 8 tactical tools, 3 report templates (SALUTE, 9-Line
 |------|-------|
 | Monthly | $3.99/mo |
 | Annual | $29.99/yr (best value) |
-| Lifetime | $49.99 one-time |
+| Lifetime | $149.99 one-time |
 
 All Pro tiers unlock:
 - **Saved Waypoint Lists** — patrol routes, OBJs, rally points, persisted on device
@@ -85,7 +85,7 @@ All Pro tiers unlock:
 ## Install
 
 ### iOS
-[App Store](https://apps.apple.com/app/id6759629554) — Free with optional Pro upgrade ($3.99/mo, $29.99/yr, or $49.99 lifetime).
+[App Store](https://apps.apple.com/app/id6759629554) — Free with optional Pro upgrade ($3.99/mo, $29.99/yr, or $149.99 lifetime).
 
 ### Android
 Coming soon. The codebase is cross-platform (React Native / Expo), and Android builds are functional — we're focusing on iOS polish first, with Android launching once the feature set matures. [Watch this repo](https://github.com/RedGridTactical/RedGridMGRS) or check back for updates.
@@ -151,7 +151,7 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - HUD mode, photo geostamp, shake-to-speak, grid crossing alerts, in-app support
 
 ### v2.3 — Global Expansion ✅ (March 2026)
-- 3-tier subscriptions ($3.99/mo, $29.99/yr, $49.99 lifetime), 6-language i18n, 26-locale ASC listings, Android closed testing, startup crash fix
+- 3-tier subscriptions ($3.99/mo, $29.99/yr, $149.99 lifetime), 6-language i18n, 26-locale ASC listings, Android closed testing, startup crash fix
 
 ### v2.5 — Interoperability ✅ (March 2026)
 - FixPhrase integration (open-source, patent-free What3Words alternative)
