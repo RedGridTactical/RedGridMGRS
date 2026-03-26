@@ -41,10 +41,11 @@ import { MeshScreen }    from './src/screens/MeshScreen';
 import { useMeshtastic } from './src/hooks/useMeshtastic';
 
 import {
-  toMGRS, formatMGRS, formatPosition, calculateBearing, calculateDistance, formatDistance,
+  toMGRS, formatMGRS, formatPosition, calculateBearing, calculateDistance, formatDistance, getDisplayPrecision,
 } from './src/utils/mgrs';
 import { tapLight, tapHeavy, tapMedium, notifySuccess } from './src/utils/haptics';
 import { speakMGRS, stopSpeaking } from './src/utils/voice';
+import { trackSession } from './src/utils/analytics';
 
 // ─── GLOBAL TEXT SCALING CAP ────────────────────────────────────────────────
 // Prevent system font-size from breaking tactical layout.
@@ -130,7 +131,7 @@ function App() {
   const mesh = useMeshtastic();
 
   // Prompt for App Store review on mount (gated by open count, install age, cooldown)
-  useEffect(() => { checkAndPromptReview(); }, []);
+  useEffect(() => { checkAndPromptReview(); trackSession(); }, []);
 
   const [tab, setTab]               = useState('grid');
   const [waypoint, setWaypoint]     = useState(null);
@@ -148,8 +149,9 @@ function App() {
     setProGateVisible(true);
   }, []);
 
-  // Derived MGRS
-  const mgrsRaw       = useMemo(() => { try { return location ? toMGRS(location.lat, location.lon, 5) : null; } catch { return null; } }, [location]);
+  // Derived MGRS — free tier limited to 4-digit (1km) display precision
+  const displayPrecision = getDisplayPrecision(isPro);
+  const mgrsRaw       = useMemo(() => { try { return location ? toMGRS(location.lat, location.lon, displayPrecision) : null; } catch { return null; } }, [location, displayPrecision]);
   const mgrsFormatted = useMemo(() => { try { return mgrsRaw ? formatMGRS(mgrsRaw) : null; } catch { return null; } }, [mgrsRaw]);
   // Alt format display string (for non-MGRS coordinate formats)
   const altDisplay = useMemo(() => {

@@ -34,14 +34,14 @@ import { ElevationTool }     from '../components/tools/ElevationTool';
 
 const TOOLS = [
   { id: 'backaz',   labelKey: 'tools.backAzimuth',    subKey: 'tools.backAzimuthSub',         Component: BackAzimuthTool   },
-  { id: 'dr',       labelKey: 'tools.deadReckoning',   subKey: 'tools.deadReckoningSub',       Component: DeadReckoningTool },
-  { id: 'resect',   labelKey: 'tools.resection',       subKey: 'tools.resectionSub',           Component: ResectionTool     },
   { id: 'pace',     labelKey: 'tools.paceCount',       subKey: 'tools.paceCountSub',           Component: PaceCountTool     },
   { id: 'declin',   labelKey: 'tools.declination',     subKey: 'tools.declinationSub',         Component: DeclinationTool   },
-  { id: 'tds',      labelKey: 'tools.timeDistSpeed',   subKey: 'tools.timeDistSpeedSub',       Component: TDSTool           },
-  { id: 'solar',    labelKey: 'tools.sunMoon',          subKey: 'tools.sunMoonSub',             Component: SolarTool         },
-  { id: 'prec',     labelKey: 'tools.mgrsPrecision',   subKey: 'tools.mgrsPrecisionSub',       Component: PrecisionTool     },
-  { id: 'elev',     labelKey: 'tools.elevation',         subKey: 'tools.elevationSub',           Component: ElevationTool  },
+  { id: 'dr',       labelKey: 'tools.deadReckoning',   subKey: 'tools.deadReckoningSub',       Component: DeadReckoningTool, pro: true },
+  { id: 'resect',   labelKey: 'tools.resection',       subKey: 'tools.resectionSub',           Component: ResectionTool,     pro: true },
+  { id: 'tds',      labelKey: 'tools.timeDistSpeed',   subKey: 'tools.timeDistSpeedSub',       Component: TDSTool,           pro: true },
+  { id: 'solar',    labelKey: 'tools.sunMoon',          subKey: 'tools.sunMoonSub',             Component: SolarTool,         pro: true },
+  { id: 'prec',     labelKey: 'tools.mgrsPrecision',   subKey: 'tools.mgrsPrecisionSub',       Component: PrecisionTool,     pro: true },
+  { id: 'elev',     labelKey: 'tools.elevation',         subKey: 'tools.elevationSub',           Component: ElevationTool,  pro: true },
   { id: 'geostamp', labelKey: 'tools.photoGeostamp',   subKey: 'tools.photoGeostampSub',       Component: GeostampTool,  pro: true },
 ];
 

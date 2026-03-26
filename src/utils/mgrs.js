@@ -279,6 +279,16 @@ export function formatDMS(lat, lon) {
 }
 
 /**
+ * Return display precision based on Pro status.
+ * Free tier: 2 (4 digits = 1km), Pro: 5 (10 digits = 1m).
+ * @param {boolean} isPro
+ * @returns {number} precision 2 or 5
+ */
+export function getDisplayPrecision(isPro) {
+  return isPro ? 5 : 2;
+}
+
+/**
  * Format position for any supported coord format.
  * @param {number} lat
  * @param {number} lon
