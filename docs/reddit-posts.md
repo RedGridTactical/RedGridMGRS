@@ -54,7 +54,7 @@ So I built Red Grid MGRS. It does:
 - SALUTE, 9-Line MEDEVAC, SPOT, CASEVAC, CFF report templates — fill and copy
 - Works completely offline, no account, no data collection
 
-Free to download, $9.99 one-time Pro upgrade for unlimited waypoints, all report templates, NATO voice readout, and extra display themes (red lens, NVG green, etc.)
+Free to download, affordable one-time Pro upgrade for unlimited waypoints, all report templates, NATO voice readout, and extra display themes (red lens, NVG green, etc.)
 
 No subscription. No tracking. Your position data never leaves your phone.
 
@@ -87,7 +87,7 @@ Red Grid MGRS gives you:
 
 Zero network calls. Your GPS coordinates exist in memory only — never stored, never transmitted. It works in airplane mode, in a Faraday cage, on a mountain with no cell service.
 
-Free with a $9.99 one-time Pro upgrade. No subscription.
+Free with an affordable one-time Pro upgrade. No subscription.
 
 I'm not trying to replace the DAGR — SAASM matters in contested environments. But for the other 90% of the time, this does the job without the arms room hassle.
 
@@ -143,7 +143,7 @@ Full technical writeup: https://dev.to/redgridtactical/how-i-built-a-military-gr
 
 **Stack:** React Native + Expo, pure JavaScript, ~15,000 lines. Zero backend, zero analytics, zero tracking. The app makes no network calls during normal operation.
 
-**Business model:** Free to download + $9.99 one-time Pro upgrade. No subscription. Open source (MIT + Commons Clause).
+**Business model:** Free to download + affordable one-time Pro upgrade. No subscription. Open source (MIT + Commons Clause).
 
 **Where I'm at today:**
 - iOS App Store: live
@@ -172,7 +172,7 @@ Links:
 
 **The numbers:**
 - Free to download
-- $9.99 one-time Pro upgrade (no subscription)
+- affordable one-time Pro upgrade (no subscription)
 - ~15,000 lines of JavaScript
 - Zero monthly costs (no backend, no servers, no analytics)
 - Development time: a few weeks of focused work

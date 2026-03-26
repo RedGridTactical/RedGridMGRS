@@ -121,15 +121,13 @@ The app never validates receipts against a server. A determined user could spoof
 
 **Free:** Live MGRS display, 1 display theme, all 8 tactical tools, 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
 
-**Pro ($9.99 one-time):** Unlimited waypoint lists, all 6 report templates, NATO voice readout, coordinate format selector (UTM/DD/DMS), 4 display themes (red lens, NVG green, day white, blue force).
-
-No subscription. No recurring charges. One purchase, permanent unlock.
+**Pro:** Unlimited waypoint lists, all 6 report templates, NATO voice readout, coordinate format selector (UTM/DD/DMS), 4 display themes (red lens, NVG green, day white, blue force), offline maps, Meshtastic mesh, external GPS, mission planning, and more. Monthly, annual, or lifetime options available.
 
 ### The Pricing Philosophy
 
 I could have charged $19.99 or $29.99 and it would still be 99% cheaper than a DAGR. But I'm building this for the guys I serve with — the E-2 who's tired of signing for a DAGR at the arms room just to get a grid during land nav, the team leader who wants to plot waypoints before a ruck without fighting the DAGR's button interface, and the SAR volunteer who needs real grid coordinates but doesn't have a $2,500 budget.
 
-The app is free. $9.99 for the full Pro unlock is less than a month of most app subscriptions. No recurring charges means the user never has to think about it again.
+The app is free. The Pro upgrade costs less than a month of most app subscriptions, with monthly, annual, and lifetime options.
 
 ### Why Open Source
 
@@ -149,7 +147,7 @@ The military is full of outdated, overpriced systems where the software portion 
 
 ## Try It
 
-* **iOS App Store:** Free with optional $9.99 Pro upgrade
+* **iOS App Store:** Free with optional Pro upgrade
 * **Source Code:** [github.com/RedGridTactical/RedGridMGRS](https://github.com/RedGridTactical/RedGridMGRS)
 * **Android:** Coming soon — codebase is cross-platform, iOS-first for now
 
