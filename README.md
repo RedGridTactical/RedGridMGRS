@@ -31,7 +31,7 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 - **Speed, elevation, heading** — real-time sensor display
 - **Full offline operation** — zero cloud dependency
 
-## Beyond the DAGR — 9 Tactical Tools
+## Beyond the DAGR — 10 Tactical Tools
 
 The DAGR hardware doesn't include these. Red Grid MGRS does.
 
@@ -43,6 +43,7 @@ The DAGR hardware doesn't include these. Red Grid MGRS does.
 - Time-Distance-Speed solver
 - Sun & Moon position data
 - MGRS Precision selector (1m to 100km)
+- Elevation & Slope calculator
 - Photo Geostamp — burn MGRS + DTG onto any photo (Pro)
 
 ## 6 Radio-Ready Report Templates
