@@ -46,6 +46,14 @@ The DAGR hardware doesn't include these. Red Grid MGRS does.
 - Elevation & Slope calculator
 - Photo Geostamp — burn MGRS + DTG onto any photo (Pro)
 
+## Offline Tactical Maps
+
+Download OpenStreetMap tiles for your area of operations. Dark tactical tiles for low-vis environments. Toggle offline mode to use cached tiles with zero network. Works completely disconnected from any infrastructure. Pro feature.
+
+## Meshtastic Mesh Networking
+
+Share your grid position over LoRa mesh via BLE. See other mesh users in real time. No cell service, no internet, no infrastructure needed — just Meshtastic radios and phones. Pro feature.
+
 ## 6 Radio-Ready Report Templates
 
 Generate formatted reports ready to transmit over any net:
@@ -70,16 +78,25 @@ Live MGRS display, 1 theme, 3 tools (Back Azimuth, Pace Count, Declination), 3 r
 | Lifetime | $149.99 one-time |
 
 All Pro tiers unlock:
-- **Saved Waypoint Lists** — patrol routes, OBJs, rally points, persisted on device
-- **All 6 Report Templates** — Standard includes SALUTE, MEDEVAC, SPOT
+- **10-digit MGRS** — full 1-meter precision (free: 4-digit / 1km)
+- **All 10 Tactical Tools** — free includes Back Azimuth, Pace Count, Declination
+- **All 6 Report Templates** — free includes SALUTE, MEDEVAC, SPOT
+- **Offline Tactical Maps** — download OpenStreetMap tiles, dark tactical tiles, zero-network map use
+- **Meshtastic Mesh Networking** — share position over LoRa mesh via BLE, see other nodes
+- **External GPS** — Garmin GLO, Bad Elf via BLE for enhanced accuracy
+- **Mission Planning** — route overlay, leg distances, nearest-neighbor optimization
+- **GPX/KML Import & Export** — document picker import, Share sheet export
 - **NATO Voice Readout** — hands-free grid calls using phonetic alphabet
 - **Shake to Speak** — shake device for hands-free NATO grid readout
 - **HUD Mode** — full-screen tactical display with compass and wayfinder
 - **Photo Geostamp** — burn MGRS grid + DTG onto any photo, saved to camera roll
 - **Grid Crossing Alerts** — haptic feedback at 1km and 100m boundaries
 - **Coordinate Formats** — UTM, decimal degrees, DMS on the main grid display
+- **FixPhrase** — open-source What3Words alternative
 - **4 Display Themes** — red lens, NVG green, day white, blue force
-- **Unlimited Waypoints** — no storage limits
+- **Unlimited Waypoints** — saved lists, patrol routes, OBJs, rally points
+- **Adjustable Grid Scale** — 0.7x–1.5x MGRS font size
+- **6 Languages** — EN, FR, DE, ES, JA, KO
 
 ---
 
@@ -139,34 +156,34 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 
 > **iOS live, Android in closed testing.** Cross-platform (React Native/Expo). Full roadmap at [redgridtactical.com/roadmap](https://redgridtactical.com/roadmap.html).
 
-### v1.0 — Foundation ✅ (February 2026)
+### v1.0 — Foundation ✅ (2026)
 - Real-time MGRS coordinates (1m precision), wayfinder arrow, 8 tactical tools, 3 report templates, red-on-black display, zero-network architecture
 
-### v2.0 — Pro Launch ✅ (March 2026)
+### v2.0 — Pro Launch ✅ (2026)
 - Pro IAP, 4 themes, 6 reports, unlimited waypoints, coordinate formats, magnetic declination, haptics, accessibility
 
-### v2.1 — Polish ✅ (March 2026)
+### v2.1 — Polish ✅ (2026)
 - Custom grid input, compass heading, waypoint coordinate editing, copy-to-clipboard
 
-### v2.2 — Pro Features ✅ (March 2026)
+### v2.2 — Pro Features ✅ (2026)
 - HUD mode, photo geostamp, shake-to-speak, grid crossing alerts, in-app support
 
-### v2.3 — Global Expansion ✅ (March 2026)
-- 3-tier subscriptions ($3.99/mo, $29.99/yr, $149.99 lifetime), 6-language i18n, 26-locale ASC listings, Android closed testing, startup crash fix
+### v2.3 — Global Expansion ✅ (2026)
+- 3-tier subscriptions, 6-language i18n, 26-locale ASC listings, Android closed testing, startup crash fix
 
-### v2.5 — Interoperability ✅ (March 2026)
+### v2.5 — Interoperability ✅ (2026)
 - FixPhrase integration (open-source, patent-free What3Words alternative)
 - GPX/KML waypoint export via Share sheet
-- Elevation and slope calculator tool
+- Elevation and slope calculator tool (10th tactical tool)
 - OLED true black themes (pure #000000)
 - [MGRS Tactical Toolkit](https://redgridtactical.github.io/RedGridMGRS/tools.html) — web-based converter, single HTML file, zero dependencies
 
-### v2.6 — Open Source Library ✅ (March 2026)
+### v2.6 — Open Source Library ✅ (2026)
 - `@redgrid/mgrs` npm package — DMA TM 8358.1 compliant MGRS library
 - Standalone conversion, bearing, distance, dead reckoning, FixPhrase
 - Zero dependencies, ~15 KB
 
-### v3.0 — Tactical Map ✅ (March 2026)
+### v3.0 — Tactical Map ✅ (2026)
 - Offline OpenStreetMap tiles (no API key, fully local)
 - MGRS grid overlay on map
 - Mission planning (waypoints on map, route plotting, nearest-neighbor optimization)
@@ -174,10 +191,10 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - External GPS support (Garmin GLO, Bad Elf via BLE)
 - Meshtastic/LoRa off-grid position sharing
 
-### v3.2 — Polish & Scale ✅ (March 2026)
+### v3.2 — Polish & Scale ✅ (2026)
 - Adjustable grid display scale
 
-### v3.2.1 — Offline Tile Download ✅ (March 2026)
+### v3.2.1 — Offline Tile Download ✅ (2026)
 - Download map tiles for offline use from the map screen
 - Toggle offline mode to use cached tiles with zero network
 - Dark tile support matching current tactical theme
