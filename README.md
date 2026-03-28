@@ -59,7 +59,7 @@ Generate formatted reports ready to transmit over any net:
 ## Pricing
 
 ### Free
-Live MGRS display, 1 theme, 8 tactical tools, 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
+Live MGRS display, 1 theme, 3 tools (Back Azimuth, Pace Count, Declination), 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
 
 ### Pro — 3 tiers
 | Tier | Price |

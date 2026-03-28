@@ -704,7 +704,7 @@ export function ReportScreen({ mgrs, isPro, onShowProGate }) {
 3. **Product fetch (Lines 75-115):**
    - Fetch with 2-second timeout
    - Returns { priceString, ... } or null
-   - If null, ProGate shows fallback "$9.99"
+   - If null, ProGate shows fallback "$149.99"
    - ✅ **Graceful if store unavailable**
 
 ### Purchase Flow
@@ -768,7 +768,7 @@ if (hasPro) {
 **Display (Lines 24-101):**
 ```javascript
 export function ProGate({ visible, onClose, featureName, product, isPurchasing, onPurchase, onRestore }) {
-  const priceStr = product?.priceString ?? '$9.99';
+  const priceStr = product?.priceString ?? '$149.99';
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
@@ -932,7 +932,7 @@ const themeData = useTheme(theme || 'red');
 ### Edge Cases for Pro Features
 
 ✅ Purchase interrupted → isPro remains false, can retry
-✅ Network unavailable → product price shows "$9.99" fallback
+✅ Network unavailable → product price shows "$149.99" fallback
 ✅ Receipt corrupted → loadProStatus fails gracefully, app stays free
 ✅ Restore finds old purchase → persisted, isPro=true
 ✅ User enters LISTS tab without Pro → Upsell screen shown
@@ -1272,9 +1272,9 @@ if (keyboardType === 'numeric' && value > 360) {
 ### Issue #2: ProGate Price Shows Placeholder if Product Fetch Fails
 
 **File:** `/src/hooks/useIAP.js:86-99 + ProGate.js:25`
-**Severity:** Low (fallback is "$9.99" which is reasonable)
-**Problem:** If product fetch times out (2s), ProGate shows "$9.99" (hardcoded fallback). User doesn't know if this is actual price.
-**User impact:** Potential confusion if actual price is different ($9.99).
+**Severity:** Low (fallback is "$149.99" which is reasonable)
+**Problem:** If product fetch times out (2s), ProGate shows "$149.99" (hardcoded fallback). User doesn't know if this is actual price.
+**User impact:** Potential confusion if actual price is different ($149.99).
 **Fix:** Show disclaimer "Price subject to change" or attempt product refetch on ProGate open.
 
 ---

@@ -14,6 +14,7 @@ const TILE_DIR = FileSystem?.documentDirectory
   : null;
 
 const OSM_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const DARK_TILE_URL = 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png';
 
 /**
  * Convert lat/lon to tile coordinates at a given zoom level.
@@ -37,8 +38,9 @@ function tilePath(z, x, y) {
 /**
  * Get the remote URL for a tile.
  */
-function tileUrl(z, x, y) {
-  return OSM_TILE_URL.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+function tileUrl(z, x, y, dark = false) {
+  const template = dark ? DARK_TILE_URL : OSM_TILE_URL;
+  return template.replace('{z}', z).replace('{x}', x).replace('{y}', y);
 }
 
 /**
@@ -74,12 +76,12 @@ async function tileExists(z, x, y) {
  * Download a single tile to local storage.
  * @returns {boolean} true if downloaded successfully
  */
-async function downloadTile(z, x, y) {
+async function downloadTile(z, x, y, dark = false) {
   if (!FileSystem || !TILE_DIR) return false;
   try {
     await ensureTileDir(z, x);
     const path = tilePath(z, x, y);
-    const url = tileUrl(z, x, y);
+    const url = tileUrl(z, x, y, dark);
     if (!path) return false;
 
     const result = await FileSystem.downloadAsync(url, path);
@@ -118,13 +120,15 @@ function getTilesForRegion(region, zoom) {
  * @param {object} region - { latitude, longitude, latitudeDelta, longitudeDelta }
  * @param {number[]} zoomLevels - Array of zoom levels to download (e.g. [10, 12, 14])
  * @param {function} onProgress - Optional callback: (downloaded, total) => void
+ * @param {object} options - { dark: boolean } - download dark CartoDB tiles if true
  * @returns {{ downloaded: number, failed: number, skipped: number, total: number }}
  */
-export async function downloadTilesForRegion(region, zoomLevels = [10, 12, 14], onProgress) {
+export async function downloadTilesForRegion(region, zoomLevels = [10, 12, 14], onProgress, options = {}) {
   if (!FileSystem || !TILE_DIR) {
     return { downloaded: 0, failed: 0, skipped: 0, total: 0 };
   }
 
+  const dark = options.dark || false;
   let allTiles = [];
   for (const zoom of zoomLevels) {
     allTiles = allTiles.concat(getTilesForRegion(region, zoom));
@@ -139,17 +143,16 @@ export async function downloadTilesForRegion(region, zoomLevels = [10, 12, 14], 
   const BATCH_SIZE = 5;
   for (let i = 0; i < allTiles.length; i += BATCH_SIZE) {
     const batch = allTiles.slice(i, i + BATCH_SIZE);
-    const results = await Promise.all(
+    await Promise.all(
       batch.map(async ({ z, x, y }) => {
         const exists = await tileExists(z, x, y);
         if (exists) {
           skipped++;
-          return true;
+          return;
         }
-        const ok = await downloadTile(z, x, y);
+        const ok = await downloadTile(z, x, y, dark);
         if (ok) downloaded++;
         else failed++;
-        return ok;
       })
     );
     if (onProgress) {
@@ -214,5 +217,17 @@ export async function clearTileCache() {
   }
 }
 
+/**
+ * Get the local path template for LocalTile component.
+ * Strips file:// prefix since LocalTile expects a filesystem path.
+ * @returns {string|null} Local tile path template, or null if unavailable
+ */
+export function getLocalTilePathTemplate() {
+  if (!TILE_DIR) return null;
+  // Strip file:// prefix — LocalTile needs a raw filesystem path
+  const dir = TILE_DIR.replace(/^file:\/\//, '');
+  return `${dir}{z}/{x}/{y}.png`;
+}
+
 // Export helpers for testing
-export { latLonToTile, getTilesForRegion };
+export { latLonToTile, getTilesForRegion, TILE_DIR };

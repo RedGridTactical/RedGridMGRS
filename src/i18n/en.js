@@ -26,6 +26,18 @@ export default {
     estimatedTime: 'ESTIMATED TIME',
     optimizeRoute: 'OPTIMIZE ROUTE',
     legs: 'LEGS',
+    downloadTiles: 'DOWNLOAD TILES',
+    downloading: 'DOWNLOADING',
+    tilesReady: 'TILES CACHED',
+    tilesCached: '{count} TILES',
+    downloadComplete: 'Download complete',
+    downloadFailed: 'Download failed',
+    clearCache: 'CLEAR CACHE',
+    cacheCleared: 'Tile cache cleared',
+    confirmDownload: 'Download map tiles for this area? This will cache zoom levels 10-16 for offline use.',
+    confirmClear: 'Clear all cached map tiles?',
+    offline: 'OFFLINE',
+    online: 'ONLINE',
   },
 
   // ─── GPS / Signal ─────────────────────────────────────────────────────
