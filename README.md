@@ -176,6 +176,13 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 ### v3.2 — Polish & Scale ✅ (March 2026)
 - Adjustable grid display scale
 
+### v3.2.1 — Offline Tile Download ✅ (March 2026)
+- Download map tiles for offline use from the map screen
+- Toggle offline mode to use cached tiles with zero network
+- Dark tile support matching current tactical theme
+- Cache indicator and tile count in bottom bar
+- Fixed subscription metadata for monthly and annual plans
+
 ### v3.5+ — Platform Ecosystem (2027)
 - Android public release on Google Play
 - iOS Live Activity + Dynamic Island, StandBy mode, Apple Watch, Widgets, Siri Shortcuts

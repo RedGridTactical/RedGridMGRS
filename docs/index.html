@@ -41,7 +41,7 @@
   "description": "DAGR-class military GPS navigator with live MGRS coordinates, magnetic declination, waypoints, and tactical tools. Zero network calls. Zero tracking.",
   "url": "https://redgridtactical.github.io/RedGridMGRS/",
   "downloadUrl": "https://apps.apple.com/app/id6759629554",
-  "softwareVersion": "2.5.0",
+  "softwareVersion": "3.2.1",
   "author": {
     "@type": "Organization",
     "name": "Red Grid Tactical"
@@ -415,7 +415,7 @@
   <p class="pitch">
     The military's DAGR costs <strong>$2,500</strong> and weighs a pound.
     Red Grid MGRS puts the same core land navigation capabilities in your pocket
-    for <strong>free</strong>. Zero network. Zero tracking. Open source.
+    for <strong>free</strong>. Offline maps, Meshtastic mesh networking, 10 tactical tools. Zero tracking.
   </p>
 
   <div class="cta-row">
@@ -466,13 +466,23 @@
     </div>
     <div class="feature-card">
       <div class="icon">&#128736;</div>
-      <h4>9 Tactical Tools</h4>
-      <p>Back azimuth, dead reckoning, resection, pace count, TDS, sun/moon, precision selector, photo geostamp.</p>
+      <h4>10 Tactical Tools</h4>
+      <p>Back azimuth, dead reckoning, resection, pace count, TDS, sun/moon, precision selector, elevation/slope, photo geostamp.</p>
     </div>
     <div class="feature-card">
       <div class="icon">&#128220;</div>
       <h4>6 Report Templates</h4>
       <p>SALUTE, 9-Line MEDEVAC, SPOT, CASEVAC, ICS 201, CFF. Fill and copy, radio-ready.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">&#128506;</div>
+      <h4>Offline Tactical Maps</h4>
+      <p>Download OpenStreetMap tiles for your AO. Dark tactical tiles for low-vis. Toggle offline mode for zero-network map use. Pro feature.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">&#128225;</div>
+      <h4>Meshtastic Mesh Networking</h4>
+      <p>Share your grid over LoRa mesh via BLE. See other mesh users on the map in real time. No cell service needed. Pro feature.</p>
     </div>
     <div class="feature-card">
       <div class="icon">&#128274;</div>
@@ -556,10 +566,24 @@
       </tr>
       <tr>
         <td>Tactical Tools</td>
-        <td class="check">&#10003; 9 tools</td>
+        <td class="check">&#10003; 10 tools</td>
         <td>Limited</td>
         <td>Some</td>
         <td>Basic</td>
+      </tr>
+      <tr>
+        <td>Offline Maps</td>
+        <td class="check">&#10003; Tile download</td>
+        <td class="cross">&#10007;</td>
+        <td class="cross">&#10007;</td>
+        <td class="cross">&#10007;</td>
+      </tr>
+      <tr>
+        <td>Mesh Networking</td>
+        <td class="check">&#10003; Meshtastic</td>
+        <td class="cross">&#10007;</td>
+        <td class="cross">&#10007;</td>
+        <td class="cross">&#10007;</td>
       </tr>
       <tr>
         <td>Weighs</td>
@@ -610,8 +634,8 @@
       <div class="price">Free</div>
       <div class="price-label">Standard</div>
       <ul>
-        <li>Live MGRS display (all precisions)</li>
-        <li>All 9 tactical tools</li>
+        <li>Live MGRS display (4-digit / 1km)</li>
+        <li>3 tactical tools</li>
         <li>3 report templates (SALUTE, MEDEVAC, SPOT)</li>
         <li>1 waypoint</li>
         <li>Day White theme</li>
