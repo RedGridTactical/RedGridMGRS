@@ -285,7 +285,7 @@ export function formatDMS(lat, lon) {
  * @returns {number} precision 2 or 5
  */
 export function getDisplayPrecision(isPro) {
-  return isPro ? 5 : 2;
+  return 5; // 10-digit MGRS for all users
 }
 
 /**

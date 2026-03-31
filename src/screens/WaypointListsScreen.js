@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   wpEditCancel: { paddingHorizontal: 12, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
   wpEditCancelText: { fontSize: 10, letterSpacing: 2 },
 
-  wpHeaderBtns: { flexDirection: 'row', gap: 6 },
+  wpHeaderBtns: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
 
   gridEntryBox: { borderWidth: 1, padding: 10, gap: 8, marginBottom: 8 },
   gridEntryInput: { borderWidth: 1, fontFamily: 'monospace', fontSize: 16, letterSpacing: 4, paddingHorizontal: 10, paddingVertical: 8 },

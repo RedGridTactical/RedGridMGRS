@@ -15,6 +15,7 @@ const TILE_DIR = FileSystem?.documentDirectory
 
 const OSM_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const DARK_TILE_URL = 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png';
+const TOPO_TILE_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
 
 /**
  * Convert lat/lon to tile coordinates at a given zoom level.
@@ -38,8 +39,8 @@ function tilePath(z, x, y) {
 /**
  * Get the remote URL for a tile.
  */
-function tileUrl(z, x, y, dark = false) {
-  const template = dark ? DARK_TILE_URL : OSM_TILE_URL;
+function tileUrl(z, x, y, style = 'standard') {
+  const template = style === 'dark' ? DARK_TILE_URL : style === 'topo' ? TOPO_TILE_URL : OSM_TILE_URL;
   return template.replace('{z}', z).replace('{x}', x).replace('{y}', y);
 }
 
@@ -76,12 +77,12 @@ async function tileExists(z, x, y) {
  * Download a single tile to local storage.
  * @returns {boolean} true if downloaded successfully
  */
-async function downloadTile(z, x, y, dark = false) {
+async function downloadTile(z, x, y, style = 'standard') {
   if (!FileSystem || !TILE_DIR) return false;
   try {
     await ensureTileDir(z, x);
     const path = tilePath(z, x, y);
-    const url = tileUrl(z, x, y, dark);
+    const url = tileUrl(z, x, y, style);
     if (!path) return false;
 
     const result = await FileSystem.downloadAsync(url, path);
@@ -120,7 +121,7 @@ function getTilesForRegion(region, zoom) {
  * @param {object} region - { latitude, longitude, latitudeDelta, longitudeDelta }
  * @param {number[]} zoomLevels - Array of zoom levels to download (e.g. [10, 12, 14])
  * @param {function} onProgress - Optional callback: (downloaded, total) => void
- * @param {object} options - { dark: boolean } - download dark CartoDB tiles if true
+ * @param {object} options - { style: 'standard'|'dark'|'topo' } - tile style to download
  * @returns {{ downloaded: number, failed: number, skipped: number, total: number }}
  */
 export async function downloadTilesForRegion(region, zoomLevels = [10, 12, 14], onProgress, options = {}) {
@@ -128,7 +129,7 @@ export async function downloadTilesForRegion(region, zoomLevels = [10, 12, 14], 
     return { downloaded: 0, failed: 0, skipped: 0, total: 0 };
   }
 
-  const dark = options.dark || false;
+  const style = options.style || (options.dark ? 'dark' : 'standard');
   let allTiles = [];
   for (const zoom of zoomLevels) {
     allTiles = allTiles.concat(getTilesForRegion(region, zoom));
@@ -150,7 +151,7 @@ export async function downloadTilesForRegion(region, zoomLevels = [10, 12, 14], 
           skipped++;
           return;
         }
-        const ok = await downloadTile(z, x, y, dark);
+        const ok = await downloadTile(z, x, y, style);
         if (ok) downloaded++;
         else failed++;
       })

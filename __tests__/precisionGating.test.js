@@ -1,25 +1,25 @@
 /**
- * Test suite for free-tier precision gating.
- * Free users see 4-digit MGRS (1km precision); Pro users see 10-digit (1m).
+ * Test suite for precision display.
+ * All users get 10-digit MGRS (1m precision).
  * Internal location data is never truncated — only the display string.
  */
 
 const { toMGRS, formatMGRS, getDisplayPrecision } = require('../src/utils/mgrs');
 
-describe('Precision gating — getDisplayPrecision', () => {
+describe('Precision — getDisplayPrecision', () => {
 
   test('Pro user gets precision 5 (10-digit, 1m)', () => {
     expect(getDisplayPrecision(true)).toBe(5);
   });
 
-  test('Free user gets precision 2 (4-digit, 1km)', () => {
-    expect(getDisplayPrecision(false)).toBe(2);
+  test('Free user gets precision 5 (10-digit, 1m)', () => {
+    expect(getDisplayPrecision(false)).toBe(5);
   });
 
-  test('Undefined/null isPro treated as free', () => {
-    expect(getDisplayPrecision(undefined)).toBe(2);
-    expect(getDisplayPrecision(null)).toBe(2);
-    expect(getDisplayPrecision(0)).toBe(2);
+  test('Undefined/null isPro still returns 5', () => {
+    expect(getDisplayPrecision(undefined)).toBe(5);
+    expect(getDisplayPrecision(null)).toBe(5);
+    expect(getDisplayPrecision(0)).toBe(5);
   });
 });
 

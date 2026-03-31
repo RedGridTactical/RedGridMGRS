@@ -68,7 +68,7 @@ Generate formatted reports ready to transmit over any net:
 ## Pricing
 
 ### Free
-Live MGRS display, 1 theme, 3 tools (Back Azimuth, Pace Count, Declination), 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
+Live 10-digit MGRS display, 1 theme, 3 tools (Back Azimuth, Pace Count, Declination), 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
 
 ### Pro — 3 tiers
 | Tier | Price |
@@ -78,7 +78,7 @@ Live MGRS display, 1 theme, 3 tools (Back Azimuth, Pace Count, Declination), 3 r
 | Lifetime | $149.99 one-time |
 
 All Pro tiers unlock:
-- **10-digit MGRS** — full 1-meter precision (free: 4-digit / 1km)
+- **10-digit MGRS** — full 1-meter precision for all users
 - **All 10 Tactical Tools** — free includes Back Azimuth, Pace Count, Declination
 - **All 6 Report Templates** — free includes SALUTE, MEDEVAC, SPOT
 - **Offline Tactical Maps** — download OpenStreetMap tiles, dark tactical tiles, zero-network map use

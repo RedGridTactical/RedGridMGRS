@@ -15,7 +15,9 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Alert, Animated, Platform,
+  Modal, TextInput, ScrollView,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '../utils/ThemeContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { toMGRS, formatMGRS } from '../utils/mgrs';
@@ -64,7 +66,12 @@ function PulsingDot({ color }) {
   );
 }
 
-export function MapScreen({ location, isPro, onShowProGate }) {
+// Tile sources — Standard (OSM), Dark (CartoDB), Topo (OpenTopoMap)
+const TOPO_TILE_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
+const MAP_STYLES = ['standard', 'dark', 'topo'];
+const MAP_STYLE_KEY = 'rg_map_style';
+
+export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint }) {
   const colors = useColors();
   const { t } = useTranslation();
   const mapRef = useRef(null);
@@ -80,6 +87,21 @@ export function MapScreen({ location, isPro, onShowProGate }) {
   const cacheCheckTimer = useRef(null);
   const isDark = colors.bg === '#000000' || colors.bg === '#0A0A0A' || colors.bg === '#000';
   const localTilePath = getLocalTilePathTemplate();
+
+  // Map style: standard, dark, topo
+  const [mapStyle, setMapStyle] = useState(isDark ? 'dark' : 'standard');
+
+  // Load persisted map style preference
+  useEffect(() => {
+    AsyncStorage.getItem(MAP_STYLE_KEY).then(v => { if (v && MAP_STYLES.includes(v)) setMapStyle(v); }).catch(() => {});
+  }, []);
+
+  // Waypoint creation menu state
+  const [wpMenuVisible, setWpMenuVisible] = useState(false);
+  const [pendingWaypoint, setPendingWaypoint] = useState(null); // { lat, lon, mgrs }
+  const [wpLabel, setWpLabel] = useState('');
+  const [wpLists, setWpLists] = useState([]);
+  const [wpSelectedList, setWpSelectedList] = useState(null);
 
   // Load waypoints from all lists for display on map
   useEffect(() => {
@@ -173,7 +195,7 @@ export function MapScreen({ location, isPro, onShowProGate }) {
                 region,
                 [10, 12, 14, 16],
                 (done, total) => setDlProgress(total > 0 ? done / total : 0),
-                { dark: isDark }
+                { style: mapStyle }
               );
               notifySuccess();
               await refreshCacheCount(region);
@@ -226,69 +248,80 @@ export function MapScreen({ location, isPro, onShowProGate }) {
     }
   }, []);
 
-  // Long-press to create waypoint
-  const onLongPress = useCallback((e) => {
+  // Long-press to open waypoint creation menu
+  const onLongPress = useCallback(async (e) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
     tapMedium();
     const mgrs = formatMGRS(toMGRS(latitude, longitude, 5));
+    setPendingWaypoint({ lat: latitude, lon: longitude, mgrs });
+    setWpLabel(mgrs);
+    // Load available lists for the picker
+    try {
+      const lists = await loadWaypointLists();
+      setWpLists(Array.isArray(lists) ? lists : []);
+      setWpSelectedList(lists && lists.length > 0 ? lists[0].id : null);
+    } catch { setWpLists([]); setWpSelectedList(null); }
+    setWpMenuVisible(true);
+  }, []);
 
-    Alert.alert(
-      t('map.addWaypoint'),
-      `${mgrs}`,
-      [
-        { text: t('waypoints.cancel'), style: 'cancel' },
-        {
-          text: t('waypoints.add'),
-          onPress: async () => {
-            try {
-              const lists = await loadWaypointLists();
-              if (!lists || lists.length === 0) {
-                // Create a default "MAP" list if none exist
-                const newList = {
-                  id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-                  name: 'MAP',
-                  waypoints: [{
-                    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-                    lat: latitude,
-                    lon: longitude,
-                    label: mgrs,
-                  }],
-                };
-                await saveWaypointLists([newList]);
-              } else {
-                // Add to the first list
-                const updated = [...lists];
-                if (!Array.isArray(updated[0].waypoints)) updated[0].waypoints = [];
-                updated[0].waypoints.push({
-                  id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-                  lat: latitude,
-                  lon: longitude,
-                  label: mgrs,
-                });
-                await saveWaypointLists(updated);
-              }
-              notifySuccess();
-              // Reload waypoints
-              const refreshed = await loadWaypointLists();
-              const allWps = [];
-              if (Array.isArray(refreshed)) {
-                for (const list of refreshed) {
-                  if (Array.isArray(list?.waypoints)) {
-                    for (const wp of list.waypoints) {
-                      if (wp?.lat != null && wp?.lon != null) {
-                        allWps.push({ ...wp, listName: list.name || 'Unnamed' });
-                      }
-                    }
-                  }
-                }
-              }
-              setWaypoints(allWps);
-            } catch {}
-          },
-        },
-      ]
-    );
-  }, [t]);
+  // Save waypoint from the menu
+  const saveWaypointFromMenu = useCallback(async () => {
+    if (!pendingWaypoint) return;
+    try {
+      const lists = await loadWaypointLists();
+      const wp = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        lat: pendingWaypoint.lat,
+        lon: pendingWaypoint.lon,
+        label: wpLabel || pendingWaypoint.mgrs,
+      };
+      if (!lists || lists.length === 0) {
+        await saveWaypointLists([{ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: 'MAP', waypoints: [wp] }]);
+      } else {
+        const updated = [...lists];
+        const targetIdx = wpSelectedList ? updated.findIndex(l => l.id === wpSelectedList) : 0;
+        const idx = targetIdx >= 0 ? targetIdx : 0;
+        if (!Array.isArray(updated[idx].waypoints)) updated[idx].waypoints = [];
+        updated[idx].waypoints.push(wp);
+        await saveWaypointLists(updated);
+      }
+      notifySuccess();
+      // Reload map waypoints
+      const refreshed = await loadWaypointLists();
+      const allWps = [];
+      if (Array.isArray(refreshed)) {
+        for (const list of refreshed) {
+          if (Array.isArray(list?.waypoints)) {
+            for (const w of list.waypoints) {
+              if (w?.lat != null && w?.lon != null) allWps.push({ ...w, listName: list.name || 'Unnamed' });
+            }
+          }
+        }
+      }
+      setWaypoints(allWps);
+    } catch {}
+    setWpMenuVisible(false);
+    setPendingWaypoint(null);
+  }, [pendingWaypoint, wpLabel, wpSelectedList]);
+
+  // Navigate to waypoint (set as active in GRID tab)
+  const navigateToWaypoint = useCallback(() => {
+    if (!pendingWaypoint || !onSetWaypoint) return;
+    onSetWaypoint({ lat: pendingWaypoint.lat, lon: pendingWaypoint.lon, label: wpLabel || pendingWaypoint.mgrs });
+    notifySuccess();
+    setWpMenuVisible(false);
+    setPendingWaypoint(null);
+  }, [pendingWaypoint, wpLabel, onSetWaypoint]);
+
+  // Cycle map style
+  const cycleMapStyle = useCallback(() => {
+    tapLight();
+    setMapStyle(prev => {
+      const next = MAP_STYLES[(MAP_STYLES.indexOf(prev) + 1) % MAP_STYLES.length];
+      AsyncStorage.setItem(MAP_STYLE_KEY, next).catch(() => {});
+      return next;
+    });
+  }, []);
 
   // Center on user location
   const centerOnUser = useCallback(() => {
@@ -310,7 +343,8 @@ export function MapScreen({ location, isPro, onShowProGate }) {
   }, [cachedCount, localTilePath]);
 
   // Tile source — online uses remote URL, offline uses LocalTile with cached files
-  const remoteTileUrl = isDark ? DARK_TILE_URL : OSM_TILE_URL;
+  const remoteTileUrl = mapStyle === 'dark' ? DARK_TILE_URL : mapStyle === 'topo' ? TOPO_TILE_URL : OSM_TILE_URL;
+  const mapStyleLabel = mapStyle === 'dark' ? 'DRK' : mapStyle === 'topo' ? 'TOPO' : 'STD';
 
   if (!MapView) {
     // Graceful fallback if react-native-maps unavailable
@@ -431,6 +465,16 @@ export function MapScreen({ location, isPro, onShowProGate }) {
           <Text style={[styles.mapBtnIcon, { color: colors.accent, opacity: downloading ? 0.4 : 1 }]}>⬇</Text>
         </TouchableOpacity>
 
+        {/* Map style toggle */}
+        <TouchableOpacity
+          style={[styles.mapBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={cycleMapStyle}
+          accessibilityRole="button"
+          accessibilityLabel={`Map style: ${mapStyleLabel}. Tap to cycle.`}
+        >
+          <Text style={[styles.mapBtnLabel, { color: colors.accent }]}>{mapStyleLabel}</Text>
+        </TouchableOpacity>
+
         {/* Center on user button */}
         {location && (
           <TouchableOpacity
@@ -456,6 +500,90 @@ export function MapScreen({ location, isPro, onShowProGate }) {
           </Text>
         )}
       </View>
+
+      {/* Waypoint creation menu — themed, not native Alert */}
+      <Modal visible={wpMenuVisible} transparent animationType="fade" onRequestClose={() => setWpMenuVisible(false)}>
+        <View style={styles.wpMenuOverlay}>
+          <View style={[styles.wpMenuCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            {/* Header with MGRS */}
+            <Text style={[styles.wpMenuTitle, { color: colors.text }]}>
+              {t('map.addWaypoint')}
+            </Text>
+            <Text style={[styles.wpMenuMGRS, { color: colors.accent }]}>
+              {pendingWaypoint?.mgrs || ''}
+            </Text>
+
+            {/* Rename input */}
+            <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>LABEL</Text>
+            <TextInput
+              style={[styles.wpMenuInput, { borderColor: colors.border, backgroundColor: colors.bg, color: colors.text }]}
+              value={wpLabel}
+              onChangeText={setWpLabel}
+              maxLength={24}
+              autoCapitalize="characters"
+              placeholderTextColor={colors.text4}
+              placeholder="Waypoint name"
+            />
+
+            {/* List picker */}
+            <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>ADD TO LIST</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.wpMenuListScroll}>
+              {wpLists.map(list => (
+                <TouchableOpacity
+                  key={list.id}
+                  style={[styles.wpMenuListBtn, {
+                    borderColor: wpSelectedList === list.id ? colors.accent : colors.border,
+                    backgroundColor: wpSelectedList === list.id ? colors.border2 : 'transparent',
+                  }]}
+                  onPress={() => setWpSelectedList(list.id)}
+                >
+                  <Text style={[styles.wpMenuListText, { color: wpSelectedList === list.id ? colors.accent : colors.text2 }]}>
+                    {list.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              {wpLists.length === 0 && (
+                <Text style={[styles.wpMenuHint, { color: colors.text4 }]}>New "MAP" list will be created</Text>
+              )}
+            </ScrollView>
+
+            {/* Action buttons */}
+            <View style={styles.wpMenuActions}>
+              <TouchableOpacity
+                style={[styles.wpMenuBtn, { borderColor: colors.accent, backgroundColor: colors.border2 }]}
+                onPress={saveWaypointFromMenu}
+              >
+                <Text style={[styles.wpMenuBtnText, { color: colors.accent }]}>SAVE</Text>
+              </TouchableOpacity>
+
+              {onSetWaypoint && (
+                <TouchableOpacity
+                  style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
+                  onPress={() => { saveWaypointFromMenu().then(() => navigateToWaypoint()); }}
+                >
+                  <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>SAVE + NAV</Text>
+                </TouchableOpacity>
+              )}
+
+              {onSetWaypoint && (
+                <TouchableOpacity
+                  style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
+                  onPress={navigateToWaypoint}
+                >
+                  <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>NAV ONLY</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                style={[styles.wpMenuBtn, { borderColor: colors.border }]}
+                onPress={() => { setWpMenuVisible(false); setPendingWaypoint(null); }}
+              >
+                <Text style={[styles.wpMenuBtnText, { color: colors.border }]}>CANCEL</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -509,4 +637,22 @@ const styles = StyleSheet.create({
   bottomLabel: { fontSize: 9, letterSpacing: 3, fontWeight: '700' },
   bottomMGRS: { fontFamily: 'monospace', fontSize: 14, letterSpacing: 2, fontWeight: '700', flex: 1 },
   cacheIndicator: { fontSize: 9, letterSpacing: 2, fontWeight: '600' },
+
+  // Map style button label
+  mapBtnLabel: { fontSize: 8, fontWeight: '800', letterSpacing: 1 },
+
+  // Waypoint creation menu
+  wpMenuOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 24 },
+  wpMenuCard: { width: '100%', maxWidth: 340, borderWidth: 1, padding: 16, gap: 8 },
+  wpMenuTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 4, fontWeight: '700' },
+  wpMenuMGRS: { fontFamily: 'monospace', fontSize: 16, letterSpacing: 3, fontWeight: '700', marginBottom: 4 },
+  wpMenuLabel: { fontSize: 9, letterSpacing: 3, fontWeight: '700', marginTop: 4 },
+  wpMenuInput: { borderWidth: 1, fontFamily: 'monospace', fontSize: 13, letterSpacing: 2, paddingHorizontal: 10, paddingVertical: 8 },
+  wpMenuListScroll: { maxHeight: 40, marginVertical: 4 },
+  wpMenuListBtn: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6 },
+  wpMenuListText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2, fontWeight: '700' },
+  wpMenuHint: { fontSize: 10, letterSpacing: 1, alignSelf: 'center' },
+  wpMenuActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  wpMenuBtn: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
+  wpMenuBtnText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, fontWeight: '700' },
 });

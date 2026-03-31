@@ -350,6 +350,7 @@ function AppContent({
             location={location}
             isPro={isPro}
             onShowProGate={showProGate}
+            onSetWaypoint={setWaypoint}
           />
         )}
 

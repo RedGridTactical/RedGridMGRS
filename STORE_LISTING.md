@@ -96,7 +96,7 @@ ZERO FOOTPRINT PRIVACY:
 - Location data is held in memory only and never stored or transmitted.
 
 
-Download free — includes live MGRS display, 1 theme, basic tools, and 3 report templates. Upgrade to Red Grid Pro for all 10 tools, offline maps, mesh networking, all themes, unlimited waypoints, and all 6 reports. Monthly, annual, or lifetime options available.
+Download free — includes live 10-digit MGRS display, 1 theme, basic tools, and 3 report templates. Upgrade to Red Grid Pro for all 10 tools, offline maps, mesh networking, all themes, unlimited waypoints, and all 6 reports. Monthly, annual, or lifetime options available.
 
 ## Keywords
 mgrs,gps,military,grid,navigation,tactical,offline,army,bearing,mesh,meshtastic,sar,utm,declination
