@@ -2,7 +2,7 @@
   "expo": {
     "name": "Red Grid MGRS",
     "slug": "redgrid-tactical",
-    "version": "3.2.1",
+    "version": "3.2.2",
     "orientation": "default",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#000000",

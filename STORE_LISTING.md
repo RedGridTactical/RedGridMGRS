@@ -18,10 +18,10 @@ Like the Defense Advanced GPS Receiver carried by warfighters worldwide, Red Gri
 
 OFFLINE TACTICAL MAPS:
 
-- OpenStreetMap with MGRS grid overlay
+- Three map styles: Standard, Dark Tactical, and Topographic (contour lines)
 - Download tiles for your area of operations
-- Dark tactical tiles for low-vis environments
 - Toggle offline mode for zero-network map use
+- MGRS grid overlay on all map styles
 - Works completely disconnected from any network
 
 
@@ -101,17 +101,16 @@ Download free — includes live 10-digit MGRS display, 1 theme, basic tools, and
 ## Keywords
 mgrs,gps,military,grid,navigation,tactical,offline,army,bearing,mesh,meshtastic,sar,utm,declination
 
-## What's New (v3.2.1)
-v3.2.1 — Offline Tile Download & Bug Fixes
+## What's New (v3.2.2)
+v3.2.2 — Free 10-Digit MGRS, Topo Maps, Waypoint UX
 
-- Download map tiles for offline use from the map screen
-- Toggle offline mode to use cached tiles with zero network
-- Tile count estimate before download with 5,000-tile safety cap
-- Dark tile support — downloads match your current tactical theme
-- Cache indicator shows tile count in bottom bar
-- Long-press download button to clear cached tiles
-- Performance: debounced tile cache checks, reduced map marker re-renders
-- Fixed subscription metadata — monthly and annual plans now available
+- Free tier now includes full 10-digit MGRS (1-meter precision for all users)
+- Topographic map layer with contour lines and terrain features (OpenTopoMap)
+- Map style toggle: cycle between Standard, Dark Tactical, and Topographic
+- Themed waypoint creation menu (no more white popups under light discipline)
+- Rename waypoints and choose target list directly from the map
+- Navigate-to-waypoint from map sets bearing/distance on GRID tab
+- Fixed button overflow in waypoint lists on narrow screens
 
 ## Promotional Text
 Now with offline maps, Meshtastic mesh networking, and downloadable tile caching. DAGR-class MGRS navigation — zero network required.
