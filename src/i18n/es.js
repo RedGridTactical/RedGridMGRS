@@ -270,7 +270,7 @@ export default {
     create: 'CREAR',
     listNamePlaceholder: 'NOMBRE DE LISTA',
     enterGrid: '+ INGRESAR CUADR',
-    markPos: '+ MARCAR POS',
+    markPos: 'AÑADIR POS',
     add: 'A\u00d1ADIR',
     cancel: 'CANCELAR',
     save: 'GUARDAR',

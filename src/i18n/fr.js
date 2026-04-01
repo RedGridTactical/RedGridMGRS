@@ -269,7 +269,7 @@ export default {
     create: 'CR\u00c9ER',
     listNamePlaceholder: 'NOM DE LA LISTE',
     enterGrid: '+ ENTRER GRILLE',
-    markPos: '+ MARQUER POS',
+    markPos: 'AJOUTER POS',
     add: 'AJOUTER',
     cancel: 'ANNULER',
     save: 'SAUVEGARDER',

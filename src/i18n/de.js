@@ -270,7 +270,7 @@ export default {
     create: 'ERSTELLEN',
     listNamePlaceholder: 'LISTENNAME',
     enterGrid: '+ GITTER EINGEBEN',
-    markPos: '+ POS MARKIEREN',
+    markPos: 'POS HINZUFÜGEN',
     add: 'HINZUF\u00dcGEN',
     cancel: 'ABBRECHEN',
     save: 'SPEICHERN',

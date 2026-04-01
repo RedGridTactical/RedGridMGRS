@@ -270,7 +270,7 @@ export default {
     create: '\uc0dd\uc131',
     listNamePlaceholder: '\ubaa9\ub85d \uc774\ub984',
     enterGrid: '+ \uadf8\ub9ac\ub4dc \uc785\ub825',
-    markPos: '+ \uc704\uce58 \ud45c\uc2dc',
+    markPos: '위치 추가',
     add: '\ucd94\uac00',
     cancel: '\ucde8\uc18c',
     save: '\uc800\uc7a5',

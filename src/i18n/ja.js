@@ -270,7 +270,7 @@ export default {
     create: '\u4f5c\u6210',
     listNamePlaceholder: '\u30ea\u30b9\u30c8\u540d',
     enterGrid: '+ \u30b0\u30ea\u30c3\u30c9\u5165\u529b',
-    markPos: '+ \u4f4d\u7f6e\u30de\u30fc\u30af',
+    markPos: '位置を追加',
     add: '\u8ffd\u52a0',
     cancel: '\u30ad\u30e3\u30f3\u30bb\u30eb',
     save: '\u4fdd\u5b58',

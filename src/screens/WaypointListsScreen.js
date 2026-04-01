@@ -341,8 +341,8 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
                 <Text style={[styles.addWpBtnText, { color: colors.text2 }]}>{t('waypoints.enterGrid')}</Text>
               </TouchableOpacity>
               {location && (
-                <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.border }]} onPress={() => addCurrentPosition(currentList.id)} accessibilityRole="button" accessibilityLabel="Mark current position as waypoint">
-                  <Text style={[styles.addWpBtnText, { color: colors.border }]}>{t('waypoints.markPos')}</Text>
+                <TouchableOpacity style={[styles.addWpBtn, styles.addPosBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={() => addCurrentPosition(currentList.id)} accessibilityRole="button" accessibilityLabel="Add current GPS position as waypoint">
+                  <Text style={[styles.addWpBtnText, { color: colors.text2 }]}>{t('waypoints.markPos')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -487,10 +487,11 @@ const styles = StyleSheet.create({
   newListCancelText: { fontSize: 14 },
 
   wpSection: { gap: 8 },
-  wpHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  wpHeader: { marginBottom: 6, gap: 8 },
   wpHeaderText: { fontSize: 9, letterSpacing: 2 },
   addWpBtn: { borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
   addWpBtnText: { fontSize: 9, letterSpacing: 2 },
+  addPosBtn: { borderWidth: 1 },
   emptyText: { fontSize: 9, textAlign: 'center', paddingVertical: 20, lineHeight: 16 },
 
   wpRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, padding: 10 },

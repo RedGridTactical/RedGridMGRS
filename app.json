@@ -32,6 +32,8 @@
       "infoPlist": {
         "CFBundleDisplayName": "Red Grid MGRS",
         "NSLocationWhenInUseUsageDescription": "Red Grid MGRS uses your location to display your current grid coordinates. No location data is stored or transmitted.",
+        "NSBluetoothAlwaysUsageDescription": "Red Grid MGRS uses Bluetooth to connect to Meshtastic radios for off-grid mesh networking. No data is transmitted over the internet.",
+        "NSBluetoothPeripheralUsageDescription": "Red Grid MGRS uses Bluetooth to connect to Meshtastic radios for off-grid mesh networking. No data is transmitted over the internet.",
         "SKAdNetworkItems": [],
         "ITSAppUsesNonExemptEncryption": false
       },
@@ -72,7 +74,14 @@
         }
       ],
       "expo-localization",
-      "react-native-ble-plx"
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": false,
+          "modes": ["central"],
+          "bluetoothAlwaysPermission": "Red Grid MGRS uses Bluetooth to connect to Meshtastic radios for off-grid mesh networking. No data is transmitted over the internet."
+        }
+      ]
     ],
     "extra": {
       "eas": {

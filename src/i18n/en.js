@@ -312,7 +312,7 @@ export default {
     create: 'CREATE',
     listNamePlaceholder: 'LIST NAME',
     enterGrid: '+ ENTER GRID',
-    markPos: '+ MARK POS',
+    markPos: 'ADD POSITION',
     add: 'ADD',
     cancel: 'CANCEL',
     save: 'SAVE',
