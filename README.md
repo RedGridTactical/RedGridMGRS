@@ -201,13 +201,14 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Cache indicator and tile count in bottom bar
 - Fixed subscription metadata for monthly and annual plans
 
-### v3.2.2 — Free 10-Digit MGRS, Topo Maps ✅ (2026)
+### v3.2.2 — Free 10-Digit MGRS, Topo Maps, BLE Fix ✅ (2026)
 - Free tier now includes full 10-digit MGRS (1-meter precision for all users)
 - Topographic map layer with contour lines and terrain features (OpenTopoMap)
 - Map style toggle: Standard, Dark Tactical, Topographic
 - Themed waypoint creation menu (light discipline — no white popups)
 - Navigate-to-waypoint from map
-- Fixed button overflow in waypoint lists
+- Fixed iOS BLE permissions — Meshtastic mesh networking now works on iPhone
+- "Add Position" button renamed and always visible in waypoint lists
 
 ### v3.5+ — Platform Ecosystem (2027)
 - Android public release on Google Play

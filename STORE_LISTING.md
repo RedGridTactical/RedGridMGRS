@@ -110,7 +110,8 @@ v3.2.2 — Free 10-Digit MGRS, Topo Maps, Waypoint UX
 - Themed waypoint creation menu (no more white popups under light discipline)
 - Rename waypoints and choose target list directly from the map
 - Navigate-to-waypoint from map sets bearing/distance on GRID tab
-- Fixed button overflow in waypoint lists on narrow screens
+- "Add Position" button in waypoint lists now clearly labeled and always visible
+- Fixed Bluetooth LE permissions on iPhone — Meshtastic mesh networking now works
 
 ## Promotional Text
 Now with offline maps, Meshtastic mesh networking, and downloadable tile caching. DAGR-class MGRS navigation — zero network required.
