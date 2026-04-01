@@ -101,17 +101,12 @@ Download free — includes live 10-digit MGRS display, 1 theme, basic tools, and
 ## Keywords
 mgrs,gps,military,grid,navigation,tactical,offline,army,bearing,mesh,meshtastic,sar,utm,declination
 
-## What's New (v3.2.2)
-v3.2.2 — Free 10-Digit MGRS, Topo Maps, Waypoint UX
+## What's New (v3.2.3)
+v3.2.3 — iOS BLE Fix, Add Position Button, Updated Release Notes
 
-- Free tier now includes full 10-digit MGRS (1-meter precision for all users)
-- Topographic map layer with contour lines and terrain features (OpenTopoMap)
-- Map style toggle: cycle between Standard, Dark Tactical, and Topographic
-- Themed waypoint creation menu (no more white popups under light discipline)
-- Rename waypoints and choose target list directly from the map
-- Navigate-to-waypoint from map sets bearing/distance on GRID tab
-- "Add Position" button in waypoint lists now clearly labeled and always visible
 - Fixed Bluetooth LE permissions on iPhone — Meshtastic mesh networking now works
+- "Add Position" button in waypoint lists now clearly labeled and always visible
+- Waypoint list header layout fix — buttons no longer clip on narrow screens
 
 ## Promotional Text
 Now with offline maps, Meshtastic mesh networking, and downloadable tile caching. DAGR-class MGRS navigation — zero network required.
