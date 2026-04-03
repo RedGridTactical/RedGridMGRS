@@ -211,11 +211,43 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 ### v3.2.3 — iOS BLE Fix ✅ (2026)
 - Fixed iOS BLE permissions — Meshtastic mesh networking now works on iPhone
 - "Add Position" button renamed and always visible in waypoint lists
-- Waypoint list header layout fix
 
-### v3.5+ — Platform Ecosystem (2027)
-- Android public release on Google Play
-- iOS Live Activity + Dynamic Island, StandBy mode, Apple Watch, Widgets, Siri Shortcuts
+### v3.2.4 — Meshtastic BLE Protocol Rewrite ✅ (2026)
+- Complete rewrite using real Meshtastic protobuf protocol
+- Correct ToRadio UUID, startConfig handshake, FromNum notifications
+- Shared BleManager, waitForPoweredOn state check
+- Compatible with actual Meshtastic hardware
+
+### v3.3 — Field Ready (2026)
+- Mesh positions rendered on map with labels and track history
+- One-tap "Mark Position" on GRID tab
+- Tile download prompt on first map visit
+- Waypoint encryption (PIN + SecureStore)
+- Auto dead reckoning from last GPS fix
+
+### v3.5 — Team Coordination (2026)
+- Blue force tracking over LoRa mesh with movement trails
+- Encrypted Meshtastic channels from app
+- Background location + BLE for continuous sharing
+- Cursor-on-Target (CoT) export for TAK interop
+- Apple Watch companion
+- Route planning with elevation profile
+- Android public launch on Google Play
+
+### v4.0 — Ecosystem Integration (2026-2027)
+- ATAK bridge via Meshtastic (CoT-over-LoRa)
+- Shared waypoint lists over mesh
+- Geofencing with mesh boundary alerts
+- Offline voice commands
+- Inertial navigation fallback (IMU dead reckoning)
+- Custom report templates
+
+### v5.0 — Platform (2027+)
+- iOS Live Activity + Dynamic Island, Widgets, Siri Shortcuts
+- Red Grid Cloud (optional team management portal)
+- Integration API for third-party apps
+- Sensor fusion (barometric, IMU, external GPS, mesh multilateration)
+- Institutional licensing for SAR/LE/military organizations
 
 ---
 

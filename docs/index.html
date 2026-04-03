@@ -708,9 +708,28 @@
   </div>
 </section>
 
+<!-- ROADMAP -->
+<section>
+  <h2 style="text-align: center;">What's Coming Next</h2>
+  <div class="features" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+    <div class="feature-card">
+      <h4>v3.3 — Field Ready</h4>
+      <p>Mesh positions on map. One-tap mark position. Tile download prompt. Waypoint encryption. Auto dead reckoning from last GPS fix.</p>
+    </div>
+    <div class="feature-card">
+      <h4>v3.5 — Team Coordination</h4>
+      <p>Blue force tracking over LoRa. Encrypted mesh channels. Background location. CoT export for TAK interop. Apple Watch. Android launch.</p>
+    </div>
+    <div class="feature-card">
+      <h4>v4.0 — Ecosystem</h4>
+      <p>ATAK bridge via Meshtastic. Shared waypoints over mesh. Geofencing alerts. Offline voice commands. Inertial navigation fallback.</p>
+    </div>
+  </div>
+</section>
+
 <!-- FAQ -->
 <section>
-  <h2>Frequently Asked Questions</h2>
+  <h2 style="text-align: center;">Frequently Asked Questions</h2>
 
   <div class="faq-item">
     <h4>Does this replace my DAGR?</h4>
@@ -743,8 +762,13 @@
   </div>
 
   <div class="faq-item">
+    <h4>What is Meshtastic and do I need a radio?</h4>
+    <p>Meshtastic is open-source firmware for LoRa radios that creates off-grid mesh networks. Red Grid MGRS connects to a Meshtastic radio via Bluetooth LE to share your grid position with other mesh users. You need a Meshtastic-compatible radio (~$20-40) to use mesh features. Without one, all other features work normally.</p>
+  </div>
+
+  <div class="faq-item">
     <h4>When is Android coming?</h4>
-    <p>The codebase is cross-platform (React Native / Expo). Android builds work today. We're polishing the iOS experience first and will launch Android once the feature set matures. Star the GitHub repo to stay updated.</p>
+    <p>The codebase is cross-platform (React Native / Expo). Android builds are functional and in closed testing on Google Play. Public launch is planned for v3.5. Star the GitHub repo to stay updated.</p>
   </div>
 </section>
 
