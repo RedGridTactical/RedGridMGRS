@@ -281,15 +281,21 @@ export class ExternalGPSManager {
     this._scanSubscription = null;
   }
 
-  /** Get the BleManager instance, lazy-loading react-native-ble-plx */
+  /** Get the shared BleManager instance to avoid iOS conflicts with multiple managers */
   _getBleManager() {
     if (!this._manager) {
       try {
-        const { BleManager } = require('react-native-ble-plx');
-        this._manager = new BleManager();
+        const { getSharedBleManager } = require('./meshtastic');
+        this._manager = getSharedBleManager();
       } catch (e) {
-        console.warn('react-native-ble-plx not available:', e.message);
-        return null;
+        // Fallback: create own manager if meshtastic module unavailable
+        try {
+          const { BleManager } = require('react-native-ble-plx');
+          this._manager = new BleManager();
+        } catch (e2) {
+          console.warn('react-native-ble-plx not available:', e2.message);
+          return null;
+        }
       }
     }
     return this._manager;
@@ -521,13 +527,10 @@ export class ExternalGPSManager {
     this._notify();
   }
 
-  /** Clean up BLE manager */
+  /** Clean up — release reference to shared BLE manager (don't destroy it) */
   destroy() {
     this.disconnect();
-    if (this._manager) {
-      try { this._manager.destroy(); } catch {}
-      this._manager = null;
-    }
+    this._manager = null; // shared manager lifecycle owned by meshtastic.js
   }
 }
 
