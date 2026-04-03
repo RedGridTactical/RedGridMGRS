@@ -9,8 +9,8 @@
         "keywords": ["mgrs", "gps", "military", "grid", "navigation", "tactical", "offline", "army", "bearing", "mesh", "meshtastic", "sar", "utm", "declination"],
         "releaseNotes": "v3.2.3 — iOS BLE Fix, Add Position Button\n\n- Fixed Bluetooth LE permissions on iPhone — Meshtastic mesh networking now works\n- \"Add Position\" button in waypoint lists now clearly labeled and always visible\n- Waypoint list header layout fix — buttons no longer clip on narrow screens",
         "promotionalText": "Full 10-digit MGRS for all users. Offline maps, Meshtastic mesh networking, topographic tiles. DAGR-class navigation — zero network required.",
-        "privacyPolicyUrl": "https://redgridtactical.github.io/RedGridMGRS/privacy.html",
-        "supportUrl": "https://redgridtactical.github.io/RedGridMGRS/support.html"
+        "privacyPolicyUrl": "https://redgridtactical.com/privacy.html",
+        "supportUrl": "https://redgridtactical.com/mgrs.html"
       }
     },
     "categories": ["NAVIGATION"],

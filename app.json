@@ -89,8 +89,8 @@
       "eas": {
         "projectId": "c55caaee-6950-4b8c-850b-f0d2d402cc09"
       },
-      "privacyPolicyUrl": "https://redgridtactical.github.io/RedGridMGRS/privacy.html",
-      "supportUrl": "https://redgridtactical.github.io/RedGridMGRS/support.html"
+      "privacyPolicyUrl": "https://redgridtactical.com/privacy.html",
+      "supportUrl": "https://redgridtactical.com/mgrs.html"
     },
     "icon": "./assets/icons/icon.png"
   }
