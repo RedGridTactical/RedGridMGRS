@@ -232,7 +232,7 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Cursor-on-Target (CoT) export for TAK interop
 - Apple Watch companion
 - Route planning with elevation profile
-- Android public launch on Google Play
+- Android public launch on Google Play (satellite-optimized for T-Mobile Starlink)
 
 ### v4.0 — Ecosystem Integration (2026-2027)
 - ATAK bridge via Meshtastic (CoT-over-LoRa)
@@ -241,6 +241,7 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Offline voice commands
 - Inertial navigation fallback (IMU dead reckoning)
 - Custom report templates
+- Satellite position reporting (iOS Satellite API when available, Android NTN)
 
 ### v5.0 — Platform (2027+)
 - iOS Live Activity + Dynamic Island, Widgets, Siri Shortcuts
