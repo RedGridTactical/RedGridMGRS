@@ -226,19 +226,20 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Auto dead reckoning from last GPS fix
 
 ### v3.5 — Solo Operator (2026)
+- Camera-based target acquisition (point camera at distant point, get its MGRS grid)
 - Encrypted Meshtastic channels from app
-- Background location + BLE for continuous position broadcast
-- Cursor-on-Target (CoT) export for TAK interop
-- Apple Watch companion
+- Background position broadcast
+- CoT export (broadcast own position for ATAK interop)
+- Apple Watch companion (grid + bearing on wrist, NVG-readable)
 - Route planning with elevation profile
 - Android public launch on Google Play (satellite-optimized for T-Mobile Starlink)
 
 ### v4.0 — Ecosystem Integration (2026-2027)
-- ATAK bridge via Meshtastic (CoT-over-LoRa, read-only interop)
-- Offline voice commands
-- Inertial navigation fallback (IMU dead reckoning)
-- Custom report templates
+- Offline voice commands ("Mark position" / "Send grid" / "Navigate to waypoint")
+- Inertial navigation fallback (IMU dead reckoning in GPS-denied environments)
 - Satellite position reporting (iOS Satellite API when available, Android NTN)
+- Custom report templates (define your own formats for any SOP)
+- Sensor fusion (barometric + IMU + GPS + external GPS)
 
 ### v5.0 — Platform (2027+)
 - iOS Live Activity + Dynamic Island, Widgets, Siri Shortcuts
