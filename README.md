@@ -225,19 +225,16 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Waypoint encryption (PIN + SecureStore)
 - Auto dead reckoning from last GPS fix
 
-### v3.5 — Team Coordination (2026)
-- Blue force tracking over LoRa mesh with movement trails
+### v3.5 — Solo Operator (2026)
 - Encrypted Meshtastic channels from app
-- Background location + BLE for continuous sharing
+- Background location + BLE for continuous position broadcast
 - Cursor-on-Target (CoT) export for TAK interop
 - Apple Watch companion
 - Route planning with elevation profile
 - Android public launch on Google Play (satellite-optimized for T-Mobile Starlink)
 
 ### v4.0 — Ecosystem Integration (2026-2027)
-- ATAK bridge via Meshtastic (CoT-over-LoRa)
-- Shared waypoint lists over mesh
-- Geofencing with mesh boundary alerts
+- ATAK bridge via Meshtastic (CoT-over-LoRa, read-only interop)
 - Offline voice commands
 - Inertial navigation fallback (IMU dead reckoning)
 - Custom report templates
@@ -245,10 +242,10 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 
 ### v5.0 — Platform (2027+)
 - iOS Live Activity + Dynamic Island, Widgets, Siri Shortcuts
-- Red Grid Cloud (optional team management portal)
 - Integration API for third-party apps
 - Sensor fusion (barometric, IMU, external GPS, mesh multilateration)
-- Institutional licensing for SAR/LE/military organizations
+
+> **Team features** (roles, messaging, geofencing, shared waypoints, AAR) are in [Red Grid Link](https://github.com/RedGridTactical/RedGridLink). MGRS is the solo navigator. Link is the team coordinator.
 
 ---
 
