@@ -101,15 +101,16 @@ Download free — includes live 10-digit MGRS display, 1 theme, basic tools, and
 ## Keywords
 mgrs,gps,military,grid,navigation,tactical,offline,army,bearing,mesh,meshtastic,sar,utm,declination
 
-## What's New (v3.2.3)
-v3.2.3 — iOS BLE Fix, Add Position Button, Updated Release Notes
+## What's New (v3.3.0)
+v3.3.0 — Mesh Positions on Map
 
-- Fixed Bluetooth LE permissions on iPhone — Meshtastic mesh networking now works
-- "Add Position" button in waypoint lists now clearly labeled and always visible
-- Waypoint list header layout fix — buttons no longer clip on narrow screens
+- See other Meshtastic mesh users on the tactical map in real time
+- Each mesh node shows as a distinct marker with node ID, MGRS grid, bearing, and distance
+- Tap a mesh marker to see full position details and time since last update
+- Meshtastic setup guide added — close the official Meshtastic app before scanning
 
 ## Promotional Text
-Now with offline maps, Meshtastic mesh networking, and downloadable tile caching. DAGR-class MGRS navigation — zero network required.
+See your mesh network on the map. Meshtastic LoRa position sharing, offline topo maps, 10 tactical tools. DAGR-class navigation — zero network required.
 
 ## Privacy URL
 https://redgridtactical.github.io/RedGridMGRS/privacy.html

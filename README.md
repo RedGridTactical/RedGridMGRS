@@ -227,12 +227,9 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Shared BleManager, waitForPoweredOn state check
 - Compatible with actual Meshtastic hardware
 
-### v3.3 — Field Ready (2026)
-- Mesh positions rendered on map with labels and track history
-- One-tap "Mark Position" on GRID tab
-- Tile download prompt on first map visit
-- Waypoint encryption (PIN + SecureStore)
-- Auto dead reckoning from last GPS fix
+### v3.3.0 — Field Ready ✅ (2026)
+- Mesh positions rendered on map with node ID, MGRS, bearing, distance
+- Meshtastic setup guide with BLE exclusivity note
 
 ### v3.5 — Solo Operator (2026)
 - Camera-based target acquisition (point camera at distant point, get its MGRS grid)
