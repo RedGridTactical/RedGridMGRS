@@ -54,6 +54,15 @@ Download OpenStreetMap tiles for your area of operations. Dark tactical tiles fo
 
 Share your grid position over LoRa mesh via BLE. See other mesh users in real time. No cell service, no internet, no infrastructure needed — just Meshtastic radios and phones. Pro feature.
 
+### Meshtastic Setup
+
+1. Flash [Meshtastic firmware](https://flasher.meshtastic.org) onto a compatible radio (Heltec V3/V4, T-Beam Supreme, RAK WisBlock, etc.)
+2. **Close the Meshtastic app** before scanning from Red Grid MGRS — iOS only allows one app to hold a BLE connection to a device at a time. If the Meshtastic app is connected, Red Grid cannot discover the radio.
+3. Open Red Grid MGRS → Mesh tab → Scan → tap your radio to connect
+4. Toggle Auto Share to broadcast your position over the mesh
+
+Supported radios: any Meshtastic device with ESP32-S3 + SX1262 LoRa at 915MHz (US). Recommended: [Heltec WiFi LoRa 32 V3/V4](https://heltec.org/project/wifi-lora-32-v3/) or [LILYGO T-Beam Supreme](https://lilygo.cc/products/t-beam-supreme).
+
 ## 6 Radio-Ready Report Templates
 
 Generate formatted reports ready to transmit over any net:
