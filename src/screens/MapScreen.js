@@ -20,7 +20,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '../utils/ThemeContext';
 import { useTranslation } from '../hooks/useTranslation';
-import { toMGRS, formatMGRS } from '../utils/mgrs';
+import { toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
 import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptics';
 import { loadWaypointLists, saveWaypointLists } from '../utils/storage';
 import { MGRSGridOverlay } from '../components/MGRSGridOverlay';
@@ -66,12 +66,21 @@ function PulsingDot({ color }) {
   );
 }
 
+// Time-since helper for mesh markers
+function timeSince(ts) {
+  if (!ts) return '';
+  const sec = Math.floor((Date.now() - ts) / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+  return `${Math.floor(sec / 3600)}h ago`;
+}
+
 // Tile sources — Standard (OSM), Dark (CartoDB), Topo (OpenTopoMap)
 const TOPO_TILE_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
 const MAP_STYLES = ['standard', 'dark', 'topo'];
 const MAP_STYLE_KEY = 'rg_map_style';
 
-export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint }) {
+export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshPositions = [] }) {
   const colors = useColors();
   const { t } = useTranslation();
   const mapRef = useRef(null);
@@ -412,6 +421,36 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint }) {
             pinColor={colors.accent}
           />
         ))}
+
+        {/* Mesh node markers */}
+        {meshPositions.filter(p => p.lat && p.lon).map((node, idx) => {
+          const nodeLabel = node.nodeId ? `#${node.nodeId.toString(16).toUpperCase()}` : `Node ${idx + 1}`;
+          const mgrs = formatMGRS(toMGRS(node.lat, node.lon, 5));
+          let desc = mgrs;
+          if (location) {
+            try {
+              const brg = Math.round(calculateBearing(location.lat, location.lon, node.lat, node.lon));
+              const dst = formatDistance(calculateDistance(location.lat, location.lon, node.lat, node.lon));
+              desc = `${mgrs}\nBRG ${brg}° DST ${dst}`;
+            } catch {}
+          }
+          if (node.timestamp) desc += `\n${timeSince(node.timestamp)}`;
+          return (
+            <Marker
+              key={`mesh-${node.nodeId || idx}`}
+              coordinate={{ latitude: node.lat, longitude: node.lon }}
+              title={`MESH ${nodeLabel}`}
+              description={desc}
+              tracksViewChanges={false}
+              anchor={{ x: 0.5, y: 0.5 }}
+            >
+              <View style={styles.meshMarker}>
+                <View style={[styles.meshMarkerDot, { backgroundColor: colors.text2, borderColor: colors.accent }]} />
+                <Text style={[styles.meshMarkerLabel, { color: colors.text }]}>{nodeLabel}</Text>
+              </View>
+            </Marker>
+          );
+        })}
       </MapView>
 
       {/* Center reticle */}
@@ -655,4 +694,9 @@ const styles = StyleSheet.create({
   wpMenuActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   wpMenuBtn: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   wpMenuBtnText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, fontWeight: '700' },
+
+  // Mesh node markers
+  meshMarker: { alignItems: 'center', justifyContent: 'center' },
+  meshMarkerDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2 },
+  meshMarkerLabel: { fontFamily: 'monospace', fontSize: 8, fontWeight: '700', letterSpacing: 1, marginTop: 2, textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
 });

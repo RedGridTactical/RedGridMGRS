@@ -351,6 +351,7 @@ function AppContent({
             isPro={isPro}
             onShowProGate={showProGate}
             onSetWaypoint={setWaypoint}
+            meshPositions={mesh.meshPositions}
           />
         )}
 
