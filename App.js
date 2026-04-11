@@ -13,7 +13,7 @@ import './src/i18n';
 import React, { useState, useMemo, useCallback, useRef, useEffect, Component } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated,
-  SafeAreaView, StatusBar, useWindowDimensions, AccessibilityInfo,
+  SafeAreaView, StatusBar, useWindowDimensions, AccessibilityInfo, Alert, Linking,
 } from 'react-native';
 import { useTranslation } from './src/hooks/useTranslation';
 
@@ -30,6 +30,8 @@ import { MGRSDisplay }    from './src/components/MGRSDisplay';
 import { WayfinderArrow } from './src/components/WayfinderArrow';
 import { WaypointModal }  from './src/components/WaypointModal';
 import { ProGate }        from './src/components/ProGate';
+import { WhatsNewModal }  from './src/components/WhatsNewModal';
+import { extractTokenFromUrl, redeemShareToken, getTrialStatus } from './src/utils/referral';
 import { ToolsScreen }    from './src/screens/ToolsScreen';
 import { ReportScreen }   from './src/screens/ReportScreen';
 import { WaypointListsScreen } from './src/screens/WaypointListsScreen';
@@ -125,7 +127,58 @@ function App() {
 
   const { location, error, isLoading, retry, compassHeading } = useLocation();
   const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing, gridScale, setGridScale } = useSettings();
-  const { isPro, isPurchasing, product, products, selectedTier, setSelectedTier, purchase, restore } = useIAP();
+  const { isPro: iapIsPro, isPurchasing, product, products, selectedTier, setSelectedTier, purchase, restore } = useIAP();
+
+  // Trial state from referral system — treated as Pro for feature gating.
+  const [trialActive, setTrialActive] = useState(false);
+  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
+  const isPro = iapIsPro || trialActive;
+
+  // Check trial status on mount and whenever we return from background
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = async () => {
+      const status = await getTrialStatus();
+      if (cancelled) return;
+      setTrialActive(status.active);
+      setTrialDaysLeft(status.daysLeft);
+    };
+    refresh();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Deep link handler — redeem trial when user opens redgrid://share/<token>
+  useEffect(() => {
+    const handleUrl = async (url) => {
+      if (!url) return;
+      const token = extractTokenFromUrl(url);
+      if (!token) return;
+      const result = await redeemShareToken(token);
+      if (result.ok) {
+        const status = await getTrialStatus();
+        setTrialActive(status.active);
+        setTrialDaysLeft(status.daysLeft);
+        try {
+          Alert.alert(
+            '30 DAYS OF PRO UNLOCKED',
+            `A friend has shared Red Grid Pro with you. All features are now active for ${status.daysLeft} days. Enjoy.`
+          );
+        } catch {}
+      } else if (result.reason === 'already_received') {
+        try { Alert.alert('Trial Already Used', 'You have already redeemed a shared trial on this device.'); } catch {}
+      } else if (result.reason === 'expired') {
+        try { Alert.alert('Link Expired', 'This trial link has expired. Ask for a new one.'); } catch {}
+      } else {
+        try { Alert.alert('Invalid Trial Link', 'This trial link could not be verified.'); } catch {}
+      }
+    };
+    // Handle cold-start deep link
+    Linking.getInitialURL().then(handleUrl).catch(() => {});
+    // Handle warm deep links while running
+    const sub = Linking.addEventListener('url', (ev) => handleUrl(ev?.url));
+    return () => { try { sub?.remove?.(); } catch {} };
+  }, []);
+
   const themeData = useTheme(theme || 'red');
   const { checkAndPromptReview, openStoreReview } = useStoreReview();
   const mesh = useMeshtastic();
@@ -158,6 +211,40 @@ function App() {
     if (!location || coordFormat === 'mgrs') return null;
     try { return formatPosition(location.lat, location.lon, coordFormat); } catch { return null; }
   }, [location, coordFormat]);
+
+  // Mark Position — one-tap save of current GPS fix as active nav target
+  const [markToast, setMarkToast] = useState(null);
+  const handleMarkPosition = useCallback(() => {
+    if (!location?.lat || !location?.lon) {
+      try { Alert.alert('No GPS fix', 'Waiting for a valid position. Move to open sky and try again.'); } catch {}
+      return;
+    }
+    const now = new Date();
+    const hhmm = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+    const newWaypoint = { lat: location.lat, lon: location.lon, label: `MARK ${hhmm}` };
+    const commit = () => {
+      tapHeavy();
+      setWaypoint(newWaypoint);
+      notifySuccess();
+      setMarkToast(newWaypoint.label);
+      setTimeout(() => setMarkToast(null), 2000);
+      AccessibilityInfo.announceForAccessibility(`Position marked as ${newWaypoint.label}`);
+    };
+    if (waypoint) {
+      try {
+        Alert.alert(
+          'Replace current waypoint?',
+          `Current: ${waypoint.label || 'Unnamed'}\nNew: ${newWaypoint.label}`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Replace', style: 'destructive', onPress: commit },
+          ]
+        );
+      } catch { commit(); }
+    } else {
+      commit();
+    }
+  }, [location, waypoint]);
 
   // Tap-to-copy grid — copies whatever format is displayed (MGRS, UTM, DD, or DMS)
   const [copyToast, setCopyToast] = useState(false);
@@ -219,6 +306,7 @@ function App() {
       mgrsFormatted={mgrsFormatted} waypoint={waypoint} waypointMGRS={waypointMGRS}
       bearing={bearing} arrowAngle={arrowAngle} distance={distance} arrowSize={arrowSize}
       onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
+      onMarkPosition={handleMarkPosition} markToast={markToast}
       isPro={isPro} onShowProGate={showProGate}
       onCopyGrid={copyGrid} copyToast={copyToast}
       coordFormat={coordFormat} altDisplay={altDisplay}
@@ -234,6 +322,7 @@ function App() {
       mgrsFormatted={mgrsFormatted} waypoint={waypoint} waypointMGRS={waypointMGRS}
       bearing={bearing} arrowAngle={arrowAngle} distance={distance} arrowSize={arrowSize}
       onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
+      onMarkPosition={handleMarkPosition} markToast={markToast}
       isPro={isPro} onShowProGate={showProGate}
       onCopyGrid={copyGrid} copyToast={copyToast}
       coordFormat={coordFormat} altDisplay={altDisplay}
@@ -474,6 +563,9 @@ function AppContent({
         onClose={() => setShowSupport(false)}
       />
 
+      {/* What's new in this version — first launch post-update only */}
+      <WhatsNewModal currentVersion="3.3.1" />
+
     </SafeAreaView>
 
     {/* HUD Mode — full-screen simplified display (Pro), rendered above SafeAreaView for true full-screen */}
@@ -516,7 +608,7 @@ function UpsellScreen({ onUpgrade }) {
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport, gridScale }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport, gridScale }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -539,6 +631,18 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
         )
       }
       <Div />
+      <View style={staticStyles.markRow}>
+        <TouchableOpacity
+          style={[staticStyles.markBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]}
+          onPress={onMarkPosition}
+          disabled={!location?.lat}
+          accessibilityRole="button"
+          accessibilityLabel="Mark current position as waypoint"
+        >
+          <Text style={[staticStyles.markBtnText, { color: colors.text, opacity: location?.lat ? 1 : 0.4 }]} suppressHighlighting={true}>◉ MARK POSITION</Text>
+        </TouchableOpacity>
+        {markToast && <Text style={[staticStyles.markToast, { color: colors.text2 }]}>✓ {markToast}</Text>}
+      </View>
       {!waypoint ? (
         <View style={staticStyles.noWpBlock}>
           <Crosshair size={50} />
@@ -595,7 +699,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport, gridScale }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport, gridScale }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -626,6 +730,16 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
           <Text style={[staticStyles.noWpText, { color: colors.border }]}>{t('grid.noWaypoint')}</Text>
         )}
         <View style={staticStyles.lsBtnWrap}>
+          <TouchableOpacity
+            style={[staticStyles.lsMarkBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]}
+            onPress={onMarkPosition}
+            disabled={!location?.lat}
+            accessibilityRole="button"
+            accessibilityLabel="Mark current position as waypoint"
+          >
+            <Text style={[staticStyles.lsMarkBtnText, { color: colors.text, opacity: location?.lat ? 1 : 0.4 }]} suppressHighlighting={true}>◉ MARK POSITION</Text>
+          </TouchableOpacity>
+          {markToast && <Text style={[staticStyles.markToast, { color: colors.text2, textAlign: 'center' }]}>✓ {markToast}</Text>}
           <View style={staticStyles.lsBtns}>
             <TouchableOpacity style={[staticStyles.lsBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel={waypoint ? t('grid.edit') : t('grid.addWaypoint')}>
               <Text style={[staticStyles.lsBtnText, { color: colors.text }]}>{waypoint ? t('grid.editWp') : t('grid.plusWaypoint')}</Text>
@@ -819,6 +933,12 @@ const staticStyles = StyleSheet.create({
   noWpText: { fontSize:11, letterSpacing:4 },
   addBtn: { borderWidth:1, paddingHorizontal:26, paddingVertical:13, minHeight:44 },
   addBtnText: { fontSize:12, letterSpacing:3, fontWeight:'700' },
+  markRow: { alignItems:'center', paddingVertical:4, gap:6 },
+  markBtn: { borderWidth:2, paddingHorizontal:34, paddingVertical:14, minHeight:48, minWidth:220, alignItems:'center' },
+  markBtnText: { fontSize:13, letterSpacing:3, fontWeight:'800' },
+  markToast: { fontSize:10, letterSpacing:2, fontWeight:'700', marginTop:2 },
+  lsMarkBtn: { borderWidth:2, paddingVertical:11, alignItems:'center', marginBottom:6 },
+  lsMarkBtnText: { fontSize:12, letterSpacing:3, fontWeight:'800' },
   wpBlock: { alignItems:'center', paddingVertical:10, gap:12 },
   arrowWrap: { alignItems:'center', gap:6 },
   bearingText: { fontFamily:'monospace', fontSize:26, letterSpacing:4, fontWeight:'700' },

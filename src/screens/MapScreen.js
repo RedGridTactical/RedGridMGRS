@@ -79,6 +79,7 @@ function timeSince(ts) {
 const TOPO_TILE_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
 const MAP_STYLES = ['standard', 'dark', 'topo'];
 const MAP_STYLE_KEY = 'rg_map_style';
+const FIRST_VISIT_PROMPT_KEY = 'rg_map_first_visit_prompted_v1';
 
 export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshPositions = [] }) {
   const colors = useColors();
@@ -104,6 +105,34 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
   useEffect(() => {
     AsyncStorage.getItem(MAP_STYLE_KEY).then(v => { if (v && MAP_STYLES.includes(v)) setMapStyle(v); }).catch(() => {});
   }, []);
+
+  // First-visit offline tile prompt: show once ever on first map visit.
+  // Pro users get a download modal, free users get a Pro upgrade banner.
+  const [firstVisitModalVisible, setFirstVisitModalVisible] = useState(false);
+  const [firstVisitBannerVisible, setFirstVisitBannerVisible] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const seen = await AsyncStorage.getItem(FIRST_VISIT_PROMPT_KEY);
+        if (cancelled) return;
+        if (seen === 'true') return;
+        // Wait until we have a location fix — otherwise prompt is useless
+        if (!location?.lat) return;
+        // Delay so the map gets a chance to draw first
+        setTimeout(() => {
+          if (cancelled) return;
+          if (isPro) {
+            setFirstVisitModalVisible(true);
+          } else {
+            setFirstVisitBannerVisible(true);
+          }
+        }, 1500);
+        await AsyncStorage.setItem(FIRST_VISIT_PROMPT_KEY, 'true').catch(() => {});
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [location?.lat, isPro]);
 
   // Waypoint creation menu state
   const [wpMenuVisible, setWpMenuVisible] = useState(false);
@@ -623,6 +652,56 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
           </View>
         </View>
       </Modal>
+
+      {/* First-visit free-tier upgrade banner */}
+      {firstVisitBannerVisible && (
+        <View style={[styles.firstVisitBanner, { backgroundColor: colors.card, borderColor: colors.text2 }]}>
+          <View style={{ flex:1 }}>
+            <Text style={[styles.firstVisitTitle, { color: colors.text }]}>OFFLINE MAPS READY</Text>
+            <Text style={[styles.firstVisitBody, { color: colors.text3 }]}>Download tiles for your area with Red Grid Pro. Never get caught with a blank map in the field.</Text>
+          </View>
+          <View style={{ gap:6 }}>
+            <TouchableOpacity
+              style={[styles.firstVisitPrimary, { borderColor: colors.text, backgroundColor: colors.border2 }]}
+              onPress={() => { setFirstVisitBannerVisible(false); onShowProGate && onShowProGate('Offline Maps'); }}
+            >
+              <Text style={[styles.firstVisitPrimaryText, { color: colors.text }]}>UPGRADE</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.firstVisitSecondary, { borderColor: colors.border }]}
+              onPress={() => setFirstVisitBannerVisible(false)}
+            >
+              <Text style={[styles.firstVisitSecondaryText, { color: colors.border }]}>DISMISS</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* First-visit Pro-tier download modal */}
+      <Modal visible={firstVisitModalVisible} transparent animationType="fade" onRequestClose={() => setFirstVisitModalVisible(false)}>
+        <View style={styles.wpMenuOverlay}>
+          <View style={[styles.wpMenuBox, { backgroundColor: colors.card, borderColor: colors.text2 }]}>
+            <Text style={[styles.wpMenuTitle, { color: colors.text }]}>READY FOR THE FIELD?</Text>
+            <Text style={[styles.firstVisitBody, { color: colors.text3, marginBottom:16 }]}>
+              Download offline map tiles for your current area now. You'll have maps even when you lose cell service.
+            </Text>
+            <View style={styles.wpMenuActions}>
+              <TouchableOpacity
+                style={[styles.wpMenuBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]}
+                onPress={() => { setFirstVisitModalVisible(false); setTimeout(() => handleDownloadTiles(), 250); }}
+              >
+                <Text style={[styles.wpMenuBtnText, { color: colors.text }]}>DOWNLOAD</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.wpMenuBtn, { borderColor: colors.border }]}
+                onPress={() => setFirstVisitModalVisible(false)}
+              >
+                <Text style={[styles.wpMenuBtnText, { color: colors.border }]}>LATER</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -694,6 +773,13 @@ const styles = StyleSheet.create({
   wpMenuActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   wpMenuBtn: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
   wpMenuBtnText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, fontWeight: '700' },
+  firstVisitBanner: { position: 'absolute', left: 12, right: 12, bottom: 24, flexDirection: 'row', gap: 12, borderWidth: 1, padding: 12 },
+  firstVisitTitle: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 3, fontWeight: '800', marginBottom: 4 },
+  firstVisitBody: { fontFamily: 'monospace', fontSize: 10, lineHeight: 14 },
+  firstVisitPrimary: { borderWidth: 2, paddingHorizontal: 16, paddingVertical: 10, minHeight: 44, minWidth: 100, alignItems: 'center', justifyContent: 'center' },
+  firstVisitPrimaryText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, fontWeight: '700' },
+  firstVisitSecondary: { borderWidth: 1, paddingHorizontal: 16, paddingVertical: 8, minHeight: 36, minWidth: 100, alignItems: 'center', justifyContent: 'center' },
+  firstVisitSecondaryText: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2, fontWeight: '600' },
 
   // Mesh node markers
   meshMarker: { alignItems: 'center', justifyContent: 'center' },

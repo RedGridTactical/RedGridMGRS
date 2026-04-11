@@ -43,4 +43,9 @@ if [ -f "$HERMESC" ]; then
   fi
 fi
 
+# 4. gradlew wrapper (loses exec bit on npm install in some setups).
+if [ -f android/gradlew ]; then
+  chmod +x android/gradlew 2>/dev/null || true
+fi
+
 echo "fix-native-binaries: ok"

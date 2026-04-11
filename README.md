@@ -16,6 +16,15 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 
 ---
 
+## Latest: v3.3.1 — Faster in the Field
+
+- **One-tap MARK POSITION** from the main screen. Drop a waypoint the instant you need it — CCP, contact, cache, rally point. No menus, no delay.
+- **Offline map prompt** on first Map tab visit. Never get caught with a blank map in the field.
+- **Share a free trial** — give a friend 30 days of Red Grid Pro. One gift per device, zero tracking. Receive one, give one.
+- **What's New** in-app screen so returning users discover every new feature.
+
+---
+
 | Grid & Wayfinder | Tools | Reports | Landscape |
 |:---:|:---:|:---:|:---:|
 | ![Grid tab](docs/images/screenshot_1_grid.png) | ![Tools tab](docs/images/screenshot_2_tools.png) | ![Reports tab](docs/images/screenshot_3_report.png) | ![Landscape](docs/images/screenshot_4_landscape.png) |

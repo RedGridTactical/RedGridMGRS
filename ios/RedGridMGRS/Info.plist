@@ -28,11 +28,12 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.redgrid.redgridtactical</string>
+				<string>redgrid</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>59</string>
+	<string>60</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSMinimumSystemVersion</key>

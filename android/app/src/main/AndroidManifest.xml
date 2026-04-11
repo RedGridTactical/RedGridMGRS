@@ -36,6 +36,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="com.redgrid.redgridtactical"/>
+        <data android:scheme="redgrid"/>
       </intent-filter>
     </activity>
   </application>

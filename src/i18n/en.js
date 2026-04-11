@@ -59,6 +59,12 @@ export default {
   grid: {
     noWaypoint: 'NO WAYPOINT SET',
     addWaypoint: '+ ADD WAYPOINT',
+    markPosition: '◉ MARK POSITION',
+    markNoFix: 'No GPS fix',
+    markNoFixDetail: 'Waiting for a valid position. Move to open sky and try again.',
+    markReplaceTitle: 'Replace current waypoint?',
+    markReplace: 'Replace',
+    markLabel: 'MARK',
     editWp: 'EDIT WP',
     plusWaypoint: '+ WAYPOINT',
     edit: 'EDIT',

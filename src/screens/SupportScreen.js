@@ -3,15 +3,16 @@
  * Shows FAQ, contact info, version, and links.
  * Opened via info button on grid footer.
  */
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Modal,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Modal, Share, Alert,
 } from 'react-native';
 import { useColors } from '../utils/ThemeContext';
-import { tapLight } from '../utils/haptics';
+import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
+import { hasSharedTrial, mintShareLink, getTrialStatus } from '../utils/referral';
 
-const APP_VERSION = '2.5.0';
+const APP_VERSION = '3.3.1';
 const SUPPORT_EMAIL = 'support@redgridtactical.com';
 const GITHUB_URL = 'https://github.com/RedGridTactical/RedGridMGRS';
 const PRIVACY_URL = 'https://redgridtactical.github.io/RedGridMGRS/privacy.html';
@@ -33,6 +34,48 @@ function FAQItem({ q, a, colors }) {
 export function SupportScreen({ visible, onClose }) {
   const colors = useColors();
   const { t } = useTranslation();
+  const [alreadyShared, setAlreadyShared] = useState(false);
+  const [trialStatus, setTrialStatus] = useState({ active: false, daysLeft: 0 });
+
+  useEffect(() => {
+    if (!visible) return;
+    let cancelled = false;
+    (async () => {
+      const shared = await hasSharedTrial();
+      const status = await getTrialStatus();
+      if (cancelled) return;
+      setAlreadyShared(shared);
+      setTrialStatus(status);
+    })();
+    return () => { cancelled = true; };
+  }, [visible]);
+
+  const handleShareTrial = useCallback(async () => {
+    tapMedium();
+    const result = await mintShareLink();
+    if (!result.ok) {
+      notifyError();
+      try {
+        Alert.alert(
+          'Already Shared',
+          'You have already shared your free trial. Each device can give exactly one 30-day Pro trial to a friend — and you already did. Thank you.'
+        );
+      } catch {}
+      setAlreadyShared(true);
+      return;
+    }
+    try {
+      await Share.share({
+        message: `I'm using Red Grid MGRS — a free tactical MGRS navigator. Here's 30 days of Pro on me:\n\n${result.url}\n\nZero tracking, offline maps, Meshtastic mesh. Works without cell service.`,
+        url: result.url,
+      });
+      notifySuccess();
+      setAlreadyShared(true);
+    } catch {
+      // User cancelled or share failed — still marked as shared (mint was successful).
+      setAlreadyShared(true);
+    }
+  }, []);
 
   return (
     <Modal
@@ -92,6 +135,34 @@ export function SupportScreen({ visible, onClose }) {
               <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('support.sourceCodeSub')}</Text>
             </View>
           </TouchableOpacity>
+
+          {/* Share a free trial */}
+          <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>GIFT A FREE TRIAL</Text>
+          <View style={[styles.shareCard, { borderColor: colors.text2, backgroundColor: colors.card }]}>
+            <Text style={[styles.shareTitle, { color: colors.text }]}>SHARE 30 DAYS OF PRO</Text>
+            <Text style={[styles.shareBody, { color: colors.text3 }]}>
+              Give a friend 30 days of Red Grid Pro free. One gift per device, ever — choose your friend carefully.
+            </Text>
+            {trialStatus.active && (
+              <Text style={[styles.shareStatus, { color: colors.text2 }]}>
+                ▸ Your trial: {trialStatus.daysLeft} day{trialStatus.daysLeft === 1 ? '' : 's'} remaining
+              </Text>
+            )}
+            <TouchableOpacity
+              style={[
+                styles.shareBtn,
+                { borderColor: alreadyShared ? colors.border : colors.text, backgroundColor: alreadyShared ? 'transparent' : colors.border2 },
+              ]}
+              disabled={alreadyShared}
+              onPress={handleShareTrial}
+              accessibilityRole="button"
+              accessibilityLabel={alreadyShared ? 'Already shared' : 'Share free trial with a friend'}
+            >
+              <Text style={[styles.shareBtnText, { color: alreadyShared ? colors.border : colors.text }]}>
+                {alreadyShared ? '✓ ALREADY SHARED' : '⤴ SHARE TRIAL'}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           {/* FAQ */}
           <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>{t('support.faq')}</Text>
@@ -211,4 +282,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 2,
   },
+  shareCard: {
+    borderWidth: 1,
+    padding: 16,
+    gap: 10,
+  },
+  shareTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '800' },
+  shareBody: { fontFamily: 'monospace', fontSize: 11, lineHeight: 16 },
+  shareStatus: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2, fontWeight: '700', marginTop: 2 },
+  shareBtn: { borderWidth: 2, paddingVertical: 14, alignItems: 'center', marginTop: 6 },
+  shareBtnText: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '800' },
 });
