@@ -1,0 +1,226 @@
+# Red Grid MGRS — Fastlane lanes
+# Drives local archive + TestFlight upload for iOS and signed AAB + Play Console upload for Android.
+
+require 'json'
+
+default_platform(:ios)
+
+# -----------------------------------------------------------------------------
+# iOS
+# -----------------------------------------------------------------------------
+platform :ios do
+
+  before_all do
+    ENV["LANG"] = "en_US.UTF-8"
+    ENV["LC_ALL"] = "en_US.UTF-8"
+  end
+
+  desc "Bump iOS build number by 1"
+  lane :bump_build do
+    increment_build_number(
+      xcodeproj: "ios/RedGridMGRS.xcodeproj"
+    )
+  end
+
+  desc "Fetch or create the App Store distribution provisioning profile via ASC API key"
+  lane :fetch_profile do
+    app_store_connect_api_key(
+      key_id: "77HSQA4SZD",
+      issuer_id: "fd037358-c176-4ca0-a466-ceb23180250f",
+      key_filepath: "secrets/AuthKey_77HSQA4SZD.p8",
+      in_house: false
+    )
+    get_provisioning_profile(
+      app_identifier: "com.redgrid.redgridtactical",
+      team_id: "79PGQG73FG",
+      provisioning_name: "Red Grid MGRS App Store",
+      cert_id: nil,
+      force: false,
+      ignore_profiles_with_different_name: false,
+      output_path: "./secrets"
+    )
+  end
+
+  desc "Build signed iOS .ipa for App Store (no upload)"
+  lane :build do
+    fetch_profile
+    cocoapods(
+      podfile: "ios/Podfile",
+      use_bundle_exec: false
+    )
+    # -------------------------------------------------------------------
+    # Deterministic version pinning: app.json is the single source of truth.
+    #
+    # We've observed that Xcode's `-exportArchive` step in Xcode 26 silently
+    # drifts CFBundleVersion by reading the archive's top-level
+    # Info.plist:ApplicationProperties:CFBundleVersion rather than the
+    # app bundle's Info.plist. So we split archive + export into two steps
+    # and patch the archive's top-level plist in between.
+    # -------------------------------------------------------------------
+    repo_root = File.expand_path("..", __dir__)
+    app_config = JSON.parse(File.read(File.join(repo_root, "app.json")))["expo"]
+    marketing_version = app_config["version"]
+    build_number      = app_config["ios"]["buildNumber"].to_s
+    UI.message("🔒 Pinning MARKETING_VERSION=#{marketing_version} CFBundleVersion=#{build_number}")
+
+    # Force source Info.plist to match app.json (in case prebuild drifted).
+    source_plist = File.join(repo_root, "ios/RedGridMGRS/Info.plist")
+    sh "/usr/libexec/PlistBuddy -c 'Set :CFBundleShortVersionString #{marketing_version}' '#{source_plist}'"
+    sh "/usr/libexec/PlistBuddy -c 'Set :CFBundleVersion #{build_number}' '#{source_plist}'"
+
+    # Phase 1: archive only (no IPA export yet).
+    archive_path = File.join(repo_root, "build/ios/RedGridMGRS.xcarchive")
+    build_app(
+      workspace: "ios/RedGridMGRS.xcworkspace",
+      scheme: "RedGridMGRS",
+      configuration: "Release",
+      clean: false,
+      skip_package_ipa: true,
+      archive_path: archive_path,
+      include_symbols: true,
+      include_bitcode: false
+    )
+
+    # Phase 2: patch the archive's top-level Info.plist.
+    archive_info = "#{archive_path}/Info.plist"
+    app_info     = "#{archive_path}/Products/Applications/RedGridMGRS.app/Info.plist"
+    sh "/usr/libexec/PlistBuddy -c 'Set :ApplicationProperties:CFBundleShortVersionString #{marketing_version}' '#{archive_info}'"
+    sh "/usr/libexec/PlistBuddy -c 'Set :ApplicationProperties:CFBundleVersion #{build_number}' '#{archive_info}'"
+    sh "/usr/libexec/PlistBuddy -c 'Set :CFBundleShortVersionString #{marketing_version}' '#{app_info}'"
+    sh "/usr/libexec/PlistBuddy -c 'Set :CFBundleVersion #{build_number}' '#{app_info}'"
+    UI.message("🔒 Patched xcarchive Info.plist to pinned version.")
+
+    # Phase 3: export IPA from the patched archive.
+    export_dir = File.join(repo_root, "build/ios")
+    sh "rm -f '#{export_dir}/RedGridMGRS.ipa' '#{export_dir}/RedGridMGRS.app.dSYM.zip'"
+    sh "xcodebuild -exportArchive -archivePath '#{archive_path}' -exportOptionsPlist '#{File.join(repo_root, 'ios/ExportOptions.plist')}' -exportPath '#{export_dir}'"
+
+    # -------------------------------------------------------------------
+    # Post-export repair: Xcode 26 deterministically drifts CFBundleVersion
+    # by +1 during export (cause unknown — not cache, not pbxproj, not
+    # archive plists). We unzip, patch, and re-sign the IPA to force the
+    # exact pinned values.
+    # -------------------------------------------------------------------
+    ipa_path = "#{export_dir}/RedGridMGRS.ipa"
+    repair_dir = "/tmp/rg-ipa-repair"
+    sh "rm -rf #{repair_dir}"
+    sh "mkdir -p #{repair_dir}"
+    sh "unzip -q '#{ipa_path}' -d #{repair_dir}"
+
+    app_bundle = "#{repair_dir}/Payload/RedGridMGRS.app"
+    app_plist  = "#{app_bundle}/Info.plist"
+
+    # Extract entitlements from the already-signed bundle for re-signing.
+    entitlements_file = "/tmp/rg-ipa-repair-entitlements.plist"
+    sh "codesign -d --entitlements :- '#{app_bundle}' > #{entitlements_file} 2>/dev/null"
+
+    # Patch Info.plist to the pinned values.
+    sh "/usr/libexec/PlistBuddy -c 'Set :CFBundleShortVersionString #{marketing_version}' '#{app_plist}'"
+    sh "/usr/libexec/PlistBuddy -c 'Set :CFBundleVersion #{build_number}' '#{app_plist}'"
+
+    # Re-sign the app bundle with the same distribution identity + entitlements.
+    signing_identity = "Apple Distribution: Gianlorenzo Ranieri (79PGQG73FG)"
+    sh "codesign --force --sign '#{signing_identity}' --entitlements '#{entitlements_file}' --timestamp '#{app_bundle}'"
+
+    # Re-zip into IPA (preserves the Payload/ structure).
+    sh "rm -f '#{ipa_path}'"
+    sh "cd #{repair_dir} && zip -qr '#{ipa_path}' Payload"
+
+    # Verify the repaired IPA has the exact pinned values.
+    verify_info = "/tmp/rg-ipa-verify-info.plist"
+    sh "unzip -p '#{ipa_path}' 'Payload/RedGridMGRS.app/Info.plist' > #{verify_info}"
+    actual_version = `/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' #{verify_info}`.strip
+    actual_build   = `/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' #{verify_info}`.strip
+    if actual_version != marketing_version || actual_build != build_number
+      UI.user_error!("❌ IPA build number drift! Expected #{marketing_version}/#{build_number}, got #{actual_version}/#{actual_build}")
+    end
+
+    # Verify signature is still valid after re-signing.
+    sh "codesign --verify --verbose=2 '#{repair_dir}/Payload/RedGridMGRS.app' 2>&1 || true"
+    UI.success("✅ IPA verified: #{actual_version} (#{actual_build}), re-signed and repaired")
+
+    # Zip up the dSYM for uploading.
+    dsym_dir = "#{archive_path}/dSYMs"
+    if Dir.exist?(dsym_dir)
+      sh "cd '#{dsym_dir}' && zip -qr '#{export_dir}/RedGridMGRS.app.dSYM.zip' *.dSYM"
+    end
+  end
+
+  desc "Build + upload to TestFlight (no submission for review)"
+  lane :beta do
+    build
+    upload_to_testflight(
+      api_key_path: "secrets/asc_api_key.json",
+      ipa: "build/ios/RedGridMGRS.ipa",
+      skip_waiting_for_build_processing: true,
+      changelog: ENV["CHANGELOG"] || "Latest development build."
+    )
+  end
+
+  desc "Build + upload + submit for App Store review"
+  lane :release do
+    build
+    upload_to_app_store(
+      api_key_path: "secrets/asc_api_key.json",
+      ipa: "build/ios/RedGridMGRS.ipa",
+      skip_metadata: true,
+      skip_screenshots: true,
+      submit_for_review: true,
+      automatic_release: false,
+      force: true,
+      precheck_include_in_app_purchases: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false
+      }
+    )
+  end
+end
+
+# -----------------------------------------------------------------------------
+# Android
+# -----------------------------------------------------------------------------
+platform :android do
+
+  desc "Bump Android versionCode by 1"
+  lane :bump_version_code do
+    android_set_version_code(
+      gradle_file: "android/app/build.gradle"
+    )
+  end
+
+  desc "Build signed AAB for Play Store"
+  lane :build do
+    gradle(
+      project_dir: "android",
+      task: "bundle",
+      build_type: "Release"
+    )
+  end
+
+  desc "Build + upload AAB to Play Console internal track"
+  lane :beta do
+    build
+    upload_to_play_store(
+      track: "internal",
+      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      json_key: "secrets/play_service_account.json",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true
+    )
+  end
+
+  desc "Promote internal build to production"
+  lane :release do
+    upload_to_play_store(
+      track: "production",
+      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      json_key: "secrets/play_service_account.json",
+      skip_upload_metadata: false,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end

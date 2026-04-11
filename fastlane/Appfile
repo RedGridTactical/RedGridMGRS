@@ -1,0 +1,9 @@
+for_platform :ios do
+  app_identifier("com.redgrid.redgridtactical")
+  apple_id("gianlorenzo.ranieri@gmail.com")
+  team_id("79PGQG73FG")
+end
+
+for_platform :android do
+  package_name("com.redgrid.redgridtactical")
+end

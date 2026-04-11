@@ -27,3 +27,20 @@ generate_qc_report.py
 # OS files
 .DS_Store
 Thumbs.db
+
+# ASC API keys / secrets — never commit
+secrets/
+
+# Local build outputs
+build/
+ios/build/
+android/build/
+android/app/build/
+android/.gradle/
+ios/Pods/
+
+# Fastlane artifacts
+fastlane/report.xml
+fastlane/README.md
+fastlane/test_output/
+fastlane/screenshots/
