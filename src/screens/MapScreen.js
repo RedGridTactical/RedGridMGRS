@@ -554,6 +554,46 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
             <Text style={[styles.mapBtnIcon, { color: colors.accent }]}>◎</Text>
           </TouchableOpacity>
         )}
+
+        {/* Zoom in */}
+        <TouchableOpacity
+          style={[styles.mapBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => {
+            tapLight();
+            const r = mapRegion || initialRegion;
+            if (mapRef.current && r) {
+              mapRef.current.animateToRegion({
+                ...r,
+                latitudeDelta: r.latitudeDelta / 2,
+                longitudeDelta: r.longitudeDelta / 2,
+              }, 300);
+            }
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Zoom in"
+        >
+          <Text style={[styles.mapBtnIcon, { color: colors.accent }]}>＋</Text>
+        </TouchableOpacity>
+
+        {/* Zoom out */}
+        <TouchableOpacity
+          style={[styles.mapBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => {
+            tapLight();
+            const r = mapRegion || initialRegion;
+            if (mapRef.current && r) {
+              mapRef.current.animateToRegion({
+                ...r,
+                latitudeDelta: Math.min(r.latitudeDelta * 2, 80),
+                longitudeDelta: Math.min(r.longitudeDelta * 2, 80),
+              }, 300);
+            }
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Zoom out"
+        >
+          <Text style={[styles.mapBtnIcon, { color: colors.accent }]}>ー</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Bottom bar — center MGRS + cache indicator */}
