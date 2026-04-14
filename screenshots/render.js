@@ -44,32 +44,38 @@ const CAPTIONS = [
   await page.setViewport({ width: 14000, height: FRAME_HEIGHT + 200, deviceScaleFactor: 1 });
 
   const htmlPath = path.join(__dirname, 'composite.html');
-  await page.goto(`file://${htmlPath}`, { waitUntil: 'networkidle0', timeout: 30000 });
 
-  // Wait for all phone images to load
-  await page.waitForFunction(() => {
-    const imgs = document.querySelectorAll('.phone img');
-    return imgs.length > 0 && Array.from(imgs).every(img => img.complete && img.naturalHeight > 0);
-  }, { timeout: 15000 }).catch(() => {
-    console.warn('Warning: some images may not have loaded — continuing anyway');
-  });
+  // Render for each platform — iOS default, Android adds body.android class for Pixel-style chrome
+  const platforms = [
+    { name: 'ios',     out: IOS_OUT,     bodyClass: '' },
+    { name: 'android', out: ANDROID_OUT, bodyClass: 'android' },
+  ];
 
-  const frames = await page.$$('.frame');
-  console.log(`Found ${frames.length} frames`);
+  for (const platform of platforms) {
+    console.log(`\nRendering ${platform.name}...`);
+    await page.goto(`file://${htmlPath}`, { waitUntil: 'networkidle0', timeout: 30000 });
 
-  for (let i = 0; i < frames.length; i++) {
-    const name = CAPTIONS[i] || `frame_${i + 1}`;
+    // Apply platform-specific body class so CSS swaps phone chrome
+    await page.evaluate((cls) => { document.body.className = cls; }, platform.bodyClass);
 
-    // iOS screenshot
-    const iosPath = path.join(IOS_OUT, `${name}.png`);
-    await frames[i].screenshot({ path: iosPath });
-    const iosStat = fs.statSync(iosPath);
-    console.log(`  ✓ ios/${name}.png (${(iosStat.size / 1024).toFixed(0)} KB)`);
+    // Wait for all phone images to load
+    await page.waitForFunction(() => {
+      const imgs = document.querySelectorAll('.phone img');
+      return imgs.length > 0 && Array.from(imgs).every(img => img.complete && img.naturalHeight > 0);
+    }, { timeout: 15000 }).catch(() => {
+      console.warn('Warning: some images may not have loaded — continuing anyway');
+    });
 
-    // Android screenshot — same dimensions work for Play Store phone screenshots
-    const androidPath = path.join(ANDROID_OUT, `${name}.png`);
-    fs.copyFileSync(iosPath, androidPath);
-    console.log(`  ✓ android/${name}.png (copy)`);
+    const frames = await page.$$('.frame');
+    console.log(`  Found ${frames.length} frames`);
+
+    for (let i = 0; i < frames.length; i++) {
+      const name = CAPTIONS[i] || `frame_${i + 1}`;
+      const outPath = path.join(platform.out, `${name}.png`);
+      await frames[i].screenshot({ path: outPath });
+      const stat = fs.statSync(outPath);
+      console.log(`  ✓ ${platform.name}/${name}.png (${(stat.size / 1024).toFixed(0)} KB)`);
+    }
   }
 
   await browser.close();

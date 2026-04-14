@@ -96,6 +96,7 @@
   }
 
   /* Phone mockup — Just Start proportions (1020x2210 in 1290x2796 frame) */
+  /* iOS default: big rounded corners, thicker bezel (iPhone Pro Max look) */
   .phone {
     position: relative;
     z-index: 2;
@@ -110,6 +111,12 @@
       0 40px 100px rgba(0,0,0,0.6),
       0 0 0 1.5px rgba(255,255,255,0.05);
     flex-shrink: 0;
+  }
+
+  /* Android: Pixel 9 Pro XL-style — squarer corners, thinner bezel */
+  body.android .phone {
+    border-radius: 48px;
+    border: 6px solid #2a2a2c;
   }
 
   .phone img {
