@@ -22,60 +22,100 @@
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
   }
 
-  /* Red Grid style: deep dark red gradients — matching Red Grid Link mockups */
-  .frame-red    { background: linear-gradient(180deg, #000000 0%, #1a0000 30%, #4a0000 70%, #8B0000 100%); }
-  .frame-green  { background: linear-gradient(180deg, #000000 0%, #001a00 30%, #003300 70%, #006600 100%); }
-  .frame-blue   { background: linear-gradient(180deg, #000000 0%, #00001a 30%, #000044 70%, #000088 100%); }
-  .frame-white  { background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 30%, #3a3a3a 70%, #555555 100%); }
+  /* Red Grid tactical gradients — deep to blood red, NVG green, OLED blue */
+  .frame-red    { background: linear-gradient(170deg, #000000 0%, #1a0000 25%, #7A0000 90%, #B80000 100%); }
+  .frame-green  { background: linear-gradient(170deg, #000000 0%, #001505 25%, #004410 90%, #007A1A 100%); }
+  .frame-blue   { background: linear-gradient(170deg, #000000 0%, #00001F 25%, #00005C 90%, #0011AA 100%); }
+  .frame-mixed  { background: linear-gradient(170deg, #000000 0%, #1a0000 25%, #7A0000 85%, #4A0000 100%); }
 
-  /* Headline */
+  /* Ambient glow shapes */
+  .frame::before {
+    content: '';
+    position: absolute;
+    width: 900px;
+    height: 900px;
+    border-radius: 50%;
+    opacity: 0.08;
+    top: 350px;
+    left: -200px;
+    background: #FF2020;
+    filter: blur(150px);
+    pointer-events: none;
+  }
+  .frame::after {
+    content: '';
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    border-radius: 50%;
+    opacity: 0.06;
+    bottom: 800px;
+    right: -100px;
+    background: #FF4040;
+    filter: blur(120px);
+    pointer-events: none;
+  }
+  .frame-green::before { background: #20FF40; }
+  .frame-green::after  { background: #40FF60; }
+  .frame-blue::before  { background: #2040FF; }
+  .frame-blue::after   { background: #4060FF; }
+
+  /* Headline text */
   .headline {
     position: relative;
     z-index: 2;
-    font-size: 76px;
+    font-size: 92px;
     font-weight: 900;
     color: #ffffff;
     text-align: center;
     line-height: 1.08;
-    letter-spacing: -1px;
-    max-width: 1100px;
-    padding: 130px 60px 0;
+    letter-spacing: -2px;
+    max-width: 1160px;
+    padding: 140px 60px 0;
+    text-shadow: 0 4px 40px rgba(0,0,0,0.5);
     text-transform: uppercase;
   }
 
   .subtitle {
     position: relative;
     z-index: 2;
-    font-size: 36px;
+    font-size: 40px;
     font-weight: 400;
-    color: rgba(255,255,255,0.55);
+    color: rgba(255,255,255,0.78);
     text-align: center;
-    margin-top: 20px;
-    max-width: 1000px;
-    line-height: 1.35;
+    margin-top: 22px;
+    max-width: 1080px;
+    line-height: 1.38;
     padding: 0 60px;
   }
 
-  /* Phone mockup — dark bezel, matching Link style */
+  /* Phone mockup — Just Start proportions (1020x2210 in 1290x2796 frame) */
   .phone {
     position: relative;
     z-index: 2;
-    margin-top: 50px;
-    width: 860px;
-    border-radius: 54px;
+    margin-top: 40px;
+    width: 1020px;
+    height: 2210px;
+    background: #1C1C1E;
+    border-radius: 110px;
+    border: 8px solid #3a3a3c;
     overflow: hidden;
-    background: #111;
-    border: 3px solid rgba(255,255,255,0.08);
-    box-shadow: 0 40px 100px rgba(0,0,0,0.7);
+    box-shadow:
+      0 40px 100px rgba(0,0,0,0.6),
+      0 0 0 1.5px rgba(255,255,255,0.05);
+    flex-shrink: 0;
   }
+
   .phone img {
     width: 100%;
+    height: 100%;
+    object-fit: cover;
     display: block;
   }
 </style>
@@ -84,58 +124,58 @@
 
 <!-- 01: GRID tab — Red theme -->
 <div class="frame frame-red">
-  <div class="headline">10-DIGIT MGRS<br>PRECISION</div>
-  <div class="subtitle">Live military grid, 1-meter accuracy</div>
-  <div class="phone"><img src="raw/01_grid.png"></div>
+  <div class="headline">10-Digit MGRS<br>Precision</div>
+  <div class="subtitle">Live military grid · 1-meter accuracy</div>
+  <div class="phone"><img src="raw/01_grid.png" alt="Live MGRS grid"></div>
 </div>
 
-<!-- 02: MAP tab — Red theme -->
-<div class="frame frame-red">
-  <div class="headline">OFFLINE<br>TACTICAL MAPS</div>
-  <div class="subtitle">3 map styles · MGRS grid overlay</div>
-  <div class="phone"><img src="raw/02_map.png"></div>
+<!-- 02: MAP tab — mixed red theme — mesh positions visible -->
+<div class="frame frame-mixed">
+  <div class="headline">Offline<br>Tactical Maps</div>
+  <div class="subtitle">Dark tiles · MGRS overlay · mesh positions</div>
+  <div class="phone"><img src="raw/02_map.png" alt="Offline tactical maps with mesh nodes"></div>
 </div>
 
 <!-- 03: TOOLS tab — NVG Green theme -->
 <div class="frame frame-green">
-  <div class="headline">10 TACTICAL<br>TOOLS</div>
+  <div class="headline">10 Tactical<br>Tools</div>
   <div class="subtitle">Dead reckoning · resection · pace count</div>
-  <div class="phone"><img src="raw/03_tools.png"></div>
+  <div class="phone"><img src="raw/03_tools.png" alt="10 tactical tools"></div>
 </div>
 
 <!-- 04: REPORTS tab — Blue theme -->
 <div class="frame frame-blue">
-  <div class="headline">RADIO-READY<br>REPORTS</div>
+  <div class="headline">Radio-Ready<br>Reports</div>
   <div class="subtitle">SALUTE · 9-Line MEDEVAC · SPOT · CFF</div>
-  <div class="phone"><img src="raw/04_reports.png"></div>
+  <div class="phone"><img src="raw/04_reports.png" alt="Radio-ready reports"></div>
 </div>
 
 <!-- 05: LISTS — Red theme -->
 <div class="frame frame-red">
-  <div class="headline">MARK POSITION.<br>ONE TAP.</div>
+  <div class="headline">Mark Position.<br>One Tap.</div>
   <div class="subtitle">Waypoints · GPX/KML · mission planning</div>
-  <div class="phone"><img src="raw/05_lists.png"></div>
+  <div class="phone"><img src="raw/05_lists.png" alt="Waypoint lists and mission planning"></div>
 </div>
 
 <!-- 06: COORDS — Red theme -->
 <div class="frame frame-red">
-  <div class="headline">5 COORDINATE<br>FORMATS</div>
+  <div class="headline">5 Coordinate<br>Formats</div>
   <div class="subtitle">MGRS · UTM · DD · DMS · FixPhrase</div>
-  <div class="phone"><img src="raw/06_coords.png"></div>
+  <div class="phone"><img src="raw/06_coords.png" alt="Five coordinate formats"></div>
 </div>
 
 <!-- 07: THEMES — Red theme -->
 <div class="frame frame-red">
-  <div class="headline">4 TACTICAL<br>DISPLAY THEMES</div>
+  <div class="headline">4 Tactical<br>Display Themes</div>
   <div class="subtitle">Red · NVG Green · Day White · Blue</div>
-  <div class="phone"><img src="raw/07_themes.png"></div>
+  <div class="phone"><img src="raw/07_themes.png" alt="Four tactical themes"></div>
 </div>
 
-<!-- 08: MESH — Red theme -->
-<div class="frame frame-red">
-  <div class="headline">MESHTASTIC<br>MESH NETWORK</div>
+<!-- 08: MESH — mixed red theme -->
+<div class="frame frame-mixed">
+  <div class="headline">Meshtastic<br>Mesh Network</div>
   <div class="subtitle">See your team on the map · no cell needed</div>
-  <div class="phone"><img src="raw/08_mesh.png"></div>
+  <div class="phone"><img src="raw/08_mesh.png" alt="Meshtastic mesh network"></div>
 </div>
 
 </body>
