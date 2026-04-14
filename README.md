@@ -25,9 +25,9 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 
 ---
 
-| Grid & Wayfinder | Tools | Reports | Landscape |
+| Grid & Wayfinder | Offline Maps | Tools | Reports |
 |:---:|:---:|:---:|:---:|
-| ![Grid tab](docs/images/screenshot_1_grid.png) | ![Tools tab](docs/images/screenshot_2_tools.png) | ![Reports tab](docs/images/screenshot_3_report.png) | ![Landscape](docs/images/screenshot_4_landscape.png) |
+| ![Grid tab](docs/images/screenshot_1_grid.png) | ![Map tab](docs/images/screenshot_2_map.png) | ![Tools tab](docs/images/screenshot_2_tools.png) | ![Reports tab](docs/images/screenshot_3_report.png) |
 
 ---
 
