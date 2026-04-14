@@ -182,12 +182,12 @@ export function MeshScreen({
               )}
               <View style={styles.nodeMetrics}>
                 {pos.bearing !== null && (
-                  <Text style={[styles.nodeMetric, { color: colors.text3 }]}>BRG {Math.round(pos.bearing)}\u00b0</Text>
+                  <Text style={[styles.nodeMetric, { color: colors.text3 }]}>BRG {Math.round(pos.bearing)}°</Text>
                 )}
                 {pos.distance !== null && (
                   <Text style={[styles.nodeMetric, { color: colors.text3 }]}>DST {formatDistance(pos.distance)}</Text>
                 )}
-                {pos.altitude !== null && pos.altitude !== 0 && (
+                {pos.altitude != null && pos.altitude !== 0 && !Number.isNaN(pos.altitude) && (
                   <Text style={[styles.nodeMetric, { color: colors.text3 }]}>ALT {Math.round(pos.altitude)}m</Text>
                 )}
               </View>

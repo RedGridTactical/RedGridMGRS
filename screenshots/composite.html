@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Red Grid MGRS — App Store Screenshots Compositor</title>
+<title>Red Grid MGRS — App Store Screenshots</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -25,76 +25,54 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: flex-start;
   }
 
-  /* Tactical dark gradients with red/dark-red accents */
-  .frame-1 { background: linear-gradient(170deg, #000000 0%, #0a0000 25%, #8B0000 85%, #CC0000 100%); }
-  .frame-2 { background: linear-gradient(170deg, #000000 0%, #050505 25%, #1a0505 60%, #8B0000 100%); }
-  .frame-3 { background: linear-gradient(170deg, #000000 0%, #0a0a0a 30%, #CC0000 85%, #8B0000 100%); }
-  .frame-4 { background: linear-gradient(170deg, #000000 0%, #0a0000 30%, #4a0000 70%, #CC0000 100%); }
-  .frame-5 { background: linear-gradient(170deg, #000000 0%, #050505 20%, #8B0000 80%, #CC3333 100%); }
-  .frame-6 { background: linear-gradient(170deg, #000000 0%, #0a0000 25%, #CC0000 90%, #FF3333 100%); }
-  .frame-7 { background: linear-gradient(170deg, #000000 0%, #0a0a0a 30%, #4a0000 75%, #8B0000 100%); }
-  .frame-8 { background: linear-gradient(170deg, #000000 0%, #050505 25%, #8B0000 85%, #CC0000 100%); }
+  /* Red Grid style: deep dark red gradients — matching Red Grid Link mockups */
+  .frame-red    { background: linear-gradient(180deg, #000000 0%, #1a0000 30%, #4a0000 70%, #8B0000 100%); }
+  .frame-green  { background: linear-gradient(180deg, #000000 0%, #001a00 30%, #003300 70%, #006600 100%); }
+  .frame-blue   { background: linear-gradient(180deg, #000000 0%, #00001a 30%, #000044 70%, #000088 100%); }
+  .frame-white  { background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 30%, #3a3a3a 70%, #555555 100%); }
 
-  /* Subtle decorative blur */
-  .frame::before {
-    content: '';
-    position: absolute;
-    width: 900px;
-    height: 900px;
-    border-radius: 50%;
-    opacity: 0.04;
-    top: 400px;
-    left: -200px;
-    background: #CC0000;
-    filter: blur(150px);
-    pointer-events: none;
-  }
-
-  /* Headline text */
+  /* Headline */
   .headline {
     position: relative;
     z-index: 2;
-    font-size: 82px;
-    font-weight: 800;
+    font-size: 76px;
+    font-weight: 900;
     color: #ffffff;
     text-align: center;
-    line-height: 1.1;
+    line-height: 1.08;
     letter-spacing: -1px;
     max-width: 1100px;
-    padding: 120px 70px 0;
-    text-shadow: 0 4px 40px rgba(0,0,0,0.6);
-  }
-  .headline em {
-    font-style: normal;
-    color: #CC0000;
+    padding: 130px 60px 0;
+    text-transform: uppercase;
   }
 
   .subtitle {
     position: relative;
     z-index: 2;
-    font-size: 38px;
+    font-size: 36px;
     font-weight: 400;
-    color: rgba(255,255,255,0.65);
+    color: rgba(255,255,255,0.55);
     text-align: center;
     margin-top: 20px;
     max-width: 1000px;
-    line-height: 1.4;
-    padding: 0 70px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+    line-height: 1.35;
+    padding: 0 60px;
   }
 
-  /* Phone mockup */
+  /* Phone mockup — dark bezel, matching Link style */
   .phone {
     position: relative;
     z-index: 2;
-    margin-top: 60px;
-    width: 920px;
-    border-radius: 60px;
+    margin-top: 50px;
+    width: 860px;
+    border-radius: 54px;
     overflow: hidden;
-    box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 4px rgba(255,255,255,0.08);
+    background: #111;
+    border: 3px solid rgba(255,255,255,0.08);
+    box-shadow: 0 40px 100px rgba(0,0,0,0.7);
   }
   .phone img {
     width: 100%;
@@ -104,60 +82,60 @@
 </head>
 <body>
 
-<!-- 01: Grid tab — hero shot -->
-<div class="frame frame-1">
-  <div class="headline"><em>10-Digit MGRS</em><br>In Your Pocket</div>
-  <div class="subtitle">DAGR-class precision · zero tracking</div>
+<!-- 01: GRID tab — Red theme -->
+<div class="frame frame-red">
+  <div class="headline">10-DIGIT MGRS<br>PRECISION</div>
+  <div class="subtitle">Live military grid, 1-meter accuracy</div>
   <div class="phone"><img src="raw/01_grid.png"></div>
 </div>
 
-<!-- 02: Map tab -->
-<div class="frame frame-2">
-  <div class="headline">Offline<br><em>Tactical Maps</em></div>
+<!-- 02: MAP tab — Red theme -->
+<div class="frame frame-red">
+  <div class="headline">OFFLINE<br>TACTICAL MAPS</div>
   <div class="subtitle">3 map styles · MGRS grid overlay</div>
   <div class="phone"><img src="raw/02_map.png"></div>
 </div>
 
-<!-- 03: Tools tab -->
-<div class="frame frame-3">
-  <div class="headline"><em>10 Tactical</em><br>Tools Built In</div>
-  <div class="subtitle">Resection · dead reckoning · pace count</div>
+<!-- 03: TOOLS tab — NVG Green theme -->
+<div class="frame frame-green">
+  <div class="headline">10 TACTICAL<br>TOOLS</div>
+  <div class="subtitle">Dead reckoning · resection · pace count</div>
   <div class="phone"><img src="raw/03_tools.png"></div>
 </div>
 
-<!-- 04: Reports tab -->
-<div class="frame frame-4">
-  <div class="headline">Radio-Ready<br><em>Report Templates</em></div>
+<!-- 04: REPORTS tab — Blue theme -->
+<div class="frame frame-blue">
+  <div class="headline">RADIO-READY<br>REPORTS</div>
   <div class="subtitle">SALUTE · 9-Line MEDEVAC · SPOT · CFF</div>
   <div class="phone"><img src="raw/04_reports.png"></div>
 </div>
 
-<!-- 05: Waypoint lists -->
-<div class="frame frame-5">
-  <div class="headline"><em>Mark Position</em><br>One Tap</div>
+<!-- 05: LISTS — Red theme -->
+<div class="frame frame-red">
+  <div class="headline">MARK POSITION.<br>ONE TAP.</div>
   <div class="subtitle">Waypoints · GPX/KML · mission planning</div>
   <div class="phone"><img src="raw/05_lists.png"></div>
 </div>
 
-<!-- 06: Meshtastic mesh -->
-<div class="frame frame-6">
-  <div class="headline">Meshtastic<br><em>Mesh Network</em></div>
-  <div class="subtitle">See your team on the map · no cell service</div>
-  <div class="phone"><img src="raw/06_mesh.png"></div>
+<!-- 06: COORDS — Red theme -->
+<div class="frame frame-red">
+  <div class="headline">5 COORDINATE<br>FORMATS</div>
+  <div class="subtitle">MGRS · UTM · DD · DMS · FixPhrase</div>
+  <div class="phone"><img src="raw/06_coords.png"></div>
 </div>
 
-<!-- 07: Themes -->
-<div class="frame frame-7">
-  <div class="headline"><em>4 Tactical</em><br>Display Themes</div>
-  <div class="subtitle">Red · NVG green · day white · blue</div>
+<!-- 07: THEMES — Red theme -->
+<div class="frame frame-red">
+  <div class="headline">4 TACTICAL<br>DISPLAY THEMES</div>
+  <div class="subtitle">Red · NVG Green · Day White · Blue</div>
   <div class="phone"><img src="raw/07_themes.png"></div>
 </div>
 
-<!-- 08: Share trial -->
-<div class="frame frame-8">
-  <div class="headline">Share <em>30 Days</em><br>Of Pro Free</div>
-  <div class="subtitle">One gift per device · zero tracking</div>
-  <div class="phone"><img src="raw/08_support.png"></div>
+<!-- 08: MESH — Red theme -->
+<div class="frame frame-red">
+  <div class="headline">MESHTASTIC<br>MESH NETWORK</div>
+  <div class="subtitle">See your team on the map · no cell needed</div>
+  <div class="phone"><img src="raw/08_mesh.png"></div>
 </div>
 
 </body>

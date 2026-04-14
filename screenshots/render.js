@@ -20,14 +20,14 @@ const IOS_OUT = path.join(__dirname, 'output', 'ios');
 const ANDROID_OUT = path.join(__dirname, 'output', 'android');
 
 const CAPTIONS = [
-  '01_grid_hero',
+  '01_grid',
   '02_map_offline',
   '03_tools',
   '04_reports',
   '05_mark_position',
-  '06_mesh_network',
+  '06_coords',
   '07_themes',
-  '08_share_trial',
+  '08_mesh_network',
 ];
 
 (async () => {

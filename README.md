@@ -16,18 +16,20 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 
 ---
 
-## Latest: v3.3.1 — Faster in the Field
+## Latest: v3.3.2 — Tactical Map Controls
 
-- **One-tap MARK POSITION** from the main screen. Drop a waypoint the instant you need it — CCP, contact, cache, rally point. No menus, no delay.
-- **Offline map prompt** on first Map tab visit. Never get caught with a blank map in the field.
-- **Share a free trial** — give a friend 30 days of Red Grid Pro. One gift per device, zero tracking. Receive one, give one.
-- **What's New** in-app screen so returning users discover every new feature.
+- **Map zoom controls** — dedicated + / – buttons and a one-tap Recenter-on-Me control. No more pinch-gymnastics with the phone against your chest.
+- **Screenshot compositor** — new Puppeteer pipeline that renders App Store frames at 1290×2796 directly from simulator captures. Clean marketing output in one command.
+- **Degree-symbol + altitude fixes** on the Mesh screen node cards.
+- All v3.3.1 features — **MARK POSITION**, **offline map prompt**, **share-to-unlock referral**, **in-app What's New**.
 
 ---
 
-| Grid & Wayfinder | Offline Maps | Tools | Reports |
+| Grid & Wayfinder | Offline Maps + Mesh | Tools | Reports |
 |:---:|:---:|:---:|:---:|
 | ![Grid tab](docs/images/screenshot_1_grid.png) | ![Map tab](docs/images/screenshot_2_map.png) | ![Tools tab](docs/images/screenshot_2_tools.png) | ![Reports tab](docs/images/screenshot_3_report.png) |
+| **Waypoint Lists** | **Mesh Network** | | |
+| ![Lists tab](docs/images/screenshot_5_lists.png) | ![Mesh tab](docs/images/screenshot_6_mesh.png) | | |
 
 ---
 
@@ -239,6 +241,18 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 ### v3.3.0 — Field Ready ✅ (2026)
 - Mesh positions rendered on map with node ID, MGRS, bearing, distance
 - Meshtastic setup guide with BLE exclusivity note
+
+### v3.3.1 — Faster in the Field ✅ (2026)
+- One-tap MARK POSITION from the main screen
+- First-visit offline map download prompt
+- Share-to-unlock 30-day Pro trial referral (HMAC-signed deep links)
+- In-app What's New modal for returning users
+
+### v3.3.2 — Tactical Map Controls ✅ (2026)
+- Map zoom +/– controls and Recenter-on-Me button
+- Screenshot compositor pipeline (Puppeteer, 1290×2796)
+- Mesh node card polish (degree symbol, altitude guard)
+- Local build pipeline (off EAS, Xcode 26 + fastlane)
 
 ### v3.5 — Solo Operator (2026)
 - Camera-based target acquisition (point camera at distant point, get its MGRS grid)
