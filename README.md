@@ -5,7 +5,7 @@
 **DAGR-Class MGRS Navigator**
 
 [![App Store](https://img.shields.io/badge/App%20Store-Download-8B0000?logo=apple)](https://apps.apple.com/app/id6759629554)
-[![Google Play](https://img.shields.io/badge/Google%20Play-Coming%20Soon-555555?logo=googleplay)](#android)
+[![Google Play](https://img.shields.io/badge/Google%20Play-Download-8B0000?logo=googleplay)](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical)
 [![License](https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-8B0000)](LICENSE)
 [![No Tracking](https://img.shields.io/badge/Tracking-None-CC0000)](PRIVACY.md)
 [![GitHub stars](https://img.shields.io/github/stars/RedGridTactical/RedGridMGRS)](https://github.com/RedGridTactical/RedGridMGRS/stargazers)
@@ -16,10 +16,11 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 
 ---
 
-## Latest: v3.3.2 — Tactical Map Controls
+## Latest: v3.3.2 — Now on Android
 
+- **📱 Google Play launch** — [Red Grid MGRS is now live on Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical). Same zero-network architecture, same DAGR-class MGRS, same open source code — now on both platforms.
 - **Map zoom controls** — dedicated + / – buttons and a one-tap Recenter-on-Me control. No more pinch-gymnastics with the phone against your chest.
-- **Screenshot compositor** — new Puppeteer pipeline that renders App Store frames at 1290×2796 directly from simulator captures. Clean marketing output in one command.
+- **Screenshot compositor** — Puppeteer pipeline that renders App Store + Play Store frames directly from simulator captures. Clean marketing output in one command.
 - **Degree-symbol + altitude fixes** on the Mesh screen node cards.
 - All v3.3.1 features — **MARK POSITION**, **offline map prompt**, **share-to-unlock referral**, **in-app What's New**.
 
@@ -126,7 +127,7 @@ All Pro tiers unlock:
 [App Store](https://apps.apple.com/app/id6759629554) — Free with optional Pro upgrade ($3.99/mo, $29.99/yr, or $149.99 lifetime).
 
 ### Android
-Coming soon. The codebase is cross-platform (React Native / Expo), and Android builds are functional — we're focusing on iOS polish first, with Android launching once the feature set matures. [Watch this repo](https://github.com/RedGridTactical/RedGridMGRS) or check back for updates.
+[Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) — Free with optional Pro upgrade ($3.99/mo, $29.99/yr, or $149.99 lifetime). Android 7+ (API 24+). First production release April 2026.
 
 ### Build from Source
 
@@ -174,7 +175,7 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 
 ## Roadmap
 
-> **iOS live, Android in closed testing.** Cross-platform (React Native/Expo). Full roadmap at [redgridtactical.com/roadmap](https://redgridtactical.com/roadmap.html).
+> **iOS + Android both live.** Cross-platform (React Native/Expo). Full roadmap at [redgridtactical.com/roadmap](https://redgridtactical.com/roadmap.html).
 
 ### v1.0 — Foundation ✅ (2026)
 - Real-time MGRS coordinates (1m precision), wayfinder arrow, 8 tactical tools, 3 report templates, red-on-black display, zero-network architecture
@@ -248,11 +249,12 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Share-to-unlock 30-day Pro trial referral (HMAC-signed deep links)
 - In-app What's New modal for returning users
 
-### v3.3.2 — Tactical Map Controls ✅ (2026)
+### v3.3.2 — Now on Android ✅ (2026)
+- **First Android production release on Google Play** (worldwide, 177 regions)
 - Map zoom +/– controls and Recenter-on-Me button
-- Screenshot compositor pipeline (Puppeteer, 1290×2796)
+- Screenshot compositor pipeline (Puppeteer, Phone + 7" + 10" tablet frames)
 - Mesh node card polish (degree symbol, altitude guard)
-- Local build pipeline (off EAS, Xcode 26 + fastlane)
+- Local build pipeline (off EAS, Xcode 26 + fastlane + Gradle)
 
 ### v3.5 — Solo Operator (2026)
 - Camera-based target acquisition (point camera at distant point, get its MGRS grid)
@@ -261,7 +263,7 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - CoT export (broadcast own position for ATAK interop)
 - Apple Watch companion (grid + bearing on wrist, NVG-readable)
 - Route planning with elevation profile
-- Android public launch on Google Play (satellite-optimized for T-Mobile Starlink)
+- Satellite connectivity optimization for T-Mobile Starlink on Android
 
 ### v4.0 — Ecosystem Integration (2026-2027)
 - Offline voice commands ("Mark position" / "Send grid" / "Navigate to waypoint")
