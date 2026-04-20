@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * asc-update-whats-new.js — Push v3.3.1 "What's New" text to all ASC locales.
+ * asc-update-whats-new.js — Push "What's New" text to all ASC locales.
  *
  * Uses App Store Connect API with the .p8 key at secrets/AuthKey_77HSQA4SZD.p8
- * to update the "releaseNotes" field on the v3.3.1 app version across every
- * locale in one run.
+ * to update the "releaseNotes" field on the target app version across every
+ * locale in one run. Defaults to app.json version if no arg is passed.
  *
  * Prereqs: run `npm install jsonwebtoken axios` once.
  *
@@ -35,53 +35,35 @@ const APP_ID = '6759629554'; // Red Grid MGRS
 // Release notes per locale. Copy the English version for locales we don't
 // have a translation for — ASC requires ALL localizations to be populated.
 const RELEASE_NOTES = {
-  'en-US': `v3.3.1 — Faster in the Field
+  'en-US': `v3.3.3 — Smoother in the Field
 
-- MARK POSITION: one-tap waypoint save from the main screen. No menus, no delay. Drop a mark the instant you need it — CCP, contact, cache, rally point.
-- OFFLINE MAP PROMPT: Red Grid now prompts you to download map tiles for your area on your first map visit, so you're field-ready before you lose signal.
-- SHARE A FREE TRIAL: give a friend 30 days of Red Grid Pro. One gift per device, no strings, zero tracking. Receive one, give one.
-- In-app What's New screen so returning users discover every new feature.
-- Performance and stability improvements.`,
+- REVIEW PROMPT POLISH: if you like Red Grid, the in-app review ask now appears at natural moments (right after a successful MARK POSITION) instead of at random launches.
+- Background tuning and stability improvements across the grid, map, and tools.`,
 
-  'fr-FR': `v3.3.1 — Plus rapide sur le terrain
+  'fr-FR': `v3.3.3 — Plus fluide sur le terrain
 
-- MARQUAGE POSITION: enregistrement du point de passage en un seul toucher depuis l'écran principal. Plus de menus, plus de délai.
-- CARTES HORS LIGNE: Red Grid propose de télécharger les tuiles de carte de votre zone dès votre première visite.
-- PARTAGER UN ESSAI: offrez à un ami 30 jours de Red Grid Pro. Un cadeau par appareil, zéro tracking.
-- Écran « Nouveautés » intégré pour les utilisateurs récurrents.
-- Améliorations des performances et de la stabilité.`,
+- INVITATION D'AVIS AFFINÉE: si vous aimez Red Grid, la demande d'avis intégrée apparaît maintenant à des moments naturels (juste après un MARQUAGE POSITION réussi) au lieu de lancements aléatoires.
+- Améliorations des performances et de la stabilité sur la grille, la carte et les outils.`,
 
-  'de-DE': `v3.3.1 — Schneller im Einsatz
+  'de-DE': `v3.3.3 — Geschmeidiger im Einsatz
 
-- POSITION MARKIEREN: Ein-Tipp-Wegpunkt direkt vom Hauptbildschirm. Keine Menüs, keine Verzögerung.
-- OFFLINE-KARTE: Red Grid fragt beim ersten Kartenbesuch, ob Kacheln für Ihr Gebiet heruntergeladen werden sollen.
-- TESTVERSION TEILEN: Schenken Sie einem Freund 30 Tage Red Grid Pro. Ein Geschenk pro Gerät, kein Tracking.
-- „Neu in dieser Version"-Bildschirm für wiederkehrende Benutzer.
-- Leistungs- und Stabilitätsverbesserungen.`,
+- BEWERTUNGSAUFFORDERUNG VERFEINERT: Wenn Sie Red Grid mögen, erscheint die In-App-Bewertungsanfrage jetzt in natürlichen Momenten (direkt nach einer erfolgreichen POSITION MARKIEREN) statt bei zufälligen Starts.
+- Hintergrund-Tuning und Stabilitätsverbesserungen in Grid, Karte und Werkzeugen.`,
 
-  'es-ES': `v3.3.1 — Más rápido en el campo
+  'es-ES': `v3.3.3 — Más fluido en el campo
 
-- MARCAR POSICIÓN: guardado de punto de ruta con un solo toque desde la pantalla principal. Sin menús, sin demoras.
-- MAPAS OFFLINE: Red Grid ahora te pide descargar las teselas del mapa de tu área en la primera visita.
-- COMPARTIR PRUEBA: regala a un amigo 30 días de Red Grid Pro. Un regalo por dispositivo, sin seguimiento.
-- Pantalla "Novedades" integrada para usuarios recurrentes.
-- Mejoras de rendimiento y estabilidad.`,
+- INVITACIÓN DE RESEÑA REFINADA: si te gusta Red Grid, la solicitud de reseña en la app aparece ahora en momentos naturales (justo después de un MARCAR POSICIÓN exitoso) en vez de lanzamientos aleatorios.
+- Ajustes de rendimiento y mejoras de estabilidad en la cuadrícula, el mapa y las herramientas.`,
 
-  'ja': `v3.3.1 — 現場でより迅速に
+  'ja': `v3.3.3 — 現場でよりスムーズに
 
-- 位置マーク: メイン画面からワンタップでウェイポイント保存。メニュー不要、即座に記録。
-- オフラインマップ: 初回マップ表示時にエリアのタイルダウンロードを提案。
-- 無料トライアル共有: 友人にRed Grid Proを30日間プレゼント。デバイスごとに1回、追跡なし。
-- アプリ内の「新機能」画面でリピートユーザーに新機能を案内。
-- パフォーマンスと安定性の改善。`,
+- レビュー依頼の最適化: Red Gridを気に入った場合、アプリ内レビューの依頼がランダムな起動時ではなく、自然なタイミング（位置マーク成功直後）に表示されるようになりました。
+- グリッド、マップ、ツール全体のバックグラウンドチューニングと安定性の改善。`,
 
-  'ko': `v3.3.1 — 현장에서 더 빠르게
+  'ko': `v3.3.3 — 현장에서 더 부드럽게
 
-- 위치 표시: 메인 화면에서 원 탭으로 웨이포인트 저장. 메뉴 없이 즉시.
-- 오프라인 지도: 첫 지도 방문 시 해당 지역의 타일 다운로드를 제안합니다.
-- 무료 체험 공유: 친구에게 Red Grid Pro 30일을 선물하세요. 기기당 한 번, 추적 없음.
-- 재방문 사용자를 위한 '새로운 기능' 화면.
-- 성능 및 안정성 개선.`,
+- 리뷰 요청 개선: Red Grid가 마음에 드신다면, 앱 내 리뷰 요청이 임의의 실행 시점이 아닌 자연스러운 순간(위치 표시 성공 직후)에 나타납니다.
+- 그리드, 지도, 도구 전반의 백그라운드 조정 및 안정성 개선.`,
 };
 
 // Additional locales that share English text (fallback for all remaining
