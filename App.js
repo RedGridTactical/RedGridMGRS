@@ -180,11 +180,12 @@ function App() {
   }, []);
 
   const themeData = useTheme(theme || 'red');
-  const { checkAndPromptReview, openStoreReview } = useStoreReview();
+  const { checkAndPromptReview, promptReviewOnPositiveMoment, openStoreReview } = useStoreReview();
   const mesh = useMeshtastic();
 
-  // Prompt for App Store review on mount (gated by open count, install age, cooldown)
-  useEffect(() => { checkAndPromptReview(); trackSession(); }, []);
+  // Prompt for App Store review on mount (gated by open count, install age, cooldown).
+  // Pro users bypass the open/install-date gates — they've already demonstrated intent.
+  useEffect(() => { checkAndPromptReview({ isPro }); trackSession(); }, [isPro]);
 
   const [tab, setTab]               = useState('grid');
   const [waypoint, setWaypoint]     = useState(null);
@@ -229,6 +230,10 @@ function App() {
       setMarkToast(newWaypoint.label);
       setTimeout(() => setMarkToast(null), 2000);
       AccessibilityInfo.announceForAccessibility(`Position marked as ${newWaypoint.label}`);
+      // Positive moment: user successfully marked a position. Gated inside the hook
+      // (MIN_POSITIVE_MOMENTS=3, POSITIVE_COOLDOWN_DAYS=90) so this fires at most once
+      // every 90 days and only after the user has done it ≥3 times.
+      promptReviewOnPositiveMoment();
     };
     if (waypoint) {
       try {
@@ -564,7 +569,7 @@ function AppContent({
       />
 
       {/* What's new in this version — first launch post-update only */}
-      <WhatsNewModal currentVersion="3.3.1" />
+      <WhatsNewModal currentVersion="3.3.3" />
 
     </SafeAreaView>
 
@@ -801,7 +806,7 @@ function SignalBadge({ isLoading, location }) {
   const color = isLoading ? colors.border : location ? colors.text : colors.border;
   const label = isLoading ? t('gps.acquiring') : location ? t('gps.gpsFix') : t('gps.noSignal');
   return (
-    <View style={staticStyles.signal} accessibilityRole="status" accessibilityLiveRegion="polite" accessibilityLabel={`GPS status: ${label}`}>
+    <View style={staticStyles.signal} accessibilityLiveRegion="polite" accessibilityLabel={`GPS status: ${label}`}>
       <View style={[staticStyles.signalDot, { backgroundColor: color }]} />
       <Text style={[staticStyles.signalText, { color: colors.border }]}>{label}</Text>
     </View>

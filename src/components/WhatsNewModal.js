@@ -30,6 +30,30 @@ const FEATURES_BY_VERSION = {
       body: 'Give a friend 30 days of Red Grid Pro. One gift, one trial — both directions, just once.',
     },
   ],
+  '3.3.2': [
+    {
+      icon: '🤖',
+      title: 'NOW ON ANDROID',
+      body: 'Red Grid MGRS is available on Android phones and tablets. Same precision, same zero-network privacy.',
+    },
+    {
+      icon: '🔎',
+      title: 'MAP ZOOM CONTROLS',
+      body: 'Pinch or tap +/- for precise map zoom. MGRS grid reference now shows immediately in the bottom bar.',
+    },
+  ],
+  '3.3.3': [
+    {
+      icon: '✓',
+      title: 'SMOOTHER IN-APP REVIEW',
+      body: 'If you like Red Grid, the review prompt now appears at natural moments — after a successful mark — instead of at random launches.',
+    },
+    {
+      icon: '◆',
+      title: 'PERFORMANCE POLISH',
+      body: 'Background tuning and stability improvements across the grid, map, and tools.',
+    },
+  ],
 };
 
 export function WhatsNewModal({ currentVersion }) {

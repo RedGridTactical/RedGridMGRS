@@ -91,8 +91,15 @@ android {
         applicationId 'com.redgrid.redgridtactical'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 15
-        versionName "3.3.2"
+        versionCode 17
+        versionName "3.3.3"
+
+        // Google Maps Android API key — read from secrets/google-maps-key.txt (gitignored).
+        // Falls back to empty string if the file is missing; the app still launches but
+        // the map screen won't render tiles until a valid key is present.
+        def mapsKeyFile = rootProject.file('../secrets/google-maps-key.txt')
+        def mapsKey = mapsKeyFile.exists() ? mapsKeyFile.text.trim() : ""
+        manifestPlaceholders = [GOOGLE_MAPS_API_KEY: mapsKey]
     }
     signingConfigs {
         debug {
