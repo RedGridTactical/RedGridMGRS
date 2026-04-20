@@ -10,15 +10,23 @@
  *
  * Flow (one pass):
  *   1. Look up the target appStoreVersion by versionString
- *   2. Wait for the matching build (by version number) to appear in ASC
- *   3. Wait for the build's processingState to reach VALID (or skip with --no-wait)
- *   4. PATCH the appStoreVersion to point at the build (build relationship)
- *   5. POST an appStoreVersionSubmission to send it to App Review
+ *   2. Force releaseType = AFTER_APPROVAL so the build goes live the moment
+ *      Apple approves — no manual click required. Set RELEASE_TYPE=MANUAL env
+ *      var to override for a gated launch.
+ *   3. Wait for the matching build (by version number) to appear in ASC
+ *   4. Wait for the build's processingState to reach VALID
+ *   5. PATCH the appStoreVersion to point at the build (build relationship)
+ *   6. Create a reviewSubmission + reviewSubmissionItem for the version,
+ *      then PATCH it with submitted=true to finalize (modern API; the legacy
+ *      appStoreVersionSubmissions CREATE returns 403 on new submissions).
  *
  * Usage:
  *   node scripts/asc-submit-for-review.js [version] [buildNumber]
  *     version      defaults to app.json expo.version
  *     buildNumber  defaults to app.json expo.ios.buildNumber
+ *
+ *   RELEASE_TYPE=MANUAL node scripts/asc-submit-for-review.js ...
+ *     override auto-release for a gated launch.
  */
 const fs = require('fs');
 const path = require('path');
@@ -31,6 +39,14 @@ const appJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'app.json'), 'utf8'))
 
 const versionString = process.argv[2] || appJson.expo.version;
 const buildNumber   = String(process.argv[3] || appJson.expo.ios.buildNumber);
+// Default to AFTER_APPROVAL so versions go live the moment Apple approves.
+// Set RELEASE_TYPE=MANUAL in the env for a gated launch where you want to
+// click "Release" yourself at a planned time.
+const RELEASE_TYPE  = (process.env.RELEASE_TYPE || 'AFTER_APPROVAL').toUpperCase();
+if (!['AFTER_APPROVAL', 'MANUAL', 'SCHEDULED'].includes(RELEASE_TYPE)) {
+  console.error(`Invalid RELEASE_TYPE "${RELEASE_TYPE}" — must be AFTER_APPROVAL, MANUAL, or SCHEDULED.`);
+  process.exit(1);
+}
 
 function newToken() {
   const now = Math.floor(Date.now() / 1000);
@@ -65,7 +81,7 @@ async function main() {
   }
   const version = vRes.data.data[0];
   const versionId = version.id;
-  console.log(`App Store version: ${versionId} (state=${version.attributes.appStoreState})`);
+  console.log(`App Store version: ${versionId} (state=${version.attributes.appStoreState}, releaseType=${version.attributes.releaseType})`);
 
   if (version.attributes.appStoreState !== 'PREPARE_FOR_SUBMISSION' &&
       version.attributes.appStoreState !== 'DEVELOPER_REJECTED' &&
@@ -74,7 +90,22 @@ async function main() {
     console.warn(`WARNING: version is in state "${version.attributes.appStoreState}" — submission may fail.`);
   }
 
-  // 2. Wait for the build to appear
+  // 2. Force releaseType to the desired value (default AFTER_APPROVAL) so the
+  //    version goes live the moment Apple approves it.
+  if (version.attributes.releaseType !== RELEASE_TYPE) {
+    console.log(`\nFlipping releaseType: ${version.attributes.releaseType} → ${RELEASE_TYPE}`);
+    a = api();
+    const rt = await a.patch(`/appStoreVersions/${versionId}`, {
+      data: { type: 'appStoreVersions', id: versionId, attributes: { releaseType: RELEASE_TYPE } },
+    });
+    if (rt.status >= 400) {
+      console.error(`releaseType PATCH failed: ${rt.status}`, JSON.stringify(rt.data).substring(0, 400));
+      process.exit(2);
+    }
+    console.log(`  ✓ releaseType = ${rt.data.data.attributes.releaseType}`);
+  }
+
+  // 3. Wait for the build to appear
   console.log(`\nLooking for build ${buildNumber}...`);
   let build = null;
   for (let attempt = 0; attempt < 40; attempt++) {
