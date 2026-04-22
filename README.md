@@ -256,6 +256,18 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Mesh node card polish (degree symbol, altitude guard)
 - Local build pipeline (off EAS, Xcode 26 + fastlane + Gradle)
 
+### v3.3.3 — Smoother in the Field 🟡 (2026, Apple review)
+- In-app review prompt fires at natural moments (right after a successful MARK POSITION) instead of random launches
+- Pro users bypass the launch-time gate — asked sooner, since they've already converted
+- Write-review URL opens directly so users land on the text-review sheet (not the star-only rating sheet)
+- Background tuning and stability polish across the grid, map, and tools
+
+### v3.3.4 — Android 16 KB Runtime (2026)
+- Rebuild native libraries (Hermes, React Native core, Expo modules, Fresco image libs) with 16 KB page-size alignment
+- Meets Google Play's Android 15+ requirement (enforcement live since Oct 2025)
+- Unblocks future Android updates — v3.3.2 is the last version shipped under the legacy 4 KB alignment
+- Requires NDK r27+, AGP 8.5.1+, updated Expo runtime
+
 ### v3.5 — Solo Operator (2026)
 - Camera-based target acquisition (point camera at distant point, get its MGRS grid)
 - Encrypted Meshtastic channels from app
