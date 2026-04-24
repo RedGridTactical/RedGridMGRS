@@ -35,35 +35,35 @@ const APP_ID = '6759629554'; // Red Grid MGRS
 // Release notes per locale. Copy the English version for locales we don't
 // have a translation for — ASC requires ALL localizations to be populated.
 const RELEASE_NOTES = {
-  'en-US': `v3.3.3 — Smoother in the Field
+  'en-US': `v3.3.4 — Tap-to-Delete Waypoints
 
-- REVIEW PROMPT POLISH: if you like Red Grid, the in-app review ask now appears at natural moments (right after a successful MARK POSITION) instead of at random launches.
-- Background tuning and stability improvements across the grid, map, and tools.`,
+- Tap any waypoint pin on the map to see its details and remove it. No more stuck markers after you plot them. Works on free and Pro plans.
+- Minor stability and readability tweaks across the map and grid screens.`,
 
-  'fr-FR': `v3.3.3 — Plus fluide sur le terrain
+  'fr-FR': `v3.3.4 — Toucher pour supprimer
 
-- INVITATION D'AVIS AFFINÉE: si vous aimez Red Grid, la demande d'avis intégrée apparaît maintenant à des moments naturels (juste après un MARQUAGE POSITION réussi) au lieu de lancements aléatoires.
-- Améliorations des performances et de la stabilité sur la grille, la carte et les outils.`,
+- Touchez n'importe quelle épingle sur la carte pour voir ses détails et la supprimer. Plus de marqueurs bloqués après les avoir placés. Fonctionne sur les plans gratuit et Pro.
+- Petites améliorations de stabilité et de lisibilité sur les écrans de carte et de grille.`,
 
-  'de-DE': `v3.3.3 — Geschmeidiger im Einsatz
+  'de-DE': `v3.3.4 — Antippen zum Löschen
 
-- BEWERTUNGSAUFFORDERUNG VERFEINERT: Wenn Sie Red Grid mögen, erscheint die In-App-Bewertungsanfrage jetzt in natürlichen Momenten (direkt nach einer erfolgreichen POSITION MARKIEREN) statt bei zufälligen Starts.
-- Hintergrund-Tuning und Stabilitätsverbesserungen in Grid, Karte und Werkzeugen.`,
+- Tippen Sie auf eine beliebige Wegpunkt-Markierung auf der Karte, um deren Details zu sehen und sie zu entfernen. Keine festsitzenden Marker mehr nach dem Setzen. Funktioniert auf dem kostenlosen und Pro-Tarif.
+- Kleinere Stabilitäts- und Lesbarkeitsverbesserungen auf den Karten- und Grid-Bildschirmen.`,
 
-  'es-ES': `v3.3.3 — Más fluido en el campo
+  'es-ES': `v3.3.4 — Tocar para eliminar
 
-- INVITACIÓN DE RESEÑA REFINADA: si te gusta Red Grid, la solicitud de reseña en la app aparece ahora en momentos naturales (justo después de un MARCAR POSICIÓN exitoso) en vez de lanzamientos aleatorios.
-- Ajustes de rendimiento y mejoras de estabilidad en la cuadrícula, el mapa y las herramientas.`,
+- Toca cualquier punto de referencia en el mapa para ver sus detalles y eliminarlo. Ya no hay marcadores atascados después de colocarlos. Funciona en los planes gratuito y Pro.
+- Pequeños ajustes de estabilidad y legibilidad en las pantallas de mapa y cuadrícula.`,
 
-  'ja': `v3.3.3 — 現場でよりスムーズに
+  'ja': `v3.3.4 — タップで削除
 
-- レビュー依頼の最適化: Red Gridを気に入った場合、アプリ内レビューの依頼がランダムな起動時ではなく、自然なタイミング（位置マーク成功直後）に表示されるようになりました。
-- グリッド、マップ、ツール全体のバックグラウンドチューニングと安定性の改善。`,
+- 地図上のウェイポイントピンをタップして詳細を表示し、削除できます。プロットした後にマーカーが動かなくなることはありません。無料プランとProプランの両方で動作します。
+- 地図とグリッド画面全体にわたる小さな安定性と可読性の改善。`,
 
-  'ko': `v3.3.3 — 현장에서 더 부드럽게
+  'ko': `v3.3.4 — 탭하여 삭제
 
-- 리뷰 요청 개선: Red Grid가 마음에 드신다면, 앱 내 리뷰 요청이 임의의 실행 시점이 아닌 자연스러운 순간(위치 표시 성공 직후)에 나타납니다.
-- 그리드, 지도, 도구 전반의 백그라운드 조정 및 안정성 개선.`,
+- 지도의 웨이포인트 핀을 탭하여 세부 정보를 확인하고 제거하세요. 배치한 후 고정되는 마커가 더 이상 없습니다. 무료 및 Pro 요금제에서 작동합니다.
+- 지도 및 그리드 화면 전반에 걸친 소소한 안정성 및 가독성 개선.`,
 };
 
 // Additional locales that share English text (fallback for all remaining

@@ -54,6 +54,18 @@ const FEATURES_BY_VERSION = {
       body: 'Background tuning and stability improvements across the grid, map, and tools.',
     },
   ],
+  '3.3.4': [
+    {
+      icon: '✕',
+      title: 'TAP-TO-DELETE WAYPOINTS',
+      body: 'Tap any waypoint pin on the map to see its details and remove it. Works on free and Pro plans — no more stuck markers after you plot them.',
+    },
+    {
+      icon: '◆',
+      title: 'POLISH',
+      body: 'Minor stability and readability tweaks across the map and grid screens.',
+    },
+  ],
 };
 
 export function WhatsNewModal({ currentVersion }) {
