@@ -256,17 +256,18 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Mesh node card polish (degree symbol, altitude guard)
 - Local build pipeline (off EAS, Xcode 26 + fastlane + Gradle)
 
-### v3.3.3 — Smoother in the Field 🟡 (2026, Apple review)
+### v3.3.3 — Smoother in the Field ✅ (2026)
 - In-app review prompt fires at natural moments (right after a successful MARK POSITION) instead of random launches
 - Pro users bypass the launch-time gate — asked sooner, since they've already converted
 - Write-review URL opens directly so users land on the text-review sheet (not the star-only rating sheet)
 - Background tuning and stability polish across the grid, map, and tools
 
-### v3.3.4 — Android 16 KB Runtime (2026)
-- Rebuild native libraries (Hermes, React Native core, Expo modules, Fresco image libs) with 16 KB page-size alignment
-- Meets Google Play's Android 15+ requirement (enforcement live since Oct 2025)
-- Unblocks future Android updates — v3.3.2 is the last version shipped under the legacy 4 KB alignment
-- Requires NDK r27+, AGP 8.5.1+, updated Expo runtime
+### v3.3.4 — Tap-to-Delete Waypoints 🟡 (2026, iOS in Apple review)
+- Tap any waypoint pin on the map to see its details and remove it
+- Closes a long-standing gap where free users couldn't clear plotted markers (the LISTS tab is Pro-gated)
+- NAV / DELETE / Close action card appears in-place so you don't leave the map
+- Works on both free and Pro plans
+- Android v3.3.4 held until the SDK 53 / RN 0.77 upgrade lands (which unlocks the 16 KB page-size alignment Google Play requires for updates)
 
 ### v3.5 — Solo Operator (2026)
 - Camera-based target acquisition (point camera at distant point, get its MGRS grid)
