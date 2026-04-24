@@ -286,6 +286,15 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
     }
   }, []);
 
+  // Render the bottom MGRS bar immediately on mount — without this, it stays
+  // blank (em-dash) until the user pans.
+  useEffect(() => {
+    try {
+      const r = mapRegion || initialRegion;
+      if (r) setCenterMGRS(formatMGRS(toMGRS(r.latitude, r.longitude, 5)));
+    } catch {}
+  }, [initialRegion, mapRegion]);
+
   // Long-press to open waypoint creation menu
   const onLongPress = useCallback(async (e) => {
     const { latitude, longitude } = e.nativeEvent.coordinate;
@@ -350,6 +359,63 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
     setWpMenuVisible(false);
     setPendingWaypoint(null);
   }, [pendingWaypoint, wpLabel, onSetWaypoint]);
+
+  // ── Delete a placed waypoint by id (works for both free + Pro users) ──
+  // Finds the wp across all lists, removes it, persists, and refreshes the
+  // map's local waypoint state. Without this, free users had no way to
+  // remove waypoints they plotted on the map (the LISTS tab is Pro-gated).
+  const deleteWaypointById = useCallback(async (wpId) => {
+    if (!wpId) return;
+    try {
+      const lists = await loadWaypointLists();
+      if (!Array.isArray(lists)) return;
+      const updated = lists.map(l => ({
+        ...l,
+        waypoints: Array.isArray(l.waypoints) ? l.waypoints.filter(w => w.id !== wpId) : [],
+      }));
+      await saveWaypointLists(updated);
+      // Refresh local waypoint state from the new lists
+      const allWps = [];
+      for (const list of updated) {
+        if (Array.isArray(list?.waypoints)) {
+          for (const w of list.waypoints) {
+            if (w?.lat != null && w?.lon != null) allWps.push({ ...w, listName: list.name || 'Unnamed' });
+          }
+        }
+      }
+      setWaypoints(allWps);
+      setSelectedMarker(null);
+      notifySuccess();
+    } catch {
+      notifyError();
+    }
+  }, []);
+
+  // Confirm before destructive delete
+  const confirmDeleteSelectedMarker = useCallback(() => {
+    if (!selectedMarker) return;
+    Alert.alert(
+      'Delete waypoint?',
+      `Remove ${selectedMarker.label || 'this waypoint'} from the map.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => deleteWaypointById(selectedMarker.id) },
+      ],
+    );
+  }, [selectedMarker, deleteWaypointById]);
+
+  // "Navigate" from the selected-marker card — sets it as the active waypoint
+  // on the GRID tab and dismisses the card.
+  const navigateToSelectedMarker = useCallback(() => {
+    if (!selectedMarker || !onSetWaypoint) return;
+    onSetWaypoint({
+      lat: selectedMarker.lat,
+      lon: selectedMarker.lon,
+      label: selectedMarker.label || formatMGRS(toMGRS(selectedMarker.lat, selectedMarker.lon, 5)),
+    });
+    notifySuccess();
+    setSelectedMarker(null);
+  }, [selectedMarker, onSetWaypoint]);
 
   // Cycle map style
   const cycleMapStyle = useCallback(() => {
@@ -487,6 +553,59 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
         <View style={[styles.reticleH, { backgroundColor: colors.accent + '66' }]} />
         <View style={[styles.reticleV, { backgroundColor: colors.accent + '66' }]} />
       </View>
+
+      {/* Selected-marker info card — appears when a waypoint marker is tapped.
+          Available to ALL users (not Pro-gated) so free users can delete map
+          waypoints they plotted. Anchored at the top so it never overlaps the
+          bottom MGRS bar or the right-side map control buttons. */}
+      {selectedMarker && (
+        <View style={[styles.markerCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.markerCardHeader}>
+            <Text
+              style={[styles.markerCardLabel, { color: colors.text }]}
+              numberOfLines={1}
+              accessibilityRole="header"
+            >
+              {selectedMarker.label || 'WAYPOINT'}
+            </Text>
+            <TouchableOpacity
+              style={styles.markerCardClose}
+              onPress={() => { tapLight(); setSelectedMarker(null); }}
+              accessibilityRole="button"
+              accessibilityLabel="Close waypoint card"
+            >
+              <Text style={[styles.markerCardCloseText, { color: colors.text3 }]}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={[styles.markerCardMgrs, { color: colors.text2 }]} numberOfLines={1}>
+            {formatMGRS(toMGRS(selectedMarker.lat, selectedMarker.lon, 5))}
+          </Text>
+          {location && (
+            <Text style={[styles.markerCardBrg, { color: colors.text3 }]} numberOfLines={1}>
+              BRG {Math.round(calculateBearing(location.lat, location.lon, selectedMarker.lat, selectedMarker.lon))}°
+              {'  '}DST {formatDistance(calculateDistance(location.lat, location.lon, selectedMarker.lat, selectedMarker.lon))}
+            </Text>
+          )}
+          <View style={styles.markerCardBtnRow}>
+            <TouchableOpacity
+              style={[styles.markerCardBtn, { borderColor: colors.text2 }]}
+              onPress={navigateToSelectedMarker}
+              accessibilityRole="button"
+              accessibilityLabel={`Navigate to ${selectedMarker.label || 'waypoint'}`}
+            >
+              <Text style={[styles.markerCardBtnText, { color: colors.text2 }]}>NAV</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.markerCardBtn, { borderColor: colors.border }]}
+              onPress={confirmDeleteSelectedMarker}
+              accessibilityRole="button"
+              accessibilityLabel={`Delete ${selectedMarker.label || 'waypoint'}`}
+            >
+              <Text style={[styles.markerCardBtnText, { color: colors.border }]}>DELETE</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {/* Download progress overlay */}
       {downloading && (
@@ -761,6 +880,25 @@ const styles = StyleSheet.create({
   reticle: { position: 'absolute', top: '50%', left: '50%', width: 20, height: 20, marginLeft: -10, marginTop: -10 },
   reticleH: { position: 'absolute', top: 9, left: 0, right: 0, height: 1 },
   reticleV: { position: 'absolute', left: 9, top: 0, bottom: 0, width: 1 },
+
+  // Selected-marker info card (top-anchored so it never collides with bottom MGRS bar)
+  markerCard: {
+    position: 'absolute', top: 50, left: 16, right: 16,
+    borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12, gap: 4,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.4, shadowRadius: 6 },
+      android: { elevation: 6 },
+    }),
+  },
+  markerCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  markerCardLabel: { flex: 1, fontFamily: 'monospace', fontSize: 13, fontWeight: '700', letterSpacing: 3 },
+  markerCardClose: { paddingHorizontal: 8, paddingVertical: 4, minWidth: 32, minHeight: 32, justifyContent: 'center', alignItems: 'center' },
+  markerCardCloseText: { fontSize: 14, fontWeight: '700' },
+  markerCardMgrs: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 2 },
+  markerCardBrg: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2 },
+  markerCardBtnRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  markerCardBtn: { flex: 1, borderWidth: 1, paddingVertical: 8, alignItems: 'center', minHeight: 44, justifyContent: 'center' },
+  markerCardBtnText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, fontWeight: '700' },
 
   // Right-side button stack
   rightButtons: {
