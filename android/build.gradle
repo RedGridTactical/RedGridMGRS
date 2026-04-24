@@ -8,7 +8,12 @@ buildscript {
         targetSdkVersion = Integer.parseInt(findProperty('android.targetSdkVersion') ?: '34')
         kotlinVersion = findProperty('android.kotlinVersion') ?: '1.9.25'
 
-        ndkVersion = "26.1.10909125"
+        // Bumped from r26 → r27 LTS for 16 KB page-size alignment (Android 15+
+        // policy enforced by Google Play since Oct 2025). Native libs built with
+        // r27+ are 16 KB-aligned for arm64-v8a by default. r27 chosen over r28
+        // because r28's newer libc++ headers conflict with expo-modules-core's
+        // C++ in Expo SDK 52. Switch to r28 once we upgrade Expo SDK.
+        ndkVersion = "27.2.12479018"
     }
     repositories {
         google()
