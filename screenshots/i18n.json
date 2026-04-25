@@ -1,0 +1,80 @@
+{
+  "_comment": "Localized headlines + subtitles for App Store screenshot frames. 7 locales × 8 frames. Headlines use \\n for line break. Military proper nouns (MGRS, UTM, DAGR, NATO, SALUTE, MEDEVAC, SPOT, CFF, NVG, Meshtastic, FixPhrase, GPX, KML) stay in English. Length-tested against the 107px headline / 47px subtitle layout — JA/KO renders ~30% narrower, DE compounds ~10% wider.",
+
+  "en": {
+    "01_grid":         { "headline": "10-Digit MGRS\nPrecision",           "subtitle": "Live military grid · 1-meter accuracy" },
+    "02_map_offline":  { "headline": "Offline\nTactical Maps",             "subtitle": "Dark tiles · MGRS overlay · mesh positions" },
+    "03_tools":        { "headline": "10 Tactical\nTools",                  "subtitle": "Dead reckoning · resection · pace count" },
+    "04_reports":      { "headline": "Radio-Ready\nReports",                "subtitle": "SALUTE · 9-Line MEDEVAC · SPOT · CFF" },
+    "05_mark_position":{ "headline": "Mark Position.\nOne Tap.",            "subtitle": "Waypoints · GPX/KML · mission planning" },
+    "06_coords":       { "headline": "5 Coordinate\nFormats",               "subtitle": "MGRS · UTM · DD · DMS · FixPhrase" },
+    "07_themes":       { "headline": "4 Tactical\nDisplay Themes",          "subtitle": "Red · NVG Green · Day White · Blue" },
+    "08_mesh_network": { "headline": "Meshtastic\nMesh Network",            "subtitle": "See your team on the map · no cell needed" }
+  },
+
+  "fr": {
+    "01_grid":         { "headline": "MGRS 10 chiffres\nPrécision",         "subtitle": "Grille militaire en direct · précision 1 m" },
+    "02_map_offline":  { "headline": "Cartes Tactiques\nHors Ligne",        "subtitle": "Tuiles sombres · grille MGRS · positions mesh" },
+    "03_tools":        { "headline": "10 Outils\nTactiques",                "subtitle": "Estime · résection · comptage de pas" },
+    "04_reports":      { "headline": "Rapports\nPrêts pour Radio",          "subtitle": "SALUTE · MEDEVAC 9 lignes · SPOT · CFF" },
+    "05_mark_position":{ "headline": "Marquer Position.\nUn Toucher.",      "subtitle": "Waypoints · GPX/KML · planification mission" },
+    "06_coords":       { "headline": "5 Formats de\nCoordonnées",           "subtitle": "MGRS · UTM · DD · DMS · FixPhrase" },
+    "07_themes":       { "headline": "4 Thèmes\nTactiques",                 "subtitle": "Rouge · NVG Vert · Jour Blanc · Bleu" },
+    "08_mesh_network": { "headline": "Mesh\nMeshtastic",                    "subtitle": "Voyez votre équipe sur la carte · sans réseau" }
+  },
+
+  "de": {
+    "01_grid":         { "headline": "10-Stelliges\nMGRS",                  "subtitle": "Militär-Gitter live · 1 m Präzision" },
+    "02_map_offline":  { "headline": "Offline\nTaktikkarten",               "subtitle": "Dark Tiles · MGRS-Gitter · Mesh-Positionen" },
+    "03_tools":        { "headline": "10 Taktische\nWerkzeuge",             "subtitle": "Koppelnavigation · Resektion · Schrittzähler" },
+    "04_reports":      { "headline": "Funkbereite\nBerichte",               "subtitle": "SALUTE · 9-Zeilen MEDEVAC · SPOT · CFF" },
+    "05_mark_position":{ "headline": "Position Markieren.\nEin Tipp.",      "subtitle": "Wegpunkte · GPX/KML · Missionsplanung" },
+    "06_coords":       { "headline": "5 Koordinaten-\nFormate",             "subtitle": "MGRS · UTM · DD · DMS · FixPhrase" },
+    "07_themes":       { "headline": "4 Taktische\nThemen",                 "subtitle": "Rot · NVG Grün · Tag Weiß · Blau" },
+    "08_mesh_network": { "headline": "Meshtastic\nMesh-Netzwerk",           "subtitle": "Team auf der Karte · kein Mobilfunk nötig" }
+  },
+
+  "es": {
+    "01_grid":         { "headline": "MGRS 10 Dígitos\nPrecisión",          "subtitle": "Cuadrícula militar en vivo · precisión 1 m" },
+    "02_map_offline":  { "headline": "Mapas Tácticos\nSin Conexión",        "subtitle": "Teselas oscuras · cuadrícula MGRS · mesh" },
+    "03_tools":        { "headline": "10 Herramientas\nTácticas",           "subtitle": "Estima · resección · contador de pasos" },
+    "04_reports":      { "headline": "Informes Listos\npara Radio",         "subtitle": "SALUTE · MEDEVAC 9 líneas · SPOT · CFF" },
+    "05_mark_position":{ "headline": "Marcar Posición.\nUn Toque.",         "subtitle": "Waypoints · GPX/KML · planificación misión" },
+    "06_coords":       { "headline": "5 Formatos de\nCoordenadas",          "subtitle": "MGRS · UTM · DD · DMS · FixPhrase" },
+    "07_themes":       { "headline": "4 Temas\nTácticos",                   "subtitle": "Rojo · NVG Verde · Día Blanco · Azul" },
+    "08_mesh_network": { "headline": "Red Mesh\nMeshtastic",                "subtitle": "Ve a tu equipo en el mapa · sin cobertura" }
+  },
+
+  "ja": {
+    "01_grid":         { "headline": "10桁 MGRS\n精度",                      "subtitle": "軍用グリッド ライブ · 1 m 精度" },
+    "02_map_offline":  { "headline": "オフライン\n戦術マップ",                "subtitle": "ダークタイル · MGRSグリッド · メッシュ位置" },
+    "03_tools":        { "headline": "10種の\n戦術ツール",                    "subtitle": "推測航法 · 後方交会 · 歩測" },
+    "04_reports":      { "headline": "無線対応\nレポート",                    "subtitle": "SALUTE · MEDEVAC 9行 · SPOT · CFF" },
+    "05_mark_position":{ "headline": "位置マーク。\nワンタップ。",             "subtitle": "ウェイポイント · GPX/KML · ミッション計画" },
+    "06_coords":       { "headline": "5種の座標\nフォーマット",                "subtitle": "MGRS · UTM · DD · DMS · FixPhrase" },
+    "07_themes":       { "headline": "4種の戦術\nテーマ",                      "subtitle": "赤 · NVG緑 · 昼白 · 青" },
+    "08_mesh_network": { "headline": "Meshtastic\nメッシュネット",             "subtitle": "地図でチーム確認 · 通信不要" }
+  },
+
+  "ko": {
+    "01_grid":         { "headline": "10자리 MGRS\n정밀도",                   "subtitle": "군용 그리드 실시간 · 1 m 정확도" },
+    "02_map_offline":  { "headline": "오프라인\n전술 지도",                    "subtitle": "다크 타일 · MGRS 그리드 · 메시 위치" },
+    "03_tools":        { "headline": "10가지\n전술 도구",                       "subtitle": "추측 항법 · 후방 교회 · 보수 측정" },
+    "04_reports":      { "headline": "무전 준비\n보고서",                       "subtitle": "SALUTE · MEDEVAC 9줄 · SPOT · CFF" },
+    "05_mark_position":{ "headline": "위치 표시.\n원 탭.",                       "subtitle": "웨이포인트 · GPX/KML · 임무 계획" },
+    "06_coords":       { "headline": "5가지 좌표\n형식",                         "subtitle": "MGRS · UTM · DD · DMS · FixPhrase" },
+    "07_themes":       { "headline": "4가지 전술\n테마",                          "subtitle": "빨강 · NVG 녹색 · 주간 백 · 파랑" },
+    "08_mesh_network": { "headline": "Meshtastic\n메시 네트워크",                 "subtitle": "지도에서 팀 확인 · 통신 불필요" }
+  },
+
+  "it": {
+    "01_grid":         { "headline": "MGRS 10 Cifre\nPrecisione",            "subtitle": "Griglia militare live · precisione 1 m" },
+    "02_map_offline":  { "headline": "Mappe Tattiche\nOffline",              "subtitle": "Dark tiles · griglia MGRS · posizioni mesh" },
+    "03_tools":        { "headline": "10 Strumenti\nTattici",                "subtitle": "Stima · resezione · contapassi" },
+    "04_reports":      { "headline": "Rapporti Pronti\nper Radio",           "subtitle": "SALUTE · MEDEVAC 9 righe · SPOT · CFF" },
+    "05_mark_position":{ "headline": "Marca Posizione.\nUn Tocco.",          "subtitle": "Waypoint · GPX/KML · pianificazione missione" },
+    "06_coords":       { "headline": "5 Formati\nCoordinate",                "subtitle": "MGRS · UTM · DD · DMS · FixPhrase" },
+    "07_themes":       { "headline": "4 Temi\nTattici",                       "subtitle": "Rosso · NVG Verde · Giorno Bianco · Blu" },
+    "08_mesh_network": { "headline": "Mesh\nMeshtastic",                      "subtitle": "Squadra sulla mappa · senza rete cellulare" }
+  }
+}
