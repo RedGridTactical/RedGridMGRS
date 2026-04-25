@@ -1,0 +1,87 @@
+{
+  "timestamp": "2026-04-25T17:32:40.071Z",
+  "salesDate": "2026-04-24",
+  "yesterdayInstalls": 4,
+  "yesterdayRedownloads": 7,
+  "yesterdayTerritories": {
+    "MY": 1,
+    "IN": 1,
+    "IT": 1,
+    "HU": 1
+  },
+  "week7dAvgInstalls": 7.71,
+  "week7dTotalInstalls": 54,
+  "week7dDaysReported": 7,
+  "week7dTopTerritories": {
+    "US": 19,
+    "LV": 4,
+    "FR": 3,
+    "KR": 4,
+    "NO": 4,
+    "CA": 2,
+    "GB": 2,
+    "CO": 5,
+    "KH": 1,
+    "CZ": 2,
+    "RU": 2,
+    "AT": 2,
+    "EE": 1,
+    "LT": 1,
+    "SA": 1,
+    "UA": 1
+  },
+  "activeSubs": 6,
+  "activeTrials": 0,
+  "versions": [
+    {
+      "version": "3.3.4",
+      "state": "WAITING_FOR_REVIEW",
+      "releaseType": "AFTER_APPROVAL",
+      "created": "2026-04-24T16:16:37-07:00"
+    },
+    {
+      "version": "3.3.3",
+      "state": "READY_FOR_SALE",
+      "releaseType": "AFTER_APPROVAL",
+      "created": "2026-04-19T18:43:03-07:00"
+    },
+    {
+      "version": "3.3.2",
+      "state": "READY_FOR_SALE",
+      "releaseType": "MANUAL",
+      "created": "2026-04-13T15:07:46-07:00"
+    }
+  ],
+  "liveOnAppStore": {
+    "version": "3.3.3",
+    "releaseDate": "2026-04-20T17:37:48Z",
+    "ratingAvg": 3.66667,
+    "ratingCount": 3,
+    "currentVersionRatingAvg": 3.66667,
+    "currentVersionRatingCount": 3,
+    "sellerName": "Gianlorenzo Ranieri",
+    "artistName": "Gianlorenzo Ranieri"
+  },
+  "reviewCount": 1,
+  "reviews": [
+    {
+      "rating": 2,
+      "territory": "USA",
+      "title": "Fix this",
+      "body": "It does not allow you to delete waypoints. Once the waypoints are plotted they stay the for ever. Is it because IM not paying for the full version ?",
+      "nickname": "Hecthor-27",
+      "createdDate": "2026-04-21T23:40:57-07:00"
+    }
+  ],
+  "newReviewCount": 1,
+  "newReviews": [
+    {
+      "rating": 2,
+      "territory": "USA",
+      "title": "Fix this",
+      "body": "It does not allow you to delete waypoints. Once the waypoints are plotted they stay the for ever. Is it because IM not paying for the full version ?",
+      "nickname": "Hecthor-27",
+      "createdDate": "2026-04-21T23:40:57-07:00"
+    }
+  ]
+}
