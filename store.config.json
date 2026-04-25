@@ -22,10 +22,100 @@
         "title": "Red Grid MGRS",
         "shortDescription": "DAGR-class MGRS navigator — offline maps, Meshtastic mesh, 10 tactical tools",
         "fullDescription": "<<same as apple.info.en-US.description — copy verbatim>>",
-        "releaseNotes": "v3.3.4 — Tap-to-Delete Waypoints\n\n• Tap any waypoint pin on the map to see its details and remove it. No more stuck markers after you plot them. Works on free and Pro plans.\n• Minor stability and readability tweaks across the map and grid screens",
+        "releaseNotes": "v3.3.4 — Tap-to-Delete Waypoints\n\n• Tap any waypoint pin on the map to see its details and remove it. No more stuck markers after you plot them. Works on free and Pro plans.\n• Native libraries rebuilt with 16 KB page-size alignment for Android 15+ compatibility.\n• Minor stability and readability tweaks across the map and grid screens",
         "privacyPolicyUrl": "https://redgridtactical.github.io/RedGridMGRS/privacy.html",
         "contactEmail": "support@redgridtactical.com",
         "contactWebsite": "https://redgridtactical.com"
+      },
+      "fr-FR": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "Navigateur MGRS classe DAGR — cartes hors ligne, mesh Meshtastic, 10 outils tactiques",
+        "releaseNotes": "v3.3.4 — Toucher pour supprimer\n\n• Touchez n'importe quelle épingle de waypoint sur la carte pour voir ses détails et la supprimer. Plus de marqueurs bloqués après les avoir placés. Fonctionne sur les plans gratuit et Pro.\n• Bibliothèques natives reconstruites avec alignement 16 Ko pour la compatibilité Android 15+.\n• Petites améliorations de stabilité et de lisibilité sur les écrans de carte et de grille."
+      },
+      "de-DE": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "DAGR-Klasse MGRS-Navigator — Offline-Karten, Meshtastic Mesh, 10 taktische Werkzeuge",
+        "releaseNotes": "v3.3.4 — Antippen zum Löschen\n\n• Tippen Sie auf eine beliebige Wegpunkt-Markierung auf der Karte, um Details zu sehen und sie zu entfernen. Keine festsitzenden Marker mehr nach dem Setzen. Funktioniert auf dem kostenlosen und Pro-Tarif.\n• Native Bibliotheken mit 16-KB-Seitengrößen-Ausrichtung für Android 15+ neu kompiliert.\n• Kleinere Stabilitäts- und Lesbarkeitsverbesserungen auf den Karten- und Grid-Bildschirmen."
+      },
+      "es-ES": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "Navegador MGRS clase DAGR — mapas offline, malla Meshtastic, 10 herramientas tácticas",
+        "releaseNotes": "v3.3.4 — Tocar para eliminar\n\n• Toca cualquier marcador de waypoint en el mapa para ver sus detalles y eliminarlo. Ya no hay marcadores atascados después de colocarlos. Funciona en los planes gratuito y Pro.\n• Bibliotecas nativas recompiladas con alineación de página de 16 KB para compatibilidad con Android 15+.\n• Pequeños ajustes de estabilidad y legibilidad en las pantallas de mapa y cuadrícula."
+      },
+      "es-419": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "Navegador MGRS clase DAGR — mapas offline, red Meshtastic, 10 herramientas tácticas",
+        "releaseNotes": "v3.3.4 — Toca para eliminar\n\n• Toca cualquier marcador de waypoint en el mapa para ver sus detalles y eliminarlo. Ya no hay marcadores atorados después de colocarlos. Funciona en los planes gratis y Pro.\n• Bibliotecas nativas recompiladas con alineación de página de 16 KB para compatibilidad con Android 15+.\n• Ajustes menores de estabilidad y legibilidad en las pantallas de mapa y cuadrícula."
+      },
+      "ja-JP": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "DAGRクラスMGRSナビゲーター - オフラインマップ、Meshtasticメッシュ、戦術ツール10種",
+        "releaseNotes": "v3.3.4 — タップで削除\n\n• 地図上のウェイポイントピンをタップして詳細を表示し、削除できます。プロットした後にマーカーが動かなくなることはありません。無料プランとProプランの両方で動作します。\n• Android 15+ 対応のため、ネイティブライブラリを 16 KB ページサイズアライメントで再ビルド。\n• 地図とグリッド画面全体にわたる小さな安定性と可読性の改善。"
+      },
+      "ko-KR": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "DAGR급 MGRS 내비게이터 — 오프라인 지도, Meshtastic 메시, 전술 도구 10종",
+        "releaseNotes": "v3.3.4 — 탭하여 삭제\n\n• 지도의 웨이포인트 핀을 탭하여 세부 정보를 확인하고 제거하세요. 배치한 후 고정되는 마커가 더 이상 없습니다. 무료 및 Pro 요금제에서 작동합니다.\n• Android 15+ 호환성을 위해 네이티브 라이브러리를 16 KB 페이지 크기 정렬로 재빌드.\n• 지도 및 그리드 화면 전반에 걸친 소소한 안정성 및 가독성 개선."
+      },
+      "it-IT": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "Navigatore MGRS classe DAGR — mappe offline, mesh Meshtastic, 10 strumenti tattici",
+        "releaseNotes": "v3.3.4 — Tocca per eliminare\n\n• Tocca qualsiasi segnalino waypoint sulla mappa per vederne i dettagli e rimuoverlo. Basta con i marcatori bloccati dopo averli piazzati. Funziona sui piani gratuito e Pro.\n• Librerie native ricompilate con allineamento a pagine da 16 KB per la compatibilità con Android 15+.\n• Piccoli miglioramenti di stabilità e leggibilità nelle schermate mappa e griglia."
+      },
+      "nl-NL": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "DAGR-klasse MGRS-navigator — offline kaarten, Meshtastic mesh, 10 tactische tools",
+        "releaseNotes": "v3.3.4 — Tikken om te verwijderen\n\n• Tik op een waypoint-speld op de kaart om de details te bekijken en deze te verwijderen. Geen vastzittende markers meer nadat je ze hebt geplaatst. Werkt op gratis en Pro plannen.\n• Native bibliotheken opnieuw gebouwd met 16 KB-paginagrootte-uitlijning voor Android 15+ compatibiliteit.\n• Kleine verbeteringen aan stabiliteit en leesbaarheid in de kaart- en rasterschermen."
+      },
+      "pt-BR": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "Navegador MGRS classe DAGR — mapas offline, mesh Meshtastic, 10 ferramentas táticas",
+        "releaseNotes": "v3.3.4 — Toque para excluir\n\n• Toque em qualquer pino de waypoint no mapa para ver seus detalhes e removê-lo. Chega de marcadores presos depois de colocá-los. Funciona nos planos gratuito e Pro.\n• Bibliotecas nativas recompiladas com alinhamento de página de 16 KB para compatibilidade com Android 15+.\n• Pequenos ajustes de estabilidade e legibilidade nas telas de mapa e grade."
+      },
+      "pt-PT": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "Navegador MGRS classe DAGR — mapas offline, mesh Meshtastic, 10 ferramentas táticas",
+        "releaseNotes": "v3.3.4 — Tocar para eliminar\n\n• Toque em qualquer pino de waypoint no mapa para ver os seus detalhes e removê-lo. Fim dos marcadores presos depois de colocados. Funciona nos planos gratuito e Pro.\n• Bibliotecas nativas recompiladas com alinhamento de página de 16 KB para compatibilidade com Android 15+.\n• Pequenos ajustes de estabilidade e legibilidade nos ecrãs de mapa e grelha."
+      },
+      "ru-RU": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "MGRS-навигатор класса DAGR — офлайн-карты, Meshtastic mesh, 10 тактических инструментов",
+        "releaseNotes": "v3.3.4 — Касание для удаления\n\n• Коснитесь любой метки путевой точки на карте, чтобы увидеть её данные и удалить. Больше никаких застрявших маркеров после установки. Работает на бесплатном и Pro тарифе.\n• Нативные библиотеки пересобраны с выравниванием страниц 16 КБ для совместимости с Android 15+.\n• Небольшие улучшения стабильности и читаемости на экранах карты и сетки."
+      },
+      "uk": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "MGRS-навігатор класу DAGR — офлайн-карти, Meshtastic mesh, 10 тактичних інструментів",
+        "releaseNotes": "v3.3.4 — Торкніться, щоб видалити\n\n• Торкніться будь-якої позначки путньої точки на карті, щоб переглянути її деталі та видалити. Більше жодних застряглих маркерів після розміщення. Працює на безкоштовному та Pro-тарифах.\n• Нативні бібліотеки перезібрані з вирівнюванням сторінок 16 КБ для сумісності з Android 15+.\n• Незначні покращення стабільності та читабельності на екранах карти й сітки."
+      },
+      "pl-PL": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "Nawigator MGRS klasy DAGR — mapy offline, mesh Meshtastic, 10 narzędzi taktycznych",
+        "releaseNotes": "v3.3.4 — Dotknij, aby usunąć\n\n• Dotknij dowolnej pinezki punktu trasy na mapie, aby zobaczyć jej szczegóły i ją usunąć. Koniec z zatrzymanymi znacznikami po ich ustawieniu. Działa w planach darmowym i Pro.\n• Biblioteki natywne przebudowane z wyrównaniem stron 16 KB dla zgodności z Androidem 15+.\n• Drobne usprawnienia stabilności i czytelności na ekranach mapy i siatki."
+      },
+      "tr-TR": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "DAGR sınıfı MGRS gezginer — çevrimdışı haritalar, Meshtastic mesh, 10 taktik araç",
+        "releaseNotes": "v3.3.4 — Silmek için dokun\n\n• Haritadaki herhangi bir ara nokta iğnesine dokunarak ayrıntılarını görüp kaldırabilirsin. Yerleştirdikten sonra takılı kalan işaretçi yok. Ücretsiz ve Pro planlarında çalışır.\n• Android 15+ uyumluluğu için yerel kütüphaneler 16 KB sayfa boyutu hizalamasıyla yeniden derlendi.\n• Harita ve grid ekranlarında küçük kararlılık ve okunabilirlik iyileştirmeleri."
+      },
+      "zh-CN": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "DAGR 级 MGRS 导航器 — 离线地图、Meshtastic 网状网络、10 种战术工具",
+        "releaseNotes": "v3.3.4 — 轻触删除航点\n\n• 轻触地图上任何航点标记即可查看其详细信息并将其移除。放置后不再有卡住的标记。在免费版和 Pro 版中均可使用。\n• 原生库以 16 KB 页面大小对齐重新编译，以兼容 Android 15+。\n• 地图和网格屏幕的细微稳定性与可读性优化。"
+      },
+      "zh-TW": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "DAGR 級 MGRS 導航器 — 離線地圖、Meshtastic 網狀網路、10 種戰術工具",
+        "releaseNotes": "v3.3.4 — 輕觸以刪除航點\n\n• 輕觸地圖上任何航點標記即可查看其詳細資訊並將其移除。放置後不再有卡住的標記。在免費方案與 Pro 方案中均可使用。\n• 原生程式庫以 16 KB 頁面大小對齊重新編譯,以相容 Android 15+。\n• 地圖與網格畫面的細微穩定性與可讀性優化。"
+      },
+      "ar": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "ملاح MGRS من فئة DAGR — خرائط دون إنترنت، شبكة Meshtastic، 10 أدوات تكتيكية",
+        "releaseNotes": "v3.3.4 — انقر للحذف\n\n• انقر على أي دبوس نقطة طريق على الخريطة لعرض تفاصيلها وإزالتها. لا مزيد من العلامات العالقة بعد وضعها. يعمل على الخطتين المجانية وPro.\n• إعادة بناء المكتبات الأصلية بمحاذاة صفحات 16 كيلوبايت لتوافق Android 15+.\n• تحسينات طفيفة في الاستقرار وإمكانية القراءة في شاشتي الخريطة والشبكة."
+      },
+      "hi-IN": {
+        "title": "Red Grid MGRS",
+        "shortDescription": "DAGR श्रेणी MGRS नेविगेटर — ऑफ़लाइन नक्शे, Meshtastic मेश, 10 सामरिक उपकरण",
+        "releaseNotes": "v3.3.4 — हटाने के लिए टैप करें\n\n• मानचित्र पर किसी भी वेपॉइंट पिन पर टैप करके उसका विवरण देखें और उसे हटाएँ। रखने के बाद अटके हुए मार्कर अब नहीं। मुफ़्त और Pro प्लान दोनों पर काम करता है।\n• Android 15+ संगतता के लिए 16 KB पेज-आकार संरेखण के साथ नेटिव लाइब्रेरी फिर से बनाई गईं।\n• मानचित्र और ग्रिड स्क्रीन में छोटे-छोटे स्थिरता और पठनीयता सुधार।"
       }
     },
     "categories": ["MAPS_AND_NAVIGATION"],
