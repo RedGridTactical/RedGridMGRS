@@ -268,6 +268,9 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - NAV / DELETE / Close action card appears in-place so you don't leave the map
 - Works on both free and Pro plans
 - Android rebuilt on Expo SDK 53 / RN 0.79.6 — all native libs 16 KB page-size aligned for Android 15+ compatibility
+- **In-app localization expanded to 15 languages** (added IT, NL, PT-BR, RU, ZH-Hans, ZH-Hant, TR, PL, AR-SA, HI alongside EN, FR, DE, ES, JA, KO)
+- **All 26 ASC locales** now have native release notes + native promotionalText + native long-form descriptions (was 6 native, 20 machine-translated)
+- **redgridtactical.com** now serves localized home + /mgrs page in 7 languages (EN/FR/DE/ES/JA/KO/IT) with hreflang routing
 
 ### v3.5 — Solo Operator (2026)
 - Camera-based target acquisition (point camera at distant point, get its MGRS grid)
