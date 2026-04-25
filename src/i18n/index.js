@@ -13,6 +13,16 @@ import de from './de';
 import es from './es';
 import ja from './ja';
 import ko from './ko';
+import it from './it';
+import nl from './nl';
+import ptBR from './pt-BR';
+import ru from './ru';
+import zhHans from './zh-Hans';
+import zhHant from './zh-Hant';
+import tr from './tr';
+import pl from './pl';
+import arSA from './ar-SA';
+import hi from './hi';
 
 const resources = {
   en: { translation: en },
@@ -21,6 +31,22 @@ const resources = {
   es: { translation: es },
   ja: { translation: ja },
   ko: { translation: ko },
+  it: { translation: it },
+  nl: { translation: nl },
+  'pt-BR': { translation: ptBR },
+  pt: { translation: ptBR },
+  ru: { translation: ru },
+  'zh-Hans': { translation: zhHans },
+  'zh-CN': { translation: zhHans },
+  zh: { translation: zhHans },
+  'zh-Hant': { translation: zhHant },
+  'zh-TW': { translation: zhHant },
+  'zh-HK': { translation: zhHant },
+  tr: { translation: tr },
+  pl: { translation: pl },
+  'ar-SA': { translation: arSA },
+  ar: { translation: arSA },
+  hi: { translation: hi },
 };
 
 // Get device locale (e.g. 'en-US' -> 'en')
