@@ -262,12 +262,12 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Write-review URL opens directly so users land on the text-review sheet (not the star-only rating sheet)
 - Background tuning and stability polish across the grid, map, and tools
 
-### v3.3.4 — Tap-to-Delete Waypoints 🟡 (2026, iOS in Apple review)
+### v3.3.4 — Tap-to-Delete Waypoints 🟡 (2026, iOS + Android in review)
 - Tap any waypoint pin on the map to see its details and remove it
 - Closes a long-standing gap where free users couldn't clear plotted markers (the LISTS tab is Pro-gated)
 - NAV / DELETE / Close action card appears in-place so you don't leave the map
 - Works on both free and Pro plans
-- Android v3.3.4 held until the SDK 53 / RN 0.77 upgrade lands (which unlocks the 16 KB page-size alignment Google Play requires for updates)
+- Android rebuilt on Expo SDK 53 / RN 0.79.6 — all native libs 16 KB page-size aligned for Android 15+ compatibility
 
 ### v3.5 — Solo Operator (2026)
 - Camera-based target acquisition (point camera at distant point, get its MGRS grid)
