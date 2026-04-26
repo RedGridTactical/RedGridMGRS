@@ -1,0 +1,149 @@
+{
+  "timestamp": "2026-04-26T20:15:50.748Z",
+  "salesDate": "2026-04-25",
+  "yesterdayInstalls": null,
+  "yesterdayRedownloads": null,
+  "yesterdayTerritories": {},
+  "week7dAvgInstalls": 7.71,
+  "week7dTotalInstalls": 54,
+  "week7dDaysReported": 7,
+  "week7dTopTerritories": {
+    "MY": 1,
+    "IN": 1,
+    "IT": 1,
+    "HU": 1,
+    "US": 19,
+    "LV": 4,
+    "FR": 3,
+    "KR": 4,
+    "NO": 4,
+    "CA": 1,
+    "GB": 2,
+    "CO": 5,
+    "KH": 1,
+    "CZ": 2,
+    "RU": 1,
+    "AT": 1,
+    "EE": 1,
+    "LT": 1,
+    "SA": 1
+  },
+  "activeSubs": 6,
+  "activeTrials": 0,
+  "versions": [
+    {
+      "version": "3.3.4",
+      "state": "READY_FOR_SALE",
+      "releaseType": "AFTER_APPROVAL",
+      "created": "2026-04-24T16:16:37-07:00"
+    },
+    {
+      "version": "3.3.3",
+      "state": "READY_FOR_SALE",
+      "releaseType": "AFTER_APPROVAL",
+      "created": "2026-04-19T18:43:03-07:00"
+    },
+    {
+      "version": "3.3.2",
+      "state": "READY_FOR_SALE",
+      "releaseType": "MANUAL",
+      "created": "2026-04-13T15:07:46-07:00"
+    }
+  ],
+  "liveOnAppStore": {
+    "version": "3.3.4",
+    "releaseDate": "2026-04-25T20:37:36Z",
+    "ratingAvg": 3.66667,
+    "ratingCount": 3,
+    "currentVersionRatingAvg": 3.66667,
+    "currentVersionRatingCount": 3,
+    "sellerName": "Estus Holdings LLC",
+    "artistName": "Gianlorenzo Ranieri"
+  },
+  "reviewCount": 1,
+  "reviews": [
+    {
+      "rating": 2,
+      "territory": "USA",
+      "title": "Fix this",
+      "body": "It does not allow you to delete waypoints. Once the waypoints are plotted they stay the for ever. Is it because IM not paying for the full version ?",
+      "nickname": "Hecthor-27",
+      "createdDate": "2026-04-21T23:40:57-07:00"
+    }
+  ],
+  "newReviewCount": 0,
+  "newReviews": [],
+  "localePricingDrift": {
+    "staleLocales": [
+      {
+        "locale": "uk",
+        "markers": [
+          "9,99"
+        ]
+      },
+      {
+        "locale": "hr",
+        "markers": [
+          "9,99"
+        ]
+      },
+      {
+        "locale": "da",
+        "markers": [
+          "9,99"
+        ]
+      },
+      {
+        "locale": "fr-FR",
+        "markers": [
+          "9,99",
+          "achat unique",
+          "aucun abonnement",
+          "aucun frais récurrent"
+        ]
+      }
+    ],
+    "contradictions": [
+      {
+        "locale": "fr-FR",
+        "text": "aucun abonnement"
+      }
+    ],
+    "version": "3.3.4",
+    "versionState": "READY_FOR_SALE",
+    "iapCatalog": {
+      "subs": [
+        "redgrid_mgrs_pro_annual",
+        "redgrid_mgrs_pro_monthly"
+      ],
+      "iaps": [
+        "redgrid_pro_lifetime"
+      ]
+    }
+  },
+  "parityDrift": {
+    "drift": [
+      {
+        "locale": "uk",
+        "paragraphs": 6,
+        "enParagraphs": 21
+      },
+      {
+        "locale": "hr",
+        "paragraphs": 6,
+        "enParagraphs": 21
+      },
+      {
+        "locale": "da",
+        "paragraphs": 6,
+        "enParagraphs": 21
+      },
+      {
+        "locale": "fr-FR",
+        "paragraphs": 13,
+        "enParagraphs": 21
+      }
+    ],
+    "enParagraphs": 21
+  }
+}
