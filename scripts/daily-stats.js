@@ -146,6 +146,111 @@ async function getPublicMetadata() {
   } catch (e) { return { error: e.message }; }
 }
 
+// Pull current ASC localized descriptions across all locales and flag any
+// containing outdated/inconsistent pricing claims. Catches the kind of bug
+// where the EN-US source got updated but translations weren't regenerated
+// (e.g. fr-FR kept "$9,99 lifetime, no subscription" after the 3-tier
+// rollout). Returns { staleLocales: [...], unknownPricing: [...] }.
+async function checkLocalePricingDrift() {
+  try {
+    // 1. Find the most recently editable iOS version (READY_FOR_SALE preferred
+    //    so we audit what users see today, not just the in-flight version).
+    const vs = (await api.get(`/apps/${cfg.app_id}/appStoreVersions?filter[platform]=IOS&limit=10`)).data.data || [];
+    const order = ['READY_FOR_SALE', 'PENDING_DEVELOPER_RELEASE', 'IN_REVIEW', 'WAITING_FOR_REVIEW', 'PREPARE_FOR_SUBMISSION'];
+    vs.sort((a, b) => order.indexOf(a.attributes.appStoreState) - order.indexOf(b.attributes.appStoreState));
+    const v = vs.find(x => order.includes(x.attributes.appStoreState)) || vs[0];
+    if (!v) return { staleLocales: [], unknownPricing: [], note: 'no version found' };
+
+    const locs = (await api.get(`/appStoreVersions/${v.id}/appStoreVersionLocalizations?limit=200`)).data.data || [];
+
+    // 2. Bug markers — strings that indicate stale pricing copy.
+    //    Tight set: explicit stale price OR "no subscription" claim that
+    //    contradicts the current 3-tier IAP catalog.
+    const STALE_MARKERS = [
+      '9,99', '9.99',
+      'achat unique', 'aucun abonnement', 'aucun frais récurrent',
+      'einmaliger in-app',
+      'compra única intégrée', 'sem assinatura',
+    ];
+
+    const staleLocales = [];
+    for (const loc of locs) {
+      const desc = (loc.attributes.description || '').toLowerCase();
+      const hits = STALE_MARKERS.filter(m => desc.includes(m.toLowerCase()));
+      if (hits.length) {
+        staleLocales.push({ locale: loc.attributes.locale, markers: hits });
+      }
+    }
+
+    // 3. Cross-reference: pull live IAP product list to confirm pricing
+    //    structure matches what descriptions claim. Currently we expect
+    //    Monthly + Annual + Lifetime. Anything claiming "no subscription"
+    //    is a contradiction.
+    const groups = (await api.get(`/apps/${cfg.app_id}/subscriptionGroups`)).data.data || [];
+    const subs = [];
+    for (const g of groups) {
+      const ss = (await api.get(`/subscriptionGroups/${g.id}/subscriptions`)).data.data || [];
+      subs.push(...ss.map(s => s.attributes.productId));
+    }
+    const iaps = (await api.get(`/apps/${cfg.app_id}/inAppPurchasesV2`)).data.data || [];
+    const iapIds = iaps.map(i => i.attributes.productId);
+    const hasSubscriptions = subs.length > 0;
+
+    // If we have subscriptions live but any locale description claims
+    // "no subscription", flag it as a contradiction.
+    const noSubMarkers = ['aucun abonnement', 'no subscription', 'kein abonnement', 'sin suscripción', 'nessun abbonamento'];
+    const contradictions = [];
+    if (hasSubscriptions) {
+      for (const loc of locs) {
+        const desc = (loc.attributes.description || '').toLowerCase();
+        const found = noSubMarkers.find(m => desc.includes(m.toLowerCase()));
+        if (found) contradictions.push({ locale: loc.attributes.locale, text: found });
+      }
+    }
+
+    return {
+      staleLocales,
+      contradictions,
+      version: v.attributes.versionString,
+      versionState: v.attributes.appStoreState,
+      iapCatalog: { subs, iaps: iapIds },
+    };
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+
+// Compare each translated description against EN-US for structural drift —
+// paragraph count and presence of key sections. Catches when EN gets a new
+// section or restructuring but translations stay at older format.
+async function checkEnTranslationParity() {
+  try {
+    const vs = (await api.get(`/apps/${cfg.app_id}/appStoreVersions?filter[platform]=IOS&limit=10`)).data.data || [];
+    const order = ['READY_FOR_SALE', 'PENDING_DEVELOPER_RELEASE', 'IN_REVIEW'];
+    vs.sort((a, b) => order.indexOf(a.attributes.appStoreState) - order.indexOf(b.attributes.appStoreState));
+    const v = vs.find(x => order.includes(x.attributes.appStoreState)) || vs[0];
+    if (!v) return { drift: [] };
+
+    const locs = (await api.get(`/appStoreVersions/${v.id}/appStoreVersionLocalizations?limit=200`)).data.data || [];
+    const enUS = locs.find(l => l.attributes.locale === 'en-US');
+    if (!enUS) return { drift: [], note: 'no en-US baseline' };
+
+    const enParas = (enUS.attributes.description || '').split(/\n\n/).filter(Boolean).length;
+    const drift = [];
+    for (const loc of locs) {
+      if (loc.attributes.locale === 'en-US') continue;
+      const paras = (loc.attributes.description || '').split(/\n\n/).filter(Boolean).length;
+      // Allow ±20% paragraph delta — beyond that suggests structural drift.
+      if (Math.abs(paras - enParas) > Math.ceil(enParas * 0.2)) {
+        drift.push({ locale: loc.attributes.locale, paragraphs: paras, enParagraphs: enParas });
+      }
+    }
+    return { drift, enParagraphs: enParas };
+  } catch (e) {
+    return { error: e.message };
+  }
+}
+
 function fmtTerritories(territories) {
   return Object.entries(territories || {})
     .sort((a, b) => b[1] - a[1])
@@ -186,6 +291,10 @@ async function main() {
   const versions = await getVersionState();
   const liveOnIossuf = await getPublicMetadata();
 
+  // ── Locale pricing/parity sanity checks ──
+  const pricingDrift = await checkLocalePricingDrift();
+  const parityDrift = await checkEnTranslationParity();
+
   // ── Reviews: anything new vs prior run ──
   const reviews = await getReviews();
   const prior = loadPriorRun();
@@ -211,6 +320,8 @@ async function main() {
     reviews,
     newReviewCount: newReviews.length,
     newReviews,
+    localePricingDrift: pricingDrift,
+    parityDrift,
   };
 
   // Write JSON snapshot (machine-readable)
@@ -280,6 +391,15 @@ async function main() {
   }
   if (versions && versions[0]?.state === 'REJECTED' || versions?.[0]?.state === 'METADATA_REJECTED') {
     flags.push(`🚨 v${versions[0].version} REJECTED — check Resolution Center on ASC`);
+  }
+  if (pricingDrift.staleLocales?.length) {
+    flags.push(`💸 Stale pricing in ${pricingDrift.staleLocales.length} ASC locale(s) [v${pricingDrift.version}]: ${pricingDrift.staleLocales.map(s => s.locale).join(', ')} — run scripts/asc-fix-pricing-v3.js when version is editable`);
+  }
+  if (pricingDrift.contradictions?.length) {
+    flags.push(`⚠️  IAP/copy contradiction: ${pricingDrift.contradictions.length} locale(s) claim "no subscription" but ${pricingDrift.iapCatalog?.subs?.length || 0} sub product(s) exist on ASC: ${pricingDrift.contradictions.map(c => c.locale).join(', ')}`);
+  }
+  if (parityDrift.drift?.length) {
+    flags.push(`🌐 EN/translation paragraph-count drift in ${parityDrift.drift.length} locale(s): ${parityDrift.drift.map(d => `${d.locale}(${d.paragraphs}vs${d.enParagraphs})`).join(', ')}`);
   }
   if (flags.length === 0) {
     md.push('No alerts. Holding pattern.');
