@@ -588,7 +588,7 @@ function AppContent({
       />
 
       {/* What's new in this version — first launch post-update only */}
-      <WhatsNewModal currentVersion="3.3.4" />
+      <WhatsNewModal currentVersion="3.3.5" />
 
     </SafeAreaView>
 
