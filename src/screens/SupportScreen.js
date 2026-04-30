@@ -12,7 +12,7 @@ import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptic
 import { useTranslation } from '../hooks/useTranslation';
 import { hasSharedTrial, mintShareLink, getTrialStatus } from '../utils/referral';
 
-const APP_VERSION = '3.3.4';
+const APP_VERSION = '3.3.5';
 const SUPPORT_EMAIL = 'support@redgridtactical.com';
 const GITHUB_URL = 'https://github.com/RedGridTactical/RedGridMGRS';
 const PRIVACY_URL = 'https://redgridtactical.github.io/RedGridMGRS/privacy.html';

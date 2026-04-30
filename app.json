@@ -2,7 +2,7 @@
   "expo": {
     "name": "Red Grid MGRS",
     "slug": "redgrid-tactical",
-    "version": "3.3.4",
+    "version": "3.3.5",
     "scheme": "redgrid",
     "orientation": "default",
     "userInterfaceStyle": "dark",
@@ -29,7 +29,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.redgrid.redgridtactical",
-      "buildNumber": "63",
+      "buildNumber": "64",
       "infoPlist": {
         "CFBundleDisplayName": "Red Grid MGRS",
         "NSLocationWhenInUseUsageDescription": "Red Grid MGRS uses your location to display your current grid coordinates. No location data is stored or transmitted.",

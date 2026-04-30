@@ -66,6 +66,13 @@ const FEATURES_BY_VERSION = {
       body: 'Minor stability and readability tweaks across the map and grid screens.',
     },
   ],
+  '3.3.5': [
+    {
+      icon: '◆',
+      title: 'INFRASTRUCTURE UPDATE',
+      body: 'Behind-the-scenes improvements to support reliability and faster ship cycles.',
+    },
+  ],
 };
 
 export function WhatsNewModal({ currentVersion }) {
