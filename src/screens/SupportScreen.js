@@ -36,6 +36,23 @@ export function SupportScreen({ visible, onClose }) {
   const { t } = useTranslation();
   const [alreadyShared, setAlreadyShared] = useState(false);
   const [trialStatus, setTrialStatus] = useState({ active: false, daysLeft: 0 });
+  const [attribution, setAttribution] = useState(null);
+
+  // Read locally-stored Apple Search Ads attribution (if present).
+  // Never makes a network call — just reads what `fetchAndStoreAttribution`
+  // already cached on first launch.
+  useEffect(() => {
+    if (!visible) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { getStoredAttribution } = require('expo-ad-attribution');
+        const data = await getStoredAttribution();
+        if (!cancelled) setAttribution(data);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [visible]);
 
   useEffect(() => {
     if (!visible) return;
@@ -194,6 +211,14 @@ export function SupportScreen({ visible, onClose }) {
             <Text style={[styles.versionText, { color: colors.text4 }]}>Red Grid MGRS v{APP_VERSION}</Text>
             <Text style={[styles.versionText, { color: colors.text4 }]}>{t('support.license')}</Text>
             <Text style={[styles.versionText, { color: colors.text4 }]}>{t('support.copyright')}</Text>
+            {attribution && attribution.attribution && (
+              <Text style={[styles.versionText, { color: colors.text4 }]}>
+                Install: Apple Search Ads · campaign {attribution.campaignId || '—'}
+              </Text>
+            )}
+            {attribution && attribution.attribution === false && (
+              <Text style={[styles.versionText, { color: colors.text4 }]}>Install: organic</Text>
+            )}
           </View>
 
         </ScrollView>

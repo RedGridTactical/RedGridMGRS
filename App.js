@@ -187,6 +187,25 @@ function App() {
   // Pro users bypass the open/install-date gates — they've already demonstrated intent.
   useEffect(() => { checkAndPromptReview({ isPro }); trackSession(); }, [isPro]);
 
+  // One-shot Apple Search Ads attribution fetch on first launch.
+  // Calls AAAttribution.attributionToken() and exchanges with Apple's
+  // adservices endpoint. Idempotent — only fires once per install.
+  // Stored locally only; never sent to a third party. iOS-only no-op
+  // on Android.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { fetchAndStoreAttribution } = require('expo-ad-attribution');
+        if (cancelled) return;
+        await fetchAndStoreAttribution();
+      } catch {
+        // Module missing or platform unsupported — silent no-op.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const [tab, setTab]               = useState('grid');
   const [waypoint, setWaypoint]     = useState(null);
   const [showModal, setShowModal]   = useState(false);
