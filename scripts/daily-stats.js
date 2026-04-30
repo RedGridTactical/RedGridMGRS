@@ -27,7 +27,16 @@ const STATS_DIR = path.join(ROOT, 'stats/daily');
 fs.mkdirSync(STATS_DIR, { recursive: true });
 
 const today = new Date();
-const todayStr = today.toISOString().slice(0, 10);
+// Use local date (not UTC) so the daily file is named for the day the
+// script ran from the operator's perspective. Previously the script used
+// .toISOString() which drifts past midnight UTC and dates files one day
+// forward when run in EDT/PDT evenings.
+const todayStr = (() => {
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+})();
 
 function makeToken() {
   const now = Math.floor(Date.now() / 1000);

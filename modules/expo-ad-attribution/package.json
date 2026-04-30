@@ -1,0 +1,7 @@
+{
+  "name": "expo-ad-attribution",
+  "version": "0.1.0",
+  "description": "Apple Search Ads attribution token helper. Calls AAAttribution.attributionToken() and exchanges it with Apple's adservices endpoint to surface paid-channel install attribution.",
+  "main": "src/index.js",
+  "private": true
+}
