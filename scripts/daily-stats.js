@@ -447,23 +447,22 @@ async function main() {
     md.push(`- v${v.version} → \`${v.state}\` (${v.releaseType})`);
   }
   md.push('');
-  md.push('## Apple Search Ads (yesterday)');
-  if (!asa.isConfigured()) {
-    md.push('- ASA API not configured. To enable: secrets/asa-creds.json + secrets/asa-private-key.pem (one-time setup at app.searchads.apple.com → Account → API)');
-  } else if (!asaYesterday) {
-    md.push('- No ASA report data for yesterday (Apple delays ~1-3h)');
-  } else if (asaYesterday.error) {
-    md.push(`- ASA report failed: \`${asaYesterday.error}\``);
-  } else {
+  // Apple Search Ads section: only show when API creds are configured.
+  // Per user direction (Apr 29) we abandoned the API auth route and pull
+  // ad performance on-demand via Chrome MCP instead. Daily-stats stays
+  // silent about ASA unless the operator opts back into the API flow
+  // by dropping creds into secrets/asa-creds.json + asa-private-key.pem.
+  if (asa.isConfigured() && asaYesterday && !asaYesterday.error) {
     const t = asaYesterday.grandTotals;
+    md.push('## Apple Search Ads (yesterday)');
     md.push(`- Spend: **$${t.spend.toFixed(2)}** · Installs: **${t.installs}** · CPA: **$${(t.avgCPA || 0).toFixed(2)}**`);
     md.push(`- Impressions: ${t.impressions} · Taps: ${t.taps} · CPT: $${(t.avgCPT || 0).toFixed(2)}`);
     for (const c of asaYesterday.perCampaign || []) {
       const cn = (c.name || '').slice(0, 38);
       md.push(`  - ${cn} [${c.status}] — $${c.spend.toFixed(2)} / ${c.installs} installs / CPA $${c.avgCPA.toFixed(2)}`);
     }
+    md.push('');
   }
-  md.push('');
   md.push(`## Reviews (${reviews.length} total, **${newReviews.length} new since last run**)`);
   for (const r of newReviews) {
     md.push(`- 🆕 [${r.rating}★] ${r.territory} ${(r.createdDate || '').slice(0, 10)} — ${r.title}`);
