@@ -20,6 +20,7 @@ const path = require('path');
 const zlib = require('zlib');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
+const asa = require('./lib/asa-client');
 
 const ROOT = path.resolve(__dirname, '..');
 const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'secrets/asc_api_key.json'), 'utf8'));
@@ -153,6 +154,76 @@ async function getPublicMetadata() {
       artistName: r.artistName,
     };
   } catch (e) { return { error: e.message }; }
+}
+
+// Pull Apple Search Ads campaign-level performance for yesterday.
+// Returns null when ASA creds aren't configured (one-time UI setup at
+// app.searchads.apple.com → Account → API). Aggregates metrics across
+// all running campaigns into a single per-day snapshot.
+async function pullAsaYesterday(yesterdayStr) {
+  if (!asa.isConfigured()) return null;
+  const report = await asa.getCampaignsReport(yesterdayStr, yesterdayStr);
+  if (!report || report.error) return report;
+
+  // ASA report shape: { reportingDataResponse: { row: [{metadata, granularity, total}], grandTotals: {...}}}
+  const rows = report?.reportingDataResponse?.row || [];
+  const grandTotals = report?.reportingDataResponse?.grandTotals?.total || {};
+
+  const perCampaign = rows.map(r => ({
+    id: r.metadata?.campaignId,
+    name: r.metadata?.campaignName,
+    status: r.metadata?.campaignStatus,
+    countries: r.metadata?.countriesOrRegions,
+    dailyBudget: r.metadata?.dailyBudget?.amount,
+    spend: parseFloat(r.total?.localSpend?.amount || 0),
+    impressions: r.total?.impressions || 0,
+    taps: r.total?.taps || 0,
+    installs: r.total?.installs || 0,
+    avgCPA: parseFloat(r.total?.avgCPA?.amount || 0),
+    avgCPT: parseFloat(r.total?.avgCPT?.amount || 0),
+    ttr: r.total?.ttr || 0,
+    cr: r.total?.conversionRate || 0,
+  }));
+
+  return {
+    perCampaign,
+    grandTotals: {
+      spend: parseFloat(grandTotals?.localSpend?.amount || 0),
+      impressions: grandTotals?.impressions || 0,
+      taps: grandTotals?.taps || 0,
+      installs: grandTotals?.installs || 0,
+      avgCPA: parseFloat(grandTotals?.avgCPA?.amount || 0),
+      avgCPT: parseFloat(grandTotals?.avgCPT?.amount || 0),
+    },
+  };
+}
+
+// Look back across the last N daily snapshots to enforce kill-criteria
+// (CPA > $8 for 5 consecutive days; spend > $50 with 0 paid subs).
+function asaKillCriteriaFlags(todayAsa, todaySubs, priorRuns) {
+  const flags = [];
+  if (!todayAsa || !todayAsa.grandTotals) return flags;
+  const t = todayAsa.grandTotals;
+
+  // Hot CR check
+  if (t.impressions >= 200 && t.cr !== undefined && t.cr < 0.10) {
+    flags.push(`📉 ASA CR ${(t.cr * 100).toFixed(1)}% under 10% with ${t.impressions} impressions — investigate keyword/creative`);
+  }
+
+  // 5-day rolling CPA > $8
+  const cpas = [t.avgCPA, ...priorRuns.slice(0, 4).map(r => r?.asa?.grandTotals?.avgCPA).filter(x => typeof x === 'number' && x > 0)];
+  if (cpas.length >= 5 && cpas.every(c => c > 8)) {
+    flags.push(`💸 ASA CPA over $8 for 5 consecutive days (${cpas.map(c => `$${c.toFixed(2)}`).join(', ')}) — pause/rebid`);
+  }
+
+  // Cumulative spend > $50 with 0 paid subs delta
+  const spendCum = [t.spend, ...priorRuns.slice(0, 13).map(r => r?.asa?.grandTotals?.spend || 0)].reduce((a, b) => a + b, 0);
+  const subsStart = priorRuns.length >= 14 ? priorRuns[13]?.activeSubs : null;
+  if (spendCum > 50 && subsStart != null && todaySubs != null && todaySubs <= subsStart) {
+    flags.push(`💀 ASA spent $${spendCum.toFixed(2)} over 14 days with no net sub gain (${subsStart} → ${todaySubs}) — pause campaign`);
+  }
+
+  return flags;
 }
 
 // Pull current ASC localized descriptions across all locales and flag any
@@ -300,6 +371,9 @@ async function main() {
   const versions = await getVersionState();
   const liveOnIossuf = await getPublicMetadata();
 
+  // ── Apple Search Ads performance (when configured) ──
+  const asaYesterday = await pullAsaYesterday(yest);
+
   // ── Locale pricing/parity sanity checks ──
   const pricingDrift = await checkLocalePricingDrift();
   const parityDrift = await checkEnTranslationParity();
@@ -331,6 +405,7 @@ async function main() {
     newReviews,
     localePricingDrift: pricingDrift,
     parityDrift,
+    asa: asaYesterday,
   };
 
   // Write JSON snapshot (machine-readable)
@@ -372,6 +447,23 @@ async function main() {
     md.push(`- v${v.version} → \`${v.state}\` (${v.releaseType})`);
   }
   md.push('');
+  md.push('## Apple Search Ads (yesterday)');
+  if (!asa.isConfigured()) {
+    md.push('- ASA API not configured. To enable: secrets/asa-creds.json + secrets/asa-private-key.pem (one-time setup at app.searchads.apple.com → Account → API)');
+  } else if (!asaYesterday) {
+    md.push('- No ASA report data for yesterday (Apple delays ~1-3h)');
+  } else if (asaYesterday.error) {
+    md.push(`- ASA report failed: \`${asaYesterday.error}\``);
+  } else {
+    const t = asaYesterday.grandTotals;
+    md.push(`- Spend: **$${t.spend.toFixed(2)}** · Installs: **${t.installs}** · CPA: **$${(t.avgCPA || 0).toFixed(2)}**`);
+    md.push(`- Impressions: ${t.impressions} · Taps: ${t.taps} · CPT: $${(t.avgCPT || 0).toFixed(2)}`);
+    for (const c of asaYesterday.perCampaign || []) {
+      const cn = (c.name || '').slice(0, 38);
+      md.push(`  - ${cn} [${c.status}] — $${c.spend.toFixed(2)} / ${c.installs} installs / CPA $${c.avgCPA.toFixed(2)}`);
+    }
+  }
+  md.push('');
   md.push(`## Reviews (${reviews.length} total, **${newReviews.length} new since last run**)`);
   for (const r of newReviews) {
     md.push(`- 🆕 [${r.rating}★] ${r.territory} ${(r.createdDate || '').slice(0, 10)} — ${r.title}`);
@@ -410,6 +502,17 @@ async function main() {
   if (parityDrift.drift?.length) {
     flags.push(`🌐 EN/translation paragraph-count drift in ${parityDrift.drift.length} locale(s): ${parityDrift.drift.map(d => `${d.locale}(${d.paragraphs}vs${d.enParagraphs})`).join(', ')}`);
   }
+
+  // ASA kill-criteria — needs prior runs for trailing windows
+  const priorRuns = [];
+  if (fs.existsSync(STATS_DIR)) {
+    const files = fs.readdirSync(STATS_DIR).filter(f => f.endsWith('.json') && f !== `${todayStr}.json`).sort().reverse().slice(0, 14);
+    for (const f of files) {
+      try { priorRuns.push(JSON.parse(fs.readFileSync(path.join(STATS_DIR, f), 'utf8'))); } catch {}
+    }
+  }
+  const asaFlags = asaKillCriteriaFlags(asaYesterday, subs?.active ?? null, priorRuns);
+  for (const f of asaFlags) flags.push(f);
   if (flags.length === 0) {
     md.push('No alerts. Holding pattern.');
   } else {
