@@ -1,0 +1,62 @@
+diff --git a/node_modules/react-native/scripts/codegen/generate-artifacts-executor.js b/node_modules/react-native/scripts/codegen/generate-artifacts-executor.js
+index c831166..26554c6 100644
+--- a/node_modules/react-native/scripts/codegen/generate-artifacts-executor.js
++++ b/node_modules/react-native/scripts/codegen/generate-artifacts-executor.js
+@@ -1031,7 +1031,7 @@ export RCT_SCRIPT_TYPE="withCodegenDiscovery"
+ 
+ SCRIPT_PHASES_SCRIPT="$RCT_SCRIPT_RN_DIR/scripts/react_native_pods_utils/script_phases.sh"
+ WITH_ENVIRONMENT="$RCT_SCRIPT_RN_DIR/scripts/xcode/with-environment.sh"
+-/bin/sh -c "$WITH_ENVIRONMENT $SCRIPT_PHASES_SCRIPT"
++"$WITH_ENVIRONMENT" "$SCRIPT_PHASES_SCRIPT"
+ SCRIPT`;
+ }
+ 
+diff --git a/node_modules/react-native/scripts/find-node-for-xcode.sh b/node_modules/react-native/scripts/find-node-for-xcode.sh
+old mode 100644
+new mode 100755
+diff --git a/node_modules/react-native/scripts/node-binary.sh b/node_modules/react-native/scripts/node-binary.sh
+old mode 100644
+new mode 100755
+diff --git a/node_modules/react-native/scripts/react_native_pods_utils/script_phases.rb b/node_modules/react-native/scripts/react_native_pods_utils/script_phases.rb
+index f5dd2ed..2a9250f 100644
+--- a/node_modules/react-native/scripts/react_native_pods_utils/script_phases.rb
++++ b/node_modules/react-native/scripts/react_native_pods_utils/script_phases.rb
+@@ -44,7 +44,7 @@ def get_script_template(react_native_path, export_vars={})
+ 
+         SCRIPT_PHASES_SCRIPT="$RCT_SCRIPT_RN_DIR/scripts/react_native_pods_utils/script_phases.sh"
+         WITH_ENVIRONMENT="$RCT_SCRIPT_RN_DIR/scripts/xcode/with-environment.sh"
+-        /bin/sh -c "$WITH_ENVIRONMENT $SCRIPT_PHASES_SCRIPT"
++        "$WITH_ENVIRONMENT" "$SCRIPT_PHASES_SCRIPT"
+         EOS
+     result = ERB.new(template, trim_mode: '->').result(binding)
+     return result
+diff --git a/node_modules/react-native/scripts/xcode/with-environment.sh b/node_modules/react-native/scripts/xcode/with-environment.sh
+index c6bd62c..d2ddf3c 100755
+--- a/node_modules/react-native/scripts/xcode/with-environment.sh
++++ b/node_modules/react-native/scripts/xcode/with-environment.sh
+@@ -43,5 +43,5 @@ fi
+ 
+ # Execute argument, if present
+ if [ -n "$1" ]; then
+-  $1
++  "$1"
+ fi
+diff --git a/node_modules/react-native/sdks/hermes-engine/utils/create-dummy-hermes-xcframework.sh b/node_modules/react-native/sdks/hermes-engine/utils/create-dummy-hermes-xcframework.sh
+old mode 100644
+new mode 100755
+diff --git a/node_modules/react-native/sdks/hermes-engine/utils/replace_hermes_version.js b/node_modules/react-native/sdks/hermes-engine/utils/replace_hermes_version.js
+index f727aeb..49bceae 100644
+--- a/node_modules/react-native/sdks/hermes-engine/utils/replace_hermes_version.js
++++ b/node_modules/react-native/sdks/hermes-engine/utils/replace_hermes_version.js
+@@ -61,7 +61,7 @@ function replaceHermesConfiguration(configuration, version, podsRoot) {
+   fs.mkdirSync(finalLocation, {recursive: true});
+ 
+   console.log('Extracting the tarball');
+-  execSync(`tar -xf ${tarballURLPath} -C ${finalLocation}`);
++  execSync(`tar -xf "${tarballURLPath}" -C "${finalLocation}"`);
+ }
+ 
+ function updateLastBuildConfiguration(configuration) {
+diff --git a/node_modules/react-native/sdks/hermesc/osx-bin/hermesc b/node_modules/react-native/sdks/hermesc/osx-bin/hermesc
+index d08e1bb..d917d0b 100755
+Binary files a/node_modules/react-native/sdks/hermesc/osx-bin/hermesc and b/node_modules/react-native/sdks/hermesc/osx-bin/hermesc differ

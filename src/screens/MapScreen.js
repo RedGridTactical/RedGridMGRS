@@ -24,7 +24,13 @@ import { toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance
 import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptics';
 import { loadWaypointLists, saveWaypointLists } from '../utils/storage';
 import { MGRSGridOverlay } from '../components/MGRSGridOverlay';
+import { RouteOverlay } from '../components/RouteOverlay';
+import { calculateRoute, estimateTime, formatTime, optimizeRoute } from '../utils/routePlanner';
 import { downloadTilesForRegion, checkTilesForRegion, clearTileCache, getLocalTilePathTemplate, getTilesForRegion } from '../utils/tileManager';
+
+// Free-tier persistent-waypoint cap. Free users get 1 saved waypoint; Pro is
+// unlimited. Captured here so the contract stays in one place.
+const FREE_WAYPOINT_LIMIT = 1;
 
 let MapView = null;
 let Marker = null;
@@ -140,6 +146,11 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
   const [wpLabel, setWpLabel] = useState('');
   const [wpLists, setWpLists] = useState([]);
   const [wpSelectedList, setWpSelectedList] = useState(null);
+
+  // Route-planning mode (Pro). When enabled, tapping waypoint markers adds/
+  // removes them from the route in tap order and a polyline + summary appear.
+  const [routeMode, setRouteMode] = useState(false);
+  const [routeWaypoints, setRouteWaypoints] = useState([]); // ordered [{ id, lat, lon, name }]
 
   // Load waypoints from all lists for display on map
   useEffect(() => {
@@ -311,9 +322,20 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
     setWpMenuVisible(true);
   }, []);
 
-  // Save waypoint from the menu
+  // Save waypoint from the menu. Free users are capped at FREE_WAYPOINT_LIMIT
+  // saved waypoints — once they've saved one, further SAVE actions surface the
+  // Pro paywall. NAV ONLY (no save) remains available to all users.
   const saveWaypointFromMenu = useCallback(async () => {
     if (!pendingWaypoint) return;
+
+    // Free-tier cap. Count whatever's already in waypoint lists; Pro gate when over.
+    if (!isPro && waypoints.length >= FREE_WAYPOINT_LIMIT) {
+      setWpMenuVisible(false);
+      setPendingWaypoint(null);
+      onShowProGate && onShowProGate('Unlimited Waypoints');
+      return;
+    }
+
     try {
       const lists = await loadWaypointLists();
       const wp = {
@@ -349,7 +371,7 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
     } catch {}
     setWpMenuVisible(false);
     setPendingWaypoint(null);
-  }, [pendingWaypoint, wpLabel, wpSelectedList]);
+  }, [pendingWaypoint, wpLabel, wpSelectedList, isPro, waypoints.length, onShowProGate]);
 
   // Navigate to waypoint (set as active in GRID tab)
   const navigateToWaypoint = useCallback(() => {
@@ -426,6 +448,76 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
       return next;
     });
   }, []);
+
+  // ── ROUTE PLANNING (Pro) ──
+  // Toggle route-planning mode. Free users are diverted to the paywall.
+  // Tapping the button while active exits the mode and clears the route.
+  const toggleRouteMode = useCallback(() => {
+    if (!isPro) {
+      onShowProGate && onShowProGate('Route Planning');
+      return;
+    }
+    tapMedium();
+    setSelectedMarker(null);
+    setRouteMode(prev => {
+      const next = !prev;
+      // Clear the route when leaving the mode so the polyline goes away.
+      if (!next) setRouteWaypoints([]);
+      return next;
+    });
+  }, [isPro, onShowProGate]);
+
+  // Tap a waypoint marker — in route mode, add/remove from the ordered route;
+  // otherwise, open the selected-marker info card.
+  const handleWaypointPress = useCallback((wp) => {
+    if (!routeMode) {
+      setSelectedMarker(wp);
+      return;
+    }
+    tapLight();
+    setRouteWaypoints(prev => {
+      const idx = prev.findIndex(w => w.id === wp.id);
+      if (idx >= 0) return prev.filter(w => w.id !== wp.id);
+      return [...prev, { id: wp.id, lat: wp.lat, lon: wp.lon, name: wp.label || wp.listName || '' }];
+    });
+  }, [routeMode]);
+
+  // Nearest-neighbor reorder starting from current location (or first waypoint
+  // if no GPS fix). Operator can re-run as they add waypoints.
+  const optimizeRouteOrder = useCallback(() => {
+    if (routeWaypoints.length < 2) return;
+    tapMedium();
+    const start = (location?.lat != null && location?.lon != null)
+      ? { lat: location.lat, lon: location.lon }
+      : routeWaypoints[0];
+    const optimized = optimizeRoute(routeWaypoints, start);
+    setRouteWaypoints(optimized);
+    notifySuccess();
+  }, [routeWaypoints, location]);
+
+  const clearRoute = useCallback(() => {
+    tapLight();
+    setRouteWaypoints([]);
+  }, []);
+
+  const exitRouteMode = useCallback(() => {
+    tapLight();
+    setRouteMode(false);
+    setRouteWaypoints([]);
+  }, []);
+
+  // Summary metrics for the route panel — distance, count, est. travel time
+  // at a default 15 min/km tactical foot pace.
+  const routeSummary = useMemo(() => {
+    if (routeWaypoints.length < 2) return null;
+    const { totalDistance } = calculateRoute(routeWaypoints);
+    const minutes = estimateTime(totalDistance, 15);
+    return {
+      count: routeWaypoints.length,
+      distance: formatDistance(totalDistance),
+      time: formatTime(minutes),
+    };
+  }, [routeWaypoints]);
 
   // Center on user location
   const centerOnUser = useCallback(() => {
@@ -505,17 +597,30 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
           </Marker>
         )}
 
-        {/* Waypoint markers */}
-        {waypoints.map((wp) => (
-          <Marker
-            key={wp.id}
-            coordinate={{ latitude: wp.lat, longitude: wp.lon }}
-            title={wp.label || 'Waypoint'}
-            description={formatMGRS(toMGRS(wp.lat, wp.lon, 5))}
-            onPress={() => setSelectedMarker(wp)}
-            pinColor={colors.accent}
-          />
-        ))}
+        {/* Waypoint markers — in route mode, tapping toggles inclusion in
+            the planned route; otherwise it opens the selected-marker card. */}
+        {waypoints.map((wp) => {
+          const routeIdx = routeMode ? routeWaypoints.findIndex(rw => rw.id === wp.id) : -1;
+          const inRoute = routeIdx >= 0;
+          const description = inRoute
+            ? `RT ${routeIdx + 1} • ${formatMGRS(toMGRS(wp.lat, wp.lon, 5))}`
+            : formatMGRS(toMGRS(wp.lat, wp.lon, 5));
+          return (
+            <Marker
+              key={wp.id}
+              coordinate={{ latitude: wp.lat, longitude: wp.lon }}
+              title={wp.label || 'Waypoint'}
+              description={description}
+              onPress={() => handleWaypointPress(wp)}
+              pinColor={colors.accent}
+            />
+          );
+        })}
+
+        {/* Route polyline + segment labels */}
+        {routeMode && routeWaypoints.length >= 2 && (
+          <RouteOverlay waypoints={routeWaypoints} colors={colors} />
+        )}
 
         {/* Mesh node markers */}
         {meshPositions.filter(p => p.lat && p.lon).map((node, idx) => {
@@ -619,8 +724,9 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
         </View>
       )}
 
-      {/* Right-side buttons */}
-      <View style={styles.rightButtons}>
+      {/* Right-side buttons — lifted when the route panel is showing so the
+          zoom controls stay reachable. */}
+      <View style={[styles.rightButtons, routeMode && { bottom: 165 }]}>
         {/* Offline mode toggle — only show when tiles are cached */}
         {cachedCount > 0 && (
           <TouchableOpacity
@@ -660,6 +766,20 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
           accessibilityLabel={`Map style: ${mapStyleLabel}. Tap to cycle.`}
         >
           <Text style={[styles.mapBtnLabel, { color: colors.accent }]}>{mapStyleLabel}</Text>
+        </TouchableOpacity>
+
+        {/* Route-planning toggle (Pro). Lit accent when active. */}
+        <TouchableOpacity
+          style={[styles.mapBtn, {
+            backgroundColor: routeMode ? colors.accent : colors.card,
+            borderColor: routeMode ? colors.accent : colors.border,
+          }]}
+          onPress={toggleRouteMode}
+          accessibilityRole="button"
+          accessibilityLabel={routeMode ? 'Exit route planning mode' : 'Start route planning mode (Pro)'}
+          accessibilityState={{ selected: routeMode }}
+        >
+          <Text style={[styles.mapBtnLabel, { color: routeMode ? colors.bg : colors.accent }]}>RT</Text>
         </TouchableOpacity>
 
         {/* Center on user button */}
@@ -714,6 +834,58 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
           <Text style={[styles.mapBtnIcon, { color: colors.accent }]}>ー</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Route-planning summary panel — sits above the bottom MGRS bar while
+          route mode is active. Shows count, total distance, and est. time, plus
+          OPTIMIZE / CLEAR / EXIT controls. */}
+      {routeMode && (
+        <View style={[styles.routePanel, { backgroundColor: colors.card, borderColor: colors.accent, borderTopColor: colors.accent }]}>
+          <View style={styles.routePanelHeader}>
+            <Text style={[styles.routePanelTitle, { color: colors.accent }]}>ROUTE</Text>
+            <Text style={[styles.routePanelHint, { color: colors.text3 }]} numberOfLines={1}>
+              {routeWaypoints.length === 0
+                ? 'Tap waypoints to add'
+                : routeWaypoints.length === 1
+                  ? '1 waypoint • need 2+'
+                  : `${routeSummary.count} wps • ${routeSummary.distance} • ${routeSummary.time}`}
+            </Text>
+          </View>
+          <View style={styles.routePanelBtnRow}>
+            <TouchableOpacity
+              style={[styles.routePanelBtn, {
+                borderColor: routeWaypoints.length >= 2 ? colors.text2 : colors.border,
+                opacity: routeWaypoints.length >= 2 ? 1 : 0.4,
+              }]}
+              onPress={optimizeRouteOrder}
+              disabled={routeWaypoints.length < 2}
+              accessibilityRole="button"
+              accessibilityLabel="Optimize route order from current location"
+            >
+              <Text style={[styles.routePanelBtnText, { color: routeWaypoints.length >= 2 ? colors.text2 : colors.border }]}>OPTIMIZE</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.routePanelBtn, {
+                borderColor: routeWaypoints.length > 0 ? colors.border : colors.border,
+                opacity: routeWaypoints.length > 0 ? 1 : 0.4,
+              }]}
+              onPress={clearRoute}
+              disabled={routeWaypoints.length === 0}
+              accessibilityRole="button"
+              accessibilityLabel="Clear all waypoints from route"
+            >
+              <Text style={[styles.routePanelBtnText, { color: colors.border }]}>CLEAR</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.routePanelBtn, { borderColor: colors.text2 }]}
+              onPress={exitRouteMode}
+              accessibilityRole="button"
+              accessibilityLabel="Exit route planning mode"
+            >
+              <Text style={[styles.routePanelBtnText, { color: colors.text2 }]}>DONE</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {/* Bottom bar — center MGRS + cache indicator */}
       <View style={[styles.bottomBar, { backgroundColor: colors.bg, borderTopColor: colors.border2 }]}>
@@ -963,4 +1135,25 @@ const styles = StyleSheet.create({
   meshMarker: { alignItems: 'center', justifyContent: 'center' },
   meshMarkerDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2 },
   meshMarkerLabel: { fontFamily: 'monospace', fontSize: 8, fontWeight: '700', letterSpacing: 1, marginTop: 2, textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
+
+  // Route planning panel — sits above the bottom MGRS bar when route mode is on
+  routePanel: {
+    position: 'absolute', bottom: 50, left: 0, right: 0,
+    paddingHorizontal: 14, paddingTop: 10, paddingBottom: 10,
+    borderTopWidth: 2,
+    gap: 8,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.4, shadowRadius: 6 },
+      android: { elevation: 8 },
+    }),
+  },
+  routePanelHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  routePanelTitle: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 4, fontWeight: '800' },
+  routePanelHint: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 1, flex: 1 },
+  routePanelBtnRow: { flexDirection: 'row', gap: 8 },
+  routePanelBtn: {
+    flex: 1, borderWidth: 1, paddingVertical: 9,
+    alignItems: 'center', justifyContent: 'center', minHeight: 38,
+  },
+  routePanelBtnText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, fontWeight: '700' },
 });

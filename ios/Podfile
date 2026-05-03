@@ -62,5 +62,58 @@ target 'RedGridMGRS' do
         end
       end
     end
+
+    # Xcode 26 toolchain compatibility.
+    #
+    # The blocker is fmt's `basic_format_string` consteval constructor:
+    # Xcode 26's Clang refuses to evaluate it as a constant expression and
+    # emits hard errors in `fmt/src/format.cc` (NOT warnings — `-Wno-error`
+    # does nothing for these). Setting `FMT_USE_CONSTEVAL=0` via -D doesn't
+    # help either, because fmt's `base.h` does an unguarded
+    # `#define FMT_USE_CONSTEVAL 1` based on compiler-feature detection
+    # *after* command-line macros are processed.
+    #
+    # The cleanest fix is to patch fmt's header in place: rewrite the two
+    # `#define FMT_USE_CONSTEVAL 1` lines to `... 0`, which forces the
+    # constructor to be a regular constexpr fall-through that still
+    # validates format strings via `detail::check_format_string<Args...>(s)`.
+    # The patch is idempotent — if the lines already say 0, nothing happens.
+    # Remove this block once RN/fmt ship a toolchain-clean release.
+    fmt_base = File.join(installer.sandbox.root, 'fmt', 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base)
+      original = File.read(fmt_base)
+      patched = original.gsub(/^(#\s*define\s+FMT_USE_CONSTEVAL)\s+1\s*$/,
+                              "\\1 0  // [Red Grid] Xcode 26 compat — see ios/Podfile")
+      if patched != original
+        # The fmt pod is installed read-only from the CocoaPods cache;
+        # mark it writable before patching, then leave it writable so
+        # subsequent re-installs don't trip the same permission error.
+        File.chmod(0644, fmt_base)
+        File.write(fmt_base, patched)
+        Pod::UI.puts "[Red Grid] Patched fmt/base.h: FMT_USE_CONSTEVAL forced to 0 for Xcode 26.".green
+      end
+    end
+
+    # Defensive belt-and-braces — disable `-Werror` and the noisier diagnostics
+    # in the C++ pods most likely to produce compatibility warnings against
+    # the Xcode 26 SDK. Pure warning suppression, no semantic effect.
+    xcode26_pods = %w[fmt glog RCT-Folly DoubleConversion boost]
+    installer.pods_project.targets.each do |target|
+      next unless xcode26_pods.include?(target.name)
+      target.build_configurations.each do |config|
+        config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+        config.build_settings['CLANG_WARN_DOCUMENTATION_COMMENTS'] = 'NO'
+        cflags = (config.build_settings['OTHER_CFLAGS'] || ['$(inherited)']).dup
+        %w[-Wno-error -Wno-deprecated-declarations -Wno-shorten-64-to-32].each do |flag|
+          cflags << flag unless cflags.include?(flag)
+        end
+        config.build_settings['OTHER_CFLAGS'] = cflags
+        cppflags = (config.build_settings['OTHER_CPLUSPLUSFLAGS'] || ['$(inherited)']).dup
+        %w[-Wno-error -Wno-deprecated-declarations -Wno-unqualified-std-cast-call -Wno-shorten-64-to-32].each do |flag|
+          cppflags << flag unless cppflags.include?(flag)
+        end
+        config.build_settings['OTHER_CPLUSPLUSFLAGS'] = cppflags
+      end
+    end
   end
 end
