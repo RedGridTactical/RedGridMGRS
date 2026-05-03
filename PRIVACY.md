@@ -32,17 +32,20 @@ All stored data lives **on your device only**. None of it is ever transmitted an
 
 ## Network Activity
 
-Red Grid MGRS makes **zero network requests**. There is no:
+Red Grid MGRS makes **no analytics, no tracking, no telemetry, no account, and no cloud sync** network calls. There is no:
 
-- Analytics or usage tracking
-- Crash reporting
-- Advertising network
+- Analytics or usage tracking SDK
+- Crash reporting service
+- Advertising network or attribution SDK (no third-party IDs are collected or transmitted)
 - Account system or cloud sync
-- Update check or telemetry
+- Update check or telemetry "phone home"
 
-In-app purchases (Red Grid Pro) are processed entirely by Apple (App Store) or Google (Play Store). Red Grid MGRS never sees your payment details and receives no personal data from these transactions.
+The app does make these network calls, all of which are either user-initiated or required by the operating system itself:
 
-You can verify the zero-network claim by reviewing the source code or monitoring network traffic while using the app.
+- **Map tile downloads** — only when you explicitly tap "Download tiles for offline" or pan an online map. Tiles are fetched from public OpenStreetMap-style tile servers (OpenStreetMap, CARTO, OpenTopoMap). Your device's IP and the tile coordinates you request are visible to those tile servers, the same as they would be for any other map app. No personal data is sent.
+- **In-app purchases** — when you buy or restore Red Grid Pro, the request goes to Apple StoreKit (iOS) or Google Play Billing (Android). Red Grid MGRS never sees your payment details and never proxies them through any server.
+
+You can verify these claims by reviewing the source code or monitoring network traffic while using the app.
 
 ## Permissions
 

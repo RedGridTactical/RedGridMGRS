@@ -24,6 +24,7 @@ import { useTheme }     from './src/hooks/useTheme';
 import { useStoreReview } from './src/hooks/useStoreReview';
 import { useShakeToSpeak } from './src/hooks/useShakeToSpeak';
 import { useGridCrossing } from './src/hooks/useGridCrossing';
+import { useExternalGPS, useGPSSource } from './src/hooks/useExternalGPS';
 import { ThemeProvider, useColors } from './src/utils/ThemeContext';
 
 import { MGRSDisplay }    from './src/components/MGRSDisplay';
@@ -125,7 +126,12 @@ function App() {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
 
-  const { location, error, isLoading, retry, compassHeading } = useLocation();
+  const { location: internalLocation, error, isLoading, retry, compassHeading } = useLocation();
+  const externalGPS = useExternalGPS();
+  // Lift external GPS to app scope so the connected receiver overrides phone
+  // GPS everywhere (grid, map, tools, mesh, reports). Falls back to internal
+  // GPS when no receiver is connected.
+  const { location, source: gpsSource, deviceName: gpsDeviceName } = useGPSSource(internalLocation, externalGPS);
   const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing, gridScale, setGridScale } = useSettings();
   const { isPro: iapIsPro, isPurchasing, product, products, selectedTier, setSelectedTier, purchase, restore } = useIAP();
 
@@ -187,24 +193,14 @@ function App() {
   // Pro users bypass the open/install-date gates — they've already demonstrated intent.
   useEffect(() => { checkAndPromptReview({ isPro }); trackSession(); }, [isPro]);
 
-  // One-shot Apple Search Ads attribution fetch on first launch.
-  // Calls AAAttribution.attributionToken() and exchanges with Apple's
-  // adservices endpoint. Idempotent — only fires once per install.
-  // Stored locally only; never sent to a third party. iOS-only no-op
-  // on Android.
+  // Feed the active location into the mesh hook so auto-share has something to
+  // broadcast. Without this, auto-share runs every 30s but sends nothing.
+  // Source is the active GPS (external receiver if connected, else phone).
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { fetchAndStoreAttribution } = require('expo-ad-attribution');
-        if (cancelled) return;
-        await fetchAndStoreAttribution();
-      } catch {
-        // Module missing or platform unsupported — silent no-op.
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+    if (location?.lat != null && location?.lon != null) {
+      mesh.setLastPosition(location.lat, location.lon, location.altitude ?? 0);
+    }
+  }, [location?.lat, location?.lon, location?.altitude, mesh]);
 
   const [tab, setTab]               = useState('grid');
   const [waypoint, setWaypoint]     = useState(null);

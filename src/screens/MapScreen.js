@@ -252,7 +252,7 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
         },
       ]
     );
-  }, [isPro, onShowProGate, mapRegion, initialRegion, t, refreshCacheCount, isDark]);
+  }, [isPro, onShowProGate, mapRegion, initialRegion, t, refreshCacheCount, mapStyle]);
 
   // Clear tile cache
   const handleClearCache = useCallback(() => {
