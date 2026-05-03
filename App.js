@@ -161,6 +161,17 @@ function App() {
       if (!token) return;
       const result = await redeemShareToken(token);
       if (result.ok) {
+        // Kill-switch path: token is valid but the entitlement flag is off,
+        // so we don't grant Pro. Welcome the user without unlocking features.
+        if (result.granted === false) {
+          try {
+            Alert.alert(
+              'WELCOME ABOARD',
+              'A friend has invited you to Red Grid Tactical. Explore the free features, then upgrade to Red Grid Pro from the home screen whenever you’re ready.'
+            );
+          } catch {}
+          return;
+        }
         const status = await getTrialStatus();
         setTrialActive(status.active);
         setTrialDaysLeft(status.daysLeft);

@@ -97,16 +97,18 @@ export function useIAP() {
         if (IAPModule && IAPModule.getAvailablePurchases) {
           try {
             if (IAPModule.initConnection) {
+              let initTimer;
               await Promise.race([
                 IAPModule.initConnection(),
-                new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 3000))
-              ]);
+                new Promise((_, r) => { initTimer = setTimeout(() => r(new Error('timeout')), 3000); })
+              ]).finally(() => { if (initTimer) clearTimeout(initTimer); });
             }
 
+            let purchasesTimer;
             const purchases = await Promise.race([
               IAPModule.getAvailablePurchases(),
-              new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000))
-            ]);
+              new Promise((_, r) => { purchasesTimer = setTimeout(() => r(new Error('timeout')), 5000); })
+            ]).finally(() => { if (purchasesTimer) clearTimeout(purchasesTimer); });
 
             const hasPro = purchases?.some?.(p =>
               ALL_PRODUCT_IDS.includes(p?.id)
@@ -150,12 +152,13 @@ export function useIAP() {
       try {
         // expo-iap requires initConnection() before any store operations
         if (IAPModule.initConnection) {
+          let initTimer;
           await Promise.race([
             IAPModule.initConnection(),
-            new Promise((_, reject) =>
-              setTimeout(() => reject(new Error('Init timeout')), 3000)
-            )
-          ]);
+            new Promise((_, reject) => {
+              initTimer = setTimeout(() => reject(new Error('Init timeout')), 3000);
+            })
+          ]).finally(() => { if (initTimer) clearTimeout(initTimer); });
         }
 
         if (cancelled || !mounted.current) return;
