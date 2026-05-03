@@ -723,24 +723,46 @@
 <!-- ROADMAP -->
 <section>
   <h2 style="text-align: center;">What's Coming Next</h2>
+  <p style="text-align: center; max-width: 720px; margin: 0 auto 1.5em; opacity: 0.8;">Each release maps a single field workflow rather than a feature grab-bag. Strategy: the private, offline-first solo navigator for operators who need MGRS, mission packaging, mesh awareness, and interoperability — without accounts or tracking.</p>
   <div class="features" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
     <div class="feature-card">
-      <h4>v3.3.4 &mdash; Tap-to-Delete Waypoints</h4>
-      <p>Submitted for review April 24 on both iOS and Google Play. Tap any waypoint pin on the map to see its details and remove it. Android runtime rebuilt on Expo SDK 53 / RN 0.79.6 with 16 KB page-size alignment for Android 15+. Works on both plans.</p>
+      <h4>v3.3.5 &mdash; Reliability + privacy reset</h4>
+      <p>In review on iOS + Google Play. External GPS app-wide. Mesh auto-share now broadcasts your active position over LoRa. New Pro route-planning workflow on the map. Removed first-launch attribution call to match the no-tracking policy.</p>
     </div>
     <div class="feature-card">
-      <h4>v3.3.3 &mdash; Smoother in the Field &#10003;</h4>
-      <p>Live since April 20. In-app <strong>review prompt</strong> now appears at natural moments (right after a successful MARK POSITION) instead of random launches. Background tuning and stability polish across the grid, map, and tools.</p>
+      <h4>v3.4 &mdash; Mission Preflight</h4>
+      <p>Field-ready before you leave coverage. AO Preflight panel for GPS source, external GPS, mesh radio, offline tile coverage, missing zooms, permissions. Saved AO packages per map style + zoom (&ldquo;Range 23&rdquo;, &ldquo;Patrol Base&rdquo;, &ldquo;SAR Segment A&rdquo;).</p>
     </div>
     <div class="feature-card">
-      <h4>v3.5 &mdash; Solo Operator</h4>
-      <p>Camera-based target acquisition. Encrypted mesh channels. Apple Watch. CoT for ATAK. Route planning with elevation. Bundles the Expo SDK 53 upgrade that unblocks Android 16 KB compliance.</p>
+      <h4>v3.5 &mdash; Route Card + Field Export</h4>
+      <p>Turn route mode into a paid mission artifact. Route card with leg distance, bearing, est. time, start DTG, notes. Export as GPX route/track, KML, KMZ, or radio-friendly text. Elevation profile and route templates (patrol, SAR sweep, rally, land-nav).</p>
     </div>
     <div class="feature-card">
-      <h4>v4.0 — Ecosystem</h4>
-      <p>Offline voice commands. Inertial navigation (GPS-denied). Satellite position reporting. Custom report templates. Sensor fusion.</p>
+      <h4>v3.6 &mdash; Solo Mesh Awareness</h4>
+      <p>Be the best solo tactical UI for Meshtastic position awareness. Node roster with bearing, distance, last-seen. Send-grid for current position, waypoint, or route summary. Mesh setup checklist. Position broadcast stays explicit and battery-aware.</p>
+    </div>
+    <div class="feature-card">
+      <h4>v3.7 &mdash; Interoperability Pack</h4>
+      <p>Useful next to TAK/iTAK, CalTopo, Avenza without becoming a cloud platform. Cursor-on-Target (CoT) export. KML/KMZ mission packages. Better KML import (folders &rarr; lists, route LineStrings). &ldquo;Copy as&rdquo;: MGRS, lat/lon, CoT XML, radio report.</p>
+    </div>
+    <div class="feature-card">
+      <h4>v3.8 &mdash; Solo SAR / ICS Field Pack</h4>
+      <p>Operational reporting for the individual field user. FEMA/NIMS forms (ICS 201, 202, 204, 205, 206, 213, 214). Incident folder with operational period, waypoints, reports, photos. PDF + radio-friendly text export. SAR segment helper.</p>
+    </div>
+    <div class="feature-card">
+      <h4>v3.9 &mdash; Land Nav Training Mode</h4>
+      <p>Course mode with imported checkpoint lists, hidden grids until the clue unlocks, scoring on time/distance/error. Pace and azimuth drills. Instructor export with printable course card and student summary.</p>
+    </div>
+    <div class="feature-card">
+      <h4>v4.0 &mdash; Glanceable Field Companion</h4>
+      <p>Faster core field use. Apple Watch first slice: current MGRS, bearing/distance to active waypoint, mark position, mesh broadcast indicator. Widgets and Live Activity. Siri/App Shortcuts (&ldquo;Mark position&rdquo;, &ldquo;Copy grid&rdquo;, &ldquo;Start preflight&rdquo;).</p>
+    </div>
+    <div class="feature-card">
+      <h4>v4.x &mdash; R&amp;D Track</h4>
+      <p>Parallel work that won&rsquo;t block the paid workflow roadmap: camera target acquisition (start as bearing capture), inertial / GPS-denied fallback (start with dead-reckoning + confidence decay), satellite position reporting, full TAK server integration.</p>
     </div>
   </div>
+  <p style="text-align: center; max-width: 720px; margin: 1.5em auto 0; opacity: 0.7; font-size: 0.95em;">Team features (roles, messaging, geofencing, shared waypoints, AAR, live shared sessions) live in <a href="https://github.com/RedGridTactical/RedGridLink">Red Grid Link</a>. MGRS is the solo navigator; Link is the team coordinator.</p>
 </section>
 
 <!-- FAQ -->
