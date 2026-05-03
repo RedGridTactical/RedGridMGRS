@@ -22,7 +22,12 @@
 
 ## Network activity
 
-Zero. This application makes no network requests of any kind. There is no analytics SDK, no crash reporting service, no ad network, and no update check. In-app purchases use the native Apple StoreKit and Google Play Billing APIs built into the OS — no third-party purchase SDK is bundled.
+No analytics SDK, no crash reporting service, no ad network, no attribution SDK, no update check, no account, no cloud sync. The application contains no third-party identifiers and never transmits location, settings, or waypoint data anywhere.
+
+The only network calls the app makes are:
+
+- **Map tile downloads** — only when you tap "Download tiles for offline" or interact with the map online. Tiles are fetched from public OpenStreetMap-style endpoints (OpenStreetMap, CARTO, OpenTopoMap). Tile requests look identical to any other map app: your IP and the requested tile coordinates are visible to the tile server. No personal data is sent.
+- **In-app purchases** — Apple StoreKit (iOS) and Google Play Billing (Android) handle purchase flows directly with the operating system; no third-party purchase SDK is bundled and the app never sees your payment details.
 
 You can verify this by inspecting the source code or using a network monitor while running the app.
 

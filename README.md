@@ -16,12 +16,12 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 
 ---
 
-## Latest: v3.3.2 — Now on Android
+## Latest: v3.3.5 — Reliability + privacy reset
 
-- **📱 Google Play launch** — [Red Grid MGRS is now live on Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical). Same zero-network architecture, same DAGR-class MGRS, same open source code — now on both platforms.
-- **Map zoom controls** — dedicated + / – buttons and a one-tap Recenter-on-Me control. No more pinch-gymnastics with the phone against your chest.
-- **Screenshot compositor** — Puppeteer pipeline that renders App Store + Play Store frames directly from simulator captures. Clean marketing output in one command.
-- **Degree-symbol + altitude fixes** on the Mesh screen node cards.
+- **External GPS is now app-wide.** Connect a Bluetooth receiver (Garmin GLO, Bad Elf, etc.) and every screen — grid, map, tools, mesh, reports — uses the receiver's fix instead of the phone's GPS.
+- **Mesh auto-share actually broadcasts.** The auto-share toggle on the Mesh screen now sends your active position over LoRa every 30 seconds.
+- **Live on Google Play** — [Red Grid MGRS](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) on both platforms.
+- **Privacy reset.** Removed the Apple Search Ads attribution module that called out to Apple on first launch. The app now matches the privacy policy: no analytics, no tracking, no telemetry, no third-party identifiers — only user-initiated map tile downloads and platform-native IAP.
 - All v3.3.1 features — **MARK POSITION**, **offline map prompt**, **share-to-unlock referral**, **in-app What's New**.
 
 ---
@@ -262,7 +262,14 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Write-review URL opens directly so users land on the text-review sheet (not the star-only rating sheet)
 - Background tuning and stability polish across the grid, map, and tools
 
-### v3.3.4 — Tap-to-Delete Waypoints 🟡 (2026, iOS + Android in review)
+### v3.3.5 — Reliability + privacy reset 🟡 (2026, iOS + Android in review)
+- External GPS is now the active source app-wide (was settings-only)
+- Mesh auto-share now feeds the active position into LoRa broadcasts
+- Removed Apple Search Ads attribution module — restored true zero-tracking posture
+- Map tile-download dependency bug fix (downloads now respect the current style)
+- Version source-of-truth synced across `app.json`, native, and docs
+
+### v3.3.4 — Tap-to-Delete Waypoints ✅ (2026, iOS live since Apr 25)
 - Tap any waypoint pin on the map to see its details and remove it
 - Closes a long-standing gap where free users couldn't clear plotted markers (the LISTS tab is Pro-gated)
 - NAV / DELETE / Close action card appears in-place so you don't leave the map

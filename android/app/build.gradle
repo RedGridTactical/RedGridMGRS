@@ -92,7 +92,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 17
-        versionName "3.3.4"
+        versionName "3.3.5"
 
         // Google Maps Android API key — read from secrets/google-maps-key.txt (gitignored).
         // Falls back to empty string if the file is missing; the app still launches but
