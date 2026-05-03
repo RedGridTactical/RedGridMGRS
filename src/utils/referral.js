@@ -5,7 +5,8 @@
  *   - Every device can RECEIVE one trial, exactly once, ever.
  *   - Every device can SHARE one trial (one link that successfully redeems), exactly once, ever.
  *   - These are two independent one-shot permissions.
- *   - Receiver gets 30 days of Pro. Sender gets no reward — sharing is altruistic.
+ *   - Receiver gets a 30-day Pro grant when TRIAL_ENTITLEMENT_GRANTED is true.
+ *     Sender gets no reward — sharing is altruistic.
  *   - Zero network: all token signing/validation happens locally via HMAC-SHA256.
  *
  * Storage keys:
@@ -19,11 +20,31 @@
  *   sig      = first 16 bytes of HMAC-SHA256(SHARED_SECRET, payload_json_bytes), base64url
  *   token    = "RG1." + base64url(payload) + "." + sig
  *
- * SECURITY NOTE: the shared secret is embedded in the client. This is
- * obfuscation-grade, not cryptographic — the goal is to prevent casual
- * token forgery ("type a string and get Pro"), not to resist a reverse
- * engineer. A dedicated attacker can always extract the secret and mint
- * their own tokens. That's an acceptable loss for a 30-day promo trial.
+ * SECURITY MODEL — short version: this is a marketing mechanic, not a secure
+ * entitlement. The shared secret is embedded in the client and extractable
+ * by anyone who reverse-engineers the binary. The HMAC stops casual forgery
+ * ("type a string and get Pro") but not a determined attacker. Three
+ * harm-reduction levers:
+ *
+ *   1. TRIAL_ENTITLEMENT_GRANTED below — if false, redemption succeeds (so the
+ *      link still opens the share-this experience and shows confirmation)
+ *      but Pro is NOT granted. The flag is the kill switch we ship if abuse
+ *      is observed in the wild — flip it off in a point release rather than
+ *      taking down the marketing flow.
+ *   2. TOKEN_MAX_AGE_DAYS — links expire after this window so leaked tokens
+ *      don't circulate indefinitely.
+ *   3. One-shot per device — RECEIVED and SHARED keys cap to one of each per
+ *      AsyncStorage instance. Reinstalling resets, but that's a deliberate
+ *      attack barrier (lost data) rather than a free farming path.
+ *
+ * ROADMAP — replace this with a real entitlement system once supported:
+ *   - iOS: Apple StoreKit offer codes (presentCodeRedemptionSheet) for the
+ *     Red Grid Pro Monthly subscription. Offers are managed in App Store
+ *     Connect and validated server-side by Apple.
+ *   - Android: Google Play promotional codes generated in Play Console.
+ *   - Migration: stop calling redeemShareToken when the flag is off, and
+ *     instead present the platform redemption sheet pre-filled with a code
+ *     embedded in the share link.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform, NativeModules } from 'react-native';
@@ -39,12 +60,20 @@ const KEYS = {
 // Length > 32 bytes so HMAC has enough entropy.
 const SHARED_SECRET = 'rg-mgrs-trial-v1-7f3e2c9d4a1b8e5f6c0d';
 
-// Trial length in days.
+// Kill switch — when false, valid tokens are still recognized but no Pro
+// grant is written. UI should treat redemption as "thanks for installing"
+// (acquisition value) without granting the entitlement (security harm).
+// Flip to false in a point release if abuse is observed in the wild.
+export const TRIAL_ENTITLEMENT_GRANTED = true;
+
+// Trial length in days. Only meaningful when TRIAL_ENTITLEMENT_GRANTED is true.
 const TRIAL_DAYS = 30;
 
-// Token freshness window — links older than this cannot be redeemed.
-// Prevents stale links from circulating indefinitely.
-const TOKEN_MAX_AGE_DAYS = 90;
+// Token freshness window — links older than this cannot be redeemed. Reduced
+// from 90 to 14 days so a leaked link has a tighter blast radius. Existing
+// tokens minted before this change are unaffected because exp is baked in
+// at mint time.
+const TOKEN_MAX_AGE_DAYS = 14;
 
 // ──────────────────────────────────────────────────────────────────────────
 // Base64URL (no padding) — tokens have to survive URL encoding.
@@ -222,7 +251,13 @@ export async function hasReceivedTrial() {
 
 /**
  * Attempt to redeem an inbound share token.
- * Returns { ok: true, expiresAt } on success, { ok: false, reason } on failure.
+ *
+ * Returns:
+ *   - { ok: true, expiresAt } when entitlement is granted (legacy mode).
+ *   - { ok: true, granted: false, reason: 'disabled' } when the kill switch
+ *     is off — token is valid but no Pro is given. UI should treat this as
+ *     a successful install/acquisition signal without unlocking features.
+ *   - { ok: false, reason } on rejection.
  */
 export async function redeemShareToken(token) {
   if (await hasReceivedTrial()) {
@@ -230,12 +265,22 @@ export async function redeemShareToken(token) {
   }
   const verify = verifyShareToken(token);
   if (!verify.ok) return verify;
+
+  // Kill switch path — record the redemption so the user can't try again,
+  // but do NOT grant the entitlement. See TRIAL_ENTITLEMENT_GRANTED for
+  // rationale. UI should display a friendly "thanks for installing" rather
+  // than a Pro-unlocked celebration.
+  if (!TRIAL_ENTITLEMENT_GRANTED) {
+    try { await AsyncStorage.setItem(KEYS.RECEIVED, 'true'); } catch {}
+    return { ok: true, granted: false, reason: 'disabled' };
+  }
+
   const trialExpires = new Date(Date.now() + TRIAL_DAYS * 86400 * 1000).toISOString();
   try {
     await AsyncStorage.setItem(KEYS.RECEIVED, 'true');
     await AsyncStorage.setItem(KEYS.EXPIRES, trialExpires);
   } catch {}
-  return { ok: true, expiresAt: trialExpires };
+  return { ok: true, granted: true, expiresAt: trialExpires };
 }
 
 // ──────────────────────────────────────────────────────────────────────────

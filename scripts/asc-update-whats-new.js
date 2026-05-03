@@ -35,180 +35,243 @@ const APP_ID = '6759629554'; // Red Grid MGRS
 // Release notes per locale. Copy the English version for locales we don't
 // have a translation for — ASC requires ALL localizations to be populated.
 const RELEASE_NOTES = {
-  'en-US': `v3.3.4 — Tap-to-Delete Waypoints
+  'en-US': `v3.3.5 — Reliability + privacy
 
-- Tap any waypoint pin on the map to see its details and remove it. No more stuck markers after you plot them. Works on free and Pro plans.
-- Minor stability and readability tweaks across the map and grid screens.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'fr-FR': `v3.3.4 — Toucher pour supprimer
+  'fr-FR': `v3.3.5 — Reliability + privacy
 
-- Touchez n'importe quelle épingle sur la carte pour voir ses détails et la supprimer. Plus de marqueurs bloqués après les avoir placés. Fonctionne sur les plans gratuit et Pro.
-- Petites améliorations de stabilité et de lisibilité sur les écrans de carte et de grille.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'de-DE': `v3.3.4 — Antippen zum Löschen
+  'de-DE': `v3.3.5 — Reliability + privacy
 
-- Tippen Sie auf eine beliebige Wegpunkt-Markierung auf der Karte, um deren Details zu sehen und sie zu entfernen. Keine festsitzenden Marker mehr nach dem Setzen. Funktioniert auf dem kostenlosen und Pro-Tarif.
-- Kleinere Stabilitäts- und Lesbarkeitsverbesserungen auf den Karten- und Grid-Bildschirmen.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'es-ES': `v3.3.4 — Tocar para eliminar
+  'es-ES': `v3.3.5 — Reliability + privacy
 
-- Toca cualquier punto de referencia en el mapa para ver sus detalles y eliminarlo. Ya no hay marcadores atascados después de colocarlos. Funciona en los planes gratuito y Pro.
-- Pequeños ajustes de estabilidad y legibilidad en las pantallas de mapa y cuadrícula.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'es-MX': `v3.3.4 — Toca para eliminar
+  'es-MX': `v3.3.5 — Reliability + privacy
 
-- Toca cualquier marcador de waypoint en el mapa para ver sus detalles y eliminarlo. Ya no hay marcadores atorados después de colocarlos. Funciona en los planes gratis y Pro.
-- Ajustes menores de estabilidad y legibilidad en las pantallas de mapa y cuadrícula.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'ja': `v3.3.4 — タップで削除
+  'ja': `v3.3.5 — Reliability + privacy
 
-- 地図上のウェイポイントピンをタップして詳細を表示し、削除できます。プロットした後にマーカーが動かなくなることはありません。無料プランとProプランの両方で動作します。
-- 地図とグリッド画面全体にわたる小さな安定性と可読性の改善。`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'ko': `v3.3.4 — 탭하여 삭제
+  'ko': `v3.3.5 — Reliability + privacy
 
-- 지도의 웨이포인트 핀을 탭하여 세부 정보를 확인하고 제거하세요. 배치한 후 고정되는 마커가 더 이상 없습니다. 무료 및 Pro 요금제에서 작동합니다.
-- 지도 및 그리드 화면 전반에 걸친 소소한 안정성 및 가독성 개선.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'it': `v3.3.4 — Tocca per eliminare
+  'it': `v3.3.5 — Reliability + privacy
 
-- Tocca qualsiasi segnalino waypoint sulla mappa per vederne i dettagli e rimuoverlo. Basta con i marcatori bloccati dopo averli piazzati. Funziona sui piani gratuito e Pro.
-- Piccoli miglioramenti di stabilità e leggibilità nelle schermate mappa e griglia.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'nl-NL': `v3.3.4 — Tikken om te verwijderen
+  'nl-NL': `v3.3.5 — Reliability + privacy
 
-- Tik op een waypoint-speld op de kaart om de details te bekijken en deze te verwijderen. Geen vastzittende markers meer nadat je ze hebt geplaatst. Werkt op gratis en Pro plannen.
-- Kleine verbeteringen aan stabiliteit en leesbaarheid in de kaart- en rasterschermen.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'pt-BR': `v3.3.4 — Toque para excluir
+  'pt-BR': `v3.3.5 — Reliability + privacy
 
-- Toque em qualquer pino de waypoint no mapa para ver seus detalhes e removê-lo. Chega de marcadores presos depois de colocá-los. Funciona nos planos gratuito e Pro.
-- Pequenos ajustes de estabilidade e legibilidade nas telas de mapa e grade.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'pt-PT': `v3.3.4 — Tocar para eliminar
+  'pt-PT': `v3.3.5 — Reliability + privacy
 
-- Toque em qualquer pino de waypoint no mapa para ver os seus detalhes e removê-lo. Fim dos marcadores presos depois de colocados. Funciona nos planos gratuito e Pro.
-- Pequenos ajustes de estabilidade e legibilidade nos ecrãs de mapa e grelha.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'ru': `v3.3.4 — Касание для удаления
+  'ru': `v3.3.5 — Reliability + privacy
 
-- Коснитесь любой метки путевой точки на карте, чтобы увидеть её данные и удалить. Больше никаких застрявших маркеров после установки. Работает на бесплатном и Pro тарифе.
-- Небольшие улучшения стабильности и читаемости на экранах карты и сетки.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'uk': `v3.3.4 — Торкніться, щоб видалити
+  'uk': `v3.3.5 — Reliability + privacy
 
-- Торкніться будь-якої позначки путньої точки на карті, щоб переглянути її деталі та видалити. Більше жодних застряглих маркерів після розміщення. Працює на безкоштовному та Pro-тарифах.
-- Незначні покращення стабільності та читабельності на екранах карти й сітки.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'pl': `v3.3.4 — Dotknij, aby usunąć
+  'pl': `v3.3.5 — Reliability + privacy
 
-- Dotknij dowolnej pinezki punktu trasy na mapie, aby zobaczyć jej szczegóły i ją usunąć. Koniec z zatrzymanymi znacznikami po ich ustawieniu. Działa w planach darmowym i Pro.
-- Drobne usprawnienia stabilności i czytelności na ekranach mapy i siatki.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'cs': `v3.3.4 — Klepnutím smažete
+  'cs': `v3.3.5 — Reliability + privacy
 
-- Klepněte na libovolný kolík trasového bodu na mapě, abyste viděli jeho podrobnosti a odstranili ho. Žádné zaseknuté značky po jejich umístění. Funguje v bezplatném i Pro tarifu.
-- Drobné úpravy stability a čitelnosti na obrazovkách mapy a mřížky.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'sk': `v3.3.4 — Ťuknutím odstránite
+  'sk': `v3.3.5 — Reliability + privacy
 
-- Ťuknite na ktorýkoľvek kolík trasového bodu na mape, aby ste videli jeho podrobnosti a odstránili ho. Už žiadne zaseknuté značky po ich umiestnení. Funguje v bezplatnom aj Pro pláne.
-- Drobné úpravy stability a čitateľnosti na obrazovkách mapy a mriežky.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'hr': `v3.3.4 — Dodir za brisanje
+  'hr': `v3.3.5 — Reliability + privacy
 
-- Dodirnite bilo koji pin točke puta na karti kako biste vidjeli njezine detalje i uklonili je. Nema više zaglavljenih oznaka nakon postavljanja. Radi na besplatnom i Pro planu.
-- Sitne poboljšanja stabilnosti i čitljivosti na zaslonima karte i mreže.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'hu': `v3.3.4 — Érintsd meg a törléshez
+  'hu': `v3.3.5 — Reliability + privacy
 
-- Érintsd meg bármelyik útpont-tűt a térképen, hogy megnézd a részleteit és eltávolítsd. Nincs többé beragadt jelölő az elhelyezés után. Működik ingyenes és Pro előfizetéssel.
-- Apró stabilitási és olvashatósági finomítások a térkép és a rács képernyőkön.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'ro': `v3.3.4 — Atinge pentru a șterge
+  'ro': `v3.3.5 — Reliability + privacy
 
-- Atinge orice pin de waypoint de pe hartă pentru a-i vedea detaliile și a-l elimina. Gata cu marcajele blocate după plasare. Funcționează pe planurile gratuit și Pro.
-- Mici îmbunătățiri de stabilitate și lizibilitate pe ecranele de hartă și grilă.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'tr': `v3.3.4 — Silmek için dokun
+  'tr': `v3.3.5 — Reliability + privacy
 
-- Haritadaki herhangi bir ara nokta iğnesine dokunarak ayrıntılarını görüp kaldırabilirsin. Yerleştirdikten sonra takılı kalan işaretçi yok. Ücretsiz ve Pro planlarında çalışır.
-- Harita ve grid ekranlarında küçük kararlılık ve okunabilirlik iyileştirmeleri.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'sv': `v3.3.4 — Tryck för att radera
+  'sv': `v3.3.5 — Reliability + privacy
 
-- Tryck på vilken waypoint-nål som helst på kartan för att se dess detaljer och ta bort den. Inga fler fastna markörer efter att du placerat dem. Fungerar på gratis- och Pro-abonnemang.
-- Mindre stabilitets- och läsbarhetsförbättringar på kart- och rutnätsskärmarna.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'no': `v3.3.4 — Trykk for å slette
+  'no': `v3.3.5 — Reliability + privacy
 
-- Trykk på en hvilken som helst veipunktnål på kartet for å se detaljene og fjerne den. Ingen fastlåste markører etter at du har plassert dem. Fungerer på gratis- og Pro-abonnementer.
-- Mindre stabilitets- og lesbarhetsforbedringer på kart- og rutenettskjermene.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'da': `v3.3.4 — Tryk for at slette
+  'da': `v3.3.5 — Reliability + privacy
 
-- Tryk på en vilkårlig waypoint-pin på kortet for at se dens detaljer og fjerne den. Ikke flere fastlåste markører efter placering. Fungerer på gratis- og Pro-abonnementer.
-- Mindre stabilitets- og læsbarhedsforbedringer på kort- og gitterskærmene.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'fi': `v3.3.4 — Poista napauttamalla
+  'fi': `v3.3.5 — Reliability + privacy
 
-- Napauta mitä tahansa reittipisteen nuppineulaa kartalla nähdäksesi sen tiedot ja poistaaksesi sen. Ei enää jumiutuneita merkkejä sijoittamisen jälkeen. Toimii ilmaisella ja Pro-tilauksella.
-- Pieniä vakautta ja luettavuutta parantavia säätöjä kartta- ja ruudukkonäytöillä.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'el': `v3.3.4 — Πατήστε για διαγραφή
+  'el': `v3.3.5 — Reliability + privacy
 
-- Πατήστε οποιαδήποτε καρφίτσα σημείου αναφοράς στον χάρτη για να δείτε τις λεπτομέρειές της και να την αφαιρέσετε. Τέλος στους κολλημένους δείκτες μετά την τοποθέτησή τους. Λειτουργεί σε δωρεάν και Pro πρόγραμμα.
-- Μικρές βελτιώσεις σταθερότητας και αναγνωσιμότητας στις οθόνες χάρτη και πλέγματος.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'zh-Hans': `v3.3.4 — 轻触删除航点
+  'zh-Hans': `v3.3.5 — Reliability + privacy
 
-- 轻触地图上任何航点标记即可查看其详细信息并将其移除。放置后不再有卡住的标记。在免费版和 Pro 版中均可使用。
-- 地图和网格屏幕的细微稳定性与可读性优化。`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'zh-Hant': `v3.3.4 — 輕觸以刪除航點
+  'zh-Hant': `v3.3.5 — Reliability + privacy
 
-- 輕觸地圖上任何航點標記即可查看其詳細資訊並將其移除。放置後不再有卡住的標記。在免費方案與 Pro 方案中均可使用。
-- 地圖與網格畫面的細微穩定性與可讀性優化。`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'vi': `v3.3.4 — Chạm để xóa điểm
+  'vi': `v3.3.5 — Reliability + privacy
 
-- Chạm vào bất kỳ ghim điểm tham chiếu nào trên bản đồ để xem chi tiết và xóa. Không còn dấu bị kẹt sau khi đặt. Hoạt động trên gói miễn phí và Pro.
-- Cải tiến nhỏ về độ ổn định và khả năng đọc trên màn hình bản đồ và lưới.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'th': `v3.3.4 — แตะเพื่อลบ
+  'th': `v3.3.5 — Reliability + privacy
 
-- แตะหมุดจุดอ้างอิงใดก็ได้บนแผนที่เพื่อดูรายละเอียดและลบออก ไม่มีหมุดค้างหลังจากวางอีกต่อไป ใช้ได้ทั้งแผนฟรีและ Pro
-- การปรับปรุงความเสถียรและการอ่านเล็กน้อยในหน้าจอแผนที่และกริด`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'id': `v3.3.4 — Ketuk untuk menghapus
+  'id': `v3.3.5 — Reliability + privacy
 
-- Ketuk pin titik jalur mana pun di peta untuk melihat detailnya dan menghapusnya. Tidak ada lagi penanda yang tersangkut setelah ditempatkan. Bekerja pada paket gratis dan Pro.
-- Penyempurnaan stabilitas dan keterbacaan kecil di layar peta dan grid.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'ms': `v3.3.4 — Ketik untuk padam
+  'ms': `v3.3.5 — Reliability + privacy
 
-- Ketik mana-mana pin titik laluan pada peta untuk melihat butirannya dan membuangnya. Tiada lagi penanda tersangkut selepas ditempatkan. Berfungsi pada pelan percuma dan Pro.
-- Penambahbaikan kecil kestabilan dan kebolehbacaan pada skrin peta dan grid.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'hi': `v3.3.4 — हटाने के लिए टैप करें
+  'he': `v3.3.5 — Reliability + privacy
 
-- मानचित्र पर किसी भी वेपॉइंट पिन पर टैप करके उसका विवरण देखें और उसे हटाएँ। रखने के बाद अटके हुए मार्कर अब नहीं। मुफ़्त और Pro प्लान दोनों पर काम करता है।
-- मानचित्र और ग्रिड स्क्रीन में छोटे-छोटे स्थिरता और पठनीयता सुधार।`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'he': `v3.3.4 — הקישו למחיקה
+  'ar-SA': `v3.3.5 — Reliability + privacy
 
-- הקישו על סיכת נקודת ציון כלשהי במפה כדי לראות את פרטיה ולהסיר אותה. אין יותר סמנים תקועים לאחר שמים אותם. פועל בתוכניות חינמית ו-Pro.
-- שיפורי יציבות וקריאות קטנים במסכי המפה והרשת.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 
-  'ar-SA': `v3.3.4 — انقر للحذف
+  'ca': `v3.3.5 — Reliability + privacy
 
-- انقر على أي دبوس نقطة طريق على الخريطة لعرض تفاصيلها وإزالتها. لا مزيد من العلامات العالقة بعد وضعها. يعمل على الخطتين المجانية وPro.
-- تحسينات طفيفة في الاستقرار وإمكانية القراءة في شاشتي الخريطة والشبكة.`,
-
-  'ca': `v3.3.4 — Toqueu per eliminar
-
-- Toqueu qualsevol marcador de waypoint al mapa per veure'n els detalls i eliminar-lo. No més marcadors encallats després de col·locar-los. Funciona en els plans gratuït i Pro.
-- Petites millores d'estabilitat i llegibilitat a les pantalles de mapa i graella.`,
+- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
+- Mesh auto-share now actually broadcasts your position over LoRa.
+- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
+- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
 };
 
 // Any ASC-required locales not listed in RELEASE_NOTES fall back to English.

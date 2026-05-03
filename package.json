@@ -55,9 +55,9 @@
     "type": "git",
     "url": "git+https://github.com/RedGridTactical/RedGridMGRS.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["mgrs", "navigation", "tactical", "military", "gps", "offline-maps"],
+  "author": "Red Grid Tactical",
+  "license": "SEE LICENSE IN LICENSE",
   "bugs": {
     "url": "https://github.com/RedGridTactical/RedGridMGRS/issues"
   },

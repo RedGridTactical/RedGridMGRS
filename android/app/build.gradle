@@ -91,7 +91,7 @@ android {
         applicationId 'com.redgrid.redgridtactical'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 17
+        versionCode 18
         versionName "3.3.5"
 
         // Google Maps Android API key — read from secrets/google-maps-key.txt (gitignored).

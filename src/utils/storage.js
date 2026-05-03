@@ -32,6 +32,21 @@ const KEYS = {
   GRID_SCALE:      'rg_grid_scale',
 };
 
+/**
+ * Race a promise against a timeout. Always clears the timer once the race
+ * settles so we don't leak a Node timer (which jest --detectOpenHandles
+ * surfaces as an open handle and which keeps the event loop alive in tests).
+ */
+function withTimeout(promise, ms, message) {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), ms);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => {
+    if (timeoutId) clearTimeout(timeoutId);
+  });
+}
+
 // ─── SETTINGS ────────────────────────────────────────────────────────────────
 /**
  * Load all settings with safe defaults.
@@ -43,15 +58,14 @@ export async function loadSettings() {
       return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true, gridScale: 1.0 };
     }
 
-    const items = await Promise.race([
+    const items = await withTimeout(
       AsyncStorage.multiGet([
         KEYS.DECLINATION, KEYS.PACE_COUNT, KEYS.THEME, KEYS.COORD_FORMAT,
         KEYS.SHAKE_TO_SPEAK, KEYS.GRID_CROSSING, KEYS.GRID_SCALE,
       ]),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Storage timeout')), 5000)
-      )
-    ]);
+      5000,
+      'Storage timeout'
+    );
 
     if (!items || !Array.isArray(items)) {
       return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true, gridScale: 1.0 };
@@ -118,12 +132,11 @@ export async function saveDeclination(value) {
   try {
     if (!AsyncStorage || !AsyncStorage.setItem) return;
     const stringValue = String(value ?? '0');
-    await Promise.race([
+    await withTimeout(
       AsyncStorage.setItem(KEYS.DECLINATION, stringValue),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Save timeout')), 5000)
-      )
-    ]);
+      5000,
+      'Save timeout'
+    );
   } catch (err) {
     // Silent failure — user data stays in memory for this session
   }
@@ -136,12 +149,11 @@ export async function savePaceCount(value) {
   try {
     if (!AsyncStorage || !AsyncStorage.setItem) return;
     const stringValue = String(value ?? '62');
-    await Promise.race([
+    await withTimeout(
       AsyncStorage.setItem(KEYS.PACE_COUNT, stringValue),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Save timeout')), 5000)
-      )
-    ]);
+      5000,
+      'Save timeout'
+    );
   } catch (err) {
     // Silent failure — user data stays in memory for this session
   }
@@ -154,12 +166,11 @@ export async function saveTheme(value) {
   try {
     if (!AsyncStorage || !AsyncStorage.setItem) return;
     const stringValue = String(value ?? 'red');
-    await Promise.race([
+    await withTimeout(
       AsyncStorage.setItem(KEYS.THEME, stringValue),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Save timeout')), 5000)
-      )
-    ]);
+      5000,
+      'Save timeout'
+    );
   } catch (err) {
     // Silent failure — user data stays in memory for this session
   }
@@ -172,12 +183,11 @@ export async function saveCoordFormat(value) {
   try {
     if (!AsyncStorage || !AsyncStorage.setItem) return;
     const stringValue = String(value ?? 'mgrs');
-    await Promise.race([
+    await withTimeout(
       AsyncStorage.setItem(KEYS.COORD_FORMAT, stringValue),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Save timeout')), 5000)
-      )
-    ]);
+      5000,
+      'Save timeout'
+    );
   } catch (err) {
     // Silent failure — user data stays in memory for this session
   }
@@ -224,12 +234,11 @@ export async function loadWaypointLists() {
       return [];
     }
 
-    const raw = await Promise.race([
+    const raw = await withTimeout(
       AsyncStorage.getItem(KEYS.WAYPOINT_LISTS),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Load timeout')), 5000)
-      )
-    ]);
+      5000,
+      'Load timeout'
+    );
 
     if (!raw) return [];
 
@@ -252,12 +261,11 @@ export async function saveWaypointLists(lists) {
     if (!Array.isArray(lists)) return;
 
     const json = JSON.stringify(lists);
-    await Promise.race([
+    await withTimeout(
       AsyncStorage.setItem(KEYS.WAYPOINT_LISTS, json),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Save timeout')), 5000)
-      )
-    ]);
+      5000,
+      'Save timeout'
+    );
   } catch (err) {
     // Silent failure — in-memory data persists for this session
   }
