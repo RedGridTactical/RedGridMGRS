@@ -279,28 +279,56 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - **All 26 ASC locales** now have native release notes + native promotionalText + native long-form descriptions (was 6 native, 20 machine-translated)
 - **redgridtactical.com** now serves localized home + /mgrs page in 7 languages (EN/FR/DE/ES/JA/KO/IT) with hreflang routing
 
-### v3.5 — Solo Operator (2026)
-- Camera-based target acquisition (point camera at distant point, get its MGRS grid)
-- Encrypted Meshtastic channels from app
-- Background position broadcast
-- CoT export (broadcast own position for ATAK interop)
-- Apple Watch companion (grid + bearing on wrist, NVG-readable)
-- Route planning with elevation profile
-- Satellite connectivity optimization for T-Mobile Starlink on Android
+> **Forward roadmap** is anchored in `STANDOUT_ROADMAP.md` (May 2026 strategic refresh). Goal: be the private, offline-first solo navigator for field operators who need MGRS, mission packaging, mesh/off-grid awareness, and interoperability — without accounts or tracking. Each release maps a single workflow rather than a feature grab-bag.
 
-### v4.0 — Ecosystem Integration (2026-2027)
-- Offline voice commands ("Mark position" / "Send grid" / "Navigate to waypoint")
-- Inertial navigation fallback (IMU dead reckoning in GPS-denied environments)
-- Satellite position reporting (iOS Satellite API when available, Android NTN)
-- Custom report templates (define your own formats for any SOP)
-- Sensor fusion (barometric + IMU + GPS + external GPS)
+### v3.4 — Mission Preflight (next)
+- "AO Preflight" panel: GPS source + accuracy, external GPS, mesh radio, offline tile coverage, missing zooms, battery/airplane-mode hints, permissions health
+- Saved AO packages (named, per map style + zoom) — "Range 23", "Patrol Base", "SAR Segment A"
+- One-tap field check before stepping off coverage
+- Pro: save multiple AO packages and refresh them; free tier sees the checklist
 
-### v5.0 — Platform (2027+)
-- iOS Live Activity + Dynamic Island, Widgets, Siri Shortcuts
-- Integration API for third-party apps
-- Sensor fusion (barometric, IMU, external GPS, mesh multilateration)
+### v3.5 — Route Card + Field Export
+- Route card: name, ordered waypoints, leg distance, leg bearing, total distance, est. time, start DTG, notes
+- Route export: GPX route/track, KML, KMZ, plain-text card for radio/clipboard/share sheet
+- Elevation profile starting from waypoint altitude + GPS altitude; downloaded elevation data later
+- Templates: patrol route, SAR sweep, rally/OBJ set, land-nav course
 
-> **Team features** (roles, messaging, geofencing, shared waypoints, AAR) are in [Red Grid Link](https://github.com/RedGridTactical/RedGridLink). MGRS is the solo navigator. Link is the team coordinator.
+### v3.6 — Solo Mesh Awareness Dashboard
+- Node roster: ID/name, MGRS, bearing/distance, last seen, stale flag, source/channel
+- Selected-node card with "navigate to node", session breadcrumb, hide stale, export node snapshot
+- Send-grid: current grid, selected waypoint, route summary, report text over mesh when packet size permits
+- Mesh setup checklist: app exclusivity, BLE, radio discovered, channel readiness
+- Position broadcast stays explicit, session-based, and battery-aware
+
+### v3.7 — Interoperability Pack
+- Cursor-on-Target (CoT) XML export for own position, waypoints, and routes
+- KML/KMZ mission package export (waypoints + route + reports + geostamped photo refs)
+- Improved KML import: folders → waypoint lists, names/descriptions preserved, route LineString parsing
+- "Copy as": MGRS, lat/lon, CoT XML, radio report
+
+### v3.8 — Solo SAR / ICS Field Pack
+- Expand templates with mobile-scoped FEMA/NIMS forms (ICS 202, 204, 205, 206, 213, 214 alongside the existing 201)
+- Incident folder: name, operational period, map waypoints/routes, reports, photos
+- PDF and radio-friendly text export, local-only storage
+- SAR segment helper: segment ID, assignment, hazards, comms, start/end grids
+
+### v3.9 — Land Nav Training Mode
+- Course mode: create/import checkpoint list, hide next grid until clue unlocks, score time/distance/error, after-action summary
+- Pace/azimuth drills: back-azimuth prompts, pace-count calibration, dead-reckoning exercise
+- Instructor export: printable course card, student result summary
+
+### v4.0 — Glanceable Field Companion
+- Apple Watch first slice: current MGRS, bearing/distance to active waypoint, mark position, mesh broadcast indicator
+- Widgets / Live Activity: current grid, active waypoint distance/bearing, offline AO status
+- Siri / App Shortcuts: "Mark position", "Copy grid", "Start preflight"
+
+### v4.x — R&D Track (parallel, not roadmap-blocking)
+- Camera target acquisition — start as bearing capture + estimated line, then earn the "target grid" claim with calibrated heading + pitch + range
+- Inertial / GPS-denied fallback — start with dead-reckoning assist + confidence decay; full IMU fusion later
+- Satellite position reporting — research-only until platform APIs and carrier support stabilize
+- Full TAK server integration — only after CoT/KML/KMZ file export is mature
+
+> **Team features** (roles, messaging, geofencing, shared waypoints, AAR, live shared sessions) are in [Red Grid Link](https://github.com/RedGridTactical/RedGridLink). MGRS is the solo navigator; Link is the team coordinator. Mesh awareness in MGRS is local/read-only awareness for the solo operator — persistent shared team sessions belong in Link.
 
 ---
 
