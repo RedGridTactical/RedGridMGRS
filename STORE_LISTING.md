@@ -101,7 +101,13 @@ Download free — includes live 10-digit MGRS display, 1 theme, basic tools, and
 ## Keywords
 mgrs,gps,military,grid,navigation,tactical,offline,army,bearing,mesh,meshtastic,sar,utm,declination
 
-## What's New (v3.3.5)
+## What's New (v3.3.6)
+v3.3.6 — Startup fix
+
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.
+
+## What's New (v3.3.5 — superseded by v3.3.6)
 v3.3.5 — Reliability + privacy reset
 
 - External GPS receivers (Garmin GLO, Bad Elf, etc.) now drive every screen, not just settings

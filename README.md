@@ -16,12 +16,17 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 
 ---
 
-## Latest: v3.3.5 — Reliability + privacy reset
+## Latest: v3.3.6 — Startup fix
+
+- **Fixes the v3.3.5 startup black screen.** Some installs of v3.3.5 could land on a black screen after the SDK upgrade. v3.3.6 restores the native iOS launch path and the app now starts reliably on iOS 15 and later.
+- **No privacy, network, or data changes.** Same zero-network architecture: no analytics, no tracking, no telemetry, no third-party identifiers. The only network calls are user-initiated map tile downloads and platform-native IAP.
+
+### v3.3.5 — Reliability + privacy reset
 
 - **External GPS is now app-wide.** Connect a Bluetooth receiver (Garmin GLO, Bad Elf, etc.) and every screen — grid, map, tools, mesh, reports — uses the receiver's fix instead of the phone's GPS.
 - **Mesh auto-share actually broadcasts.** The auto-share toggle on the Mesh screen now sends your active position over LoRa every 30 seconds.
 - **Live on Google Play** — [Red Grid MGRS](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) on both platforms.
-- **Privacy reset.** Removed the Apple Search Ads attribution module that called out to Apple on first launch. The app now matches the privacy policy: no analytics, no tracking, no telemetry, no third-party identifiers — only user-initiated map tile downloads and platform-native IAP.
+- **Privacy reset.** Removed the Apple Search Ads attribution module that called out to Apple on first launch.
 - All v3.3.1 features — **MARK POSITION**, **offline map prompt**, **share-to-unlock referral**, **in-app What's New**.
 
 ---
@@ -262,7 +267,12 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Write-review URL opens directly so users land on the text-review sheet (not the star-only rating sheet)
 - Background tuning and stability polish across the grid, map, and tools
 
-### v3.3.5 — Reliability + privacy reset 🟡 (2026, iOS + Android in review)
+### v3.3.6 — Startup fix 🟡 (2026, iOS in review)
+- Fixes a startup black screen on some v3.3.5 installs by restoring the native iOS launch path after the SDK 53 / RN 0.79 upgrade
+- No privacy, network, or data changes — zero-network architecture preserved
+- Android startup path was already on the SDK 53 host wrapper, so this is iOS-only
+
+### v3.3.5 — Reliability + privacy reset ✅ (2026, live on iOS + Android)
 - External GPS is now the active source app-wide (was settings-only)
 - Mesh auto-share now feeds the active position into LoRa broadcasts
 - Removed Apple Search Ads attribution module — restored true zero-tracking posture

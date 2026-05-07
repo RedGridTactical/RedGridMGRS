@@ -1,24 +1,19 @@
 #import "AppDelegate.h"
 
+#if __has_include(<Expo/Expo-Swift.h>)
+#import <Expo/Expo-Swift.h>
+#else
+#import "Expo-Swift.h"
+#endif
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTLinkingManager.h>
+#import <ReactAppDependencyProvider/RCTAppDependencyProvider.h>
 
-@implementation AppDelegate
-
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{
-  self.moduleName = @"main";
-
-  // You can add your custom initial props in the dictionary below.
-  // They will be passed down to the ViewController used by React Native.
-  self.initialProps = @{};
-
-  return [super application:application didFinishLaunchingWithOptions:launchOptions];
-}
+@implementation ExpoReactNativeFactoryDelegate (RedGridBundleURL)
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {
-  return [self bundleURL];
+  return bridge.bundleURL ?: [self bundleURL];
 }
 
 - (NSURL *)bundleURL
@@ -28,6 +23,46 @@
 #else
   return [[NSBundle mainBundle] URLForResource:@"main" withExtension:@"jsbundle"];
 #endif
+}
+
+@end
+
+@interface AppDelegate ()
+
+@property (nonatomic, strong) UIWindow *rootWindow;
+@property (nonatomic, strong) ExpoReactNativeFactoryDelegate *reactNativeDelegate;
+@property (nonatomic, strong) ExpoReactNativeFactory *reactNativeFactory;
+
+@end
+
+@implementation AppDelegate
+
+- (UIWindow *)window
+{
+  return self.rootWindow;
+}
+
+- (void)setWindow:(UIWindow *)window
+{
+  self.rootWindow = window;
+}
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+  ExpoReactNativeFactoryDelegate *delegate = [ExpoReactNativeFactoryDelegate new];
+  ExpoReactNativeFactory *factory = [[ExpoReactNativeFactory alloc] initWithDelegate:delegate];
+  delegate.dependencyProvider = [RCTAppDependencyProvider new];
+
+  self.reactNativeDelegate = delegate;
+  self.reactNativeFactory = factory;
+  [[self valueForKey:@"_expoAppDelegate"] setValue:factory forKey:@"factory"];
+
+  self.rootWindow = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+  [factory startReactNativeWithModuleName:@"main"
+                                 inWindow:self.rootWindow
+                            launchOptions:launchOptions];
+
+  return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 
 // Linking API

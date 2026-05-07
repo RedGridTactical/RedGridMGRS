@@ -35,243 +35,175 @@ const APP_ID = '6759629554'; // Red Grid MGRS
 // Release notes per locale. Copy the English version for locales we don't
 // have a translation for — ASC requires ALL localizations to be populated.
 const RELEASE_NOTES = {
-  'en-US': `v3.3.5 — Reliability + privacy
+  'en-US': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'fr-FR': `v3.3.5 — Reliability + privacy
+  'fr-FR': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'de-DE': `v3.3.5 — Reliability + privacy
+  'de-DE': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'es-ES': `v3.3.5 — Reliability + privacy
+  'es-ES': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'es-MX': `v3.3.5 — Reliability + privacy
+  'es-MX': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'ja': `v3.3.5 — Reliability + privacy
+  'ja': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'ko': `v3.3.5 — Reliability + privacy
+  'ko': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'it': `v3.3.5 — Reliability + privacy
+  'it': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'nl-NL': `v3.3.5 — Reliability + privacy
+  'nl-NL': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'pt-BR': `v3.3.5 — Reliability + privacy
+  'pt-BR': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'pt-PT': `v3.3.5 — Reliability + privacy
+  'pt-PT': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'ru': `v3.3.5 — Reliability + privacy
+  'ru': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'uk': `v3.3.5 — Reliability + privacy
+  'uk': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'pl': `v3.3.5 — Reliability + privacy
+  'pl': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'cs': `v3.3.5 — Reliability + privacy
+  'cs': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'sk': `v3.3.5 — Reliability + privacy
+  'sk': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'hr': `v3.3.5 — Reliability + privacy
+  'hr': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'hu': `v3.3.5 — Reliability + privacy
+  'hu': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'ro': `v3.3.5 — Reliability + privacy
+  'ro': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'tr': `v3.3.5 — Reliability + privacy
+  'tr': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'sv': `v3.3.5 — Reliability + privacy
+  'sv': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'no': `v3.3.5 — Reliability + privacy
+  'no': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'da': `v3.3.5 — Reliability + privacy
+  'da': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'fi': `v3.3.5 — Reliability + privacy
+  'fi': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'el': `v3.3.5 — Reliability + privacy
+  'el': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'zh-Hans': `v3.3.5 — Reliability + privacy
+  'zh-Hans': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'zh-Hant': `v3.3.5 — Reliability + privacy
+  'zh-Hant': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'vi': `v3.3.5 — Reliability + privacy
+  'vi': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'th': `v3.3.5 — Reliability + privacy
+  'th': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'id': `v3.3.5 — Reliability + privacy
+  'id': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'ms': `v3.3.5 — Reliability + privacy
+  'ms': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'he': `v3.3.5 — Reliability + privacy
+  'he': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'ar-SA': `v3.3.5 — Reliability + privacy
+  'ar-SA': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 
-  'ca': `v3.3.5 — Reliability + privacy
+  'ca': `v3.3.6 — Startup fix
 
-- NEW: build a route on the map by tapping saved waypoints (Pro). See distance and estimated time per leg, plus an optimize button that reorders from your current location.
-- Mesh auto-share now actually broadcasts your position over LoRa.
-- External GPS receivers (Garmin GLO, Bad Elf, etc.) drive every screen, not just settings.
-- Map tile downloads use the current map style. First-launch attribution call removed to match the no-tracking policy.`,
+- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
+- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
 };
 
 // Any ASC-required locales not listed in RELEASE_NOTES fall back to English.
