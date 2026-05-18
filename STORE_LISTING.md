@@ -98,6 +98,9 @@ ZERO FOOTPRINT PRIVACY:
 
 Download free — includes live 10-digit MGRS display, 1 theme, basic tools, and 3 report templates. Upgrade to Red Grid Pro for all 10 tools, offline maps, mesh networking, all themes, unlimited waypoints, and all 6 reports. Monthly, annual, or lifetime options available.
 
+Subscriptions auto-renew until cancelled in your App Store account settings. Pro Lifetime is a one-time purchase, not a subscription.
+Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+
 ## Keywords
 mgrs,gps,military,grid,navigation,tactical,offline,army,bearing,mesh,meshtastic,sar,utm,declination
 
