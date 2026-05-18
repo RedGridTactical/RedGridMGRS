@@ -230,5 +230,47 @@ export function getLocalTilePathTemplate() {
   return `${dir}{z}/{x}/{y}.png`;
 }
 
+// Average bytes-per-tile, used purely for "this download will cost about ~X MB"
+// pre-flight estimates. Real OSM/CARTO 256x256 PNG tiles fall in a 6–35 KB range
+// depending on terrain density; 22 KB is a midpoint that matches the long-run
+// average observed on Red Grid's existing tile cache. Topo tiles trend higher
+// (~30 KB), dark/light are lower (~15–20 KB).
+export const AVG_TILE_BYTES = 22 * 1024;
+
+/**
+ * Pre-flight estimate for a region + zoom set, with a per-zoom breakdown.
+ * No network, no disk I/O — just the same lat/lon math `getTilesForRegion`
+ * already uses. Safe to call on every viewport change.
+ *
+ * @param {object} region - { latitude, longitude, latitudeDelta, longitudeDelta }
+ * @param {number[]} zoomLevels - Zoom levels to estimate (defaults match download)
+ * @param {number} bytesPerTile - Override average bytes-per-tile if needed
+ * @returns {{ totalTiles, byZoom: { [z]: number }, estimatedBytes }}
+ */
+export function estimateTilesForRegion(region, zoomLevels = [10, 12, 14], bytesPerTile = AVG_TILE_BYTES) {
+  // Defensive: missing/zero region → no work
+  if (!region || typeof region.latitude !== 'number' || typeof region.longitude !== 'number') {
+    return { totalTiles: 0, byZoom: {}, estimatedBytes: 0 };
+  }
+  if (!Array.isArray(zoomLevels) || zoomLevels.length === 0) {
+    return { totalTiles: 0, byZoom: {}, estimatedBytes: 0 };
+  }
+
+  const byZoom = {};
+  let totalTiles = 0;
+  for (const zoom of zoomLevels) {
+    if (typeof zoom !== 'number' || zoom < 0 || zoom > 19) continue;
+    const tiles = getTilesForRegion(region, zoom);
+    byZoom[zoom] = tiles.length;
+    totalTiles += tiles.length;
+  }
+
+  return {
+    totalTiles,
+    byZoom,
+    estimatedBytes: totalTiles * bytesPerTile,
+  };
+}
+
 // Export helpers for testing
 export { latLonToTile, getTilesForRegion, TILE_DIR };

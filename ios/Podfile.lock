@@ -35,6 +35,8 @@ PODS:
     - Yoga
   - ExpoAsset (11.1.7):
     - ExpoModulesCore
+  - ExpoBattery (9.1.4):
+    - ExpoModulesCore
   - ExpoClipboard (7.1.5):
     - ExpoModulesCore
   - ExpoDocumentPicker (13.1.6):
@@ -83,6 +85,8 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - ExpoNetwork (7.1.5):
+    - ExpoModulesCore
   - ExpoSensors (14.1.4):
     - ExpoModulesCore
   - ExpoSharing (13.1.5):
@@ -1810,6 +1814,7 @@ DEPENDENCIES:
   - EXImageLoader (from `../node_modules/expo-image-loader/ios`)
   - Expo (from `../node_modules/expo`)
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
+  - ExpoBattery (from `../node_modules/expo-battery/ios`)
   - ExpoClipboard (from `../node_modules/expo-clipboard/ios`)
   - ExpoDocumentPicker (from `../node_modules/expo-document-picker/ios`)
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
@@ -1822,6 +1827,7 @@ DEPENDENCIES:
   - ExpoLocation (from `../node_modules/expo-location/ios`)
   - ExpoMediaLibrary (from `../node_modules/expo-media-library/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
+  - ExpoNetwork (from `../node_modules/expo-network/ios`)
   - ExpoSensors (from `../node_modules/expo-sensors/ios`)
   - ExpoSharing (from `../node_modules/expo-sharing/ios`)
   - ExpoSpeech (from `../node_modules/expo-speech/ios`)
@@ -1920,6 +1926,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo"
   ExpoAsset:
     :path: "../node_modules/expo-asset/ios"
+  ExpoBattery:
+    :path: "../node_modules/expo-battery/ios"
   ExpoClipboard:
     :path: "../node_modules/expo-clipboard/ios"
   ExpoDocumentPicker:
@@ -1944,6 +1952,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-media-library/ios"
   ExpoModulesCore:
     :path: "../node_modules/expo-modules-core"
+  ExpoNetwork:
+    :path: "../node_modules/expo-network/ios"
   ExpoSensors:
     :path: "../node_modules/expo-sensors/ios"
   ExpoSharing:
@@ -2107,6 +2117,7 @@ SPEC CHECKSUMS:
   EXImageLoader: 4d3d3284141f1a45006cc4d0844061c182daf7ee
   Expo: e15de17105dff3775eb3dc0803907cfbfd8f1c93
   ExpoAsset: ef06e880126c375f580d4923fdd1cdf4ee6ee7d6
+  ExpoBattery: f824a89ff65cc0a26a3d3b5ad34d52c81bf75de3
   ExpoClipboard: 436f6de6971f14eb75ae160e076d9cb3b19eb795
   ExpoDocumentPicker: b263a279685b6640b8c8bc70d71c83067aeaae55
   ExpoFileSystem: 7f92f7be2f5c5ed40a7c9efc8fa30821181d9d63
@@ -2119,6 +2130,7 @@ SPEC CHECKSUMS:
   ExpoLocation: a43df2ff15f2fae9504b23a77060e7cd16b3e326
   ExpoMediaLibrary: 0daf5e811e00daa47690f5da2989e71ff7de56e0
   ExpoModulesCore: f55e7872391bae03ee5547c83152c81750d89508
+  ExpoNetwork: 92cac43c13a2d9e9c1470ec8804836574ff34068
   ExpoSensors: 38ae3a55b484410a7976fa3ff78ea80339252e75
   ExpoSharing: b0377be82430d07398c6a4cd60b5a15696accbd3
   ExpoSpeech: 9b3bdf552e69c8015c246dc52b5ad5fcdbec878e

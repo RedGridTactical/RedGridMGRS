@@ -421,6 +421,8 @@ function App() {
         showSupport={showSupport}
         setShowSupport={setShowSupport}
         mesh={mesh}
+        gpsSource={gpsSource}
+        gpsDeviceName={gpsDeviceName}
       />
     </ThemeProvider>
   );
@@ -442,6 +444,7 @@ function AppContent({
   hudMode, setHudMode, bearing, arrowAngle, distance,
   showSupport, setShowSupport,
   mesh,
+  gpsSource, gpsDeviceName,
 }) {
   const colors = useColors();
 
@@ -472,6 +475,9 @@ function AppContent({
             onShowProGate={showProGate}
             onSetWaypoint={setWaypoint}
             meshPositions={mesh.meshPositions}
+            gpsSource={gpsSource}
+            gpsDeviceName={gpsDeviceName}
+            mesh={mesh}
           />
         )}
 
@@ -595,7 +601,7 @@ function AppContent({
       />
 
       {/* What's new in this version — first launch post-update only */}
-      <WhatsNewModal currentVersion="3.3.5" />
+      <WhatsNewModal currentVersion="3.4.0" />
 
     </SafeAreaView>
 

@@ -35,175 +35,209 @@ const APP_ID = '6759629554'; // Red Grid MGRS
 // Release notes per locale. Copy the English version for locales we don't
 // have a translation for — ASC requires ALL localizations to be populated.
 const RELEASE_NOTES = {
-  'en-US': `v3.3.6 — Startup fix
+  'en-US': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'fr-FR': `v3.3.6 — Startup fix
+  'fr-FR': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'de-DE': `v3.3.6 — Startup fix
+  'de-DE': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'es-ES': `v3.3.6 — Startup fix
+  'es-ES': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'es-MX': `v3.3.6 — Startup fix
+  'es-MX': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ja': `v3.3.6 — Startup fix
+  'ja': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ko': `v3.3.6 — Startup fix
+  'ko': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'it': `v3.3.6 — Startup fix
+  'it': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'nl-NL': `v3.3.6 — Startup fix
+  'nl-NL': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'pt-BR': `v3.3.6 — Startup fix
+  'pt-BR': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'pt-PT': `v3.3.6 — Startup fix
+  'pt-PT': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ru': `v3.3.6 — Startup fix
+  'ru': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'uk': `v3.3.6 — Startup fix
+  'uk': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'pl': `v3.3.6 — Startup fix
+  'pl': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'cs': `v3.3.6 — Startup fix
+  'cs': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'sk': `v3.3.6 — Startup fix
+  'sk': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'hr': `v3.3.6 — Startup fix
+  'hr': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'hu': `v3.3.6 — Startup fix
+  'hu': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ro': `v3.3.6 — Startup fix
+  'ro': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'tr': `v3.3.6 — Startup fix
+  'tr': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'sv': `v3.3.6 — Startup fix
+  'sv': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'no': `v3.3.6 — Startup fix
+  'no': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'da': `v3.3.6 — Startup fix
+  'da': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'fi': `v3.3.6 — Startup fix
+  'fi': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'el': `v3.3.6 — Startup fix
+  'el': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'zh-Hans': `v3.3.6 — Startup fix
+  'zh-Hans': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'zh-Hant': `v3.3.6 — Startup fix
+  'zh-Hant': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'vi': `v3.3.6 — Startup fix
+  'vi': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'th': `v3.3.6 — Startup fix
+  'th': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'id': `v3.3.6 — Startup fix
+  'id': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ms': `v3.3.6 — Startup fix
+  'ms': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'he': `v3.3.6 — Startup fix
+  'he': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ar-SA': `v3.3.6 — Startup fix
+  'ar-SA': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ca': `v3.3.6 — Startup fix
+  'ca': `v3.4 — Mission Preflight
 
-- Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.
-- No privacy, network, or data changes. Red Grid MGRS still requires no account, runs offline-first, and never transmits your location.`,
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 };
 
 // Any ASC-required locales not listed in RELEASE_NOTES fall back to English.

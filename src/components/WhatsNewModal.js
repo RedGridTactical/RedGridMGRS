@@ -73,6 +73,18 @@ const FEATURES_BY_VERSION = {
       body: 'Behind-the-scenes improvements to support reliability and faster ship cycles.',
     },
   ],
+  '3.4.0': [
+    {
+      icon: '✓',
+      title: 'MISSION PREFLIGHT',
+      body: 'Open PFL on the map for GPS, mesh, offline tile, permission, battery, and network readiness before stepping off.',
+    },
+    {
+      icon: '▤',
+      title: 'SAVED AO PACKAGES',
+      body: 'Save the current map viewport as a local AO package with tile estimates and one-tap refresh.',
+    },
+  ],
 };
 
 export function WhatsNewModal({ currentVersion }) {

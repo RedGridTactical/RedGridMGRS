@@ -130,9 +130,21 @@ Goal: make the live product match its promises.
 
 Why first: no standout roadmap matters if the trust layer is shaky.
 
-### v3.4 - Mission Preflight
+### v3.4 - Mission Preflight  🟡 IN DEVELOPMENT (versionName 3.4.0 / iOS build 66 / Android versionCode 20)
 
 Goal: make Red Grid feel field-ready before the user leaves coverage.
+
+Status (2026-05-14): core implementation landed in working tree —
+- `src/utils/storage.js` adds `AO_PACKAGES` key + `loadAOPackages` / `saveAOPackages` (`rg_ao_packages_v1`)
+- `src/utils/tileManager.js` adds `estimateTilesForRegion(region, zoomLevels)` + `AVG_TILE_BYTES`
+- `src/hooks/useAOPackages.js` enforces `FREE_AO_LIMIT = 1` and exposes add/refresh/delete
+- `src/components/PreflightStatusRow.js` renders one OK/WARN/FAIL row
+- `src/screens/PreflightScreen.js` is the full panel with summary + 4 status sections + saved-AO list + inline name prompt
+- `src/screens/MapScreen.js` adds the **PFL** button next to **RT** and lifts Preflight as a `Modal`
+- `App.js` pipes `gpsSource` / `gpsDeviceName` / `mesh` props through `AppContent` into `MapScreen`
+- `src/i18n/en.js` adds the `preflight.*` and `common.*` namespaces (non-English locales fall back to en)
+- Tests: 398/398 (added `__tests__/aoPackages.test.js` + estimator block inside `__tests__/tileManager.test.js`)
+- Native: no source changes; `app.json` / `Info.plist` / `build.gradle` bumped to 3.4.0 / iOS 66 / Android 20
 
 Core features:
 - "AO Preflight" panel:

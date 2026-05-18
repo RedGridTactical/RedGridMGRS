@@ -30,6 +30,7 @@ const KEYS = {
   SHAKE_TO_SPEAK:  'rg_shake_to_speak',
   GRID_CROSSING:   'rg_grid_crossing',
   GRID_SCALE:      'rg_grid_scale',
+  AO_PACKAGES:     'rg_ao_packages_v1',
 };
 
 /**
@@ -268,6 +269,58 @@ export async function saveWaypointLists(lists) {
     );
   } catch (err) {
     // Silent failure — in-memory data persists for this session
+  }
+}
+
+// ─── AO (Area of Operations) PACKAGES (v3.4 Mission Preflight) ──────────────
+/**
+ * AO package shape:
+ *   {
+ *     id:            string                  // local-only id
+ *     name:          string                  // user-supplied label
+ *     mapStyle:      'standard'|'dark'|'topo'
+ *     region:        { latitude, longitude, latitudeDelta, longitudeDelta }
+ *     zoomLevels:    number[]                // e.g. [10, 12, 14, 16]
+ *     tileCount:     number                  // total tile count across zooms
+ *     estimatedBytes:number                  // best-effort estimate at save time
+ *     lastRefreshed: ISO string | null       // null until first download
+ *     createdAt:     ISO string
+ *   }
+ *
+ * Storage is local-only, never transmitted, mirrors the privacy posture of the
+ * rest of storage.js. Reads/writes go through withTimeout() so a hung
+ * AsyncStorage doesn't block the Preflight panel render.
+ */
+export async function loadAOPackages() {
+  try {
+    if (!AsyncStorage || !AsyncStorage.getItem) return [];
+    const raw = await withTimeout(
+      AsyncStorage.getItem(KEYS.AO_PACKAGES),
+      5000,
+      'Load timeout'
+    );
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed;
+  } catch (err) {
+    // AsyncStorage unavailable, corrupted JSON, timeout, or parse error
+    return [];
+  }
+}
+
+export async function saveAOPackages(packages) {
+  try {
+    if (!AsyncStorage || !AsyncStorage.setItem) return;
+    if (!Array.isArray(packages)) return;
+    const json = JSON.stringify(packages);
+    await withTimeout(
+      AsyncStorage.setItem(KEYS.AO_PACKAGES, json),
+      5000,
+      'Save timeout'
+    );
+  } catch (err) {
+    // Silent failure — UI keeps the in-memory list for this session
   }
 }
 

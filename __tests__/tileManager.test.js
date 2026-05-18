@@ -11,6 +11,8 @@ const {
   downloadTilesForRegion,
   checkTilesForRegion,
   clearTileCache,
+  estimateTilesForRegion,
+  AVG_TILE_BYTES,
   TILE_DIR,
 } = require('../src/utils/tileManager');
 
@@ -300,6 +302,59 @@ describe('tileManager.js - Offline Tile Cache', () => {
     test('clearTileCache returns false without FileSystem', async () => {
       const result = await clearTileCache();
       expect(result).toBe(false);
+    });
+  });
+
+  // ─── estimateTilesForRegion (v3.4 Mission Preflight) ──────────────────
+  describe('estimateTilesForRegion(region, zoomLevels)', () => {
+    const dcRegion = {
+      latitude: 38.8895,
+      longitude: -77.0353,
+      latitudeDelta: 0.05,
+      longitudeDelta: 0.05,
+    };
+
+    test('returns zeros for null/invalid region', () => {
+      expect(estimateTilesForRegion(null)).toEqual({ totalTiles: 0, byZoom: {}, estimatedBytes: 0 });
+      expect(estimateTilesForRegion({})).toEqual({ totalTiles: 0, byZoom: {}, estimatedBytes: 0 });
+      expect(estimateTilesForRegion({ latitude: 1 })).toEqual({ totalTiles: 0, byZoom: {}, estimatedBytes: 0 });
+    });
+
+    test('returns zeros for empty zoom list', () => {
+      expect(estimateTilesForRegion(dcRegion, [])).toEqual({ totalTiles: 0, byZoom: {}, estimatedBytes: 0 });
+    });
+
+    test('sums tile counts across zoom levels', () => {
+      const est = estimateTilesForRegion(dcRegion, [10, 12, 14]);
+      // Should match `getTilesForRegion` sums (no double-counting)
+      const sum =
+        getTilesForRegion(dcRegion, 10).length +
+        getTilesForRegion(dcRegion, 12).length +
+        getTilesForRegion(dcRegion, 14).length;
+      expect(est.totalTiles).toBe(sum);
+      expect(est.byZoom[10]).toBe(getTilesForRegion(dcRegion, 10).length);
+      expect(est.byZoom[14]).toBe(getTilesForRegion(dcRegion, 14).length);
+    });
+
+    test('estimatedBytes = totalTiles * AVG_TILE_BYTES by default', () => {
+      const est = estimateTilesForRegion(dcRegion, [10, 12]);
+      expect(est.estimatedBytes).toBe(est.totalTiles * AVG_TILE_BYTES);
+    });
+
+    test('estimatedBytes respects custom bytesPerTile override', () => {
+      const est = estimateTilesForRegion(dcRegion, [12], 1000);
+      expect(est.estimatedBytes).toBe(est.totalTiles * 1000);
+    });
+
+    test('rejects out-of-range zoom levels', () => {
+      const est = estimateTilesForRegion(dcRegion, [10, -1, 50, 12]);
+      // Only zoom 10 and 12 should count
+      expect(Object.keys(est.byZoom).sort()).toEqual(['10', '12']);
+    });
+
+    test('AVG_TILE_BYTES is a reasonable midpoint (10KB–35KB)', () => {
+      expect(AVG_TILE_BYTES).toBeGreaterThanOrEqual(10 * 1024);
+      expect(AVG_TILE_BYTES).toBeLessThanOrEqual(35 * 1024);
     });
   });
 });

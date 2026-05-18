@@ -101,7 +101,14 @@ Download free — includes live 10-digit MGRS display, 1 theme, basic tools, and
 ## Keywords
 mgrs,gps,military,grid,navigation,tactical,offline,army,bearing,mesh,meshtastic,sar,utm,declination
 
-## What's New (v3.3.6)
+## What's New (v3.4)
+v3.4 — Mission Preflight
+
+- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
+- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
+- No privacy, account, tracking, or telemetry changes. Preflight checks and AO packages stay on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.
+
+## What's New (v3.3.6 — superseded by v3.4)
 v3.3.6 — Startup fix
 
 - Fixes a startup issue that could leave the app on a black screen for some users after the v3.3.5 update. The app now launches reliably on iOS 15 and later.

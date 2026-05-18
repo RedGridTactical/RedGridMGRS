@@ -27,6 +27,7 @@ import { MGRSGridOverlay } from '../components/MGRSGridOverlay';
 import { RouteOverlay } from '../components/RouteOverlay';
 import { calculateRoute, estimateTime, formatTime, optimizeRoute } from '../utils/routePlanner';
 import { downloadTilesForRegion, checkTilesForRegion, clearTileCache, getLocalTilePathTemplate, getTilesForRegion } from '../utils/tileManager';
+import { PreflightScreen } from './PreflightScreen';
 
 // Free-tier persistent-waypoint cap. Free users get 1 saved waypoint; Pro is
 // unlimited. Captured here so the contract stays in one place.
@@ -87,7 +88,17 @@ const MAP_STYLES = ['standard', 'dark', 'topo'];
 const MAP_STYLE_KEY = 'rg_map_style';
 const FIRST_VISIT_PROMPT_KEY = 'rg_map_first_visit_prompted_v1';
 
-export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshPositions = [] }) {
+export function MapScreen({
+  location,
+  isPro,
+  onShowProGate,
+  onSetWaypoint,
+  meshPositions = [],
+  // v3.4 Mission Preflight pipes — optional so older callers keep working.
+  gpsSource,
+  gpsDeviceName,
+  mesh,
+}) {
   const colors = useColors();
   const { t } = useTranslation();
   const mapRef = useRef(null);
@@ -151,6 +162,10 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
   // removes them from the route in tap order and a polyline + summary appear.
   const [routeMode, setRouteMode] = useState(false);
   const [routeWaypoints, setRouteWaypoints] = useState([]); // ordered [{ id, lat, lon, name }]
+
+  // v3.4 Mission Preflight modal visibility. Triggered by the PFL button in
+  // the right-side stack; closes back to the map untouched.
+  const [preflightVisible, setPreflightVisible] = useState(false);
 
   // Load waypoints from all lists for display on map
   useEffect(() => {
@@ -782,6 +797,17 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
           <Text style={[styles.mapBtnLabel, { color: routeMode ? colors.bg : colors.accent }]}>RT</Text>
         </TouchableOpacity>
 
+        {/* Mission Preflight (v3.4). Opens the readiness panel as a modal.
+            Visible to all tiers — the free-tier AO cap is enforced inside. */}
+        <TouchableOpacity
+          style={[styles.mapBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => { tapLight(); setPreflightVisible(true); }}
+          accessibilityRole="button"
+          accessibilityLabel="Open Mission Preflight"
+        >
+          <Text style={[styles.mapBtnLabel, { color: colors.accent }]}>PFL</Text>
+        </TouchableOpacity>
+
         {/* Center on user button */}
         {location && (
           <TouchableOpacity
@@ -1033,6 +1059,23 @@ export function MapScreen({ location, isPro, onShowProGate, onSetWaypoint, meshP
           </View>
         </View>
       </Modal>
+
+      {/* v3.4 Mission Preflight modal. Consumes the current map viewport so its
+          coverage estimates and "Save current AO" reflect what the operator
+          can actually see. Mesh + GPS props are optional; the screen degrades
+          gracefully when the parent hasn't lifted them yet. */}
+      <PreflightScreen
+        visible={preflightVisible}
+        onClose={() => setPreflightVisible(false)}
+        location={location}
+        gpsSource={gpsSource}
+        gpsDeviceName={gpsDeviceName}
+        mesh={mesh}
+        mapRegion={mapRegion || initialRegion}
+        mapStyle={mapStyle}
+        isPro={isPro}
+        onShowProGate={onShowProGate}
+      />
     </View>
   );
 }

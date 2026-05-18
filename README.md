@@ -16,10 +16,16 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 
 ---
 
-## Latest: v3.3.6 — Startup fix
+## Latest: v3.4 — Mission Preflight
 
-- **Fixes the v3.3.5 startup black screen.** Some installs of v3.3.5 could land on a black screen after the SDK upgrade. v3.3.6 restores the native iOS launch path and the app now starts reliably on iOS 15 and later.
-- **No privacy, network, or data changes.** Same zero-network architecture: no analytics, no tracking, no telemetry, no third-party identifiers. The only network calls are user-initiated map tile downloads and platform-native IAP.
+- **NEW: Mission Preflight panel** on the Map tab (PFL button). One-glance **READY / CAUTION / NOT READY** summary covering GPS source + accuracy, Meshtastic radio state, offline tile coverage + missing zooms, permissions health, and battery/network hints.
+- **NEW: Saved AO Packages.** Save the current map viewport as a named bundle (name + style + zoom set). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh. Tile estimates show count + MB before any download starts.
+- **Same zero-network posture.** Preflight checks run on-device and AO packages never leave the device. The only network calls remain user-initiated tile downloads and platform-native IAP.
+
+### v3.3.6 — Startup fix
+
+- Fixes the v3.3.5 startup black screen by restoring the native iOS launch path after the SDK upgrade.
+- No privacy, network, or data changes — same zero-network architecture.
 
 ### v3.3.5 — Reliability + privacy reset
 
@@ -267,7 +273,15 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Write-review URL opens directly so users land on the text-review sheet (not the star-only rating sheet)
 - Background tuning and stability polish across the grid, map, and tools
 
-### v3.3.6 — Startup fix 🟡 (2026, iOS in review)
+### v3.4 — Mission Preflight 🟡 (2026, in development)
+- New **PFL** button on the Map tab opens a full-screen Mission Preflight panel
+- Status sections: GPS source (phone vs external) with accuracy, Meshtastic radio state, offline tile coverage + missing zooms for the current viewport, permissions health, battery/network hints
+- One-glance **READY / CAUTION / NOT READY** summary at the top derived from the worst row
+- **Saved AO Packages** — name + map style + zoom set bundled together. Free tier: 1 AO. Pro: unlimited, with one-tap refresh and per-AO tile count + MB estimate
+- Tile-count math via the new `estimateTilesForRegion` helper — same lat/lon model as `getTilesForRegion`, no extra dependencies
+- Local-only storage (`rg_ao_packages_v1`); nothing about an AO is ever transmitted
+
+### v3.3.6 — Startup fix ✅ (2026, live)
 - Fixes a startup black screen on some v3.3.5 installs by restoring the native iOS launch path after the SDK 53 / RN 0.79 upgrade
 - No privacy, network, or data changes — zero-network architecture preserved
 - Android startup path was already on the SDK 53 host wrapper, so this is iOS-only
