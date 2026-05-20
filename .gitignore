@@ -19,6 +19,21 @@ web-build/
 .[cC][lL]*[dD][eE]*
 [cC][lL]*[dD][eE]*.md
 
+# Local session context — never commit (AI-trace-free repo policy)
+CONTEXT.md
+context.md
+
+# Operational telemetry & proceeds tracker — local-only, never commit
+# Contains active subscriber counts, install volume, revenue figures,
+# growth targets, and other business-sensitive ops data. Public repo
+# must show zero competitive-intel surface.
+stats/daily/
+stats/manual-overrides.json
+stats/proceeds-history.json
+stats/weekly-goal-tracker.md
+scripts/lib/proceeds.js
+scripts/proceeds-tracker.js
+
 # Generated reports & audit docs
 *.docx
 RedGrid_Store_Listing_Audit.md
