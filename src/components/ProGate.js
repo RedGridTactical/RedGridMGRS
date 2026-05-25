@@ -19,10 +19,16 @@ const PRO_FEATURES = [
   { icon: '\ud83d\udd34', labelKey: 'proGate.displayThemes', subKey: 'proGate.displayThemesSub' },
 ];
 
+// Paywall variant A (May 24, 2026): lifetime-first ordering with the
+// "BEST VALUE" badge promoted to lifetime. Default selectedTier flipped
+// to 'lifetime' below. Hypothesis: one lifetime sale at $149.99 generates
+// ~$98 in proceeds, equivalent to ~5 months of monthly-sub revenue, so
+// shifting tier mix toward lifetime is the highest-leverage paywall lever.
+// Rationale + rollback notes: see stats/paywall-variants.md (local-only).
 const TIERS = [
+  { id: 'lifetime', labelKey: 'proGate.tierLifetime', periodKey: 'proGate.oneTime', badge: 'proGate.bestValue' },
+  { id: 'annual',   labelKey: 'proGate.tierAnnual',   periodKey: 'proGate.perYear' },
   { id: 'monthly',  labelKey: 'proGate.tierMonthly',  periodKey: 'proGate.perMonth' },
-  { id: 'annual',   labelKey: 'proGate.tierAnnual',   periodKey: 'proGate.perYear', badge: 'proGate.bestValue' },
-  { id: 'lifetime', labelKey: 'proGate.tierLifetime', periodKey: 'proGate.oneTime' },
 ];
 
 export function ProGate({
@@ -39,7 +45,7 @@ export function ProGate({
     return product?.displayPrice ?? '$149.99';
   };
 
-  const activeTier = selectedTier || 'annual';
+  const activeTier = selectedTier || 'lifetime';
 
   return (
     <Modal
