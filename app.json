@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.redgrid.redgridtactical",
-      "versionCode": 20,
+      "versionCode": 21,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive_foreground.png",
         "backgroundColor": "#000000"
