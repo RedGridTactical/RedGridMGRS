@@ -1,14 +1,17 @@
 /**
- * useIAP — Crash-safe IAP hook (HARDENED for iOS beta).
- * Returns: { isPro, isPurchasing, product, purchase, restore }
+ * useIAP — Crash-safe IAP hook (HARDENED for iOS beta + Android Play Billing).
+ * Returns: { isPro, isPurchasing, product, products, selectedTier, setSelectedTier, purchase, restore }
  *
- * CRITICAL HARDENING:
- *   - Module load is wrapped with additional validation checks
- *   - All native bridge calls have timeout protection
- *   - AsyncStorage operations have explicit error handling
- *   - Mounted ref ensures no state updates on unmounted components
- *   - All promise chains catch even uncaught rejections
- *   - StoreKit unavailability degrades gracefully to free mode
+ * Android-specific notes:
+ *   - expo-iap's getProducts() only caches `inapp` SKUs in Play Billing's
+ *     ProductDetails cache. Subscriptions must be fetched via getSubscriptions()
+ *     before requestPurchase, otherwise Play Billing throws:
+ *       IllegalArgumentException: Details of the products must be provided.
+ *   - requestPurchase payload shape differs by platform:
+ *       iOS:     { request: { sku, andDangerouslyFinishTransactionAutomaticallyIOS } }
+ *       Android: { request: { skus: [sku], subscriptionOffers? } }
+ *   - Subscriptions on Android additionally require the offerToken from the
+ *     base plan in subscriptionOfferDetails[].
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Alert, Platform } from 'react-native';
@@ -22,14 +25,16 @@ export const PRO_PRODUCT_ID = 'redgrid_pro_lifetime';
 // Subscription product IDs (same tier, different billing)
 const SUB_MONTHLY_ID = 'redgrid_mgrs_pro_monthly';
 const SUB_ANNUAL_ID  = 'redgrid_mgrs_pro_annual';
-const ALL_PRODUCT_IDS = [PRO_PRODUCT_ID, SUB_MONTHLY_ID, SUB_ANNUAL_ID];
+const INAPP_IDS = [PRO_PRODUCT_ID];
 const SUB_IDS = [SUB_MONTHLY_ID, SUB_ANNUAL_ID];
+const ALL_PRODUCT_IDS = [...INAPP_IDS, ...SUB_IDS];
+
+const isAndroid = Platform.OS === 'android';
 
 // Safely require expo-iap — handles unavailability on iOS beta
 let IAPModule = null;
 try {
   const mod = require('expo-iap');
-  // Validate the module is actually usable before trusting it
   if (mod &&
       typeof mod.getProducts === 'function' &&
       typeof mod.requestPurchase === 'function' &&
@@ -37,9 +42,28 @@ try {
     IAPModule = mod;
   }
 } catch (e) {
-  // expo-iap not available or failed to load — free mode only
   IAPModule = null;
 }
+
+const tierToSku = (tier) => {
+  if (tier === 'monthly') return SUB_MONTHLY_ID;
+  if (tier === 'annual') return SUB_ANNUAL_ID;
+  return PRO_PRODUCT_ID;
+};
+
+const isSubTier = (tier) => tier === 'monthly' || tier === 'annual';
+
+// Pick the first usable offerToken from a fetched Android subscription product.
+// Returns null if no offer details are present (e.g. iOS shape or empty array).
+const getAndroidOfferToken = (subProduct) => {
+  const details = subProduct?.subscriptionOfferDetails;
+  if (!Array.isArray(details) || details.length === 0) return null;
+  // Prefer base plan with no offerId (the recurring base plan) when present.
+  const base = details.find((d) => d && !d.offerId && typeof d.offerToken === 'string');
+  if (base?.offerToken) return base.offerToken;
+  const first = details.find((d) => d && typeof d.offerToken === 'string');
+  return first?.offerToken || null;
+};
 
 export function useIAP() {
   const [isPro,        setIsPro]        = useState(false);
@@ -50,14 +74,17 @@ export function useIAP() {
   const [selectedTier, setSelectedTier] = useState('annual');   // default selection
   const mounted = useRef(true);
 
+  // Track in-flight + completed product detail fetches so we never call
+  // requestPurchase before Play Billing has the ProductDetails cached.
+  const fetchPromiseRef = useRef(null);
+  const initConnectedRef = useRef(false);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => { mounted.current = false; };
   }, []);
 
   // ── Load persisted Pro status + one-time stale-key migration ───────────────
-  // On v2.1.4+, validates rg_pro_unlocked against StoreKit to clear stale
-  // keys left by TestFlight/dev builds. Runs once per install.
   useEffect(() => {
     let cancelled = false;
 
@@ -71,7 +98,6 @@ export function useIAP() {
           AsyncStorage.getItem(PRO_VALIDATED).catch(() => null),
         ]);
 
-        // Already validated in a previous launch — trust the stored flag
         if (validated === 'true') {
           if (!cancelled && mounted.current && proFlag === 'true') {
             setIsPro(true);
@@ -79,21 +105,17 @@ export function useIAP() {
           return;
         }
 
-        // No Pro flag set — nothing to validate, mark migration done
         if (proFlag !== 'true') {
           await AsyncStorage.setItem(PRO_VALIDATED, 'true').catch(() => {});
           return;
         }
 
-        // Pro flag is set AND has a receipt — legitimate purchase, trust it
         if (receipt) {
           if (!cancelled && mounted.current) setIsPro(true);
           await AsyncStorage.setItem(PRO_VALIDATED, 'true').catch(() => {});
           return;
         }
 
-        // Pro flag is set but NO receipt — could be stale dev/TestFlight data.
-        // Verify against StoreKit before trusting.
         if (IAPModule && IAPModule.getAvailablePurchases) {
           try {
             if (IAPModule.initConnection) {
@@ -102,6 +124,7 @@ export function useIAP() {
                 IAPModule.initConnection(),
                 new Promise((_, r) => { initTimer = setTimeout(() => r(new Error('timeout')), 3000); })
               ]).finally(() => { if (initTimer) clearTimeout(initTimer); });
+              initConnectedRef.current = true;
             }
 
             let purchasesTimer;
@@ -111,24 +134,20 @@ export function useIAP() {
             ]).finally(() => { if (purchasesTimer) clearTimeout(purchasesTimer); });
 
             const hasPro = purchases?.some?.(p =>
-              ALL_PRODUCT_IDS.includes(p?.id)
+              ALL_PRODUCT_IDS.includes(p?.id) || ALL_PRODUCT_IDS.includes(p?.productId)
             );
 
             if (hasPro) {
-              // Verified — legitimate purchase, keep Pro and stamp receipt
               if (!cancelled && mounted.current) setIsPro(true);
               await AsyncStorage.setItem(PRO_RECEIPT_KEY, 'verified').catch(() => {});
             } else {
-              // No purchase found — stale key, clear it
               if (!cancelled && mounted.current) setIsPro(false);
               await AsyncStorage.removeItem(PRO_KEY).catch(() => {});
             }
           } catch {
-            // StoreKit unavailable — err on the side of the user, keep Pro
             if (!cancelled && mounted.current) setIsPro(true);
           }
         } else {
-          // IAP module unavailable — can't validate, keep Pro
           if (!cancelled && mounted.current) setIsPro(true);
         }
 
@@ -142,86 +161,122 @@ export function useIAP() {
     return () => { cancelled = true; };
   }, []);
 
-  // ── Initialize store connection + fetch product price ──────────────────────
-  useEffect(() => {
-    if (!IAPModule) return;
+  // ── Fetch product + subscription details (cache-aware, dedup'd) ───────────
+  // Returns a snapshot { lifetime, monthly, annual } so callers can decide
+  // whether the SKU they're about to buy has details ready.
+  const fetchProductDetails = useCallback(async () => {
+    if (!IAPModule) return {};
 
-    let cancelled = false;
+    if (fetchPromiseRef.current) {
+      try { return await fetchPromiseRef.current; }
+      catch { /* fall through and retry below */ }
+    }
 
-    const initAndFetch = async () => {
+    const run = (async () => {
       try {
-        // expo-iap requires initConnection() before any store operations
-        if (IAPModule.initConnection) {
+        if (IAPModule.initConnection && !initConnectedRef.current) {
           let initTimer;
           await Promise.race([
             IAPModule.initConnection(),
             new Promise((_, reject) => {
-              initTimer = setTimeout(() => reject(new Error('Init timeout')), 3000);
+              initTimer = setTimeout(() => reject(new Error('Init timeout')), 4000);
             })
           ]).finally(() => { if (initTimer) clearTimeout(initTimer); });
+          initConnectedRef.current = true;
         }
 
-        if (cancelled || !mounted.current) return;
+        const tasks = [];
+        if (IAPModule.getProducts) {
+          tasks.push(
+            Promise.race([
+              IAPModule.getProducts(INAPP_IDS),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('inapp fetch timeout')), 6000)
+              )
+            ]).catch(() => [])
+          );
+        } else {
+          tasks.push(Promise.resolve([]));
+        }
 
-        if (!IAPModule.getProducts) return;
+        if (IAPModule.getSubscriptions) {
+          tasks.push(
+            Promise.race([
+              IAPModule.getSubscriptions(SUB_IDS),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('subs fetch timeout')), 6000)
+              )
+            ]).catch(() => [])
+          );
+        } else {
+          // Older expo-iap fallback: try getProducts for subs (iOS-friendly path).
+          tasks.push(
+            Promise.race([
+              IAPModule.getProducts(SUB_IDS),
+              new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('subs fetch timeout')), 6000)
+              )
+            ]).catch(() => [])
+          );
+        }
 
-        const fetched = await Promise.race([
-          IAPModule.getProducts(ALL_PRODUCT_IDS),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Product fetch timeout')), 5000)
-          )
-        ]);
+        const [inappList, subList] = await Promise.all(tasks);
 
-        if (!cancelled && mounted.current && fetched?.length) {
-          const map = {};
-          for (const p of fetched) {
-            if (p?.id === PRO_PRODUCT_ID) { map.lifetime = p; setProduct(p); }
-            else if (p?.id === SUB_MONTHLY_ID) map.monthly = p;
-            else if (p?.id === SUB_ANNUAL_ID) map.annual = p;
+        const map = {};
+        for (const p of (inappList || [])) {
+          if (p?.id === PRO_PRODUCT_ID) { map.lifetime = p; }
+        }
+        for (const p of (subList || [])) {
+          if (p?.id === SUB_MONTHLY_ID) map.monthly = p;
+          else if (p?.id === SUB_ANNUAL_ID) map.annual = p;
+        }
+
+        if (mounted.current) {
+          if (map.lifetime) setProduct(map.lifetime);
+          if (map.lifetime || map.monthly || map.annual) {
+            setProducts((prev) => ({ ...prev, ...map }));
           }
-          setProducts(map);
         }
-      } catch (err) {
-        // Product fetch failed — ProGate will show fallback prices
-        // Do not throw, just silently continue
+        return map;
+      } catch {
+        return {};
       }
-    };
+    })();
 
-    // Delay to let native bridge initialize, but use setTimeout safely
-    const initialDelay = setTimeout(() => {
-      if (!cancelled) {
-        initAndFetch().catch(() => {
-          // Ensure no unhandled rejection
-        });
-      }
-    }, 500);
-
-    return () => {
-      cancelled = true;
-      if (initialDelay) clearTimeout(initialDelay);
-    };
+    fetchPromiseRef.current = run;
+    try {
+      return await run;
+    } finally {
+      // Allow retries on next call by clearing the cached promise once it settles.
+      fetchPromiseRef.current = null;
+    }
   }, []);
+
+  // Kick off the initial fetch with a small delay so the native bridge settles.
+  useEffect(() => {
+    if (!IAPModule) return;
+    let cancelled = false;
+    const t = setTimeout(() => {
+      if (!cancelled) fetchProductDetails().catch(() => {});
+    }, 500);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [fetchProductDetails]);
 
   // ── Persist Pro unlock ─────────────────────────────────────────────────────
   const persistPro = useCallback(async (receipt = '') => {
     if (mounted.current) setIsPro(true);
 
     try {
-      if (!AsyncStorage) {
-        return;
-      }
+      if (!AsyncStorage) return;
 
       const ops = [];
       ops.push(AsyncStorage.setItem(PRO_KEY, 'true').catch(() => {}));
-
       if (receipt) {
         ops.push(AsyncStorage.setItem(PRO_RECEIPT_KEY, receipt).catch(() => {}));
       }
-
       await Promise.all(ops);
-    } catch (err) {
+    } catch {
       // Storage failed — isPro is still true in memory for this session
-      // Do not throw
     }
   }, []);
 
@@ -229,10 +284,7 @@ export function useIAP() {
   const purchase = useCallback(async (tier) => {
     if (!IAPModule) {
       try {
-        Alert.alert(
-          'Unavailable',
-          'In-app purchases are not available in this build.'
-        );
+        Alert.alert('Unavailable', 'In-app purchases are not available in this build.');
       } catch {}
       return;
     }
@@ -240,24 +292,62 @@ export function useIAP() {
     if (mounted.current) setIsPurchasing(true);
 
     const effectiveTier = tier || selectedTier;
-    const isSub = effectiveTier === 'monthly' || effectiveTier === 'annual';
-    let sku = PRO_PRODUCT_ID;
-    if (effectiveTier === 'monthly') sku = SUB_MONTHLY_ID;
-    else if (effectiveTier === 'annual') sku = SUB_ANNUAL_ID;
+    const sub = isSubTier(effectiveTier);
+    const sku = tierToSku(effectiveTier);
 
     try {
-      if (!IAPModule || !IAPModule.requestPurchase) {
+      if (!IAPModule.requestPurchase) {
         if (mounted.current) setIsPurchasing(false);
         return;
       }
 
-      const purchaseRequest = {
-        request: {
-          sku,
-          andDangerouslyFinishTransactionAutomaticallyIOS: false,
-        },
-      };
-      if (isSub) purchaseRequest.type = 'subs';
+      // Ensure product details are cached in the native billing client before
+      // calling requestPurchase. On Android, missing details → IllegalArgumentException.
+      let detailsMap = { ...products };
+      let entry = detailsMap[effectiveTier];
+
+      if (!entry) {
+        detailsMap = await fetchProductDetails();
+        entry = detailsMap[effectiveTier];
+      }
+
+      if (!entry) {
+        try {
+          Alert.alert(
+            'Store unavailable',
+            'Could not load product details from the store. Please check your network and try again.'
+          );
+        } catch {}
+        return;
+      }
+
+      // Android subs require an offerToken from the base plan.
+      let subscriptionOffers;
+      if (isAndroid && sub) {
+        const offerToken = getAndroidOfferToken(entry);
+        if (!offerToken) {
+          try {
+            Alert.alert(
+              'Subscription unavailable',
+              'No active subscription offer was found for this product. Please try again later.'
+            );
+          } catch {}
+          return;
+        }
+        subscriptionOffers = [{ sku, offerToken }];
+      }
+
+      // Build platform-specific request payload.
+      let request;
+      if (isAndroid) {
+        request = sub
+          ? { skus: [sku], subscriptionOffers }
+          : { skus: [sku] };
+      } else {
+        request = { sku, andDangerouslyFinishTransactionAutomaticallyIOS: false };
+      }
+
+      const purchaseRequest = { request, type: sub ? 'subs' : 'inapp' };
 
       const result = await Promise.race([
         IAPModule.requestPurchase(purchaseRequest),
@@ -266,17 +356,32 @@ export function useIAP() {
         )
       ]);
 
-      if (result?.transactionReceipt || result?.transactionId) {
-        await persistPro(result.transactionReceipt || result.transactionId);
+      // Android returns an array of purchases; iOS returns a single object.
+      const purchases = Array.isArray(result) ? result : (result ? [result] : []);
+      const matched = purchases.find((p) =>
+        p && (p.id === sku || p.productId === sku ||
+              ALL_PRODUCT_IDS.includes(p.id) || ALL_PRODUCT_IDS.includes(p.productId))
+      ) || purchases[0];
+
+      if (matched && (matched.transactionReceipt || matched.transactionId ||
+                      matched.purchaseToken || matched.purchaseTokenAndroid)) {
+        const receiptToken =
+          matched.transactionReceipt ||
+          matched.transactionId ||
+          matched.purchaseToken ||
+          matched.purchaseTokenAndroid ||
+          'verified';
+
+        await persistPro(receiptToken);
 
         try {
-          if (IAPModule && IAPModule.finishTransaction) {
+          if (IAPModule.finishTransaction) {
             await IAPModule.finishTransaction({
-              purchase: result,
+              purchase: matched,
               isConsumable: false,
             });
           }
-        } catch (finishErr) {
+        } catch {
           // finishTransaction failed — purchase is still recorded locally
         }
       }
@@ -284,6 +389,7 @@ export function useIAP() {
       const wasCancelled =
         e?.code === 'E_USER_CANCELLED' ||
         e?.code === 'user_cancelled' ||
+        e?.code === 'E_USER_CANCELED' ||
         e?.userInfo?.code === 2;
 
       const wasTimeout = e?.message === 'Purchase timeout';
@@ -292,23 +398,20 @@ export function useIAP() {
         try {
           Alert.alert(
             wasTimeout ? 'Purchase timed out' : 'Purchase failed',
-            wasTimeout ? 'The App Store did not respond. Please try again.' : (e?.message || 'Please try again.')
+            wasTimeout ? 'The store did not respond. Please try again.' : (e?.message || 'Please try again.')
           );
         } catch {}
       }
     } finally {
       if (mounted.current) setIsPurchasing(false);
     }
-  }, [persistPro, selectedTier]);
+  }, [persistPro, selectedTier, products, fetchProductDetails]);
 
   // ── Restore ────────────────────────────────────────────────────────────────
   const restore = useCallback(async () => {
     if (!IAPModule) {
       try {
-        Alert.alert(
-          'Unavailable',
-          'In-app purchases are not available in this build.'
-        );
+        Alert.alert('Unavailable', 'In-app purchases are not available in this build.');
       } catch {}
       return;
     }
@@ -316,7 +419,7 @@ export function useIAP() {
     if (mounted.current) setIsRestoring(true);
 
     try {
-      if (!IAPModule || !IAPModule.getAvailablePurchases) {
+      if (!IAPModule.getAvailablePurchases) {
         if (mounted.current) setIsRestoring(false);
         return;
       }
@@ -328,9 +431,9 @@ export function useIAP() {
         )
       ]);
 
-      // expo-iap uses 'id' not 'productId' — check lifetime + subs
+      // expo-iap may expose `id` (iOS) or `productId` (Android) on the purchase.
       const hasPro = purchases?.some?.(p =>
-        ALL_PRODUCT_IDS.includes(p?.id)
+        ALL_PRODUCT_IDS.includes(p?.id) || ALL_PRODUCT_IDS.includes(p?.productId)
       );
 
       if (hasPro) {
