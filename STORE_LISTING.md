@@ -102,7 +102,14 @@ Subscriptions auto-renew until cancelled in your App Store account settings. Pro
 Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 ## Keywords
-mgrs,gps,military,grid,navigation,tactical,offline,army,bearing,mesh,meshtastic,sar,utm,declination
+utm,grid,coordinate,compass,waypoint,meshtastic,hunting,offline,sar,ranger,atak,topo,azimuth,dms
+<!-- ASO note (2026-05-30): 96/100 chars. Omits words already in the app name
+     ("MGRS GPS … Military Land Navigation") and subtitle ("DAGR-Class MGRS
+     Navigator") — Apple matches title+subtitle+keywords combined, so repeating
+     them wastes the field. Freed space now covers new intents surfaced via ASA
+     (coordinate, compass, waypoint, hunting, ranger, atak, topo, azimuth, dms).
+     Version-gated: applies on the next version submission. -->
+
 
 ## What's New (v3.4)
 v3.4 — Mission Preflight
