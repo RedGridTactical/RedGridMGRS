@@ -149,8 +149,10 @@ export function useStoreReview() {
    * Gated separately from the launch-time prompt so a positive moment can fire
    * a text-review ask even if the Apple 120-day rating cooldown is still active.
    *
-   * Opens the write-review URL (not SKStoreReviewController) so the user lands
-   * directly on the text-review sheet — fastest path to an actual text review.
+   * Android: fires the native Play In-App Review API (a frictionless in-app
+   * rating flow with no context switch) — the best path to seed the ratings the
+   * Play listing needs. iOS opens the write-review URL so the user lands on the
+   * text-review sheet (Apple's SKStoreReviewController yields stars only, not text).
    */
   const promptReviewOnPositiveMoment = useCallback(async (opts = {}) => {
     try {
@@ -178,8 +180,22 @@ export function useStoreReview() {
       // Record before opening so an in-flight retry doesn't double-prompt.
       await AsyncStorage.setItem(KEYS.LAST_POSITIVE_PROMPT, String(now));
 
-      // Open the write-review sheet directly (text review, not star rating).
-      await tryOpenWriteReview();
+      // Android: native Play In-App Review API — a frictionless in-app rating
+      // (no context switch to the Play listing), which maximizes rating
+      // submissions and is the best way to seed the listing's star count.
+      // iOS keeps the write-review URL for a text review (SKStoreReviewController
+      // only yields a star rating, which is why 2 ratings / 0 text reviews landed).
+      if (Platform.OS === 'android') {
+        let StoreReview = null;
+        try { StoreReview = require('expo-store-review'); } catch { StoreReview = null; }
+        if (StoreReview?.isAvailableAsync && (await StoreReview.isAvailableAsync())) {
+          await StoreReview.requestReview();
+        } else {
+          await tryOpenWriteReview();
+        }
+      } else {
+        await tryOpenWriteReview();
+      }
     } catch {
       // Silent — don't disrupt the user
     }
