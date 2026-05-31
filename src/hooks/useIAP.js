@@ -16,7 +16,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { detectFreeTrial, hasPriorSubscription } from '../utils/iapOffers';
+import { detectFreeTrial, hasPriorSubscription, getAndroidTrialOfferToken } from '../utils/iapOffers';
 
 const PRO_KEY         = 'rg_pro_unlocked';
 const PRO_RECEIPT_KEY = 'rg_pro_receipt';
@@ -359,10 +359,15 @@ export function useIAP() {
         return;
       }
 
-      // Android subs require an offerToken from the base plan.
+      // Android subs require an offerToken. For an eligible annual purchase use
+      // the free-trial offer's token so Play actually applies the 7-day trial;
+      // otherwise use the bare base-plan token. (Play also validates eligibility
+      // server-side, so an ineligible trial-token purchase fails gracefully.)
       let subscriptionOffers;
       if (isAndroid && sub) {
-        const offerToken = getAndroidOfferToken(entry);
+        const offerToken =
+          (effectiveTier === 'annual' && trialEligible && getAndroidTrialOfferToken(entry)) ||
+          getAndroidOfferToken(entry);
         if (!offerToken) {
           try {
             Alert.alert(
@@ -443,7 +448,7 @@ export function useIAP() {
     } finally {
       if (mounted.current) setIsPurchasing(false);
     }
-  }, [persistPro, selectedTier, products, fetchProductDetails]);
+  }, [persistPro, selectedTier, products, fetchProductDetails, trialEligible]);
 
   // ── Restore ────────────────────────────────────────────────────────────────
   const restore = useCallback(async () => {

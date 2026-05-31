@@ -1,4 +1,4 @@
-const { detectFreeTrial, hasPriorSubscription, isTrialEligible } = require('../src/utils/iapOffers');
+const { detectFreeTrial, hasPriorSubscription, isTrialEligible, getAndroidTrialOfferToken } = require('../src/utils/iapOffers');
 
 // Mirrors the live ASC offer: FREE_TRIAL / ONE_WEEK / 1 period on the annual sub.
 const iosAnnualWithTrial = {
@@ -130,5 +130,21 @@ describe('isTrialEligible', () => {
   test('no trial offer → never eligible (e.g. Android before Play offer created)', () => {
     expect(isTrialEligible(iosAnnualNoTrial, [])).toBe(false);
     expect(isTrialEligible(androidAnnualNoTrial, [])).toBe(false);
+  });
+});
+
+describe('getAndroidTrialOfferToken', () => {
+  test('returns the token of the offer with a $0 phase (the trial offer)', () => {
+    expect(getAndroidTrialOfferToken(androidAnnualWithTrial)).toBe('tok1');
+  });
+
+  test('returns null when no offer has a free phase (base plan only)', () => {
+    expect(getAndroidTrialOfferToken(androidAnnualNoTrial)).toBe(null);
+  });
+
+  test('returns null for iOS products / nullish / junk', () => {
+    expect(getAndroidTrialOfferToken(iosAnnualWithTrial)).toBe(null);
+    expect(getAndroidTrialOfferToken(null)).toBe(null);
+    expect(getAndroidTrialOfferToken({})).toBe(null);
   });
 });

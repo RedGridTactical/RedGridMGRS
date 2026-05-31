@@ -100,3 +100,22 @@ export function isTrialEligible(annualProduct, purchases) {
   if (!detectFreeTrial(annualProduct).hasTrial) return false;
   return !hasPriorSubscription(purchases);
 }
+
+/**
+ * Android only: return the offerToken of the free-trial offer (the offer whose
+ * pricing phases include a $0 phase), or null if none. Needed because Play
+ * exposes the base plan and each offer as separate entries in
+ * subscriptionOfferDetails — to actually apply the trial at purchase we must
+ * pass the TRIAL offer's token, not the bare base-plan token.
+ */
+export function getAndroidTrialOfferToken(product) {
+  const details = product && product.subscriptionOfferDetails;
+  if (!Array.isArray(details)) return null;
+  for (const d of details) {
+    const phases = d && d.pricingPhases && d.pricingPhases.pricingPhaseList;
+    if (!Array.isArray(phases)) continue;
+    const hasFreePhase = phases.some((p) => p && String(p.priceAmountMicros) === '0');
+    if (hasFreePhase && typeof d.offerToken === 'string' && d.offerToken) return d.offerToken;
+  }
+  return null;
+}
