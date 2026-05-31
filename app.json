@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.redgrid.redgridtactical",
-      "versionCode": 21,
+      "versionCode": 22,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive_foreground.png",
         "backgroundColor": "#000000"
@@ -29,7 +29,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.redgrid.redgridtactical",
-      "buildNumber": "66",
+      "buildNumber": "67",
       "infoPlist": {
         "CFBundleDisplayName": "Red Grid MGRS",
         "NSLocationWhenInUseUsageDescription": "Red Grid MGRS uses your location to display your current grid coordinates. No location data is stored or transmitted.",

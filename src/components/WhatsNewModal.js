@@ -85,6 +85,18 @@ const FEATURES_BY_VERSION = {
       body: 'Save the current map viewport as a local AO package with tile estimates and one-tap refresh.',
     },
   ],
+  '3.4.1': [
+    {
+      icon: '★',
+      title: '7-DAY FREE TRIAL',
+      body: 'Try Red Grid Pro free for 7 days on the annual plan — every tool, theme, and offline feature. Cancel anytime.',
+    },
+    {
+      icon: '✓',
+      title: 'SMOOTHER RATINGS PROMPT',
+      body: 'On Android, the review prompt now appears at natural moments instead of at launch. Plus minor fixes.',
+    },
+  ],
 };
 
 export function WhatsNewModal({ currentVersion }) {
