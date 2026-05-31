@@ -35,209 +35,243 @@ const APP_ID = '6759629554'; // Red Grid MGRS
 // Release notes per locale. Copy the English version for locales we don't
 // have a translation for — ASC requires ALL localizations to be populated.
 const RELEASE_NOTES = {
-  'en-US': `v3.4 — Mission Preflight
+  'en-US': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'fr-FR': `v3.4 — Mission Preflight
+  'fr-FR': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'de-DE': `v3.4 — Mission Preflight
+  'de-DE': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'es-ES': `v3.4 — Mission Preflight
+  'es-ES': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'es-MX': `v3.4 — Mission Preflight
+  'es-MX': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ja': `v3.4 — Mission Preflight
+  'ja': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ko': `v3.4 — Mission Preflight
+  'ko': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'it': `v3.4 — Mission Preflight
+  'it': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'nl-NL': `v3.4 — Mission Preflight
+  'nl-NL': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'pt-BR': `v3.4 — Mission Preflight
+  'pt-BR': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'pt-PT': `v3.4 — Mission Preflight
+  'pt-PT': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ru': `v3.4 — Mission Preflight
+  'ru': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'uk': `v3.4 — Mission Preflight
+  'uk': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'pl': `v3.4 — Mission Preflight
+  'pl': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'cs': `v3.4 — Mission Preflight
+  'cs': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'sk': `v3.4 — Mission Preflight
+  'sk': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'hr': `v3.4 — Mission Preflight
+  'hr': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'hu': `v3.4 — Mission Preflight
+  'hu': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ro': `v3.4 — Mission Preflight
+  'ro': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'tr': `v3.4 — Mission Preflight
+  'tr': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'sv': `v3.4 — Mission Preflight
+  'sv': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'no': `v3.4 — Mission Preflight
+  'no': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'da': `v3.4 — Mission Preflight
+  'da': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'fi': `v3.4 — Mission Preflight
+  'fi': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'el': `v3.4 — Mission Preflight
+  'el': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'zh-Hans': `v3.4 — Mission Preflight
+  'zh-Hans': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'zh-Hant': `v3.4 — Mission Preflight
+  'zh-Hant': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'vi': `v3.4 — Mission Preflight
+  'vi': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'th': `v3.4 — Mission Preflight
+  'th': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'id': `v3.4 — Mission Preflight
+  'id': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ms': `v3.4 — Mission Preflight
+  'ms': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'he': `v3.4 — Mission Preflight
+  'he': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ar-SA': `v3.4 — Mission Preflight
+  'ar-SA': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 
-  'ca': `v3.4 — Mission Preflight
+  'ca': `v3.4.1 — Free Trial + Polish
 
-- NEW: Mission Preflight panel on the Map tab. One-glance READY / CAUTION / NOT READY summary covering GPS source, Meshtastic radio, offline tile coverage, missing zooms, permissions, and battery/network hints — so you know your kit is field-ready before stepping off coverage.
-- NEW: Saved AO Packages. Save the current map viewport as a named bundle (map style + zoom set + tile count). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh and per-AO size estimate.
-- No privacy, account, tracking, or telemetry changes. Preflight runs on-device. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
+- NEW: 7-day free trial of Red Grid Pro on the annual plan. Unlock every tool, theme, offline AO package, Meshtastic mesh awareness, and 10-digit MGRS precision — then $29.99/year, cancel anytime.
+- Smoother in-app rating prompt on Android — it now appears at natural moments instead of at launch.
+- Minor reliability fixes.
+- No privacy, account, tracking, or telemetry changes. Red Grid MGRS still requires no account, runs offline-first, and only uses network for user-initiated tile downloads and platform-native purchases.`,
 };
 
 // Any ASC-required locales not listed in RELEASE_NOTES fall back to English.
@@ -246,6 +280,7 @@ const RELEASE_NOTES = {
 // variants Apple may request.
 const ENGLISH_FALLBACK_LOCALES = [
   'en-GB', 'en-AU', 'en-CA', 'en-SG',
+  'hi', // Hindi localization exists on the listing but we carry no translation — fall back to EN.
 ];
 
 async function main() {
