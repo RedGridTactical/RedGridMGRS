@@ -361,7 +361,7 @@ export default {
     subtitleGeneric: 'Unlock the full Red Grid experience',
     unlockButton: 'UNLOCK RED GRID PRO',
     startTrial: 'START 7-DAY FREE TRIAL',
-    thenPrice: 'then {{price}}/year · cancel anytime',
+    thenPrice: 'no charge today · then {{price}}/yr · cancel anytime',
     restore: 'RESTORE PREVIOUS PURCHASE',
     notNow: 'NOT NOW',
     priceSubtitle: 'CHOOSE YOUR PLAN',
@@ -372,6 +372,7 @@ export default {
     perYear: '/year',
     oneTime: 'one-time',
     bestValue: 'BEST VALUE',
+    freeTrialBadge: 'FREE TRIAL',
     legal: 'Payment charged to your App Store / Google Play account at confirmation. Subscriptions auto-renew until cancelled. Manage in Settings > Subscriptions.',
     // Feature list
     voiceReadout: 'Voice Readout',

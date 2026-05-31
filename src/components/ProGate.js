@@ -92,6 +92,10 @@ export function ProGate({
           <View style={styles.tierRow}>
             {TIERS.map((tier) => {
               const isActive = activeTier === tier.id;
+              // When the user is trial-eligible, the annual card leads with the
+              // free-trial hook instead of "best value" — surfaces the $0-to-start
+              // offer at tier selection, not just after the annual tier is picked.
+              const badgeKey = (tier.id === 'annual' && trialEligible) ? 'proGate.freeTrialBadge' : tier.badge;
               return (
                 <TouchableOpacity
                   key={tier.id}
@@ -106,9 +110,9 @@ export function ProGate({
                   accessibilityState={{ selected: isActive }}
                   accessibilityLabel={`${t(tier.labelKey)} ${getPriceForTier(tier.id)}`}
                 >
-                  {tier.badge && (
+                  {badgeKey && (
                     <Text style={[styles.tierBadge, { color: colors.bg, backgroundColor: colors.text }]}>
-                      {t(tier.badge)}
+                      {t(badgeKey)}
                     </Text>
                   )}
                   <Text style={[styles.tierPrice, { color: colors.text }]}>{getPriceForTier(tier.id)}</Text>
