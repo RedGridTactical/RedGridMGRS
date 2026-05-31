@@ -1,0 +1,85 @@
+{
+  "identifier" : "B8F2A1C0-0000-4000-A000-RED067102420",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "149.99",
+      "familyShareable" : false,
+      "internalID" : "100001",
+      "localizations" : [
+        {
+          "description" : "Lifetime Pro unlock",
+          "displayName" : "Red Grid Pro — Lifetime",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "redgrid_pro_lifetime",
+      "referenceName" : "Pro Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA"
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21991518",
+      "localizations" : [],
+      "name" : "Red Grid Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "3.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "200001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Monthly Pro subscription",
+              "displayName" : "Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "redgrid_mgrs_pro_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Pro Monthly",
+          "subscriptionGroupID" : "21991518",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "29.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "200002",
+          "introductoryOffer" : {
+            "internalID" : "300001",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1W"
+          },
+          "localizations" : [
+            {
+              "description" : "Annual Pro subscription with a 7-day free trial",
+              "displayName" : "Pro Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "redgrid_mgrs_pro_annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Pro Annual",
+          "subscriptionGroupID" : "21991518",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
