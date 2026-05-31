@@ -102,13 +102,20 @@ Subscriptions auto-renew until cancelled in your App Store account settings. Pro
 Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 
 ## Keywords
-utm,grid,coordinate,compass,waypoint,meshtastic,hunting,offline,sar,ranger,atak,topo,azimuth,dms
-<!-- ASO note (2026-05-30): 96/100 chars. Omits words already in the app name
-     ("MGRS GPS … Military Land Navigation") and subtitle ("DAGR-Class MGRS
-     Navigator") — Apple matches title+subtitle+keywords combined, so repeating
-     them wastes the field. Freed space now covers new intents surfaced via ASA
-     (coordinate, compass, waypoint, hunting, ranger, atak, topo, azimuth, dms).
-     Version-gated: applies on the next version submission. -->
+coordinate,utm,compass,declination,bearing,tactical,offline,meshtastic,sar,ranger,atak,topo,dms,land
+<!-- ASO note (2026-05-31): 100/100 chars. LIVE title = "Red Grid MGRS - Military GPS",
+     LIVE subtitle = "DAGR-Class Nav & Waypoints". Apple indexes title+subtitle+keywords
+     COMBINED, so this field deliberately omits every word already there (mgrs, gps,
+     military, grid, nav, navigation, waypoints, dagr) — repeating them wastes the 100 chars.
+     The current LIVE keyword field wastes ~35 chars on mgrs/gps/military/grid/navigation
+     (all already in title/subtitle). This set drops those and adds high-intent adjacent
+     terms the ASA data points to ([mgrs] is the proven converter, so broaden to its
+     neighbors): coordinate, compass, declination, bearing, ranger, atak, topo, dms, and
+     "land" (combines with subtitle "nav" → ranks "land nav"/"land navigation").
+     iOS keyword changes REQUIRE a new build+version (no metadata-only express lane), so:
+       - NOT applied to v3.4.1 (in review — protecting the free-trial submission).
+       - Push via `node scripts/asc-update-keywords.js --apply` the moment v3.4.2 reaches
+         PREPARE_FOR_SUBMISSION. Future test: swap a term for "converter" (→ "mgrs converter"). -->
 
 
 ## What's New (v3.4)
