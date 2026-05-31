@@ -330,6 +330,8 @@ export default {
     subtitleFeature: '{{feature}} es una funci\u00f3n Pro',
     subtitleGeneric: 'Desbloquea la experiencia completa de Red Grid',
     unlockButton: 'DESBLOQUEAR RED GRID PRO',
+    startTrial: 'PRUEBA GRATIS DE 7 DÍAS',
+    thenPrice: 'luego {{price}}/año · cancela cuando quieras',
     restore: 'RESTAURAR COMPRA ANTERIOR',
     notNow: 'AHORA NO',
     priceSubtitle: 'ELIGE TU PLAN',

@@ -16,6 +16,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { detectFreeTrial, hasPriorSubscription } from '../utils/iapOffers';
 
 const PRO_KEY         = 'rg_pro_unlocked';
 const PRO_RECEIPT_KEY = 'rg_pro_receipt';
@@ -72,6 +73,7 @@ export function useIAP() {
   const [product,      setProduct]      = useState(null);      // lifetime (legacy)
   const [products,     setProducts]     = useState({});         // { lifetime, monthly, annual }
   const [selectedTier, setSelectedTier] = useState('annual');   // default selection
+  const [trialEligible, setTrialEligible] = useState(false);    // annual free-trial intro offer eligibility
   const mounted = useRef(true);
 
   // Track in-flight + completed product detail fetches so we never call
@@ -261,6 +263,42 @@ export function useIAP() {
     }, 500);
     return () => { cancelled = true; clearTimeout(t); };
   }, [fetchProductDetails]);
+
+  // ── Free-trial (introductory offer) eligibility for the annual sub ─────────
+  // Eligible = the annual product advertises a free trial AND the user has no
+  // prior subscription purchase in the group (intro offers are per-group).
+  // Drives the ProGate "Start free trial" CTA; falls back to the standard
+  // paywall when the offer is unavailable or the user is ineligible. Read-only —
+  // no purchase side effects.
+  useEffect(() => {
+    if (!IAPModule) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!detectFreeTrial(products.annual).hasTrial) {
+          if (!cancelled && mounted.current) setTrialEligible(false);
+          return;
+        }
+        let purchases = [];
+        if (IAPModule.getAvailablePurchases) {
+          try {
+            if (IAPModule.initConnection && !initConnectedRef.current) {
+              await IAPModule.initConnection().catch(() => {});
+              initConnectedRef.current = true;
+            }
+            purchases = await Promise.race([
+              IAPModule.getAvailablePurchases(),
+              new Promise((resolve) => setTimeout(() => resolve([]), 5000)),
+            ]) || [];
+          } catch { purchases = []; }
+        }
+        if (!cancelled && mounted.current) setTrialEligible(!hasPriorSubscription(purchases));
+      } catch {
+        if (!cancelled && mounted.current) setTrialEligible(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [products.annual]);
 
   // ── Persist Pro unlock ─────────────────────────────────────────────────────
   const persistPro = useCallback(async (receipt = '') => {
@@ -465,6 +503,7 @@ export function useIAP() {
     products,
     selectedTier,
     setSelectedTier,
+    trialEligible,
     purchase,
     restore,
   };

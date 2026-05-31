@@ -32,7 +32,7 @@ const TIERS = [
 ];
 
 export function ProGate({
-  visible, onClose, featureName, product, products,
+  visible, onClose, featureName, product, products, trialEligible,
   isPurchasing, onPurchase, onRestore, selectedTier, onSelectTier,
 }) {
   const colors = useColors();
@@ -46,6 +46,9 @@ export function ProGate({
   };
 
   const activeTier = selectedTier || 'annual';
+  // Surface the live 7-day free trial when the annual tier is selected and the
+  // user is intro-offer eligible; otherwise fall back to the standard unlock CTA.
+  const showTrial = activeTier === 'annual' && !!trialEligible;
 
   return (
     <Modal
@@ -122,14 +125,23 @@ export function ProGate({
             disabled={isPurchasing}
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel={`${t('proGate.unlockButton')} ${getPriceForTier(activeTier)}`}
+            accessibilityLabel={showTrial
+              ? `${t('proGate.startTrial')}. ${t('proGate.thenPrice', { price: getPriceForTier('annual') })}`
+              : `${t('proGate.unlockButton')} ${getPriceForTier(activeTier)}`}
             accessibilityState={{ disabled: isPurchasing }}
           >
             {isPurchasing
               ? <ActivityIndicator color={colors.bg} />
-              : <Text style={[styles.purchaseBtnText, { color: colors.bg }]}>{t('proGate.unlockButton')}</Text>
+              : <Text style={[styles.purchaseBtnText, { color: colors.bg }]}>{showTrial ? t('proGate.startTrial') : t('proGate.unlockButton')}</Text>
             }
           </TouchableOpacity>
+
+          {/* Trial terms subtext — only when the free trial is being offered */}
+          {showTrial && !isPurchasing && (
+            <Text style={[styles.trialSub, { color: colors.text3 }]}>
+              {t('proGate.thenPrice', { price: getPriceForTier('annual') })}
+            </Text>
+          )}
 
           {/* Restore */}
           <TouchableOpacity style={styles.restoreBtn} onPress={() => { tapLight(); onRestore(); }} disabled={isPurchasing} accessibilityRole="button" accessibilityLabel={t('proGate.restore')}>
@@ -223,6 +235,10 @@ const styles = StyleSheet.create({
   purchaseBtnText: {
     fontSize: 12, fontWeight: '700',
     letterSpacing: 4,
+  },
+  trialSub: {
+    fontSize: 9, letterSpacing: 1, textAlign: 'center',
+    marginTop: -2, marginBottom: 8,
   },
   restoreBtn: { paddingVertical: 10, alignItems: 'center', marginBottom: 4, minHeight: 44 },
   restoreText: { fontSize: 9, letterSpacing: 2 },

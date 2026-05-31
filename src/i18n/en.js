@@ -360,6 +360,8 @@ export default {
     subtitleFeature: '{{feature}} is a Pro feature',
     subtitleGeneric: 'Unlock the full Red Grid experience',
     unlockButton: 'UNLOCK RED GRID PRO',
+    startTrial: 'START 7-DAY FREE TRIAL',
+    thenPrice: 'then {{price}}/year · cancel anytime',
     restore: 'RESTORE PREVIOUS PURCHASE',
     notNow: 'NOT NOW',
     priceSubtitle: 'CHOOSE YOUR PLAN',

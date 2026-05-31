@@ -133,7 +133,7 @@ function App() {
   // GPS when no receiver is connected.
   const { location, source: gpsSource, deviceName: gpsDeviceName } = useGPSSource(internalLocation, externalGPS);
   const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing, gridScale, setGridScale } = useSettings();
-  const { isPro: iapIsPro, isPurchasing, product, products, selectedTier, setSelectedTier, purchase, restore } = useIAP();
+  const { isPro: iapIsPro, isPurchasing, product, products, selectedTier, setSelectedTier, trialEligible, purchase, restore } = useIAP();
 
   // Trial state from referral system — treated as Pro for feature gating.
   const [trialActive, setTrialActive] = useState(false);
@@ -400,6 +400,7 @@ function App() {
         purchase={purchase}
         restore={restore}
         products={products}
+        trialEligible={trialEligible}
         selectedTier={selectedTier}
         setSelectedTier={setSelectedTier}
         statusBarStyle={statusBarStyle}
@@ -436,7 +437,7 @@ function AppContent({
   theme, setTheme, setWaypoint,
   showModal, setShowModal, proGateVisible, setProGateVisible,
   proGateFeature, product, products, isPurchasing, purchase, restore,
-  selectedTier, setSelectedTier,
+  selectedTier, setSelectedTier, trialEligible,
   statusBarStyle, waypoint, coordFormat, setCoordFormat,
   compassHeading,
   shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing,
@@ -587,6 +588,7 @@ function AppContent({
         featureName={proGateFeature}
         product={product}
         products={products}
+        trialEligible={trialEligible}
         isPurchasing={isPurchasing}
         onPurchase={purchase}
         onRestore={restore}
