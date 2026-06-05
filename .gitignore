@@ -31,6 +31,11 @@ stats/daily/
 stats/manual-overrides.json
 stats/proceeds-history.json
 stats/weekly-goal-tracker.md
+stats/paywall-variants.md
+stats/discovery-day3-checkin.md
+stats/keyword-research.md
+stats/*.md
+stats/*.json
 scripts/lib/proceeds.js
 scripts/proceeds-tracker.js
 
@@ -38,6 +43,32 @@ scripts/proceeds-tracker.js
 *.docx
 RedGrid_Store_Listing_Audit.md
 generate_qc_report.py
+
+# Internal dev / analysis / QA-QC / strategy / marketing-ops — untracked from the
+# public repo 2026-05-31 (kept locally for ops; must never appear on GitHub or the
+# GitHub Pages site). Removed via `git rm --cached`.
+AUDIT_REPORT.md
+QC_FINAL_REPORT.txt
+QC_FLOW_VALIDATION.md
+QC_TEST_RESULTS.txt
+TEST_SUMMARY.md
+simple-test.js
+redgrid-preview.html
+STANDOUT_ROADMAP.md
+STORE_LISTING.md
+BUILD.md
+BUILDING.md
+eas.json
+scripts/
+screenshots/
+stats/
+docs/marketing-strategy.md
+docs/hn-submission.md
+docs/reddit-posts.md
+docs/article-dagr-software-bloat.md
+docs/article-land-nav-dying-skill.md
+docs/mgrs-article.md
+docs/devto-article.md
 
 # OS files
 .DS_Store
