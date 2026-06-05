@@ -93,6 +93,32 @@ select{appearance:auto}
   }
 }
 </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to convert coordinates to MGRS",
+  "step": [
+    { "@type": "HowToStep", "name": "Paste a coordinate", "text": "Paste or type a coordinate (MGRS, UTM, latitude/longitude, or DMS) into the converter. The tool auto-detects the format." },
+    { "@type": "HowToStep", "name": "Read the results", "text": "Every other format is computed instantly, including the 10-digit (1-meter) MGRS grid." },
+    { "@type": "HowToStep", "name": "Copy", "text": "Tap any result to copy it to your clipboard for a report, radio call, or map." }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "How do I convert GPS coordinates to MGRS?", "acceptedAnswer": { "@type": "Answer", "text": "Paste your latitude and longitude into the converter. The MGRS grid, including the full 10-digit 1-meter precision reference, is computed instantly." } },
+    { "@type": "Question", "name": "What is the difference between MGRS and UTM?", "acceptedAnswer": { "@type": "Answer", "text": "Both use the same projection. UTM gives a numeric easting and northing within a zone; MGRS wraps that in a lettered 100km square ID read as a single grid string, which is faster to call over radio and plot on a military map." } },
+    { "@type": "Question", "name": "Is this MGRS converter free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, completely free with no ads, no sign-up, and no tracking. For offline field use with maps, mesh, and land-nav tools, the Red Grid MGRS app is free to download." } },
+    { "@type": "Question", "name": "How accurate is the conversion?", "acceptedAnswer": { "@type": "Answer", "text": "It is DMA TM 8358.1 compliant to 1 meter and uses truncation rather than rounding, so a grid is never reported with more precision than it actually has." } },
+    { "@type": "Question", "name": "Can I convert MGRS back to latitude and longitude?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, the converter is bidirectional. Paste an MGRS grid and you get latitude/longitude, UTM, and DMS back." } },
+    { "@type": "Question", "name": "Does it work offline?", "acceptedAnswer": { "@type": "Answer", "text": "The web tool runs in your browser. For true field use with offline maps and no signal, the Red Grid MGRS app keeps everything on-device." } }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -189,6 +215,43 @@ select{appearance:auto}
   <div id="batchOut"></div>
   <button class="btn" style="margin-top:8px;display:none" id="batchCopy" onclick="copyBatch()">COPY ALL</button>
 </div>
+
+<!-- SEO CONTENT / FAQ -->
+<section class="seo-content" style="margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;line-height:1.6">
+  <h2>What is the MGRS Converter?</h2>
+  <p style="margin-bottom:14px">The Red Grid MGRS Converter is a free online tool that converts coordinates between <strong>MGRS</strong> (Military Grid Reference System), <strong>UTM</strong>, <strong>latitude/longitude</strong>, <strong>DMS</strong> (degrees-minutes-seconds), and <strong>FixPhrase</strong>. It runs entirely in your browser &mdash; no account, no ads, no tracking &mdash; and is <strong>DMA TM 8358.1</strong> compliant, using truncation (not rounding) so a grid never reports more precision than it actually has. Whether you're plotting a military grid reference, converting GPS coordinates for land navigation, or checking a UTM zone, paste a coordinate and every format is returned instantly.</p>
+
+  <h2>How to Convert Coordinates to MGRS</h2>
+  <ol style="margin:0 0 14px 18px;padding:0">
+    <li><strong>Paste or type</strong> a coordinate &mdash; MGRS, UTM, lat/long, or DMS. The tool auto-detects the format.</li>
+    <li><strong>Read the results</strong> &mdash; every other format is computed instantly, including the 10-digit (1-meter) MGRS grid.</li>
+    <li><strong>Tap any result to copy</strong> it for a report, radio call, or map.</li>
+  </ol>
+
+  <h2>Supported Coordinate Formats</h2>
+  <p style="margin-bottom:14px"><strong>MGRS</strong> &mdash; a zone, 100,000-meter square ID, and easting/northing (e.g. <code>18S UJ 23478 06483</code>); used by NATO militaries, SAR, and land-nav courses.<br>
+  <strong>UTM</strong> &mdash; Universal Transverse Mercator: zone + easting/northing in meters.<br>
+  <strong>Lat/Long</strong> &mdash; decimal degrees (e.g. <code>38.8895, -77.0353</code>).<br>
+  <strong>DMS</strong> &mdash; degrees, minutes, seconds.<br>
+  <strong>FixPhrase</strong> &mdash; an open, word-based location code (a What3Words-style alternative).</p>
+
+  <h2>Worked Example</h2>
+  <p style="margin-bottom:14px">Washington, DC at <code>38.8895, -77.0353</code> converts to MGRS <code>18S UJ 23478 06483</code>, UTM <code>18N 323478 4306483</code>, and DMS <code>38&deg;53'22"N 077&deg;02'07"W</code>.</p>
+
+  <h2>MGRS Converter FAQ</h2>
+  <h3 style="color:var(--text);font-size:.9rem;margin:14px 0 4px">How do I convert GPS coordinates to MGRS?</h3>
+  <p style="margin-bottom:10px">Paste your latitude/longitude into the converter above. The MGRS grid &mdash; including the full 10-digit, 1-meter precision reference &mdash; is computed instantly.</p>
+  <h3 style="color:var(--text);font-size:.9rem;margin:14px 0 4px">What's the difference between MGRS and UTM?</h3>
+  <p style="margin-bottom:10px">Both use the same projection. UTM gives a numeric easting/northing within a zone; MGRS wraps that in a lettered 100km square ID, read as a single grid string &mdash; faster to call over radio and plot on a military map.</p>
+  <h3 style="color:var(--text);font-size:.9rem;margin:14px 0 4px">Is this MGRS converter free?</h3>
+  <p style="margin-bottom:10px">Yes &mdash; completely free, no ads, no sign-up, no tracking. For offline use in the field (with maps, mesh, and land-nav tools), the Red Grid MGRS app is free to download.</p>
+  <h3 style="color:var(--text);font-size:.9rem;margin:14px 0 4px">How accurate is the conversion?</h3>
+  <p style="margin-bottom:10px">DMA TM 8358.1 compliant to 1 meter, using truncation rather than rounding, so a grid is never reported with more precision than it has.</p>
+  <h3 style="color:var(--text);font-size:.9rem;margin:14px 0 4px">Can I convert MGRS back to lat/long?</h3>
+  <p style="margin-bottom:10px">Yes &mdash; the converter is bidirectional. Paste an MGRS grid and you'll get latitude/longitude, UTM, and DMS back.</p>
+  <h3 style="color:var(--text);font-size:.9rem;margin:14px 0 4px">Does it work offline?</h3>
+  <p>The web tool runs in your browser. For true field use with offline maps and no signal, the Red Grid MGRS app keeps everything on-device.</p>
+</section>
 
 <!-- GET THE APP -->
 <div class="app-cta" style="margin-top:24px;background:var(--surface);border:1px solid var(--accent-dim);border-radius:var(--radius);padding:20px 16px;text-align:center">
