@@ -229,7 +229,7 @@ function App() {
     setProGateVisible(true);
   }, []);
 
-  // Derived MGRS — free tier limited to 4-digit (1km) display precision
+  // Derived MGRS — 10-digit (1m) for ALL users; precision is not Pro-gated
   const displayPrecision = getDisplayPrecision(isPro);
   const mgrsRaw       = useMemo(() => { try { return location ? toMGRS(location.lat, location.lon, displayPrecision) : null; } catch { return null; } }, [location, displayPrecision]);
   const mgrsFormatted = useMemo(() => { try { return mgrsRaw ? formatMGRS(mgrsRaw) : null; } catch { return null; } }, [mgrsRaw]);
@@ -603,7 +603,7 @@ function AppContent({
       />
 
       {/* What's new in this version — first launch post-update only */}
-      <WhatsNewModal currentVersion="3.4.1" />
+      <WhatsNewModal currentVersion="3.4.2" />
 
     </SafeAreaView>
 

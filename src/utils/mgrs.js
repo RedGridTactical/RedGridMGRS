@@ -279,13 +279,15 @@ export function formatDMS(lat, lon) {
 }
 
 /**
- * Return display precision based on Pro status.
- * Free tier: 2 (4 digits = 1km), Pro: 5 (10 digits = 1m).
+ * MGRS display precision. INTENTIONALLY 10-digit (1m, precision 5) for ALL users —
+ * free and Pro alike. Full-precision MGRS is the free acquisition/trust hook; Pro is
+ * differentiated by offline maps, mesh, the 10 tools, waypoint lists, and reports —
+ * NOT by precision. (isPro is retained in the signature for call-site compatibility.)
  * @param {boolean} isPro
- * @returns {number} precision 2 or 5
+ * @returns {number} precision 5 (10-digit / 1m) for everyone
  */
 export function getDisplayPrecision(isPro) {
-  return 5; // 10-digit MGRS for all users
+  return 5; // 10-digit MGRS for all users — precision is NOT Pro-gated
 }
 
 /**
