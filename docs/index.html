@@ -8,7 +8,8 @@
 <meta name="keywords" content="MGRS, military GPS, DAGR, land navigation, tactical GPS, grid coordinates, military app, waypoint, compass, bearing, azimuth, SALUTE report, MEDEVAC, Army, Marine Corps, Meshtastic, LoRa, ATAK alternative, search and rescue, SAR">
 <meta name="theme-color" content="#8B0000">
 <meta name="application-name" content="Red Grid MGRS">
-<link rel="canonical" href="https://redgridtactical.github.io/RedGridMGRS/">
+<link rel="canonical" href="https://redgridtactical.com/mgrs">
+<meta name="apple-itunes-app" content="app-id=6759629554">
 
 <!-- Open Graph -->
 <meta property="og:title" content="Red Grid MGRS — DAGR-Class Military GPS Navigator">
@@ -36,16 +37,11 @@
     "price": "0",
     "priceCurrency": "USD"
   },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "5",
-    "ratingCount": "1"
-  },
   "description": "DAGR-class military GPS navigator with live MGRS coordinates, magnetic declination, waypoints, and tactical tools. Zero network calls. Zero tracking.",
   "url": "https://redgridtactical.github.io/RedGridMGRS/",
   "downloadUrl": "https://apps.apple.com/app/id6759629554",
   "installUrl": "https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical",
-  "softwareVersion": "3.3.3",
+  "softwareVersion": "3.4.0",
   "author": {
     "@type": "Organization",
     "name": "Red Grid Tactical"
@@ -438,20 +434,20 @@
   </div>
 
   <div class="badges">
-    <img src="https://img.shields.io/badge/Tracking-None-CC0000" alt="No Tracking">
-    <img src="https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-8B0000" alt="License">
+    <span style="display:inline-block;background:#CC0000;color:#fff;padding:3px 10px;border-radius:4px;font-size:0.72rem;font-weight:700;letter-spacing:0.3px;">Tracking: None</span>
+    <span style="display:inline-block;background:#8B0000;color:#fff;padding:3px 10px;border-radius:4px;font-size:0.72rem;font-weight:700;letter-spacing:0.3px;">License: MIT + Commons Clause</span>
   </div>
 </div>
 
 <!-- SCREENSHOTS -->
 <div class="screenshots">
   <div class="screenshots-inner">
-    <img src="images/screenshot_1_grid.png" alt="Live 10-digit MGRS grid with wayfinder" loading="lazy">
-    <img src="images/screenshot_2_map.png" alt="Offline tactical maps with mesh positions" loading="lazy">
-    <img src="images/screenshot_2_tools.png" alt="10 tactical tools" loading="lazy">
-    <img src="images/screenshot_3_report.png" alt="Radio-ready report templates" loading="lazy">
-    <img src="images/screenshot_5_lists.png" alt="Mission waypoint lists" loading="lazy">
-    <img src="images/screenshot_6_mesh.png" alt="Meshtastic mesh network" loading="lazy">
+    <img src="images/screenshot_1_grid.png" alt="Live 10-digit MGRS grid with wayfinder" width="400" height="867" loading="lazy">
+    <img src="images/screenshot_2_map.png" alt="Offline tactical maps with mesh positions" width="400" height="867" loading="lazy">
+    <img src="images/screenshot_2_tools.png" alt="10 tactical tools" width="400" height="867" loading="lazy">
+    <img src="images/screenshot_3_report.png" alt="Radio-ready report templates" width="400" height="867" loading="lazy">
+    <img src="images/screenshot_5_lists.png" alt="Mission waypoint lists" width="400" height="867" loading="lazy">
+    <img src="images/screenshot_6_mesh.png" alt="Meshtastic mesh network" width="400" height="867" loading="lazy">
   </div>
 </div>
 
@@ -531,8 +527,8 @@
     </div>
     <div class="feature-card">
       <div class="icon">&#128172;</div>
-      <h4>6 Languages</h4>
-      <p>Full in-app localization: 15 languages (English, French, German, Spanish, Japanese, Korean, Italian, Dutch, Brazilian Portuguese, Russian, Simplified Chinese, Traditional Chinese, Turkish, Polish, Arabic, Hindi).</p>
+      <h4>16 Languages</h4>
+      <p>Full in-app localization: 16 languages (English, French, German, Spanish, Japanese, Korean, Italian, Dutch, Brazilian Portuguese, Russian, Simplified Chinese, Traditional Chinese, Turkish, Polish, Arabic, Hindi).</p>
     </div>
   </div>
 </section>
@@ -703,8 +699,9 @@
     </div>
     <div class="price-card featured">
       <div class="price">$29.99/yr</div>
-      <div class="price-label">Pro Annual — Best Value</div>
+      <div class="price-label">Pro Annual — 7-Day Free Trial</div>
       <ul>
+        <li><strong>Start with a 7-day free trial</strong></li>
         <li>All Pro features</li>
         <li>Save 37% vs monthly</li>
       </ul>
@@ -790,12 +787,12 @@
 
   <div class="faq-item">
     <h4>What data do you collect?</h4>
-    <p>None. Zero analytics, zero tracking, zero crash reporting. GPS coordinates exist in memory only. Read the source code to verify.</p>
+    <p>None. Red Grid MGRS embeds zero analytics, zero tracking, and zero crash-reporting SDKs. GPS coordinates exist in device memory only. Read the source code to verify.</p>
   </div>
 
   <div class="faq-item">
     <h4>Is MGRS the same as UTM?</h4>
-    <p>MGRS is built on UTM but adds a grid zone designator and 100km square identification. Red Grid MGRS shows both formats (Pro feature), plus decimal degrees and DMS.</p>
+    <p>MGRS is built on UTM but adds a grid zone designator and 100km square identification. Red Grid MGRS shows both formats (Pro feature), plus decimal degrees and DMS. Try the free <a href="tools.html">online MGRS/UTM converter</a> in your browser.</p>
   </div>
 
   <div class="faq-item">
@@ -825,6 +822,7 @@
     <a href="https://apps.apple.com/app/id6759629554">App Store</a>
     <a href="https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical">Google Play</a>
     <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>
+    <a href="tools.html">MGRS Converter</a>
     <a href="blog/zero-network-architecture.html">Blog</a>
     <a href="privacy.html">Privacy Policy</a>
     <a href="support.html">Support</a>
