@@ -13,9 +13,9 @@
 
 <!-- Open Graph -->
 <meta property="og:title" content="Red Grid MGRS — DAGR-Class Military GPS Navigator">
-<meta property="og:description" content="The military's DAGR costs $2,500. Red Grid MGRS puts the same core land nav capabilities in your pocket for free. Zero tracking. Open source.">
+<meta property="og:description" content="The military's DAGR costs $2,500. Red Grid MGRS puts the same core land nav capabilities in your pocket for free. Zero tracking. Source available.">
 <meta property="og:image" content="https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png">
-<meta property="og:url" content="https://redgridtactical.github.io/RedGridMGRS/">
+<meta property="og:url" content="https://redgridtactical.com/mgrs">
 <meta property="og:type" content="website">
 
 <!-- Twitter Card -->
@@ -41,7 +41,7 @@
   "url": "https://redgridtactical.github.io/RedGridMGRS/",
   "downloadUrl": "https://apps.apple.com/app/id6759629554",
   "installUrl": "https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical",
-  "softwareVersion": "3.4.0",
+  "softwareVersion": "3.4.2",
   "author": {
     "@type": "Organization",
     "name": "Red Grid Tactical"
@@ -162,10 +162,16 @@
   .screenshots-inner {
     display: flex;
     gap: 1rem;
-    justify-content: center;
+    /* flex-start + auto margins on first/last child: centers when the strip
+       fits, scrolls from the true left edge when it overflows (centering
+       inside overflow-x:auto makes the left edge unreachable) */
+    justify-content: flex-start;
     max-width: 900px;
     margin: 0 auto;
   }
+
+  .screenshots-inner img:first-child { margin-left: auto; }
+  .screenshots-inner img:last-child { margin-right: auto; }
 
   .screenshots-inner img {
     width: 200px;
@@ -577,7 +583,7 @@
         <td class="cross">&#10007;</td>
       </tr>
       <tr>
-        <td>Open Source</td>
+        <td>Source available &mdash; read every line</td>
         <td class="check">&#10003;</td>
         <td class="cross">&#10007;</td>
         <td class="cross">&#10007;</td>
@@ -642,6 +648,7 @@
     </tbody>
   </table>
   </div>
+  <p style="font-size:0.75rem;color:var(--gray-light);margin-top:0.5rem;">Comparison as of June 2026, based on each product's public listings.</p>
 </section>
 
 <!-- PRIVACY -->
@@ -667,8 +674,8 @@
     </div>
     <div class="privacy-item">
       <div class="icon">&#128187;</div>
-      <strong>Open Source</strong>
-      <span>Verify every claim.</span>
+      <strong>Source Available</strong>
+      <span>Read every line.</span>
     </div>
   </div>
 </div>
@@ -707,7 +714,7 @@
       </ul>
     </div>
     <div class="price-card">
-      <div class="price">$149.99</div>
+      <div class="price">$199.99</div>
       <div class="price-label">Pro Lifetime</div>
       <ul>
         <li>All Pro features</li>
@@ -802,7 +809,7 @@
 
   <div class="faq-item">
     <h4>What are the pricing options?</h4>
-    <p>The app is free to download. Pro unlock is available as $3.99/month, $29.99/year (best value), or $149.99 lifetime (one-time, own forever).</p>
+    <p>The app is free to download. Pro unlock is available as $3.99/month, $29.99/year with a 7-day free trial (best value), or $199.99 lifetime (one-time, own forever).</p>
   </div>
 
   <div class="faq-item">
@@ -823,7 +830,7 @@
     <a href="https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical">Google Play</a>
     <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>
     <a href="tools.html">MGRS Converter</a>
-    <a href="blog/zero-network-architecture.html">Blog</a>
+    <a href="blog/index.html">Blog</a>
     <a href="privacy.html">Privacy Policy</a>
     <a href="support.html">Support</a>
     <a href="mailto:support@redgridtactical.com">Contact</a>

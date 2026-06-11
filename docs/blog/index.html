@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog — Red Grid MGRS</title>
+<meta name="description" content="Field notes from Red Grid Tactical: MGRS and land navigation deep dives, zero-network app architecture, and what a $2,500 military GPS teaches about software.">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Blog — Red Grid MGRS">
+<meta property="og:description" content="Field notes from Red Grid Tactical: MGRS and land navigation deep dives, zero-network app architecture, and what a $2,500 military GPS teaches about software.">
+<meta property="og:url" content="https://redgridtactical.github.io/RedGridMGRS/blog/index.html">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png">
+<link rel="canonical" href="https://redgridtactical.github.io/RedGridMGRS/blog/index.html">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Blog — Red Grid MGRS">
+<meta name="twitter:description" content="Field notes from Red Grid Tactical: MGRS and land navigation deep dives, zero-network app architecture, and what a $2,500 military GPS teaches about software.">
+<meta name="twitter:image" content="https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png">
+
+<style>
+  :root {
+    --red: #8B0000;
+    --dark: #0a0a0a;
+    --gray: #1a1a1a;
+    --gray-light: #666;
+    --bg: #fafafa;
+    --border: #e0e0e0;
+    --code-bg: #f4f4f4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    color: var(--gray);
+    line-height: 1.8;
+    background: var(--bg);
+  }
+
+  .header {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 50%, #2a0000 100%);
+    color: #fff;
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+
+  .header a {
+    color: #cc9999;
+    text-decoration: none;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .header a:hover { color: #fff; }
+
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+  }
+
+  .intro {
+    font-size: 1rem;
+    color: var(--gray-light);
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .post {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--red);
+    border-radius: 6px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .post h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 0.25rem;
+  }
+
+  .post h2 a { color: var(--dark); text-decoration: none; }
+  .post h2 a:hover { color: var(--red); }
+
+  .post .date {
+    font-size: 0.8rem;
+    color: var(--gray-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.4rem;
+  }
+
+  .post p {
+    font-size: 0.95rem;
+    color: var(--gray-light);
+    margin: 0;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--gray-light);
+    font-size: 0.85rem;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  footer a { color: var(--red); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 1.6rem; }
+    main { padding: 1.5rem 1rem 3rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../">Red Grid MGRS</a>
+</div>
+
+<main>
+
+<h1>Blog</h1>
+<p class="intro">Field notes from Red Grid Tactical &mdash; MGRS and land navigation deep dives, plus the engineering behind a zero-tracking GPS app.</p>
+
+<div class="post">
+  <div class="date">June 2026</div>
+  <h2><a href="understanding-mgrs.html">Understanding MGRS: Why the Military Grid Reference System Is Superior to Latitude/Longitude</a></h2>
+  <p>How MGRS works, why militaries worldwide adopted it, and why it outperforms lat/long, UTM, What3Words, and Plus Codes for ground navigation.</p>
+</div>
+
+<div class="post">
+  <div class="date">June 2026</div>
+  <h2><a href="dagr-vs-smartphone.html">What a $2,500 Military GPS Can Teach You About Software Bloat</a></h2>
+  <p>The DAGR costs the DoD $2,500 per unit, and its core software functionality fits in ~15,000 lines of JavaScript. What that says about defense tech and software in general.</p>
+</div>
+
+<div class="post">
+  <div class="date">June 2026</div>
+  <h2><a href="land-nav-dying-skill.html">Land Navigation Is a Dying Skill &mdash; And GPS Won't Save You When It Matters</a></h2>
+  <p>GPS dependence is a liability. The Army still teaches map and compass for a reason &mdash; here's what happens when the satellites go dark.</p>
+</div>
+
+<div class="post">
+  <div class="date">May 2026</div>
+  <h2><a href="zero-network-architecture.html">I Built a GPS App That Makes Zero Network Calls</a></h2>
+  <p>No analytics, no tracking, no crash reporting, not even a health check ping. The architecture behind a truly offline-first mobile app.</p>
+</div>
+
+</main>
+
+<footer>
+  <a href="../">Red Grid MGRS</a> &middot;
+  <a href="../tools.html">MGRS Converter</a> &middot;
+  <a href="../privacy.html">Privacy</a> &middot;
+  <a href="../support.html">Support</a> &middot;
+  <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>
+  <p style="margin-top: 0.5rem;">&copy; 2026 Red Grid Tactical</p>
+</footer>
+
+</body>
+</html>

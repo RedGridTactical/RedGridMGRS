@@ -20,62 +20,81 @@
 <body>
 <p style="font-size:0.9rem;"><a href="index.html">&larr; Back to Red Grid MGRS</a></p>
 <h1>Privacy Policy</h1>
-<p class="updated"><strong>Last updated: March 2026</strong></p>
-<p>Red Grid MGRS is a free, open-source application. This policy describes exactly what data the app accesses and what it does with it.</p>
+<p class="updated"><strong>Last updated: June 2026</strong></p>
+<p>Red Grid MGRS is built with a privacy-first, offline-first architecture. There are no user accounts, no analytics SDKs, no crash reporting, no advertising, and no tracking of any kind. This policy describes exactly what data the app accesses, what stays on your device, and the two narrow cases where the app talks to the network at all.</p>
 
 <h2>Location Data</h2>
-<p>Red Grid MGRS requests access to your device's GPS location <strong>while the app is open</strong> (foreground only). This location data is used solely to calculate and display your current MGRS coordinates on screen.</p>
+<p>Red Grid MGRS requests access to your device's GPS location <strong>while the app is open</strong> (foreground, while-in-use only). Location is used solely to calculate and display your position — MGRS coordinates, bearing and distance to waypoints, and related on-screen tools.</p>
 <ul>
-  <li>Location data is <strong>never written to disk</strong></li>
-  <li>Location data is <strong>never transmitted</strong> over any network</li>
-  <li>Location data is <strong>never shared</strong> with any third party</li>
-  <li>When you close the app, all location data is discarded from memory</li>
+  <li>Your live position is held <strong>in memory only</strong> and is discarded when you close the app</li>
+  <li>Location is <strong>never transmitted</strong> over any network — it never leaves your device</li>
+  <li>Location is <strong>never shared</strong> with any third party</li>
+  <li>The only coordinates written to disk are waypoints and saved areas that <strong>you explicitly choose to save</strong>, stored locally on your device</li>
 </ul>
 
-<h2>Stored Data</h2>
-<p>The following data is saved locally on your device:</p>
-<p><strong>All users:</strong></p>
+<h2>Data Stored on Your Device</h2>
+<p>The following data is saved locally on your device, and nowhere else:</p>
 <ul>
-  <li><strong>Magnetic declination offset</strong> — a single number you configure (default: 0)</li>
-  <li><strong>Pace count calibration</strong> — a single number you configure (default: 62)</li>
+  <li><strong>App settings and preferences</strong> — declination offset, pace count calibration, theme, coordinate format, and feature toggles</li>
+  <li><strong>Waypoints and waypoint lists</strong> — positions you choose to save</li>
+  <li><strong>Saved AO packages and downloaded map tiles</strong> — offline map areas you choose to download</li>
+  <li><strong>On-device usage counters</strong> — simple local counters (sessions, screen visits) stored under a single local storage key (<code>rg_analytics</code>). These exist only on your device, are never transmitted anywhere, and are deleted when you uninstall the app</li>
+  <li><strong>Pro entitlement flag</strong> — whether Pro is unlocked on this device</li>
 </ul>
-<p><strong>Red Grid Pro users (optional one-time purchase):</strong></p>
+<p>None of this data is ever transmitted. Uninstalling the app deletes all of it.</p>
+
+<h2>Data We Do Not Collect</h2>
+<p>We do not collect, receive, or have access to:</p>
 <ul>
-  <li><strong>Saved waypoint lists</strong> — named lists of waypoints you choose to save, stored locally on your device only</li>
-  <li><strong>Display theme preference</strong> — your selected colour theme</li>
-  <li><strong>Coordinate format preference</strong> — your selected coordinate display format</li>
+  <li>Your GPS location or any location history — <strong>location never leaves your device</strong></li>
+  <li>Personal information (name, email, phone number)</li>
+  <li>Device identifiers for tracking or advertising</li>
+  <li>Usage analytics, behavioral data, or telemetry of any kind</li>
+  <li>Crash reports</li>
+  <li>Contacts, photos, or other device content</li>
 </ul>
-<p>All stored data lives <strong>on your device only</strong>. None of it is ever transmitted anywhere.</p>
+<p>The app has no user accounts, no login, and no cloud sync. There is no analytics SDK, no crash-reporting SDK, and no advertising SDK in the app.</p>
 
 <h2>Network Activity</h2>
-<p>Red Grid MGRS makes <strong>zero network requests</strong>. There is no:</p>
+<p>Red Grid MGRS makes <strong>no network calls</strong>, with exactly two exceptions — both initiated by you:</p>
 <ul>
-  <li>Analytics or usage tracking</li>
-  <li>Crash reporting</li>
-  <li>Advertising network</li>
-  <li>Account system or cloud sync</li>
-  <li>Update check or telemetry</li>
+  <li><strong>Map tile downloads.</strong> When you choose to view or download map tiles (for example, saving an AO for offline use), the app fetches those tiles from public tile providers: <strong>OpenStreetMap</strong>, <strong>OpenTopoMap</strong>, and <strong>basemaps.cartocdn.com</strong> (the dark map style). Like any web server, those providers may log standard HTTP request data such as your IP address and the requested tile coordinates. Once downloaded, tiles are stored on your device and require no further network connection.</li>
+  <li><strong>Purchases.</strong> Purchase and subscription transactions use the platform-native Apple App Store / Google Play billing APIs (see below).</li>
 </ul>
-<p>In-app purchases (Red Grid Pro) are processed entirely by Apple (App Store) or Google (Play Store). Red Grid MGRS never sees your payment details and receives no personal data from these transactions.</p>
-<p>You can verify the zero-network claim by reviewing the source code or monitoring network traffic while using the app.</p>
+<p>There is no analytics traffic, no crash reporting, no advertising network, no account system or cloud sync, and no update check or telemetry. Outside the two cases above, the app works fully in airplane mode. You can verify this by reviewing the published source code or monitoring network traffic while using the app.</p>
+
+<h2>Purchases and Subscriptions</h2>
+<p>Red Grid MGRS is free to download. Optional <strong>Red Grid Pro</strong> is available in three tiers:</p>
+<ul>
+  <li><strong>Pro Monthly</strong> — auto-renewing monthly subscription</li>
+  <li><strong>Pro Annual</strong> — auto-renewing yearly subscription, with a 7-day free trial</li>
+  <li><strong>Pro Lifetime</strong> — a single payment that unlocks Pro permanently</li>
+</ul>
+<p>All payment is processed <strong>entirely by Apple (App Store) or Google (Google Play)</strong>. Red Grid MGRS never sees your payment details and receives no personal data from these transactions. Subscriptions are managed and cancelled through your App Store or Google Play account settings, and the app's Pro purchase screen includes a RESTORE button to recover a previous purchase after a reinstall or on a new device.</p>
 
 <h2>Permissions</h2>
+<p>The app requests the following permissions. Only Location is needed for the core grid display; everything else is optional and only requested when you use the related feature.</p>
 <table>
   <thead><tr><th>Permission</th><th>Purpose</th><th>Scope</th></tr></thead>
-  <tbody><tr><td>Location (While Using App)</td><td>Display MGRS coordinates</td><td>Foreground only — never background</td></tr></tbody>
+  <tbody>
+    <tr><td>Location</td><td>Display your MGRS position and drive the navigation tools</td><td>Foreground, while-in-use only — never background</td></tr>
+    <tr><td>Bluetooth</td><td>Connect to Meshtastic radios and external GPS receivers</td><td>Optional — only if you use mesh or external GPS features</td></tr>
+    <tr><td>Photos</td><td>Geostamp tool: burn an MGRS grid onto a photo you select</td><td>Optional — only if you use Geostamp</td></tr>
+    <tr><td>Motion &amp; Fitness</td><td>Pace Count tool: step detection for pace counting</td><td>Optional — only if you use Pace Count</td></tr>
+  </tbody>
 </table>
 <p>No other permissions are requested.</p>
 
 <h2>Third Parties</h2>
-<p>Red Grid MGRS contains no third-party SDKs that collect data. It is built on the Expo runtime framework. In-app purchases use native Apple StoreKit and Google Play Billing APIs — no third-party purchase SDK is included.</p>
+<p>Red Grid MGRS contains no third-party SDKs that collect data. The only third-party services involved are the public map tile providers listed above (when you choose to load or download tiles) and the native Apple StoreKit / Google Play Billing APIs (when you make a purchase). No third-party purchase, analytics, advertising, or social media SDK is included.</p>
 
-<h2>Children</h2>
-<p>This app does not knowingly collect any data from anyone, including children.</p>
+<h2>Children's Privacy</h2>
+<p>The app is not directed at children under 13. It does not knowingly collect any data from anyone, including children — there is nothing collected to begin with.</p>
 
 <h2>Changes</h2>
-<p>Any changes to this policy will be reflected in the project repository with an updated date.</p>
+<p>Any changes to this policy will be reflected on this page with an updated date. Continued use of the app after changes constitutes acceptance of the revised policy.</p>
 
 <h2>Contact</h2>
-<p>For questions: <a href="mailto:support@redgridtactical.com">support@redgridtactical.com</a></p>
+<p>For questions about this policy: <a href="mailto:support@redgridtactical.com">support@redgridtactical.com</a></p>
 </body>
 </html>

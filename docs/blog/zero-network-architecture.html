@@ -208,9 +208,9 @@
 <article>
 
 <h1>I Built a GPS App That Makes Zero Network Calls</h1>
-<div class="meta">March 2026 &middot; 8 min read</div>
+<div class="meta">May 2026 &middot; 8 min read</div>
 
-<p>Red Grid MGRS is a military GPS navigator for iOS. It shows your position in MGRS coordinates, computes magnetic declination, runs dead reckoning and resection calculations, and generates tactical report templates. It does all of this without making a single HTTP request.</p>
+<p>Red Grid MGRS is a military GPS navigator for iOS and Android. It shows your position in MGRS coordinates, computes magnetic declination, runs dead reckoning and resection calculations, and generates tactical report templates. It does all of this without making a single HTTP request.</p>
 
 <p>Not "minimal tracking." Not "privacy-focused." Zero. The app has no analytics SDK, no crash reporter, no telemetry endpoint, no health check ping, no update check. Put your phone in airplane mode and every feature works identically. There is no degraded state because there's nothing to degrade.</p>
 
@@ -222,7 +222,7 @@
 
 <p>But beyond the tactical use case, I think most mobile apps have no business making the network calls they make. Your calculator app doesn't need analytics. Your flashlight doesn't need a crash reporter. And a GPS app that streams your coordinates to a telemetry server is doing something fundamentally hostile to the user, even if it's "anonymized."</p>
 
-<p>So the rule was simple: the app makes zero outbound connections during normal operation. The only exception is the App Store IAP flow, which is initiated by the user tapping a purchase button and handled entirely by Apple's StoreKit framework.</p>
+<p>So the rule was simple: the app makes zero outbound connections during normal operation. The only exception is the App Store IAP flow, which is initiated by the user tapping a purchase button and handled entirely by Apple's StoreKit framework. (Since this was written the app has grown offline maps, and tile downloads are the single user-initiated exception on the data side: when you choose to save an area for offline use, the app fetches those tiles once from the public tile servers, caches them on-device, and goes quiet again.)</p>
 
 <h2>The Architecture</h2>
 
@@ -320,7 +320,7 @@ const updateLocationIfChanged = useCallback((newLoc) => {
 
 <p>The benefits are less obvious but, I think, more important.</p>
 
-<p><strong>Absolute trust.</strong> The app is open source. Anyone can verify the zero-network claim by reading the code. There's no "trust us, we anonymize it." There's nothing to anonymize because there's nothing to collect. For military users operating in sensitive environments, this matters.</p>
+<p><strong>Absolute trust.</strong> The app's full source code is published. Anyone can verify the zero-network claim by reading the code. There's no "trust us, we anonymize it." There's nothing to anonymize because there's nothing to collect. For military users operating in sensitive environments, this matters.</p>
 
 <p><strong>Works everywhere.</strong> Underground parking garage. Middle of the ocean. Remote mountainside with no cell coverage. Airplane mode. The app doesn't care. There's no loading spinner waiting for a server. There's no "requires internet connection" disclaimer in the App Store listing.</p>
 
@@ -370,13 +370,14 @@ export async function loadSettings() {
 
 <div class="callout">
   <strong>Red Grid MGRS</strong>
-  Free on the <a href="https://apps.apple.com/app/id6759629554">App Store</a>. Source code on <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>.
+  Free on the <a href="https://apps.apple.com/app/id6759629554">App Store</a> and <a href="https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical">Google Play</a>. Source code on <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>.
 </div>
 
 </article>
 
 <footer>
   <a href="../">Red Grid MGRS</a> &middot;
+  <a href="index.html">Blog</a> &middot;
   <a href="../privacy.html">Privacy</a> &middot;
   <a href="../support.html">Support</a> &middot;
   <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>
