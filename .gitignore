@@ -18,6 +18,10 @@ web-build/
 # IDE / tool config
 .[cC][lL]*[dD][eE]*
 [cC][lL]*[dD][eE]*.md
+AGENTS.md
+agents.md
+.playwright-mcp/
+android/.kotlin/
 
 # Local session context — never commit (AI-trace-free repo policy)
 CONTEXT.md
@@ -90,3 +94,4 @@ fastlane/report.xml
 fastlane/README.md
 fastlane/test_output/
 fastlane/screenshots/
+ios/hermes-engine/destroot/

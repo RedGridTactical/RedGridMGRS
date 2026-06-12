@@ -12,11 +12,19 @@
 
 > ⭐ If you find this useful, consider [starring the repo](https://github.com/RedGridTactical/RedGridMGRS) — it helps others discover it.
 
-The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for free. No network required. No data collected. Open source.
+The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for free. No network required. No data collected. Source available — read every line.
+
+**Try it without installing:** the [free web MGRS converter](https://redgridtactical.github.io/RedGridMGRS/tools.html) runs the same DMA conversion math in your browser.
 
 ---
 
-## Latest: v3.4 — Mission Preflight
+## Latest: v3.4.x — 7-Day Free Trial + Mission Preflight
+
+- **NEW: 7-day free trial** on the Pro Annual plan — every tool, theme, and offline feature. No charge today, cancel anytime.
+- **All tabs visible to everyone.** LISTS, COORDS, THEME, and MESH now appear for free users as locked previews of the Pro loadout.
+- **Field reliability:** faster map tile checks at wide zoom, report grids no longer overwritten by live GPS, smarter Meshtastic reconnect with backoff, and purchase reliability hardening.
+
+### v3.4 — Mission Preflight
 
 - **NEW: Mission Preflight panel** on the Map tab (PFL button). One-glance **READY / CAUTION / NOT READY** summary covering GPS source + accuracy, Meshtastic radio state, offline tile coverage + missing zooms, permissions health, and battery/network hints.
 - **NEW: Saved AO Packages.** Save the current map viewport as a named bundle (name + style + zoom set). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh. Tile estimates show count + MB before any download starts.
@@ -100,17 +108,16 @@ Generate formatted reports ready to transmit over any net:
 ## Pricing
 
 ### Free
-Live 10-digit MGRS display, 1 theme, 3 tools (Back Azimuth, Pace Count, Declination), 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
+Live 10-digit MGRS display (full 1-meter precision — never gated), map screen, 1 saved AO package, 1 theme (Red Light), 3 tools (Back Azimuth, Pace Count, Declination), 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
 
 ### Pro — 3 tiers
 | Tier | Price |
 |------|-------|
 | Monthly | $3.99/mo |
-| Annual | $29.99/yr (best value) |
-| Lifetime | $149.99 one-time |
+| Annual | $29.99/yr — **starts with a 7-day free trial** |
+| Lifetime | $199.99 one-time |
 
 All Pro tiers unlock:
-- **10-digit MGRS** — full 1-meter precision for all users
 - **All 10 Tactical Tools** — free includes Back Azimuth, Pace Count, Declination
 - **All 6 Report Templates** — free includes SALUTE, MEDEVAC, SPOT
 - **Offline Tactical Maps** — download OpenStreetMap tiles, dark tactical tiles, zero-network map use
@@ -128,28 +135,30 @@ All Pro tiers unlock:
 - **4 Display Themes** — red lens, NVG green, day white, blue force
 - **Unlimited Waypoints** — saved lists, patrol routes, OBJs, rally points
 - **Adjustable Grid Scale** — 0.7x–1.5x MGRS font size
-- **6 Languages** — EN, FR, DE, ES, JA, KO
+- **16 Languages** — EN, FR, DE, ES, JA, KO, IT, NL, PT-BR, RU, ZH-Hans, ZH-Hant, TR, PL, AR, HI (in-app localization for free and Pro)
 
 ---
 
 ## Install
 
 ### iOS
-[App Store](https://apps.apple.com/app/id6759629554) — Free with optional Pro upgrade ($3.99/mo, $29.99/yr, or $149.99 lifetime).
+[App Store](https://apps.apple.com/app/id6759629554) — Free with optional Pro upgrade ($3.99/mo, $29.99/yr with 7-day free trial, or $199.99 lifetime).
 
 ### Android
-[Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) — Free with optional Pro upgrade ($3.99/mo, $29.99/yr, or $149.99 lifetime). Android 7+ (API 24+). First production release April 2026.
+[Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) — Free with optional Pro upgrade ($3.99/mo, $29.99/yr with 7-day free trial, or $199.99 lifetime). Android 7+ (API 24+). First production release April 2026.
 
 ### Build from Source
+
+The app uses native modules (Bluetooth LE, in-app purchases, maps), so it needs a development build — it cannot run in Expo Go.
 
 ```bash
 git clone https://github.com/RedGridTactical/RedGridMGRS.git
 cd RedGridMGRS
 npm install
-npx expo start
+npx expo run:ios      # or: npx expo run:android
 ```
 
-Standard features work from source. Pro features require a valid purchase through Apple or Google.
+Run the test suite with `npm test`. Standard features work from source. Pro features require a valid purchase through Apple or Google.
 
 ---
 
@@ -211,7 +220,7 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - [MGRS Tactical Toolkit](https://redgridtactical.github.io/RedGridMGRS/tools.html) — web-based converter, single HTML file, zero dependencies
 
 ### v2.6 — Open Source Library ✅ (2026)
-- `@redgrid/mgrs` npm package — DMA TM 8358.1 compliant MGRS library
+- `@redgrid/mgrs` MGRS library — DMA TM 8358.1 compliant, lives in [`packages/mgrs`](packages/mgrs) (npm registry release pending)
 - Standalone conversion, bearing, distance, dead reckoning, FixPhrase
 - Zero dependencies, ~15 KB
 
@@ -273,7 +282,7 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 - Write-review URL opens directly so users land on the text-review sheet (not the star-only rating sheet)
 - Background tuning and stability polish across the grid, map, and tools
 
-### v3.4 — Mission Preflight 🟡 (2026, in development)
+### v3.4 — Mission Preflight ✅ (2026, live on iOS + Android)
 - New **PFL** button on the Map tab opens a full-screen Mission Preflight panel
 - Status sections: GPS source (phone vs external) with accuracy, Meshtastic radio state, offline tile coverage + missing zooms for the current viewport, permissions health, battery/network hints
 - One-glance **READY / CAUTION / NOT READY** summary at the top derived from the worst row
@@ -305,13 +314,7 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 
 > **Forward roadmap** is anchored in `STANDOUT_ROADMAP.md` (May 2026 strategic refresh). Goal: be the private, offline-first solo navigator for field operators who need MGRS, mission packaging, mesh/off-grid awareness, and interoperability — without accounts or tracking. Each release maps a single workflow rather than a feature grab-bag.
 
-### v3.4 — Mission Preflight (next)
-- "AO Preflight" panel: GPS source + accuracy, external GPS, mesh radio, offline tile coverage, missing zooms, battery/airplane-mode hints, permissions health
-- Saved AO packages (named, per map style + zoom) — "Range 23", "Patrol Base", "SAR Segment A"
-- One-tap field check before stepping off coverage
-- Pro: save multiple AO packages and refresh them; free tier sees the checklist
-
-### v3.5 — Route Card + Field Export
+### v3.5 — Route Card + Field Export (next)
 - Route card: name, ordered waypoints, leg distance, leg bearing, total distance, est. time, start DTG, notes
 - Route export: GPX route/track, KML, KMZ, plain-text card for radio/clipboard/share sheet
 - Elevation profile starting from waypoint altitude + GPS altitude; downloaded elevation data later
@@ -368,8 +371,8 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 
 | App | Purpose | Platform | Link |
 |-----|---------|----------|------|
-| **Red Grid MGRS** | Solo MGRS navigator (DAGR-class) | iOS | [GitHub](https://github.com/RedGridTactical/RedGridMGRS) · [App Store](https://apps.apple.com/app/id6759629554) |
-| **Red Grid Link** | Team coordination + encrypted sync | iOS | [GitHub](https://github.com/RedGridTactical/RedGridLink) · [App Store](https://apps.apple.com/app/red-grid-link/id6760084718) |
+| **Red Grid MGRS** | Solo MGRS navigator (DAGR-class) | iOS + Android | [GitHub](https://github.com/RedGridTactical/RedGridMGRS) · [App Store](https://apps.apple.com/app/id6759629554) · [Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) |
+| **Red Grid Link** | Team coordination + encrypted sync | iOS + Android | [GitHub](https://github.com/RedGridTactical/RedGridLink) · [App Store](https://apps.apple.com/app/red-grid-link/id6760084718) |
 
 Website: [redgridtactical.com](https://redgridtactical.com)
 
@@ -381,4 +384,4 @@ Website: [redgridtactical.com](https://redgridtactical.com)
 
 ---
 
-*Your phone. DAGR capability. No frills. No tracking. Open source.*
+*Your phone. DAGR capability. No frills. No tracking. Source available.*

@@ -94,3 +94,11 @@ Words can be decoded in any order (each word maps to a non-overlapping numeric r
 ## License
 
 MIT
+
+---
+
+## Powers Red Grid MGRS
+
+This library is the conversion core of **[Red Grid MGRS](https://redgridtactical.com/mgrs)** — a DAGR-class MGRS navigator for [iOS](https://apps.apple.com/app/id6759629554) and [Android](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) with offline tactical maps, Meshtastic mesh awareness, and radio-ready report templates. Zero network, zero tracking.
+
+Try the math in your browser: [free web MGRS converter](https://redgridtactical.github.io/RedGridMGRS/tools.html).
