@@ -12,6 +12,8 @@ const {
   checkTilesForRegion,
   clearTileCache,
   estimateTilesForRegion,
+  countTilesForRegion,
+  CHECK_TILE_CAP,
   AVG_TILE_BYTES,
   TILE_DIR,
 } = require('../src/utils/tileManager');
@@ -355,6 +357,37 @@ describe('tileManager.js - Offline Tile Cache', () => {
     test('AVG_TILE_BYTES is a reasonable midpoint (10KB–35KB)', () => {
       expect(AVG_TILE_BYTES).toBeGreaterThanOrEqual(10 * 1024);
       expect(AVG_TILE_BYTES).toBeLessThanOrEqual(35 * 1024);
+    });
+  });
+  describe("tile-count safety caps (zoom-out freeze regression)", () => {
+    const dcRegion = { latitude: 38.8895, longitude: -77.0353, latitudeDelta: 0.05, longitudeDelta: 0.05 };
+    // Country-scale viewport: at z16 this is millions of tiles — enumerating
+    // it used to hang the JS thread. Counting must stay arithmetic.
+    const hugeRegion = { latitude: 39, longitude: -98, latitudeDelta: 25, longitudeDelta: 60 };
+
+    test("countTilesForRegion matches enumerated count on a small region", () => {
+      for (const z of [10, 12, 14, 16]) {
+        expect(countTilesForRegion(dcRegion, z)).toBe(getTilesForRegion(dcRegion, z).length);
+      }
+    });
+
+    test("countTilesForRegion handles a country-scale region instantly", () => {
+      const start = Date.now();
+      const count = countTilesForRegion(hugeRegion, 16);
+      expect(Date.now() - start).toBeLessThan(250); // arithmetic, not enumeration
+      expect(count).toBeGreaterThan(1000000); // genuinely millions of tiles
+    });
+
+    test("estimateTilesForRegion stays fast on a country-scale region", () => {
+      const start = Date.now();
+      const est = estimateTilesForRegion(hugeRegion, [10, 12, 14, 16]);
+      expect(Date.now() - start).toBeLessThan(500);
+      expect(est.totalTiles).toBeGreaterThan(CHECK_TILE_CAP);
+    });
+
+    test("CHECK_TILE_CAP is a sane bound", () => {
+      expect(CHECK_TILE_CAP).toBeGreaterThanOrEqual(5000);
+      expect(CHECK_TILE_CAP).toBeLessThanOrEqual(100000);
     });
   });
 });

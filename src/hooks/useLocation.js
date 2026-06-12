@@ -29,6 +29,17 @@ export function useLocation() {
   const [compassHeading, setCompassHeading] = useState(null);
   const mounted = useRef(true);
   const prevCoords = useRef(null);
+  // Live watcher subscriptions — held in refs so a RETRY press replaces the
+  // existing watchers instead of stacking a new pair on every call.
+  const posSubRef = useRef(null);
+  const headingSubRef = useRef(null);
+
+  const clearSubs = useCallback(() => {
+    try { posSubRef.current?.remove?.(); } catch {}
+    try { headingSubRef.current?.remove?.(); } catch {}
+    posSubRef.current = null;
+    headingSubRef.current = null;
+  }, []);
 
   // Track cleanup to prevent state updates on unmounted component
   useEffect(() => {
@@ -53,6 +64,10 @@ export function useLocation() {
 
   const requestAndWatch = useCallback(async () => {
     if (!mounted.current) return;
+
+    // Remove any watchers from a previous call (mount or earlier RETRY) so
+    // subscriptions never stack.
+    clearSubs();
 
     try {
       if (!Location || !Location.requestForegroundPermissionsAsync) {
@@ -125,7 +140,7 @@ export function useLocation() {
           lon: initial.coords.longitude,
           accuracy: Math.round(initial.coords.accuracy),
           heading: initial.coords.heading,
-          altitude: initial.coords.altitude ? Math.round(initial.coords.altitude) : null,
+          altitude: initial.coords.altitude != null ? Math.round(initial.coords.altitude) : null,
           speed: initial.coords.speed,
         });
       }
@@ -135,10 +150,8 @@ export function useLocation() {
       }
 
       // Watch for updates — high accuracy, no background, no storage
-      let posSub = null;
-      let headingSub = null;
       try {
-        posSub = await Location.watchPositionAsync(
+        posSubRef.current = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.BestForNavigation,
             timeInterval: 1000,
@@ -151,7 +164,7 @@ export function useLocation() {
                 lon: pos.coords.longitude,
                 accuracy: Math.round(pos.coords.accuracy),
                 heading: pos.coords.heading,
-                altitude: pos.coords.altitude ? Math.round(pos.coords.altitude) : null,
+                altitude: pos.coords.altitude != null ? Math.round(pos.coords.altitude) : null,
                 speed: pos.coords.speed,
               });
             }
@@ -166,7 +179,7 @@ export function useLocation() {
       // Compass heading from magnetometer — updates as phone rotates, even when stationary
       try {
         if (Location.watchHeadingAsync) {
-          headingSub = await Location.watchHeadingAsync((data) => {
+          headingSubRef.current = await Location.watchHeadingAsync((data) => {
             if (mounted.current) {
               const h = data?.trueHeading >= 0 ? data.trueHeading : data?.magHeading;
               if (h !== undefined && h >= 0) {
@@ -179,17 +192,14 @@ export function useLocation() {
         // Magnetometer unavailable — compassHeading stays null, arrow falls back to absolute bearing
       }
 
-      return () => {
-        try { if (posSub?.remove) posSub.remove(); } catch {}
-        try { if (headingSub?.remove) headingSub.remove(); } catch {}
-      };
+      return clearSubs;
     } catch (err) {
       if (mounted.current) {
         setError(`GPS Error: ${err?.message || 'Unknown error'}`);
         setIsLoading(false);
       }
     }
-  }, [updateLocationIfChanged]);
+  }, [updateLocationIfChanged, clearSubs]);
 
   useEffect(() => {
     let cleanup;

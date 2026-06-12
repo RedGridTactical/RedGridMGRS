@@ -45,7 +45,7 @@ const TOOLS = [
   { id: 'geostamp', labelKey: 'tools.photoGeostamp',   subKey: 'tools.photoGeostampSub',       Component: GeostampTool,  pro: true },
 ];
 
-export function ToolsScreen({ location, declination, paceCount, setDeclination, setPaceCount, compassHeading, isPro, onShowProGate }) {
+export function ToolsScreen({ location, declination, paceCount, setDeclination, setPaceCount, compassHeading, isPro, trialEligible, onShowProGate }) {
   const colors = useColors();
   const { t } = useTranslation();
   const [openTool, setOpenTool] = useState(null);
@@ -85,7 +85,7 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
               <View>
                 <View style={styles.labelRow}>
                   <Text style={[styles.cardTitle, { color: colors.text }]}>{label}</Text>
-                  {isLocked && <Text style={[styles.proBadge, { color: colors.bg, backgroundColor: colors.text }]}>PRO</Text>}
+                  {isLocked && <Text style={[styles.proBadge, { color: colors.bg, backgroundColor: colors.text }]}>{trialEligible ? t('proGate.tryFreeBadge') : 'PRO'}</Text>}
                 </View>
                 <Text style={[styles.cardSub, { color: colors.text3 }]}>{sub}</Text>
               </View>

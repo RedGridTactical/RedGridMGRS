@@ -85,6 +85,23 @@ const FEATURES_BY_VERSION = {
       body: 'Save the current map viewport as a local AO package with tile estimates and one-tap refresh.',
     },
   ],
+  '3.4.3': [
+    {
+      icon: '★',
+      title: '7-DAY FREE TRIAL',
+      body: 'Try Red Grid Pro free for 7 days on the annual plan — every tool, theme, and offline feature. No charge today, cancel anytime.',
+    },
+    {
+      icon: '◉',
+      title: 'SEE THE FULL LOADOUT',
+      body: 'LISTS, COORDS, THEME, and MESH tabs are now visible to everyone — locked until Pro, so you can see exactly what the upgrade unlocks.',
+    },
+    {
+      icon: '✓',
+      title: 'FIELD RELIABILITY',
+      body: 'Smoother map tile checks at wide zoom, report grids no longer overwritten by live GPS, smarter mesh reconnect, and purchase reliability fixes.',
+    },
+  ],
   '3.4.2': [
     {
       icon: '★',
@@ -111,10 +128,15 @@ const FEATURES_BY_VERSION = {
   ],
 };
 
-export function WhatsNewModal({ currentVersion }) {
+export function WhatsNewModal({ currentVersion, showTrialCta, onStartTrial }) {
   const [visible, setVisible] = useState(false);
   const colors = useColors();
   const features = FEATURES_BY_VERSION[currentVersion] || [];
+  // Every fresh install sees this modal (first launch counts as a version
+  // change), so when the version notes lead with the free trial, give the
+  // reader a direct path into the paywall instead of a dead-end CONTINUE.
+  const hasTrialCard = features.some((f) => /FREE TRIAL/i.test(f.title || ''));
+  const showCta = !!showTrialCta && !!onStartTrial && hasTrialCard;
 
   useEffect(() => {
     if (!currentVersion || !features.length) return;
@@ -154,6 +176,16 @@ export function WhatsNewModal({ currentVersion }) {
               </View>
             ))}
           </ScrollView>
+          {showCta && (
+            <TouchableOpacity
+              style={[styles.ctaBtn, { backgroundColor: colors.text }]}
+              onPress={() => { tapLight(); dismiss(); setTimeout(() => onStartTrial(), 250); }}
+              accessibilityRole="button"
+              accessibilityLabel="Start 7-day free trial"
+            >
+              <Text style={[styles.ctaText, { color: colors.bg }]}>START 7-DAY FREE TRIAL</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={[styles.dismiss, { borderColor: colors.text, backgroundColor: colors.border2 }]}
             onPress={dismiss}
@@ -178,6 +210,8 @@ const styles = StyleSheet.create({
   icon: { fontFamily: 'monospace', fontSize: 22, width: 26, textAlign: 'center', marginTop: 2 },
   rowTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 2, fontWeight: '800', marginBottom: 4 },
   rowBody: { fontFamily: 'monospace', fontSize: 11, lineHeight: 15 },
+  ctaBtn: { paddingVertical: 14, alignItems: 'center', marginBottom: 8, minHeight: 44 },
+  ctaText: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '800' },
   dismiss: { borderWidth: 2, paddingVertical: 14, alignItems: 'center' },
   dismissText: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '800' },
 });

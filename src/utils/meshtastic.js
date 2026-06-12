@@ -57,7 +57,9 @@ let connectionState = CONNECTION_STATES.DISCONNECTED;
 let stateListeners = [];
 let positionListeners = [];
 let fromNumSubscription = null;
+let disconnectSubscription = null;
 let reconnectTimer = null;
+let reconnectAttempts = 0;
 let lastConnectedDeviceId = null;
 let configId = 0; // increments each connection for startConfig
 
@@ -455,9 +457,15 @@ export async function connectToDevice(deviceId) {
     startFromNumMonitoring(device);
 
     notifyStateChange(CONNECTION_STATES.CONNECTED);
+    reconnectAttempts = 0; // healthy connection resets the backoff ladder
 
-    // Monitor disconnect for auto-reconnect
-    mgr.onDeviceDisconnected(deviceId, () => {
+    // Monitor disconnect for auto-reconnect. Remove any subscription from a
+    // previous connect first — they used to accumulate one per reconnect.
+    if (disconnectSubscription) {
+      try { disconnectSubscription.remove(); } catch {}
+      disconnectSubscription = null;
+    }
+    disconnectSubscription = mgr.onDeviceDisconnected(deviceId, () => {
       connectedDevice = null;
       if (fromNumSubscription) {
         try { fromNumSubscription.remove(); } catch {}
@@ -480,9 +488,14 @@ export async function connectToDevice(deviceId) {
  */
 export async function disconnect() {
   lastConnectedDeviceId = null;
+  reconnectAttempts = 0;
   if (reconnectTimer) {
     clearTimeout(reconnectTimer);
     reconnectTimer = null;
+  }
+  if (disconnectSubscription) {
+    try { disconnectSubscription.remove(); } catch {}
+    disconnectSubscription = null;
   }
   if (fromNumSubscription) {
     try { fromNumSubscription.remove(); } catch {}
@@ -580,16 +593,12 @@ function startFromNumMonitoring(device) {
     FROMNUM_UUID,
     async (error, characteristic) => {
       if (error) return;
-      // FromNum notification means new data available — read FromRadio
+      // FromNum notification means new data available. The radio may queue
+      // SEVERAL FromRadio messages behind one notification (multiple nodes
+      // reporting at once) — drain until empty, like the post-startConfig
+      // NodeDB download does, or queued packets are delayed/lost.
       try {
-        const char = await device.readCharacteristicForService(
-          MESHTASTIC_SERVICE_UUID,
-          FROMRADIO_UUID,
-        );
-        if (char?.value) {
-          const raw = base64ToBytes(char.value);
-          if (raw.length > 0) processFromRadioBytes(raw);
-        }
+        await drainFromRadio(device);
       } catch {}
     }
   );
@@ -609,6 +618,14 @@ function scheduleReconnect() {
   if (!lastConnectedDeviceId) return;
   if (reconnectTimer) return;
 
+  // Exponential backoff with a retry cap — a radio that's powered off or out
+  // of range shouldn't be polled every 5s forever (battery). After the cap,
+  // the user reconnects manually from the MESH screen.
+  const MAX_RECONNECT_ATTEMPTS = 10;
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) return;
+  const delay = Math.min(5000 * Math.pow(2, reconnectAttempts), 60000);
+  reconnectAttempts++;
+
   reconnectTimer = setTimeout(async () => {
     reconnectTimer = null;
     if (connectedDevice || !lastConnectedDeviceId) return;
@@ -617,7 +634,7 @@ function scheduleReconnect() {
     } catch {
       scheduleReconnect();
     }
-  }, 5000);
+  }, delay);
 }
 
 /**

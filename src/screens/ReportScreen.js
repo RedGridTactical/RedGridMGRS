@@ -3,7 +3,7 @@
  * Free: SALUTE, 9-Line MEDEVAC, SPOT
  * Pro: ICS 201 (Incident Command), ANGUS (Artillery), Custom template
  */
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, Alert, LayoutAnimation, UIManager, Platform, AccessibilityInfo,
@@ -118,7 +118,7 @@ function buildReport(reportId, fields, values) {
   return [header, ...lines].join('\n');
 }
 
-function ReportCard({ report, mgrs, isPro, onShowProGate }) {
+function ReportCard({ report, mgrs, isPro, trialEligible, onShowProGate }) {
   const colors = useColors();
   const { t } = useTranslation();
   const initVals = useCallback(() => {
@@ -132,14 +132,20 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
   const [open, setOpen]   = useState(false);
   const [vals, setVals]   = useState(initVals);
   const isLocked = report.pro && !isPro;
+  // Per-field "user has typed here" flags. A grid field the user has edited
+  // must NEVER be overwritten by the live-position autofill — on templates
+  // like SALUTE/CFF the grid field holds an OBSERVED/TARGET location, and the
+  // GPS jitters every second, which used to clobber typed grids silently.
+  const dirtyRef = useRef({});
 
-  // Keep auto-fill fields updated when GPS position changes
+  // Keep auto-fill fields updated when GPS position changes — but only the
+  // fields the user has never touched.
   useEffect(() => {
     setVals(prev => {
       const updated = { ...prev };
       let changed = false;
       report.fields.forEach(f => {
-        if (f.autoFill === 'grid') {
+        if (f.autoFill === 'grid' && !dirtyRef.current[f.key]) {
           const newVal = mgrs || '';
           if (updated[f.key] !== newVal) { updated[f.key] = newVal; changed = true; }
         }
@@ -173,7 +179,7 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
   const clear = () => {
     Alert.alert(t('reports.clearReport'), t('reports.clearReportMsg'), [
       { text: t('reports.cancel'), style: 'cancel' },
-      { text: t('reports.clear'), style: 'destructive', onPress: () => { notifyWarning(); setVals(initVals()); } },
+      { text: t('reports.clear'), style: 'destructive', onPress: () => { notifyWarning(); dirtyRef.current = {}; setVals(initVals()); } },
     ]);
   };
 
@@ -191,7 +197,7 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
         <View>
           <View style={styles.labelRow}>
             <Text style={[styles.cardTitle, { color: colors.text }]}>{t(report.labelKey)}</Text>
-            {isLocked && <Text style={[styles.proBadge, { color: colors.bg, backgroundColor: colors.text }]} importantForAccessibility="no">PRO</Text>}
+            {isLocked && <Text style={[styles.proBadge, { color: colors.bg, backgroundColor: colors.text }]} importantForAccessibility="no">{trialEligible ? t('proGate.tryFreeBadge') : 'PRO'}</Text>}
           </View>
           <Text style={[styles.cardSub, { color: colors.text3 }]}>{t(report.subKey)}</Text>
         </View>
@@ -210,7 +216,7 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
                   placeholder={f.placeholder}
                   placeholderTextColor={colors.border}
                   value={vals[f.key]}
-                  onChangeText={t => setVals(v => ({ ...v, [f.key]: t }))}
+                  onChangeText={t => { dirtyRef.current[f.key] = true; setVals(v => ({ ...v, [f.key]: t })); }}
                   multiline={f.key === 'situation' || f.key === 'objectives'}
                   accessibilityLabel={f.label}
                 />
@@ -231,7 +237,7 @@ function ReportCard({ report, mgrs, isPro, onShowProGate }) {
   );
 }
 
-export function ReportScreen({ mgrs, isPro, onShowProGate }) {
+export function ReportScreen({ mgrs, isPro, trialEligible, onShowProGate }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -253,6 +259,7 @@ export function ReportScreen({ mgrs, isPro, onShowProGate }) {
           report={r}
           mgrs={mgrs}
           isPro={isPro}
+          trialEligible={trialEligible}
           onShowProGate={onShowProGate}
         />
       ))}

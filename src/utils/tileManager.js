@@ -117,6 +117,32 @@ function getTilesForRegion(region, zoom) {
 }
 
 /**
+ * Count tiles for a region at a zoom level WITHOUT materializing them.
+ * O(1) — safe at any viewport size (a world-view region at zoom 16 is billions
+ * of tiles; enumerating that hangs the JS thread, counting it is arithmetic).
+ */
+function countTilesForRegion(region, zoom) {
+  const minLat = region.latitude - region.latitudeDelta / 2;
+  const maxLat = region.latitude + region.latitudeDelta / 2;
+  const minLon = region.longitude - region.longitudeDelta / 2;
+  const maxLon = region.longitude + region.longitudeDelta / 2;
+
+  const topLeft = latLonToTile(maxLat, minLon, zoom);
+  const bottomRight = latLonToTile(minLat, maxLon, zoom);
+
+  const w = bottomRight.x - topLeft.x + 1;
+  const h = bottomRight.y - topLeft.y + 1;
+  return (w > 0 && h > 0) ? w * h : 0;
+}
+
+// Enumeration safety caps. Above CHECK_TILE_CAP a coverage check would mean
+// that many serial filesystem stats — callers get { tooLarge: true } instead
+// and should tell the user to zoom in. The download cap is a library-level
+// backstop behind the callers' own MAX_TILES UI limits.
+export const CHECK_TILE_CAP = 20000;
+const DOWNLOAD_TILE_CAP = 30000;
+
+/**
  * Download all tiles for a region at specified zoom levels.
  * @param {object} region - { latitude, longitude, latitudeDelta, longitudeDelta }
  * @param {number[]} zoomLevels - Array of zoom levels to download (e.g. [10, 12, 14])
@@ -130,6 +156,14 @@ export async function downloadTilesForRegion(region, zoomLevels = [10, 12, 14], 
   }
 
   const style = options.style || (options.dark ? 'dark' : 'standard');
+
+  // Backstop: refuse pathological regions before materializing tile lists.
+  let estimatedCount = 0;
+  for (const zoom of zoomLevels) estimatedCount += countTilesForRegion(region, zoom);
+  if (estimatedCount > DOWNLOAD_TILE_CAP) {
+    return { downloaded: 0, failed: 0, skipped: 0, total: estimatedCount, tooLarge: true };
+  }
+
   let allTiles = [];
   for (const zoom of zoomLevels) {
     allTiles = allTiles.concat(getTilesForRegion(region, zoom));
@@ -173,6 +207,15 @@ export async function downloadTilesForRegion(region, zoomLevels = [10, 12, 14], 
 export async function checkTilesForRegion(region, zoomLevels = [10, 12, 14]) {
   if (!FileSystem || !TILE_DIR) {
     return { cached: 0, missing: 0, total: 0 };
+  }
+
+  // Guard: at wide zoom-outs the tile count explodes (country view ≈ millions,
+  // world view ≈ billions at z16). Enumerating + stat-ing those hangs the JS
+  // thread. Count arithmetically first and bail out with tooLarge instead.
+  let estimatedCount = 0;
+  for (const zoom of zoomLevels) estimatedCount += countTilesForRegion(region, zoom);
+  if (estimatedCount > CHECK_TILE_CAP) {
+    return { cached: 0, missing: estimatedCount, total: estimatedCount, tooLarge: true };
   }
 
   let allTiles = [];
@@ -260,9 +303,9 @@ export function estimateTilesForRegion(region, zoomLevels = [10, 12, 14], bytesP
   let totalTiles = 0;
   for (const zoom of zoomLevels) {
     if (typeof zoom !== 'number' || zoom < 0 || zoom > 19) continue;
-    const tiles = getTilesForRegion(region, zoom);
-    byZoom[zoom] = tiles.length;
-    totalTiles += tiles.length;
+    const count = countTilesForRegion(region, zoom);
+    byZoom[zoom] = count;
+    totalTiles += count;
   }
 
   return {
@@ -273,4 +316,4 @@ export function estimateTilesForRegion(region, zoomLevels = [10, 12, 14], bytesP
 }
 
 // Export helpers for testing
-export { latLonToTile, getTilesForRegion, TILE_DIR };
+export { latLonToTile, getTilesForRegion, countTilesForRegion, TILE_DIR };

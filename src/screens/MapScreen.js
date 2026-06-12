@@ -26,7 +26,7 @@ import { loadWaypointLists, saveWaypointLists } from '../utils/storage';
 import { MGRSGridOverlay } from '../components/MGRSGridOverlay';
 import { RouteOverlay } from '../components/RouteOverlay';
 import { calculateRoute, estimateTime, formatTime, optimizeRoute } from '../utils/routePlanner';
-import { downloadTilesForRegion, checkTilesForRegion, clearTileCache, getLocalTilePathTemplate, getTilesForRegion } from '../utils/tileManager';
+import { downloadTilesForRegion, checkTilesForRegion, clearTileCache, getLocalTilePathTemplate, estimateTilesForRegion } from '../utils/tileManager';
 import { PreflightScreen } from './PreflightScreen';
 
 // Free-tier persistent-waypoint cap. Free users get 1 saved waypoint; Pro is
@@ -91,6 +91,7 @@ const FIRST_VISIT_PROMPT_KEY = 'rg_map_first_visit_prompted_v1';
 export function MapScreen({
   location,
   isPro,
+  trialEligible,
   onShowProGate,
   onSetWaypoint,
   meshPositions = [],
@@ -224,15 +225,13 @@ export function MapScreen({
   // Download tiles for current view
   const handleDownloadTiles = useCallback(() => {
     if (downloadingRef.current) return;
-    if (!isPro) { onShowProGate(); return; }
+    if (!isPro) { onShowProGate('Offline Maps'); return; }
     const region = mapRegion || initialRegion;
     if (!region) return;
 
-    // Estimate tile count before confirming
-    let totalTiles = 0;
-    for (const z of [10, 12, 14, 16]) {
-      totalTiles += getTilesForRegion(region, z).length;
-    }
+    // Estimate tile count before confirming — arithmetic, never enumerates
+    // (a zoomed-out viewport at z16 can be millions of tiles).
+    const totalTiles = estimateTilesForRegion(region, [10, 12, 14, 16]).totalTiles;
 
     const MAX_TILES = 5000;
     if (totalTiles > MAX_TILES) {
@@ -1022,7 +1021,7 @@ export function MapScreen({
               style={[styles.firstVisitPrimary, { borderColor: colors.text, backgroundColor: colors.border2 }]}
               onPress={() => { setFirstVisitBannerVisible(false); onShowProGate && onShowProGate('Offline Maps'); }}
             >
-              <Text style={[styles.firstVisitPrimaryText, { color: colors.text }]}>UPGRADE</Text>
+              <Text style={[styles.firstVisitPrimaryText, { color: colors.text }]}>{trialEligible ? 'START FREE TRIAL' : 'UPGRADE'}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.firstVisitSecondary, { borderColor: colors.border }]}

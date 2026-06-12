@@ -11,12 +11,14 @@ import { useColors } from '../utils/ThemeContext';
 import { tapMedium, tapLight } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
 
+// Outcome-led rows matching what the gates actually sell \u2014 a user gated on
+// "Offline Maps" must land on a list that leads with offline maps.
 const PRO_FEATURES = [
-  { icon: '\ud83d\udde3\ufe0f', labelKey: 'proGate.voiceReadout', subKey: 'proGate.voiceReadoutSub' },
-  { icon: '\ud83d\udccd', labelKey: 'proGate.savedWaypoints', subKey: 'proGate.savedWaypointsSub' },
-  { icon: '\ud83d\udccb', labelKey: 'proGate.tacticalReports', subKey: 'proGate.tacticalReportsSub' },
-  { icon: '\ud83e\udded', labelKey: 'proGate.coordFormats', subKey: 'proGate.coordFormatsSub' },
-  { icon: '\ud83d\udd34', labelKey: 'proGate.displayThemes', subKey: 'proGate.displayThemesSub' },
+  { icon: '\ud83d\uddfa\ufe0f', labelKey: 'proGate.offlineMaps', subKey: 'proGate.offlineMapsSub' },
+  { icon: '\ud83d\udce1', labelKey: 'proGate.meshAwareness', subKey: 'proGate.meshAwarenessSub' },
+  { icon: '\ud83e\udded', labelKey: 'proGate.allTools', subKey: 'proGate.allToolsSub' },
+  { icon: '\ud83d\udccd', labelKey: 'proGate.waypointsRoutes', subKey: 'proGate.waypointsRoutesSub' },
+  { icon: '\ud83d\udccb', labelKey: 'proGate.reportsThemes', subKey: 'proGate.reportsThemesSub' },
 ];
 
 // Pricing emphasis (May 26, 2026): tuned for recurring MRR. Annual is
@@ -38,12 +40,16 @@ export function ProGate({
   const colors = useColors();
   const { t } = useTranslation();
 
+  // Live store prices only. When the store is unreachable (offline field use)
+  // we show placeholders and disable purchase instead of hardcoded USD —
+  // hardcoded fallbacks display the wrong currency in ~174 of 175 territories.
   const getPriceForTier = (tier) => {
     if (products?.[tier]?.displayPrice) return products[tier].displayPrice;
-    if (tier === 'monthly') return '$3.99';
-    if (tier === 'annual') return '$29.99';
-    return product?.displayPrice ?? '$149.99';
+    if (tier === 'lifetime' && product?.displayPrice) return product.displayPrice;
+    return null;
   };
+  const pricesLoaded = !!(products?.monthly?.displayPrice || products?.annual?.displayPrice ||
+    products?.lifetime?.displayPrice || product?.displayPrice);
 
   const activeTier = selectedTier || 'annual';
   // Surface the live 7-day free trial when the annual tier is selected and the
@@ -108,40 +114,47 @@ export function ProGate({
                   activeOpacity={0.7}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: isActive }}
-                  accessibilityLabel={`${t(tier.labelKey)} ${getPriceForTier(tier.id)}`}
+                  accessibilityLabel={`${t(tier.labelKey)} ${getPriceForTier(tier.id) || ''}`}
                 >
                   {badgeKey && (
                     <Text style={[styles.tierBadge, { color: colors.bg, backgroundColor: colors.text }]}>
                       {t(badgeKey)}
                     </Text>
                   )}
-                  <Text style={[styles.tierPrice, { color: colors.text }]}>{getPriceForTier(tier.id)}</Text>
+                  <Text style={[styles.tierPrice, { color: colors.text }]} maxFontSizeMultiplier={1.2}>{getPriceForTier(tier.id) || '—'}</Text>
                   <Text style={[styles.tierPeriod, { color: colors.text3 }]}>{t(tier.periodKey)}</Text>
                 </TouchableOpacity>
               );
             })}
           </View>
 
-          {/* Purchase button */}
+          {/* Purchase button — disabled until live store prices load */}
           <TouchableOpacity
-            style={[styles.purchaseBtn, { backgroundColor: colors.text }, isPurchasing && { backgroundColor: colors.border }]}
+            style={[styles.purchaseBtn, { backgroundColor: colors.text }, (isPurchasing || !pricesLoaded) && { backgroundColor: colors.border }]}
             onPress={() => { tapMedium(); onPurchase(activeTier); }}
-            disabled={isPurchasing}
+            disabled={isPurchasing || !pricesLoaded}
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel={showTrial
-              ? `${t('proGate.startTrial')}. ${t('proGate.thenPrice', { price: getPriceForTier('annual') })}`
-              : `${t('proGate.unlockButton')} ${getPriceForTier(activeTier)}`}
-            accessibilityState={{ disabled: isPurchasing }}
+              ? `${t('proGate.startTrial')}. ${t('proGate.thenPrice', { price: getPriceForTier('annual') || '' })}`
+              : `${t('proGate.unlockButton')} ${getPriceForTier(activeTier) || ''}`}
+            accessibilityState={{ disabled: isPurchasing || !pricesLoaded }}
           >
             {isPurchasing
               ? <ActivityIndicator color={colors.bg} />
-              : <Text style={[styles.purchaseBtnText, { color: colors.bg }]}>{showTrial ? t('proGate.startTrial') : t('proGate.unlockButton')}</Text>
+              : <Text style={[styles.purchaseBtnText, { color: colors.bg }]} maxFontSizeMultiplier={1.2}>{showTrial ? t('proGate.startTrial') : t('proGate.unlockButton')}</Text>
             }
           </TouchableOpacity>
 
+          {/* Offline note — store unreachable, prices unavailable */}
+          {!pricesLoaded && !isPurchasing && (
+            <Text style={[styles.trialSub, { color: colors.text3 }]}>
+              {t('proGate.pricesUnavailable')}
+            </Text>
+          )}
+
           {/* Trial terms subtext — only when the free trial is being offered */}
-          {showTrial && !isPurchasing && (
+          {showTrial && !isPurchasing && pricesLoaded && (
             <Text style={[styles.trialSub, { color: colors.text3 }]}>
               {t('proGate.thenPrice', { price: getPriceForTier('annual') })}
             </Text>

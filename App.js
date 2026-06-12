@@ -48,14 +48,13 @@ import {
 } from './src/utils/mgrs';
 import { tapLight, tapHeavy, tapMedium, notifySuccess } from './src/utils/haptics';
 import { speakMGRS, stopSpeaking } from './src/utils/voice';
-import { trackSession } from './src/utils/analytics';
+import { trackSession, trackEvent } from './src/utils/analytics';
 
-// ─── GLOBAL TEXT SCALING CAP ────────────────────────────────────────────────
-// Prevent system font-size from breaking tactical layout.
-// Two-tier: structural UI locked via per-component caps, body text gets some room.
-// MGRSDisplay overrides to 1.0 (precision data must never scale).
-Text.defaultProps = Text.defaultProps || {};
-Text.defaultProps.maxFontSizeMultiplier = 1.0;
+// ─── TEXT SCALING ───────────────────────────────────────────────────────────
+// React 19 removed function-component defaultProps, so the old global
+// `Text.defaultProps.maxFontSizeMultiplier` cap is a silent no-op on RN 0.79.
+// Layout-critical Text now caps itself via explicit maxFontSizeMultiplier
+// props (MGRSDisplay locks to 1.0; tab bar / titles / paywall cap at 1.2).
 
 function useTabDefs() {
   const { t } = useTranslation();
@@ -71,10 +70,10 @@ function useTabDefs() {
       { id: 'map',    label: t('tabs.map')    },
       { id: 'tools',  label: t('tabs.tools')  },
       { id: 'report', label: t('tabs.reports') },
-      { id: 'lists',  label: t('tabs.lists')  },
-      { id: 'coords', label: t('tabs.coords') },
-      { id: 'theme',  label: t('tabs.theme')  },
-      { id: 'mesh',   label: t('tabs.mesh')   },
+      { id: 'lists',  label: t('tabs.lists'),  proOnly: true },
+      { id: 'coords', label: t('tabs.coords'), proOnly: true },
+      { id: 'theme',  label: t('tabs.theme'),  proOnly: true },
+      { id: 'mesh',   label: t('tabs.mesh'),   proOnly: true },
     ],
   }), [t]);
 }
@@ -200,9 +199,19 @@ function App() {
   const { checkAndPromptReview, promptReviewOnPositiveMoment, openStoreReview } = useStoreReview();
   const mesh = useMeshtastic();
 
-  // Prompt for App Store review on mount (gated by open count, install age, cooldown).
-  // Pro users bypass the open/install-date gates — they've already demonstrated intent.
-  useEffect(() => { checkAndPromptReview({ isPro }); trackSession(); }, [isPro]);
+  // Prompt for App Store review once per launch (gated by open count, install
+  // age, cooldown). Pro users bypass the open/install-date gates. Runs once,
+  // slightly delayed so IAP/trial state has settled — keying on [isPro] used to
+  // double-fire (and double-count sessions) when isPro flipped after IAP load.
+  const isProRef = useRef(isPro);
+  isProRef.current = isPro;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkAndPromptReview({ isPro: isProRef.current });
+      trackSession();
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Feed the active location into the mesh hook so auto-share has something to
   // broadcast. Without this, auto-share runs every 30s but sends nothing.
@@ -222,12 +231,32 @@ function App() {
   const [showSupport, setShowSupport] = useState(false);
 
   const tabDefs = useTabDefs();
-  const TABS = isPro ? tabDefs.pro : tabDefs.free;
+  // All tabs are always visible. Free users see the four Pro tabs (LISTS /
+  // COORDS / THEME / MESH) as locked — tapping one lands on the upsell screen.
+  // Hiding them meant the most differentiated Pro features could never create
+  // desire, and left the upsell route as dead code.
+  const TABS = tabDefs.pro;
 
   const showProGate = useCallback((featureName) => {
     setProGateFeature(featureName);
     setProGateVisible(true);
+    // On-device only (AsyncStorage counters — never transmitted).
+    trackEvent('paywall_view');
+    if (featureName) trackEvent(`gate:${featureName}`);
   }, []);
+
+  // Close the paywall the moment a purchase/restore lands — previously the
+  // buyer was left staring at the same UNLOCK screen after paying.
+  const wasProRef = useRef(isPro);
+  useEffect(() => {
+    if (!wasProRef.current && isPro && proGateVisible) {
+      setProGateVisible(false);
+      notifySuccess();
+      trackEvent('purchase_success');
+      try { Alert.alert('PRO UNLOCKED', 'All Red Grid Pro features are now active.'); } catch {}
+    }
+    wasProRef.current = isPro;
+  }, [isPro, proGateVisible]);
 
   // Derived MGRS — 10-digit (1m) for ALL users; precision is not Pro-gated
   const displayPrecision = getDisplayPrecision(isPro);
@@ -473,6 +502,7 @@ function AppContent({
           <MapScreen
             location={location}
             isPro={isPro}
+            trialEligible={trialEligible}
             onShowProGate={showProGate}
             onSetWaypoint={setWaypoint}
             meshPositions={mesh.meshPositions}
@@ -491,6 +521,7 @@ function AppContent({
             setPaceCount={setPaceCount}
             compassHeading={compassHeading}
             isPro={isPro}
+            trialEligible={trialEligible}
             onShowProGate={showProGate}
           />
         )}
@@ -499,6 +530,7 @@ function AppContent({
           <ReportScreen
             mgrs={mgrsFormatted}
             isPro={isPro}
+            trialEligible={trialEligible}
             onShowProGate={showProGate}
           />
         )}
@@ -557,7 +589,9 @@ function AppContent({
 
       {/* Tab bar — bottom positioned, adaptive spacing for 5+ tabs */}
       <View style={[staticStyles.tabBar, { borderTopColor: colors.border2, backgroundColor: colors.bg }, isLandscape && staticStyles.tabBarLandscape]} accessibilityRole="tablist">
-        {TABS && Array.isArray(TABS) && TABS.map(t => (
+        {TABS && Array.isArray(TABS) && TABS.map(t => {
+          const locked = !!t?.proOnly && !isPro;
+          return (
           <TouchableOpacity
             key={t?.id || 'unknown'}
             style={staticStyles.tabItem}
@@ -565,12 +599,15 @@ function AppContent({
             activeOpacity={0.7}
             accessibilityRole="tab"
             accessibilityState={{ selected: safeTab === t?.id }}
-            accessibilityLabel={`${t?.label || ''} tab`}
+            accessibilityLabel={`${t?.label || ''} tab${locked ? '. Pro feature, locked' : ''}`}
           >
             {safeTab === t?.id && <View style={[staticStyles.tabIndicatorTop, { backgroundColor: colors.text }]} />}
-            <Text style={[staticStyles.tabLabel, TABS.length > 4 && staticStyles.tabLabelCompact, { color: colors.border }, safeTab === t?.id && { color: colors.text }]}>{t?.label || ''}</Text>
+            <Text maxFontSizeMultiplier={1.2} style={[staticStyles.tabLabel, TABS.length > 4 && staticStyles.tabLabelCompact, { color: colors.border }, safeTab === t?.id && { color: colors.text }]}>
+              {t?.label || ''}{locked ? <Text style={[staticStyles.tabLockMark, { color: colors.border }]}>{'ᴾᴿᴼ'}</Text> : null}
+            </Text>
           </TouchableOpacity>
-        ))}
+          );
+        })}
       </View>
 
       {/* Waypoint modal */}
@@ -590,7 +627,7 @@ function AppContent({
         products={products}
         trialEligible={trialEligible}
         isPurchasing={isPurchasing}
-        onPurchase={purchase}
+        onPurchase={(tier) => { trackEvent(`purchase_tap:${tier || 'unknown'}`); purchase(tier); }}
         onRestore={restore}
         selectedTier={selectedTier}
         onSelectTier={setSelectedTier}
@@ -602,8 +639,14 @@ function AppContent({
         onClose={() => setShowSupport(false)}
       />
 
-      {/* What's new in this version — first launch post-update only */}
-      <WhatsNewModal currentVersion="3.4.2" />
+      {/* What's new in this version — first launch post-update only. For free
+          users the trial card carries a START FREE TRIAL action into the
+          paywall (every fresh install sees this modal; it used to be read-only). */}
+      <WhatsNewModal
+        currentVersion="3.4.3"
+        showTrialCta={!isPro}
+        onStartTrial={() => showProGate('Red Grid Pro')}
+      />
 
     </SafeAreaView>
 
@@ -653,7 +696,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
   return (
     <View style={staticStyles.portraitRoot}>
       <View style={staticStyles.header}>
-        <Text style={[staticStyles.appTitle, { color: colors.text }]} suppressHighlighting={true}>RED GRID MGRS</Text>
+        <Text style={[staticStyles.appTitle, { color: colors.text }]} suppressHighlighting={true} maxFontSizeMultiplier={1.2}>RED GRID MGRS</Text>
         <View style={staticStyles.headerRight}>
           {compassHeading !== null && <Text style={[staticStyles.headingText, { color: colors.text2 }]}>HDG {Math.round(compassHeading)}°</Text>}
           <SignalBadge isLoading={isLoading} location={location} />
@@ -932,6 +975,7 @@ const staticStyles = StyleSheet.create({
   tabItem: { flex:1, alignItems:'center', paddingVertical:12, position:'relative' },
   tabLabel: { fontSize:10, letterSpacing:3, fontWeight:'700' },
   tabLabelCompact: { letterSpacing:1, fontSize:9 },
+  tabLockMark: { fontSize:7, letterSpacing:0.5 },
   tabIndicatorTop: { position:'absolute', top:0, left:'10%', right:'10%', height:2 },
   screenContent: { flex:1 },
   // Portrait

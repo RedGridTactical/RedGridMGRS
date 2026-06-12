@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "postinstall": "patch-package && bash scripts/fix-native-binaries.sh"
+    "test": "jest --no-cache",
+    "postinstall": "patch-package && { [ -f scripts/fix-native-binaries.sh ] && bash scripts/fix-native-binaries.sh || true; }"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.1.2",
@@ -43,6 +44,7 @@
     "@babel/core": "^7.24.0",
     "@types/react": "~19.0.10",
     "axios": "^1.15.0",
+    "jest": "29.7.0",
     "jsonwebtoken": "^9.0.3",
     "patch-package": "^8.0.1",
     "tsx": "^4.21.0",

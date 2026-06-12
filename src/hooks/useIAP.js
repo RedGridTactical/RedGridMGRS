@@ -21,6 +21,15 @@ import { detectFreeTrial, hasPriorSubscription, getAndroidTrialOfferToken } from
 const PRO_KEY         = 'rg_pro_unlocked';
 const PRO_RECEIPT_KEY = 'rg_pro_receipt';
 const PRO_VALIDATED   = 'rg_pro_validated_v2';
+// Which SKU unlocked Pro ('unknown' for legacy installs that predate this key).
+const PRO_PRODUCT_KEY = 'rg_pro_product_v1';
+// Epoch-ms of the last time the store POSITIVELY confirmed the entitlement.
+const PRO_VERIFIED_AT = 'rg_pro_verified_at_v1';
+// A subscription unlock survives this long past its last positive store
+// confirmation before a confirmed-absent entitlement re-locks Pro. Generous
+// on purpose: this is a field app — never punish a user for being off-grid,
+// and never let one transient empty store response revoke a paying customer.
+const SUB_REVERIFY_GRACE_MS = 21 * 24 * 60 * 60 * 1000;
 export const PRO_PRODUCT_ID = 'redgrid_pro_lifetime';
 
 // Subscription product IDs (same tier, different billing)
@@ -86,23 +95,105 @@ export function useIAP() {
     return () => { mounted.current = false; };
   }, []);
 
-  // ── Load persisted Pro status + one-time stale-key migration ───────────────
+  // ── Load persisted Pro status, then re-verify subscription entitlements ────
+  // Fast path: trust the local flag immediately (instant Pro UI, works
+  // offline). Then, for SUBSCRIPTION unlocks only, re-check the store in the
+  // background so a cancelled/expired sub eventually re-locks. A positive
+  // store check refreshes PRO_VERIFIED_AT; only when the store POSITIVELY
+  // reports no entitlement for longer than the grace window is Pro revoked.
+  // Lifetime and legacy/'unknown' unlocks are never auto-revoked.
   useEffect(() => {
     let cancelled = false;
+
+    const ensureConnection = async () => {
+      if (IAPModule?.initConnection && !initConnectedRef.current) {
+        let initTimer;
+        try {
+          await Promise.race([
+            IAPModule.initConnection(),
+            new Promise((_, r) => { initTimer = setTimeout(() => r(new Error('timeout')), 3000); }),
+          ]);
+          initConnectedRef.current = true;
+        } catch {
+          // Stay disconnected — callers degrade gracefully.
+        } finally {
+          if (initTimer) clearTimeout(initTimer);
+        }
+      }
+    };
+
+    const reverifyEntitlement = async (recordedProduct) => {
+      if (!IAPModule?.getAvailablePurchases) return;
+      try {
+        await ensureConnection();
+        let purchasesTimer;
+        const result = await Promise.race([
+          IAPModule.getAvailablePurchases(),
+          new Promise((_, r) => { purchasesTimer = setTimeout(() => r(new Error('timeout')), 5000); }),
+        ]).finally(() => { if (purchasesTimer) clearTimeout(purchasesTimer); });
+
+        if (cancelled || !mounted.current) return;
+        if (!Array.isArray(result)) return; // ambiguous response — keep Pro
+
+        const owned = result.filter((p) =>
+          p && (ALL_PRODUCT_IDS.includes(p.id) || ALL_PRODUCT_IDS.includes(p.productId))
+        );
+
+        if (owned.length > 0) {
+          // Entitlement confirmed — refresh the verification clock and refine
+          // the recorded product (prefer lifetime: the strongest claim).
+          const lifetimeOwned = owned.find((p) => p.id === PRO_PRODUCT_ID || p.productId === PRO_PRODUCT_ID);
+          const best = lifetimeOwned || owned[0];
+          const bestSku = best.id || best.productId || recordedProduct || 'unknown';
+          await AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {});
+          await AsyncStorage.setItem(PRO_PRODUCT_KEY, String(bestSku)).catch(() => {});
+          return;
+        }
+
+        // Store positively reports no active entitlement.
+        if (recordedProduct !== SUB_MONTHLY_ID && recordedProduct !== SUB_ANNUAL_ID) {
+          return; // lifetime / legacy 'unknown' — never auto-revoke
+        }
+
+        const verifiedAtRaw = await AsyncStorage.getItem(PRO_VERIFIED_AT).catch(() => null);
+        const verifiedAt = Number(verifiedAtRaw) || 0;
+        if (!verifiedAt) {
+          // First negative observation with no clock — start the grace clock
+          // instead of revoking, protecting against a transient empty result.
+          await AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {});
+          return;
+        }
+        if (Date.now() - verifiedAt > SUB_REVERIFY_GRACE_MS) {
+          // Lapsed beyond the grace window — re-lock. A false negative is
+          // recoverable instantly via RESTORE on the paywall.
+          if (mounted.current && !cancelled) setIsPro(false);
+          await AsyncStorage.removeItem(PRO_KEY).catch(() => {});
+          await AsyncStorage.removeItem(PRO_RECEIPT_KEY).catch(() => {});
+          await AsyncStorage.removeItem(PRO_PRODUCT_KEY).catch(() => {});
+          await AsyncStorage.removeItem(PRO_VERIFIED_AT).catch(() => {});
+        }
+      } catch {
+        // Store unreachable (offline / outage) — keep Pro. Field-first app:
+        // never punish a user for being off-grid.
+      }
+    };
 
     const loadProStatus = async () => {
       try {
         if (!AsyncStorage) return;
 
-        const [proFlag, receipt, validated] = await Promise.all([
+        const [proFlag, receipt, validated, recordedProduct] = await Promise.all([
           AsyncStorage.getItem(PRO_KEY).catch(() => null),
           AsyncStorage.getItem(PRO_RECEIPT_KEY).catch(() => null),
           AsyncStorage.getItem(PRO_VALIDATED).catch(() => null),
+          AsyncStorage.getItem(PRO_PRODUCT_KEY).catch(() => null),
         ]);
 
         if (validated === 'true') {
-          if (!cancelled && mounted.current && proFlag === 'true') {
-            setIsPro(true);
+          if (proFlag === 'true') {
+            if (!cancelled && mounted.current) setIsPro(true);
+            // Background re-verification keeps subscription unlocks honest.
+            if (IAPModule) reverifyEntitlement(recordedProduct);
           }
           return;
         }
@@ -115,19 +206,13 @@ export function useIAP() {
         if (receipt) {
           if (!cancelled && mounted.current) setIsPro(true);
           await AsyncStorage.setItem(PRO_VALIDATED, 'true').catch(() => {});
+          if (!recordedProduct) await AsyncStorage.setItem(PRO_PRODUCT_KEY, 'unknown').catch(() => {});
           return;
         }
 
         if (IAPModule && IAPModule.getAvailablePurchases) {
           try {
-            if (IAPModule.initConnection) {
-              let initTimer;
-              await Promise.race([
-                IAPModule.initConnection(),
-                new Promise((_, r) => { initTimer = setTimeout(() => r(new Error('timeout')), 3000); })
-              ]).finally(() => { if (initTimer) clearTimeout(initTimer); });
-              initConnectedRef.current = true;
-            }
+            await ensureConnection();
 
             let purchasesTimer;
             const purchases = await Promise.race([
@@ -135,13 +220,17 @@ export function useIAP() {
               new Promise((_, r) => { purchasesTimer = setTimeout(() => r(new Error('timeout')), 5000); })
             ]).finally(() => { if (purchasesTimer) clearTimeout(purchasesTimer); });
 
-            const hasPro = purchases?.some?.(p =>
-              ALL_PRODUCT_IDS.includes(p?.id) || ALL_PRODUCT_IDS.includes(p?.productId)
+            const ownedPro = (Array.isArray(purchases) ? purchases : []).filter(p =>
+              p && (ALL_PRODUCT_IDS.includes(p.id) || ALL_PRODUCT_IDS.includes(p.productId))
             );
 
-            if (hasPro) {
+            if (ownedPro.length > 0) {
               if (!cancelled && mounted.current) setIsPro(true);
+              const lifetimeOwned = ownedPro.find((p) => p.id === PRO_PRODUCT_ID || p.productId === PRO_PRODUCT_ID);
+              const best = lifetimeOwned || ownedPro[0];
               await AsyncStorage.setItem(PRO_RECEIPT_KEY, 'verified').catch(() => {});
+              await AsyncStorage.setItem(PRO_PRODUCT_KEY, String(best.id || best.productId || 'unknown')).catch(() => {});
+              await AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {});
             } else {
               if (!cancelled && mounted.current) setIsPro(false);
               await AsyncStorage.removeItem(PRO_KEY).catch(() => {});
@@ -280,18 +369,27 @@ export function useIAP() {
           return;
         }
         let purchases = [];
-        if (IAPModule.getAvailablePurchases) {
-          try {
-            if (IAPModule.initConnection && !initConnectedRef.current) {
-              await IAPModule.initConnection().catch(() => {});
-              initConnectedRef.current = true;
-            }
+        try {
+          if (IAPModule.initConnection && !initConnectedRef.current) {
+            await IAPModule.initConnection().catch(() => {});
+            initConnectedRef.current = true;
+          }
+          // Eligibility must consider EXPIRED subscriptions too —
+          // getAvailablePurchases returns only ACTIVE items, which would show
+          // a lapsed subscriber "no charge today" and then bill them the full
+          // $29.99 at the sheet. getPurchaseHistory includes inactive items.
+          if (IAPModule.getPurchaseHistory) {
+            purchases = await Promise.race([
+              IAPModule.getPurchaseHistory({ onlyIncludeActiveItems: false }),
+              new Promise((resolve) => setTimeout(() => resolve([]), 5000)),
+            ]) || [];
+          } else if (IAPModule.getAvailablePurchases) {
             purchases = await Promise.race([
               IAPModule.getAvailablePurchases(),
               new Promise((resolve) => setTimeout(() => resolve([]), 5000)),
             ]) || [];
-          } catch { purchases = []; }
-        }
+          }
+        } catch { purchases = []; }
         if (!cancelled && mounted.current) setTrialEligible(!hasPriorSubscription(purchases));
       } catch {
         if (!cancelled && mounted.current) setTrialEligible(false);
@@ -301,7 +399,9 @@ export function useIAP() {
   }, [products.annual]);
 
   // ── Persist Pro unlock ─────────────────────────────────────────────────────
-  const persistPro = useCallback(async (receipt = '') => {
+  // Records WHICH product unlocked Pro (drives subscription re-verification)
+  // and stamps the verification clock.
+  const persistPro = useCallback(async (receipt = '', productSku = '') => {
     if (mounted.current) setIsPro(true);
 
     try {
@@ -309,6 +409,11 @@ export function useIAP() {
 
       const ops = [];
       ops.push(AsyncStorage.setItem(PRO_KEY, 'true').catch(() => {}));
+      ops.push(AsyncStorage.setItem(PRO_VALIDATED, 'true').catch(() => {}));
+      ops.push(AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {}));
+      if (productSku) {
+        ops.push(AsyncStorage.setItem(PRO_PRODUCT_KEY, String(productSku)).catch(() => {}));
+      }
       if (receipt) {
         ops.push(AsyncStorage.setItem(PRO_RECEIPT_KEY, receipt).catch(() => {}));
       }
@@ -317,6 +422,49 @@ export function useIAP() {
       // Storage failed — isPro is still true in memory for this session
     }
   }, []);
+
+  // ── Purchase event listener ────────────────────────────────────────────────
+  // requestPurchase's promise can miss deliveries: payment sheets that outlive
+  // the timeout, Ask-to-Buy approvals, promo-code redemptions, and purchases
+  // interrupted by a crash all arrive via this event instead (StoreKit also
+  // re-emits unfinished transactions on launch). Persist + finish here so a
+  // paying user is never left locked out.
+  useEffect(() => {
+    if (!IAPModule || typeof IAPModule.purchaseUpdatedListener !== 'function') return;
+    let sub = null;
+    try {
+      sub = IAPModule.purchaseUpdatedListener(async (p) => {
+        try {
+          if (!p) return;
+          const sku = p.id || p.productId;
+          const ids = Array.isArray(p.ids) ? p.ids : [];
+          const resolvedSku = (ALL_PRODUCT_IDS.includes(sku) && sku) ||
+            ids.find((x) => ALL_PRODUCT_IDS.includes(x));
+          if (!resolvedSku) return;
+          // Android PENDING (purchaseState 2): payment not completed yet
+          // (cash/slow methods). Don't unlock — Play re-delivers the event
+          // once payment actually completes.
+          if (isAndroid && p.purchaseStateAndroid != null && Number(p.purchaseStateAndroid) === 2) return;
+          const receiptToken = p.transactionReceipt || p.transactionId ||
+            p.purchaseToken || p.purchaseTokenAndroid || 'verified';
+          await persistPro(receiptToken, resolvedSku);
+          try {
+            if (IAPModule.finishTransaction) {
+              await IAPModule.finishTransaction({ purchase: p, isConsumable: false });
+            }
+          } catch {
+            // finishTransaction failed — purchase is still recorded locally;
+            // StoreKit will re-deliver and we'll finish it next time.
+          }
+        } catch {
+          // Never let a listener error crash the app.
+        }
+      });
+    } catch {
+      sub = null;
+    }
+    return () => { try { sub?.remove?.(); } catch {} };
+  }, [persistPro]);
 
   // ── Purchase (supports lifetime IAP + subscriptions) ──────────────────────
   const purchase = useCallback(async (tier) => {
@@ -392,10 +540,14 @@ export function useIAP() {
 
       const purchaseRequest = { request, type: sub ? 'subs' : 'inapp' };
 
+      // 120s: password / 2FA / payment-method sheets routinely exceed 30s, and
+      // a timeout that fires while the sheet is still up drops the eventual
+      // purchase on the floor. The purchaseUpdatedListener is the safety net
+      // for anything that completes after this window.
       const result = await Promise.race([
         IAPModule.requestPurchase(purchaseRequest),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Purchase timeout')), 30000)
+          setTimeout(() => reject(new Error('Purchase timeout')), 120000)
         )
       ]);
 
@@ -406,6 +558,20 @@ export function useIAP() {
               ALL_PRODUCT_IDS.includes(p.id) || ALL_PRODUCT_IDS.includes(p.productId))
       ) || purchases[0];
 
+      // Android PENDING purchase (purchaseState 2): payment hasn't completed —
+      // do NOT unlock. The purchaseUpdatedListener delivers the completed
+      // purchase (possibly on a later launch) and unlocks then.
+      if (matched && isAndroid &&
+          matched.purchaseStateAndroid != null && Number(matched.purchaseStateAndroid) === 2) {
+        try {
+          Alert.alert(
+            'Payment pending',
+            'Your payment is still processing. Pro will unlock automatically as soon as it completes.'
+          );
+        } catch {}
+        return;
+      }
+
       if (matched && (matched.transactionReceipt || matched.transactionId ||
                       matched.purchaseToken || matched.purchaseTokenAndroid)) {
         const receiptToken =
@@ -415,7 +581,7 @@ export function useIAP() {
           matched.purchaseTokenAndroid ||
           'verified';
 
-        await persistPro(receiptToken);
+        await persistPro(receiptToken, sku);
 
         try {
           if (IAPModule.finishTransaction) {
@@ -440,8 +606,10 @@ export function useIAP() {
       if (!wasCancelled) {
         try {
           Alert.alert(
-            wasTimeout ? 'Purchase timed out' : 'Purchase failed',
-            wasTimeout ? 'The store did not respond. Please try again.' : (e?.message || 'Please try again.')
+            wasTimeout ? 'Still waiting on the store' : 'Purchase failed',
+            wasTimeout
+              ? 'The store is taking longer than expected. If you completed the purchase, Pro will unlock automatically — or tap RESTORE in a moment.'
+              : (e?.message || 'Please try again.')
           );
         } catch {}
       }
@@ -475,12 +643,16 @@ export function useIAP() {
       ]);
 
       // expo-iap may expose `id` (iOS) or `productId` (Android) on the purchase.
-      const hasPro = purchases?.some?.(p =>
-        ALL_PRODUCT_IDS.includes(p?.id) || ALL_PRODUCT_IDS.includes(p?.productId)
+      const ownedPro = (Array.isArray(purchases) ? purchases : []).filter(p =>
+        p && (ALL_PRODUCT_IDS.includes(p.id) || ALL_PRODUCT_IDS.includes(p.productId))
       );
 
-      if (hasPro) {
-        await persistPro('restored');
+      if (ownedPro.length > 0) {
+        // Record what restored (prefer lifetime — the strongest claim) so
+        // subscription re-verification knows what it's enforcing.
+        const lifetimeOwned = ownedPro.find(p => p.id === PRO_PRODUCT_ID || p.productId === PRO_PRODUCT_ID);
+        const best = lifetimeOwned || ownedPro[0];
+        await persistPro('restored', best.id || best.productId || 'unknown');
         try {
           Alert.alert('Restored', 'Red Grid Pro has been restored.');
         } catch {}

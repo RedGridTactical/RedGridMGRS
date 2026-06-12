@@ -7,9 +7,10 @@
  *
  * Pro-only feature. Configurable via settings toggle.
  *
- * Detection compares truncated MGRS strings between position updates:
- *   - 1km boundary = first 3 digits of easting/northing (8-digit MGRS)
- *   - 100m boundary = first 4 digits of easting/northing (8-digit check)
+ * Detection compares truncated MGRS strings between position updates.
+ * In a 5-digit easting/northing, digit 1 = 10km, digit 2 = 1km, digit 3 = 100m:
+ *   - 1km boundary  = first 2 digits of easting/northing
+ *   - 100m boundary = first 3 digits of easting/northing
  *
  * HARDENING:
  *   - Skips first position (no false trigger on app open)
@@ -60,12 +61,12 @@ export function useGridCrossing(mgrsFormatted, enabled) {
     }
 
     try {
-      // Check 1km boundary: compare first 3 digits of easting/northing
-      // In 5-digit MGRS, digits 1-3 = 1km position
-      const prevE_1km = prev.easting.slice(0, 3);
-      const prevN_1km = prev.northing.slice(0, 3);
-      const curE_1km  = current.easting.slice(0, 3);
-      const curN_1km  = current.northing.slice(0, 3);
+      // Check 1km boundary: compare first 2 digits of easting/northing
+      // (digit 1 = 10km, digit 2 = 1km in a 5-digit value)
+      const prevE_1km = prev.easting.slice(0, 2);
+      const prevN_1km = prev.northing.slice(0, 2);
+      const curE_1km  = current.easting.slice(0, 2);
+      const curN_1km  = current.northing.slice(0, 2);
 
       const crossed1km = (
         prev.gzd !== current.gzd ||
@@ -82,11 +83,11 @@ export function useGridCrossing(mgrsFormatted, enabled) {
         return;
       }
 
-      // Check 100m boundary: compare first 4 digits
-      const prevE_100m = prev.easting.slice(0, 4);
-      const prevN_100m = prev.northing.slice(0, 4);
-      const curE_100m  = current.easting.slice(0, 4);
-      const curN_100m  = current.northing.slice(0, 4);
+      // Check 100m boundary: compare first 3 digits (digit 3 = 100m)
+      const prevE_100m = prev.easting.slice(0, 3);
+      const prevN_100m = prev.northing.slice(0, 3);
+      const curE_100m  = current.easting.slice(0, 3);
+      const curN_100m  = current.northing.slice(0, 3);
 
       const crossed100m = (
         prevE_100m !== curE_100m ||

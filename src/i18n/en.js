@@ -385,6 +385,18 @@ export default {
     coordFormatsSub: 'UTM, decimal degrees, DMS \u2014 on the main grid display',
     displayThemes: 'Display Themes',
     displayThemesSub: 'NVG green, day white, blue-force \u2014 preserve night vision',
+    offlineMaps: 'Offline Tactical Maps',
+    offlineMapsSub: 'Download your AO \u2014 never a blank map in the field',
+    meshAwareness: 'Meshtastic Mesh',
+    meshAwarenessSub: 'See mesh nodes on the map \u2014 no cell service needed',
+    allTools: 'All 10 Tactical Tools',
+    allToolsSub: 'Dead reckoning, resection, sun/moon, geostamp, and more',
+    waypointsRoutes: 'Unlimited Waypoints & Routes',
+    waypointsRoutesSub: 'Plan routes, save lists, import/export GPX & KML',
+    reportsThemes: 'All Reports & Themes',
+    reportsThemesSub: 'ICS 201, CASEVAC, CFF \u2014 plus NVG and day themes',
+    pricesUnavailable: 'Connect to the internet to load prices and subscribe.',
+    tryFreeBadge: 'PRO \u2014 TRY FREE',
   },
 
   // ─── Mesh / Meshtastic ───────────────────────────────────────────────
