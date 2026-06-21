@@ -2,7 +2,7 @@
 
 # Red Grid MGRS
 
-**DAGR-Class MGRS Navigator**
+**DAGR-Class MGRS Navigator** — a $2,500 military GPS in your pocket.
 
 [![App Store](https://img.shields.io/badge/App%20Store-Download-8B0000?logo=apple)](https://apps.apple.com/app/id6759629554)
 [![Google Play](https://img.shields.io/badge/Google%20Play-Download-8B0000?logo=googleplay)](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical)
@@ -10,40 +10,26 @@
 [![No Tracking](https://img.shields.io/badge/Tracking-None-CC0000)](PRIVACY.md)
 [![GitHub stars](https://img.shields.io/github/stars/RedGridTactical/RedGridMGRS)](https://github.com/RedGridTactical/RedGridMGRS/stargazers)
 
-> ⭐ If you find this useful, consider [starring the repo](https://github.com/RedGridTactical/RedGridMGRS) — it helps others discover it.
+The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land-navigation capability in your pocket: live 10-digit MGRS, magnetic declination, waypoints, bearing and distance, offline tactical maps, and Meshtastic mesh — all of it offline-first. No network required, no accounts, no analytics, no tracking. Location stays in memory only. Built by an active-duty U.S. Army officer; source-available so you can read every line.
 
-The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for free. No network required. No data collected. Source available — read every line.
-
-**Try it without installing:** the [free web MGRS converter](https://redgridtactical.github.io/RedGridMGRS/tools.html) runs the same DMA conversion math in your browser.
+[**Download on the App Store**](https://apps.apple.com/app/id6759629554) · [**Get it on Google Play**](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) · [**Try the free web MGRS converter**](https://redgridtactical.github.io/RedGridMGRS/tools.html)
 
 ---
 
-## Latest: v3.4.x — 7-Day Free Trial + Mission Preflight
+## Features
 
-- **NEW: 7-day free trial** on the Pro Annual plan — every tool, theme, and offline feature. No charge today, cancel anytime.
-- **All tabs visible to everyone.** LISTS, COORDS, THEME, and MESH now appear for free users as locked previews of the Pro loadout.
-- **Field reliability:** faster map tile checks at wide zoom, report grids no longer overwritten by live GPS, smarter Meshtastic reconnect with backoff, and purchase reliability hardening.
-
-### v3.4 — Mission Preflight
-
-- **NEW: Mission Preflight panel** on the Map tab (PFL button). One-glance **READY / CAUTION / NOT READY** summary covering GPS source + accuracy, Meshtastic radio state, offline tile coverage + missing zooms, permissions health, and battery/network hints.
-- **NEW: Saved AO Packages.** Save the current map viewport as a named bundle (name + style + zoom set). Free tier: 1 saved AO. Pro: unlimited AOs with one-tap refresh. Tile estimates show count + MB before any download starts.
-- **Same zero-network posture.** Preflight checks run on-device and AO packages never leave the device. The only network calls remain user-initiated tile downloads and platform-native IAP.
-
-### v3.3.6 — Startup fix
-
-- Fixes the v3.3.5 startup black screen by restoring the native iOS launch path after the SDK upgrade.
-- No privacy, network, or data changes — same zero-network architecture.
-
-### v3.3.5 — Reliability + privacy reset
-
-- **External GPS is now app-wide.** Connect a Bluetooth receiver (Garmin GLO, Bad Elf, etc.) and every screen — grid, map, tools, mesh, reports — uses the receiver's fix instead of the phone's GPS.
-- **Mesh auto-share actually broadcasts.** The auto-share toggle on the Mesh screen now sends your active position over LoRa every 30 seconds.
-- **Live on Google Play** — [Red Grid MGRS](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) on both platforms.
-- **Privacy reset.** Removed the Apple Search Ads attribution module that called out to Apple on first launch.
-- All v3.3.1 features — **MARK POSITION**, **offline map prompt**, **share-to-unlock referral**, **in-app What's New**.
-
----
+- **Live MGRS coordinates** — 4/6/8/10-digit precision, 1-meter resolution, free for everyone
+- **Magnetic declination** — WMM model, auto or manual offset
+- **Waypoints & wayfinder** — bearing and distance to any saved position
+- **10 tactical tools** — Back Azimuth, Dead Reckoning, Resection, Pace Count, Declination, Time-Distance-Speed, Sun & Moon, Precision selector, Elevation & Slope, Photo Geostamp
+- **Offline tactical maps** — download OpenStreetMap / topographic tiles for your AO, dark tiles for low-vis, zero-network use
+- **Mission Preflight** — one-glance READY / CAUTION / NOT READY check across GPS, mesh, tile coverage, permissions, and battery
+- **Meshtastic mesh** — share your grid over LoRa via BLE and see other nodes; no cell, no internet
+- **External GPS** — Garmin GLO, Bad Elf and other BLE receivers feed every screen
+- **6 radio-ready reports** — SALUTE, 9-Line MEDEVAC, SPOT, ICS 201, CASEVAC, ANGUS/CFF fire mission
+- **Interop & export** — GPX/KML import & export, mission planning with route optimization
+- **NATO voice, HUD mode, grid-crossing alerts, coordinate formats, FixPhrase**
+- **16 languages** — EN, FR, DE, ES, JA, KO, IT, NL, PT-BR, RU, ZH-Hans, ZH-Hant, TR, PL, AR, HI
 
 | Grid & Wayfinder | Offline Maps + Mesh | Tools | Reports |
 |:---:|:---:|:---:|:---:|
@@ -53,103 +39,45 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 
 ---
 
-## DAGR-Equivalent Features
-
-- **Live MGRS coordinates** — 4/6/8/10-digit precision, 1-meter resolution
-- **Magnetic declination** — WMM model, auto or manual offset
-- **Waypoint storage** — bearing and distance to any saved position
-- **Back azimuth and dead reckoning** — plot movement from a known point
-- **Speed, elevation, heading** — real-time sensor display
-- **Full offline operation** — zero cloud dependency
-
-## Beyond the DAGR — 10 Tactical Tools
-
-The DAGR hardware doesn't include these. Red Grid MGRS does.
-
-- Back Azimuth calculator
-- Dead Reckoning plotter
-- Two-point Resection
-- Pace Count tracker
-- Magnetic Declination reference
-- Time-Distance-Speed solver
-- Sun & Moon position data
-- MGRS Precision selector (1m to 100km)
-- Elevation & Slope calculator
-- Photo Geostamp — burn MGRS + DTG onto any photo (Pro)
-
-## Offline Tactical Maps
-
-Download OpenStreetMap tiles for your area of operations. Dark tactical tiles for low-vis environments. Toggle offline mode to use cached tiles with zero network. Works completely disconnected from any infrastructure. Pro feature.
-
-## Meshtastic Mesh Networking
-
-Share your grid position over LoRa mesh via BLE. See other mesh users in real time. No cell service, no internet, no infrastructure needed — just Meshtastic radios and phones. Pro feature.
-
-### Meshtastic Setup
-
-1. Flash [Meshtastic firmware](https://flasher.meshtastic.org) onto a compatible radio (Heltec V3/V4, T-Beam Supreme, RAK WisBlock, etc.)
-2. **Close the Meshtastic app** before scanning from Red Grid MGRS — iOS only allows one app to hold a BLE connection to a device at a time. If the Meshtastic app is connected, Red Grid cannot discover the radio.
-3. Open Red Grid MGRS → Mesh tab → Scan → tap your radio to connect
-4. Toggle Auto Share to broadcast your position over the mesh
-
-Supported radios: any Meshtastic device with ESP32-S3 + SX1262 LoRa at 915MHz (US). Recommended: [Heltec WiFi LoRa 32 V3/V4](https://heltec.org/project/wifi-lora-32-v3/) or [LILYGO T-Beam Supreme](https://lilygo.cc/products/t-beam-supreme).
-
-## 6 Radio-Ready Report Templates
-
-Generate formatted reports ready to transmit over any net:
-
-- SALUTE (Size, Activity, Location, Unit, Time, Equipment)
-- 9-Line MEDEVAC request
-- SPOT report
-- ICS 201 incident briefing
-- CASEVAC request
-- ANGUS/CFF fire mission
-
 ## Pricing
 
-### Free
-Live 10-digit MGRS display (full 1-meter precision — never gated), map screen, 1 saved AO package, 1 theme (Red Light), 3 tools (Back Azimuth, Pace Count, Declination), 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
+The app is free to download. Full 10-digit MGRS (1-meter precision) is never gated.
 
-### Pro — 3 tiers
+**Free:** live 10-digit MGRS, map screen, 1 saved AO package, 1 theme, 3 tools (Back Azimuth, Pace Count, Declination), 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
+
 | Tier | Price |
 |------|-------|
 | Monthly | $3.99/mo |
 | Annual | $29.99/yr — **starts with a 7-day free trial** |
 | Lifetime | $199.99 one-time |
 
-All Pro tiers unlock:
-- **All 10 Tactical Tools** — free includes Back Azimuth, Pace Count, Declination
-- **All 6 Report Templates** — free includes SALUTE, MEDEVAC, SPOT
-- **Offline Tactical Maps** — download OpenStreetMap tiles, dark tactical tiles, zero-network map use
-- **Meshtastic Mesh Networking** — share position over LoRa mesh via BLE, see other nodes
-- **External GPS** — Garmin GLO, Bad Elf via BLE for enhanced accuracy
-- **Mission Planning** — route overlay, leg distances, nearest-neighbor optimization
-- **GPX/KML Import & Export** — document picker import, Share sheet export
-- **NATO Voice Readout** — hands-free grid calls using phonetic alphabet
-- **Shake to Speak** — shake device for hands-free NATO grid readout
-- **HUD Mode** — full-screen tactical display with compass and wayfinder
-- **Photo Geostamp** — burn MGRS grid + DTG onto any photo, saved to camera roll
-- **Grid Crossing Alerts** — haptic feedback at 1km and 100m boundaries
-- **Coordinate Formats** — UTM, decimal degrees, DMS on the main grid display
-- **FixPhrase** — open-source What3Words alternative
-- **4 Display Themes** — red lens, NVG green, day white, blue force
-- **Unlimited Waypoints** — saved lists, patrol routes, OBJs, rally points
-- **Adjustable Grid Scale** — 0.7x–1.5x MGRS font size
-- **16 Languages** — EN, FR, DE, ES, JA, KO, IT, NL, PT-BR, RU, ZH-Hans, ZH-Hant, TR, PL, AR, HI (in-app localization for free and Pro)
+Pro unlocks all 10 tools, all 6 reports, offline tactical maps, Meshtastic mesh, external GPS, mission planning, GPX/KML import & export, NATO voice readout, shake-to-speak, HUD mode, photo geostamp, grid-crossing alerts, coordinate formats, FixPhrase, all 4 themes, unlimited waypoints, and adjustable grid scale. In-app purchases are processed by Apple or Google — Red Grid MGRS never sees your payment details.
 
 ---
 
-## Install
+## Privacy
 
-### iOS
-[App Store](https://apps.apple.com/app/id6759629554) — Free with optional Pro upgrade ($3.99/mo, $29.99/yr with 7-day free trial, or $199.99 lifetime).
+Zero-network by design. No accounts, no ad networks, no analytics, no crash reporting, no third-party SDKs.
 
-### Android
-[Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) — Free with optional Pro upgrade ($3.99/mo, $29.99/yr with 7-day free trial, or $199.99 lifetime). Android 7+ (API 24+). First production release April 2026.
+| Data | Collected | Stored | Transmitted |
+|------|-----------|--------|-------------|
+| GPS location | In memory only | Never | Never |
+| Waypoints (Free) | In memory, cleared on exit | Never | Never |
+| Waypoint lists (Pro) | On device only | Local only | Never |
+| Settings (pace / declination / theme) | On device only | Local only | Never |
+| Device identifiers | Never | Never | Never |
 
-### Build from Source
+Full policy: [Privacy Policy](https://redgridtactical.github.io/RedGridMGRS/privacy.html) · [PRIVACY.md](PRIVACY.md)
 
-The app uses native modules (Bluetooth LE, in-app purchases, maps), so it needs a development build — it cannot run in Expo Go.
+---
+
+## Install & Develop
+
+**iOS** — [App Store](https://apps.apple.com/app/id6759629554), iOS 12+. Free, with optional Pro upgrade.
+
+**Android** — [Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical), Android 7+ (API 24+). Free, with optional Pro upgrade.
+
+**Build from source** — React Native 0.79.6 / Expo SDK 53. The app uses native modules (Bluetooth LE, in-app purchases, maps), so it needs a development build and cannot run in Expo Go.
 
 ```bash
 git clone https://github.com/RedGridTactical/RedGridMGRS.git
@@ -158,204 +86,37 @@ npm install
 npx expo run:ios      # or: npx expo run:android
 ```
 
-Run the test suite with `npm test`. Standard features work from source. Pro features require a valid purchase through Apple or Google.
+Run the tests with `npm test`. Standard features work from source; Pro features require a valid purchase through Apple or Google.
 
 ---
 
-## Privacy
+## Meshtastic Setup
 
-| Data | Collected | Stored | Transmitted |
-|------|-----------|--------|-------------|
-| GPS location | In memory only | Never | Never |
-| Waypoints (Standard) | In memory, cleared on exit | Never | Never |
-| Waypoint lists (Pro) | On device only | Local only | Never |
-| Settings (pace/declination/theme) | On device only | Local only | Never |
-| Device identifiers | Never | Never | Never |
+1. Flash [Meshtastic firmware](https://flasher.meshtastic.org) onto a compatible radio (Heltec V3/V4, T-Beam Supreme, RAK WisBlock, etc.).
+2. **Close the Meshtastic app** before scanning — iOS allows only one app to hold a BLE connection to a device at a time, so Red Grid can't discover the radio while the Meshtastic app is connected.
+3. Open Red Grid MGRS → Mesh tab → Scan → tap your radio to connect.
+4. Toggle Auto Share to broadcast your position over the mesh.
 
-No ad networks. No analytics. No crash reporting. No third-party SDKs.
-In-app purchases are processed by Apple — Red Grid MGRS never sees your payment details.
-
-Full policy: [Privacy Policy](https://redgridtactical.github.io/RedGridMGRS/privacy.html) | [PRIVACY.md](PRIVACY.md)
-
----
-
-## Need Team Tracking?
-
-**[Red Grid Link](https://github.com/RedGridTactical/RedGridLink)** adds encrypted peer-to-peer team sync to the same MGRS engine. Your whole team shows up on the map over Bluetooth. No servers, no cell service. Team roles, boundary alerts, waypoint sharing, NATO voice callouts. Free on [iOS](https://apps.apple.com/app/red-grid-link/id6760084718).
-
-> Red Grid MGRS = solo navigator. Red Grid Link = team coordinator. Same engine, same precision.
+Supported radios: any Meshtastic device with ESP32-S3 + SX1262 LoRa at 915 MHz (US). Recommended: [Heltec WiFi LoRa 32 V3/V4](https://heltec.org/project/wifi-lora-32-v3/) or [LILYGO T-Beam Supreme](https://lilygo.cc/products/t-beam-supreme).
 
 ---
 
 ## Built For
 
-Military personnel, search and rescue teams, law enforcement, wildland firefighters, first responders, hunters, and backcountry navigators who depend on accurate grid coordinates in austere environments. Whether you trained on a DAGR or a lensatic compass, Red Grid MGRS speaks your language.
+Military personnel, search-and-rescue teams, law enforcement, wildland firefighters, first responders, hunters, and backcountry navigators who depend on accurate grid coordinates in austere environments. Whether you trained on a DAGR or a lensatic compass, Red Grid MGRS speaks your language.
 
 ---
 
-## Roadmap
+## Ecosystem
 
-> **iOS + Android both live.** Cross-platform (React Native/Expo). Full roadmap at [redgridtactical.com/roadmap](https://redgridtactical.com/roadmap.html).
+| App | Purpose | Platform | Link |
+|-----|---------|----------|------|
+| **Red Grid MGRS** | Solo MGRS navigator (DAGR-class) | iOS + Android | [App Store](https://apps.apple.com/app/id6759629554) · [Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) |
+| **Red Grid Link** | Team coordination + encrypted P2P sync | iOS + Android | [GitHub](https://github.com/RedGridTactical/RedGridLink) · [App Store](https://apps.apple.com/app/red-grid-link/id6760084718) |
 
-### v1.0 — Foundation ✅ (2026)
-- Real-time MGRS coordinates (1m precision), wayfinder arrow, 8 tactical tools, 3 report templates, red-on-black display, zero-network architecture
+Red Grid MGRS is the solo navigator; [Red Grid Link](https://github.com/RedGridTactical/RedGridLink) is the team coordinator (roles, boundary alerts, waypoint sharing, NATO voice callouts) over encrypted Bluetooth, free on [iOS](https://apps.apple.com/app/red-grid-link/id6760084718). Same MGRS engine, same precision.
 
-### v2.0 — Pro Launch ✅ (2026)
-- Pro IAP, 4 themes, 6 reports, unlimited waypoints, coordinate formats, magnetic declination, haptics, accessibility
-
-### v2.1 — Polish ✅ (2026)
-- Custom grid input, compass heading, waypoint coordinate editing, copy-to-clipboard
-
-### v2.2 — Pro Features ✅ (2026)
-- HUD mode, photo geostamp, shake-to-speak, grid crossing alerts, in-app support
-
-### v2.3 — Global Expansion ✅ (2026)
-- 3-tier subscriptions, 6-language i18n, 26-locale ASC listings, Android closed testing, startup crash fix
-
-### v2.5 — Interoperability ✅ (2026)
-- FixPhrase integration (open-source, patent-free What3Words alternative)
-- GPX/KML waypoint export via Share sheet
-- Elevation and slope calculator tool (10th tactical tool)
-- OLED true black themes (pure #000000)
-- [MGRS Tactical Toolkit](https://redgridtactical.github.io/RedGridMGRS/tools.html) — web-based converter, single HTML file, zero dependencies
-
-### v2.6 — Open Source Library ✅ (2026)
-- `@redgrid/mgrs` MGRS library — DMA TM 8358.1 compliant, lives in [`packages/mgrs`](packages/mgrs) (npm registry release pending)
-- Standalone conversion, bearing, distance, dead reckoning, FixPhrase
-- Zero dependencies, ~15 KB
-
-### v3.0 — Tactical Map ✅ (2026)
-- Offline OpenStreetMap tiles (no API key, fully local)
-- MGRS grid overlay on map
-- Mission planning (waypoints on map, route plotting, nearest-neighbor optimization)
-- GPX/KML import
-- External GPS support (Garmin GLO, Bad Elf via BLE)
-- Meshtastic/LoRa off-grid position sharing
-
-### v3.2 — Polish & Scale ✅ (2026)
-- Adjustable grid display scale
-
-### v3.2.1 — Offline Tile Download ✅ (2026)
-- Download map tiles for offline use from the map screen
-- Toggle offline mode to use cached tiles with zero network
-- Dark tile support matching current tactical theme
-- Cache indicator and tile count in bottom bar
-- Fixed subscription metadata for monthly and annual plans
-
-### v3.2.2 — Free 10-Digit MGRS, Topo Maps ✅ (2026)
-- Free tier now includes full 10-digit MGRS (1-meter precision for all users)
-- Topographic map layer with contour lines and terrain features (OpenTopoMap)
-- Map style toggle: Standard, Dark Tactical, Topographic
-- Themed waypoint creation menu (light discipline — no white popups)
-- Navigate-to-waypoint from map
-
-### v3.2.3 — iOS BLE Fix ✅ (2026)
-- Fixed iOS BLE permissions — Meshtastic mesh networking now works on iPhone
-- "Add Position" button renamed and always visible in waypoint lists
-
-### v3.2.4 — Meshtastic BLE Protocol Rewrite ✅ (2026)
-- Complete rewrite using real Meshtastic protobuf protocol
-- Correct ToRadio UUID, startConfig handshake, FromNum notifications
-- Shared BleManager, waitForPoweredOn state check
-- Compatible with actual Meshtastic hardware
-
-### v3.3.0 — Field Ready ✅ (2026)
-- Mesh positions rendered on map with node ID, MGRS, bearing, distance
-- Meshtastic setup guide with BLE exclusivity note
-
-### v3.3.1 — Faster in the Field ✅ (2026)
-- One-tap MARK POSITION from the main screen
-- First-visit offline map download prompt
-- Share-to-unlock 30-day Pro trial referral (HMAC-signed deep links)
-- In-app What's New modal for returning users
-
-### v3.3.2 — Now on Android ✅ (2026)
-- **First Android production release on Google Play** (worldwide, 177 regions)
-- Map zoom +/– controls and Recenter-on-Me button
-- Screenshot compositor pipeline (Puppeteer, Phone + 7" + 10" tablet frames)
-- Mesh node card polish (degree symbol, altitude guard)
-- Local build pipeline (off EAS, Xcode 26 + fastlane + Gradle)
-
-### v3.3.3 — Smoother in the Field ✅ (2026)
-- In-app review prompt fires at natural moments (right after a successful MARK POSITION) instead of random launches
-- Pro users bypass the launch-time gate — asked sooner, since they've already converted
-- Write-review URL opens directly so users land on the text-review sheet (not the star-only rating sheet)
-- Background tuning and stability polish across the grid, map, and tools
-
-### v3.4 — Mission Preflight ✅ (2026, live on iOS + Android)
-- New **PFL** button on the Map tab opens a full-screen Mission Preflight panel
-- Status sections: GPS source (phone vs external) with accuracy, Meshtastic radio state, offline tile coverage + missing zooms for the current viewport, permissions health, battery/network hints
-- One-glance **READY / CAUTION / NOT READY** summary at the top derived from the worst row
-- **Saved AO Packages** — name + map style + zoom set bundled together. Free tier: 1 AO. Pro: unlimited, with one-tap refresh and per-AO tile count + MB estimate
-- Tile-count math via the new `estimateTilesForRegion` helper — same lat/lon model as `getTilesForRegion`, no extra dependencies
-- Local-only storage (`rg_ao_packages_v1`); nothing about an AO is ever transmitted
-
-### v3.3.6 — Startup fix ✅ (2026, live)
-- Fixes a startup black screen on some v3.3.5 installs by restoring the native iOS launch path after the SDK 53 / RN 0.79 upgrade
-- No privacy, network, or data changes — zero-network architecture preserved
-- Android startup path was already on the SDK 53 host wrapper, so this is iOS-only
-
-### v3.3.5 — Reliability + privacy reset ✅ (2026, live on iOS + Android)
-- External GPS is now the active source app-wide (was settings-only)
-- Mesh auto-share now feeds the active position into LoRa broadcasts
-- Removed Apple Search Ads attribution module — restored true zero-tracking posture
-- Map tile-download dependency bug fix (downloads now respect the current style)
-- Version source-of-truth synced across `app.json`, native, and docs
-
-### v3.3.4 — Tap-to-Delete Waypoints ✅ (2026, iOS live since Apr 25)
-- Tap any waypoint pin on the map to see its details and remove it
-- Closes a long-standing gap where free users couldn't clear plotted markers (the LISTS tab is Pro-gated)
-- NAV / DELETE / Close action card appears in-place so you don't leave the map
-- Works on both free and Pro plans
-- Android rebuilt on Expo SDK 53 / RN 0.79.6 — all native libs 16 KB page-size aligned for Android 15+ compatibility
-- **In-app localization expanded to 15 languages** (added IT, NL, PT-BR, RU, ZH-Hans, ZH-Hant, TR, PL, AR-SA, HI alongside EN, FR, DE, ES, JA, KO)
-- **All 26 ASC locales** now have native release notes + native promotionalText + native long-form descriptions (was 6 native, 20 machine-translated)
-- **redgridtactical.com** now serves localized home + /mgrs page in 7 languages (EN/FR/DE/ES/JA/KO/IT) with hreflang routing
-
-> **Forward roadmap** is anchored in `STANDOUT_ROADMAP.md` (May 2026 strategic refresh). Goal: be the private, offline-first solo navigator for field operators who need MGRS, mission packaging, mesh/off-grid awareness, and interoperability — without accounts or tracking. Each release maps a single workflow rather than a feature grab-bag.
-
-### v3.5 — Route Card + Field Export (next)
-- Route card: name, ordered waypoints, leg distance, leg bearing, total distance, est. time, start DTG, notes
-- Route export: GPX route/track, KML, KMZ, plain-text card for radio/clipboard/share sheet
-- Elevation profile starting from waypoint altitude + GPS altitude; downloaded elevation data later
-- Templates: patrol route, SAR sweep, rally/OBJ set, land-nav course
-
-### v3.6 — Solo Mesh Awareness Dashboard
-- Node roster: ID/name, MGRS, bearing/distance, last seen, stale flag, source/channel
-- Selected-node card with "navigate to node", session breadcrumb, hide stale, export node snapshot
-- Send-grid: current grid, selected waypoint, route summary, report text over mesh when packet size permits
-- Mesh setup checklist: app exclusivity, BLE, radio discovered, channel readiness
-- Position broadcast stays explicit, session-based, and battery-aware
-
-### v3.7 — Interoperability Pack
-- Cursor-on-Target (CoT) XML export for own position, waypoints, and routes
-- KML/KMZ mission package export (waypoints + route + reports + geostamped photo refs)
-- Improved KML import: folders → waypoint lists, names/descriptions preserved, route LineString parsing
-- "Copy as": MGRS, lat/lon, CoT XML, radio report
-
-### v3.8 — Solo SAR / ICS Field Pack
-- Expand templates with mobile-scoped FEMA/NIMS forms (ICS 202, 204, 205, 206, 213, 214 alongside the existing 201)
-- Incident folder: name, operational period, map waypoints/routes, reports, photos
-- PDF and radio-friendly text export, local-only storage
-- SAR segment helper: segment ID, assignment, hazards, comms, start/end grids
-
-### v3.9 — Land Nav Training Mode
-- Course mode: create/import checkpoint list, hide next grid until clue unlocks, score time/distance/error, after-action summary
-- Pace/azimuth drills: back-azimuth prompts, pace-count calibration, dead-reckoning exercise
-- Instructor export: printable course card, student result summary
-
-### v4.0 — Glanceable Field Companion
-- Apple Watch first slice: current MGRS, bearing/distance to active waypoint, mark position, mesh broadcast indicator
-- Widgets / Live Activity: current grid, active waypoint distance/bearing, offline AO status
-- Siri / App Shortcuts: "Mark position", "Copy grid", "Start preflight"
-
-### v4.x — R&D Track (parallel, not roadmap-blocking)
-- Camera target acquisition — start as bearing capture + estimated line, then earn the "target grid" claim with calibrated heading + pitch + range
-- Inertial / GPS-denied fallback — start with dead-reckoning assist + confidence decay; full IMU fusion later
-- Satellite position reporting — research-only until platform APIs and carrier support stabilize
-- Full TAK server integration — only after CoT/KML/KMZ file export is mature
-
-> **Team features** (roles, messaging, geofencing, shared waypoints, AAR, live shared sessions) are in [Red Grid Link](https://github.com/RedGridTactical/RedGridLink). MGRS is the solo navigator; Link is the team coordinator. Mesh awareness in MGRS is local/read-only awareness for the solo operator — persistent shared team sessions belong in Link.
+The `@redgrid/mgrs` library (DMA TM 8358.1 compliant, zero dependencies, ~15 KB) lives in [`packages/mgrs`](packages/mgrs). Full roadmap at [redgridtactical.com/roadmap](https://redgridtactical.com/roadmap.html).
 
 ---
 
@@ -367,21 +128,8 @@ Military personnel, search and rescue teams, law enforcement, wildland firefight
 
 ---
 
-## Red Grid Tactical Ecosystem
-
-| App | Purpose | Platform | Link |
-|-----|---------|----------|------|
-| **Red Grid MGRS** | Solo MGRS navigator (DAGR-class) | iOS + Android | [GitHub](https://github.com/RedGridTactical/RedGridMGRS) · [App Store](https://apps.apple.com/app/id6759629554) · [Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) |
-| **Red Grid Link** | Team coordination + encrypted sync | iOS + Android | [GitHub](https://github.com/RedGridTactical/RedGridLink) · [App Store](https://apps.apple.com/app/red-grid-link/id6760084718) |
-
-Website: [redgridtactical.com](https://redgridtactical.com)
-
----
-
 ## License
 
-[MIT + Commons Clause](LICENSE) — free for personal non-commercial use. Commercial use requires written permission.
-
----
+[MIT + Commons Clause](LICENSE) — source-available, free for personal non-commercial use. Commercial use requires written permission.
 
 *Your phone. DAGR capability. No frills. No tracking. Source available.*

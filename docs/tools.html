@@ -136,6 +136,15 @@ select{appearance:auto}
   </div>
 </header>
 
+<!-- TOP APP CTA -->
+<div class="app-cta-top" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--accent-dim);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px">
+  <div style="font-size:.8rem;color:var(--text);line-height:1.4">DAGR-class MGRS navigator in your pocket — offline maps, mesh, and land-nav tools, all on-device. <strong style="color:var(--accent)">Free download &mdash; 7-day free trial.</strong></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="https://apps.apple.com/app/id6759629554" style="background:var(--accent);color:#fff;padding:6px 14px;border-radius:var(--radius);font-size:.78rem;letter-spacing:.03em;white-space:nowrap">App Store</a>
+    <a href="https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical" style="background:transparent;color:var(--accent);border:1px solid var(--accent);padding:5px 13px;border-radius:var(--radius);font-size:.78rem;letter-spacing:.03em;white-space:nowrap">Google Play</a>
+  </div>
+</div>
+
 <nav id="tabNav">
   <button class="active" data-panel="converter">CONVERTER</button>
   <button data-panel="bearing">BEARING</button>
@@ -151,6 +160,9 @@ select{appearance:auto}
   <button class="btn" onclick="doConvert()">CONVERT</button>
   <div class="info">Auto-detects format. Press Enter to convert. Click any result to copy.</div>
   <div class="results" id="convResults"></div>
+  <div class="inline-app-cta" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-dim);line-height:1.5">
+    Need this in the field? <a href="https://apps.apple.com/app/id6759629554" style="font-weight:bold">Get the app</a> &mdash; offline maps, mesh, and 10 land-nav tools on-device. <span style="color:var(--accent)">7-day free trial.</span>
+  </div>
 </div>
 
 <!-- BEARING & DISTANCE -->
