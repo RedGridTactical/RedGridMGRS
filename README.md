@@ -10,7 +10,7 @@
 [![No Tracking](https://img.shields.io/badge/Tracking-None-CC0000)](PRIVACY.md)
 [![GitHub stars](https://img.shields.io/github/stars/RedGridTactical/RedGridMGRS)](https://github.com/RedGridTactical/RedGridMGRS/stargazers)
 
-The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land-navigation capability in your pocket: live 10-digit MGRS, magnetic declination, waypoints, bearing and distance, offline tactical maps, and Meshtastic mesh — all of it offline-first. No network required, no accounts, no analytics, no tracking. Location stays in memory only. Built by an active-duty U.S. Army officer; source-available so you can read every line.
+The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land-navigation capability in your pocket: live 10-digit MGRS, magnetic declination, waypoints, bearing and distance, offline tactical maps, and Meshtastic mesh — all of it offline-first. No network required, no accounts, no analytics, no tracking. Location stays in memory only. Built in collaboration with active-duty and retired U.S. Army soldiers; source-available so you can read every line.
 
 [**Download on the App Store**](https://apps.apple.com/app/id6759629554) · [**Get it on Google Play**](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) · [**Try the free web MGRS converter**](https://redgridtactical.github.io/RedGridMGRS/tools.html)
 

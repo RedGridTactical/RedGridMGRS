@@ -4,7 +4,7 @@
 
 ## Key facts
 - Platforms: iOS 12+ and Android (API 24+).
-- Positioning: a "$2,500 DAGR-class MGRS navigator" for field operators, search-and-rescue, and land-navigation training. Built by an active-duty U.S. Army officer.
+- Positioning: a "$2,500 DAGR-class MGRS navigator" for field operators, search-and-rescue, and land-navigation training. Built in collaboration with active-duty and retired U.S. Army soldiers.
 - Privacy: zero network calls for core features, no accounts, no analytics, no tracking, location in-memory only.
 - MGRS engine: DMA Technical Manual 8358.1 compliant — it truncates (not rounds) intermediate UTM values, matching military receivers (DAGR, PLGR) and NGA GeoTrans, so it stays in the correct grid square at boundaries.
 - Pricing: free core app; Pro adds a 7-day free trial, then $3.99/month, $29.99/year, or $199.99 lifetime.
