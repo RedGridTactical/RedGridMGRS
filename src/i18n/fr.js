@@ -3,6 +3,26 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  routeCard: {
+    title: "FICHE D'ITINÉRAIRE",
+    button: "ITINÉRAIRE",
+    openLabel: "Ouvrir la fiche d'itinéraire",
+    share: "PARTAGER",
+    save: "ENREGISTRER",
+    close: "FERMER",
+    start: "DÉPART",
+    legs: "TRONÇONS",
+    total: "TOTAL",
+    dtg: "DTG",
+    footer: "Red Grid MGRS · hors ligne · sans réseau",
+    shareTitle: "Fiche d'itinéraire",
+    shareFailed: "Échec du partage",
+    saveFailed: "Échec de l'enregistrement",
+    saveUnavailable: "L'enregistrement d'images est indisponible sur cet appareil.",
+    savePermission: "Autorisation de la photothèque requise.",
+    saved: "Enregistré",
+    savedMsg: "Fiche d'itinéraire enregistrée dans vos photos.",
+  },
   tabs: {
     grid: 'GRILLE',
     tools: 'OUTILS',
@@ -283,6 +303,17 @@ export default {
     faqDagrA: 'Pour l\'entra\u00eenement, les STX, les marches et les environnements GPS permissifs: oui. Le module SAASM du DAGR compte dans les environnements contest\u00e9s, mais pour la plupart des cas, Red Grid offre les m\u00eames capacit\u00e9s de navigation.',
   },
   waypoints: {
+    noWp: "Aucun point",
+    noWpMsg: "Ajoutez des points avant d'exporter.",
+    exportUnavailable: "Export indisponible",
+    exportRequires: "Le système de fichiers et le partage sont requis pour l'export.",
+    sharingUnavailable: "Partage indisponible",
+    sharingUnavailableMsg: "Le partage n'est pas disponible sur cet appareil.",
+    exportFailed: "Échec de l'export",
+    exportFailedMsg: "Impossible d'exporter les points.",
+    exportFormat: "Format d'export",
+    exportFormatMsg: "Exporter « {{name}} » en :",
+    export: "EXPORTER",
     title: 'LISTES DE POINTS',
     pro: '\u25c8 PRO',
     newList: '+ NOUVEAU',
@@ -324,6 +355,7 @@ export default {
     importRequires: 'expo-document-picker et expo-file-system sont requis pour l\'importation.',
   },
   proGate: {
+    saveVsMonthly: "ÉCONOMISEZ {{pct}}%",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} est une fonction Pro',

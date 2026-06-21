@@ -84,6 +84,7 @@ secrets/
 # Local build outputs
 build/
 ios/build/
+ios/build-sim/
 android/build/
 android/app/build/
 android/.gradle/

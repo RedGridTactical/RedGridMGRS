@@ -15,6 +15,7 @@ import { parseGPX, parseKML } from '../utils/gpxImport';
 import { useColors } from '../utils/ThemeContext';
 import { notifyWarning, notifySuccess, tapLight } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
+import { RouteCard } from '../components/RouteCard';
 
 let Clipboard; try { Clipboard = require('expo-clipboard'); } catch {}
 let FileSystem; try { FileSystem = require('expo-file-system'); } catch {}
@@ -38,6 +39,7 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
   const [editMgrsInput, setEditMgrsInput] = useState('');
   const [copiedWpId,   setCopiedWpId]   = useState(null);
   const copiedTimer = useRef(null);
+  const [routeCardVisible, setRouteCardVisible] = useState(false);
 
   useEffect(() => {
     loadWaypointLists().then(setLists).catch(() => {});
@@ -164,7 +166,7 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
   // ── Export list as GPX or KML ──
   const exportList = async (format) => {
     if (!currentList || currentList.waypoints.length === 0) {
-      Alert.alert('No Waypoints', 'Add waypoints before exporting.');
+      Alert.alert(t('waypoints.noWp'), t('waypoints.noWpMsg'));
       return;
     }
     try {
@@ -175,7 +177,7 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
       const mime = format === 'kml' ? 'application/vnd.google-earth.kml+xml' : 'application/gpx+xml';
 
       if (!FileSystem || !Sharing) {
-        Alert.alert('Export Unavailable', 'expo-file-system and expo-sharing are required for export.');
+        Alert.alert(t('waypoints.exportUnavailable'), t('waypoints.exportRequires'));
         return;
       }
 
@@ -184,22 +186,22 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
 
       const available = await Sharing.isAvailableAsync();
       if (!available) {
-        Alert.alert('Sharing Unavailable', 'Sharing is not available on this device.');
+        Alert.alert(t('waypoints.sharingUnavailable'), t('waypoints.sharingUnavailableMsg'));
         return;
       }
       await Sharing.shareAsync(path, { mimeType: mime, dialogTitle: `Export ${currentList.name}` });
       notifySuccess();
     } catch (e) {
-      Alert.alert('Export Failed', e.message || 'Could not export waypoints.');
+      Alert.alert(t('waypoints.exportFailed'), e.message || t('waypoints.exportFailedMsg'));
     }
   };
 
   const showExportMenu = () => {
     if (!currentList || currentList.waypoints.length === 0) {
-      Alert.alert('No Waypoints', 'Add waypoints before exporting.');
+      Alert.alert(t('waypoints.noWp'), t('waypoints.noWpMsg'));
       return;
     }
-    Alert.alert('Export Format', `Export "${currentList.name}" as:`, [
+    Alert.alert(t('waypoints.exportFormat'), t('waypoints.exportFormatMsg', { name: currentList.name }), [
       { text: 'GPX', onPress: () => exportList('gpx') },
       { text: 'KML', onPress: () => exportList('kml') },
       { text: 'Cancel', style: 'cancel' },
@@ -335,8 +337,13 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
                 <Text style={[styles.addWpBtnText, { color: colors.border }]}>{t('waypoints.import')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.border }]} onPress={showExportMenu} accessibilityRole="button" accessibilityLabel="Export waypoint list">
-                <Text style={[styles.addWpBtnText, { color: colors.border }]}>EXPORT</Text>
+                <Text style={[styles.addWpBtnText, { color: colors.border }]}>{t('waypoints.export')}</Text>
               </TouchableOpacity>
+              {currentList.waypoints.length >= 2 && (
+                <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.text2 }]} onPress={() => setRouteCardVisible(true)} accessibilityRole="button" accessibilityLabel={t('routeCard.openLabel')}>
+                  <Text style={[styles.addWpBtnText, { color: colors.text2 }]}>{t('routeCard.button')}</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.text2 }]} onPress={() => { setEnteringGrid(true); setGridError(''); }} accessibilityRole="button" accessibilityLabel="Enter MGRS grid manually">
                 <Text style={[styles.addWpBtnText, { color: colors.text2 }]}>{t('waypoints.enterGrid')}</Text>
               </TouchableOpacity>
@@ -461,6 +468,8 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
       )}
 
       <Text style={[styles.hint, { color: colors.text4 }]}>{t('waypoints.hint')}</Text>
+
+      <RouteCard visible={routeCardVisible} list={currentList} onClose={() => setRouteCardVisible(false)} />
     </ScrollView>
   );
 }

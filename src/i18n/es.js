@@ -3,6 +3,26 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  routeCard: {
+    title: "TARJETA DE RUTA",
+    button: "RUTA",
+    openLabel: "Abrir tarjeta de ruta",
+    share: "COMPARTIR",
+    save: "GUARDAR IMAGEN",
+    close: "CERRAR",
+    start: "INICIO",
+    legs: "TRAMOS",
+    total: "TOTAL",
+    dtg: "DTG",
+    footer: "Red Grid MGRS · sin conexión · sin red",
+    shareTitle: "Tarjeta de ruta",
+    shareFailed: "Error al compartir",
+    saveFailed: "Error al guardar",
+    saveUnavailable: "Guardar imágenes no está disponible en este dispositivo.",
+    savePermission: "Se requiere permiso de la fototeca para guardar.",
+    saved: "Guardado",
+    savedMsg: "Tarjeta de ruta guardada en tus fotos.",
+  },
   tabs: {
     grid: 'CUADR\u00cdCULA',
     tools: 'HERRAMIENTAS',
@@ -284,6 +304,17 @@ export default {
     faqDagrA: 'Para entrenamiento, STXs, marchas y entornos GPS permisivos: s\u00ed. El m\u00f3dulo SAASM del DAGR importa en entornos disputados, pero para la mayor\u00eda de los casos Red Grid ofrece las mismas capacidades de navegaci\u00f3n.',
   },
   waypoints: {
+    noWp: "Sin waypoints",
+    noWpMsg: "Añade waypoints antes de exportar.",
+    exportUnavailable: "Exportación no disponible",
+    exportRequires: "Se requieren sistema de archivos y compartir para exportar.",
+    sharingUnavailable: "Compartir no disponible",
+    sharingUnavailableMsg: "Compartir no está disponible en este dispositivo.",
+    exportFailed: "Error al exportar",
+    exportFailedMsg: "No se pudieron exportar los waypoints.",
+    exportFormat: "Formato de exportación",
+    exportFormatMsg: "Exportar \"{{name}}\" como:",
+    export: "EXPORTAR",
     title: 'LISTAS DE PUNTOS',
     pro: '\u25c8 PRO',
     newList: '+ NUEVA',
@@ -325,6 +356,7 @@ export default {
     importRequires: 'expo-document-picker y expo-file-system son necesarios para importar.',
   },
   proGate: {
+    saveVsMonthly: "AHORRA {{pct}}%",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} es una funci\u00f3n Pro',

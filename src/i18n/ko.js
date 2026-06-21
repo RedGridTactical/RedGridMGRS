@@ -3,6 +3,26 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  routeCard: {
+    title: "경로 카드",
+    button: "경로",
+    openLabel: "경로 카드 열기",
+    share: "공유",
+    save: "이미지 저장",
+    close: "닫기",
+    start: "시작",
+    legs: "구간",
+    total: "합계",
+    dtg: "DTG",
+    footer: "Red Grid MGRS · 오프라인 · 네트워크 없음",
+    shareTitle: "경로 카드",
+    shareFailed: "공유 실패",
+    saveFailed: "저장 실패",
+    saveUnavailable: "이 기기에서는 이미지 저장을 사용할 수 없습니다.",
+    savePermission: "저장하려면 사진 라이브러리 권한이 필요합니다.",
+    saved: "저장됨",
+    savedMsg: "경로 카드를 사진에 저장했습니다.",
+  },
   tabs: {
     grid: '\uadf8\ub9ac\ub4dc',
     tools: '\ub3c4\uad6c',
@@ -284,6 +304,17 @@ export default {
     faqDagrA: '\ud6c8\ub828, STX, \ud589\uad70, \ud5c8\uc6a9\uc801 GPS \ud658\uacbd\uc5d0\uc11c: \uc608. DAGR\uc758 SAASM \ubaa8\ub4c8\uc740 \ubd84\uc7c1 \ud658\uacbd\uc5d0\uc11c \uc911\uc694\ud558\uc9c0\ub9cc, \ub300\ubd80\ubd84\uc758 \uacbd\uc6b0 Red Grid\ub294 \ub3d9\uc77c\ud55c \ud575\uc2ec \ub0b4\ube44\uac8c\uc774\uc158 \uae30\ub2a5\uc744 \uc81c\uacf5\ud569\ub2c8\ub2e4.',
   },
   waypoints: {
+    noWp: "웨이포인트 없음",
+    noWpMsg: "내보내기 전에 웨이포인트를 추가하세요.",
+    exportUnavailable: "내보내기 사용 불가",
+    exportRequires: "내보내려면 파일 시스템과 공유가 필요합니다.",
+    sharingUnavailable: "공유 사용 불가",
+    sharingUnavailableMsg: "이 기기에서는 공유를 사용할 수 없습니다.",
+    exportFailed: "내보내기 실패",
+    exportFailedMsg: "웨이포인트를 내보낼 수 없습니다.",
+    exportFormat: "내보내기 형식",
+    exportFormatMsg: "\"{{name}}\"을(를) 다음으로 내보내기:",
+    export: "내보내기",
     title: '\uc6e8\uc774\ud3ec\uc778\ud2b8 \ubaa9\ub85d',
     pro: '\u25c8 PRO',
     newList: '+ \uc2e0\uaddc',
@@ -325,6 +356,7 @@ export default {
     importRequires: '\uac00\uc838\uc624\uae30\uc5d0\ub294 expo-document-picker\uc640 expo-file-system\uc774 \ud544\uc694\ud569\ub2c8\ub2e4.',
   },
   proGate: {
+    saveVsMonthly: "{{pct}}% 절약",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}}\uc740(\ub294) Pro \uae30\ub2a5\uc785\ub2c8\ub2e4',

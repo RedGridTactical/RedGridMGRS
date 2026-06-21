@@ -3,6 +3,26 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  routeCard: {
+    title: "ルートカード",
+    button: "ルート",
+    openLabel: "ルートカードを開く",
+    share: "共有",
+    save: "画像を保存",
+    close: "閉じる",
+    start: "開始",
+    legs: "区間",
+    total: "合計",
+    dtg: "DTG",
+    footer: "Red Grid MGRS · オフライン · ネットワーク不要",
+    shareTitle: "ルートカード",
+    shareFailed: "共有に失敗しました",
+    saveFailed: "保存に失敗しました",
+    saveUnavailable: "このデバイスでは画像を保存できません。",
+    savePermission: "保存には写真ライブラリの許可が必要です。",
+    saved: "保存しました",
+    savedMsg: "ルートカードを写真に保存しました。",
+  },
   tabs: {
     grid: '\u30b0\u30ea\u30c3\u30c9',
     tools: '\u30c4\u30fc\u30eb',
@@ -284,6 +304,17 @@ export default {
     faqDagrA: '\u8a13\u7df4\u3001STX\u3001\u884c\u8ecd\u3001\u8a31\u5bb9\u7684GPS\u74b0\u5883\u3067\u306f\uff1a\u306f\u3044\u3002DAGR\u306eSAASM\u30e2\u30b8\u30e5\u30fc\u30eb\u306f\u7d1b\u4e89\u74b0\u5883\u3067\u91cd\u8981\u3067\u3059\u304c\u3001\u307b\u3068\u3093\u3069\u306e\u5834\u5408Red Grid\u306f\u540c\u3058\u30b3\u30a2\u30ca\u30d3\u30b2\u30fc\u30b7\u30e7\u30f3\u6a5f\u80fd\u3092\u63d0\u4f9b\u3002',
   },
   waypoints: {
+    noWp: "ウェイポイントなし",
+    noWpMsg: "エクスポートする前にウェイポイントを追加してください。",
+    exportUnavailable: "エクスポート利用不可",
+    exportRequires: "エクスポートにはファイルシステムと共有が必要です。",
+    sharingUnavailable: "共有利用不可",
+    sharingUnavailableMsg: "このデバイスでは共有を利用できません。",
+    exportFailed: "エクスポート失敗",
+    exportFailedMsg: "ウェイポイントをエクスポートできませんでした。",
+    exportFormat: "エクスポート形式",
+    exportFormatMsg: "「{{name}}」を次の形式でエクスポート:",
+    export: "エクスポート",
     title: '\u30a6\u30a7\u30a4\u30dd\u30a4\u30f3\u30c8\u30ea\u30b9\u30c8',
     pro: '\u25c8 PRO',
     newList: '+ \u65b0\u898f',
@@ -325,6 +356,7 @@ export default {
     importRequires: '\u30a4\u30f3\u30dd\u30fc\u30c8\u306b\u306fexpo-document-picker\u3068expo-file-system\u304c\u5fc5\u8981\u3067\u3059\u3002',
   },
   proGate: {
+    saveVsMonthly: "{{pct}}%お得",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}}\u306fPro\u6a5f\u80fd\u3067\u3059',

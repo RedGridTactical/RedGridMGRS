@@ -56,6 +56,16 @@ export function ProGate({
   // user is intro-offer eligible; otherwise fall back to the standard unlock CTA.
   const showTrial = activeTier === 'annual' && !!trialEligible;
 
+  // Live "save X% vs monthly" framing — computed from real store prices so it
+  // stays correct across all territories/PPP. Hidden when prices unavailable.
+  const annualSavingsPct = (() => {
+    const m = parseFloat(products?.monthly?.price);
+    const a = parseFloat(products?.annual?.price);
+    if (!m || !a || m <= 0) return null;
+    const pct = Math.round((1 - a / (m * 12)) * 100);
+    return pct > 5 && pct < 90 ? pct : null;
+  })();
+
   return (
     <Modal
       visible={visible}
@@ -123,6 +133,11 @@ export function ProGate({
                   )}
                   <Text style={[styles.tierPrice, { color: colors.text }]} maxFontSizeMultiplier={1.2}>{getPriceForTier(tier.id) || '—'}</Text>
                   <Text style={[styles.tierPeriod, { color: colors.text3 }]}>{t(tier.periodKey)}</Text>
+                  {tier.id === 'annual' && annualSavingsPct != null && (
+                    <Text style={[styles.tierSavings, { color: colors.text2 }]} maxFontSizeMultiplier={1.2}>
+                      {t('proGate.saveVsMonthly', { pct: annualSavingsPct })}
+                    </Text>
+                  )}
                 </TouchableOpacity>
               );
             })}
@@ -245,6 +260,9 @@ const styles = StyleSheet.create({
   },
   tierPeriod: {
     fontSize: 8, letterSpacing: 1,
+  },
+  tierSavings: {
+    fontFamily: 'monospace', fontSize: 7, letterSpacing: 1, fontWeight: '700', marginTop: 3,
   },
   purchaseBtn: {
     paddingVertical: 14, alignItems: 'center', marginBottom: 10, minHeight: 44,

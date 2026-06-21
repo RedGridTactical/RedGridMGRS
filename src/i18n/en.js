@@ -3,6 +3,26 @@
  * Military/NATO terms (MGRS, SALUTE, UTM, DAGR, etc.) stay English in all locales.
  */
 export default {
+  routeCard: {
+    title: "ROUTE CARD",
+    button: "ROUTE CARD",
+    openLabel: "Open route card",
+    share: "SHARE CARD",
+    save: "SAVE IMAGE",
+    close: "CLOSE",
+    start: "START",
+    legs: "LEGS",
+    total: "TOTAL",
+    dtg: "DTG",
+    footer: "Red Grid MGRS · offline · no network",
+    shareTitle: "Route Card",
+    shareFailed: "Share failed",
+    saveFailed: "Save failed",
+    saveUnavailable: "Saving images is unavailable on this device.",
+    savePermission: "Photo library permission is required to save.",
+    saved: "Saved",
+    savedMsg: "Route card saved to your photos.",
+  },
   // ─── Tabs ──────────────────────────────────────────────────────────────
   tabs: {
     grid: 'GRID',
@@ -312,6 +332,17 @@ export default {
 
   // ─── Waypoint lists screen ────────────────────────────────────────────
   waypoints: {
+    noWp: "No Waypoints",
+    noWpMsg: "Add waypoints before exporting.",
+    exportUnavailable: "Export Unavailable",
+    exportRequires: "File system and sharing are required for export.",
+    sharingUnavailable: "Sharing Unavailable",
+    sharingUnavailableMsg: "Sharing is not available on this device.",
+    exportFailed: "Export Failed",
+    exportFailedMsg: "Could not export waypoints.",
+    exportFormat: "Export Format",
+    exportFormatMsg: "Export \"{{name}}\" as:",
+    export: "EXPORT",
     title: 'WAYPOINT LISTS',
     pro: '\u25c8 PRO',
     newList: '+ NEW',
@@ -355,6 +386,7 @@ export default {
 
   // ─── ProGate / paywall ────────────────────────────────────────────────
   proGate: {
+    saveVsMonthly: "SAVE {{pct}}%",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} is a Pro feature',

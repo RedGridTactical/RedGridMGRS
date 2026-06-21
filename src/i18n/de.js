@@ -3,6 +3,26 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  routeCard: {
+    title: "ROUTENKARTE",
+    button: "ROUTE",
+    openLabel: "Routenkarte öffnen",
+    share: "KARTE TEILEN",
+    save: "BILD SPEICHERN",
+    close: "SCHLIESSEN",
+    start: "START",
+    legs: "ETAPPEN",
+    total: "GESAMT",
+    dtg: "DTG",
+    footer: "Red Grid MGRS · offline · kein Netz",
+    shareTitle: "Routenkarte",
+    shareFailed: "Teilen fehlgeschlagen",
+    saveFailed: "Speichern fehlgeschlagen",
+    saveUnavailable: "Bildspeicherung auf diesem Gerät nicht verfügbar.",
+    savePermission: "Zugriff auf die Fotomediathek erforderlich.",
+    saved: "Gespeichert",
+    savedMsg: "Routenkarte in Fotos gespeichert.",
+  },
   tabs: {
     grid: 'GITTER',
     tools: 'WERKZEUGE',
@@ -284,6 +304,17 @@ export default {
     faqDagrA: 'F\u00fcr Training, STXs, M\u00e4rsche und permissive GPS-Umgebungen: ja. Das SAASM-Modul des DAGR ist in umk\u00e4mpften Umgebungen wichtig, aber f\u00fcr die meisten F\u00e4lle bietet Red Grid die gleichen Kernnavigationsf\u00e4higkeiten.',
   },
   waypoints: {
+    noWp: "Keine Wegpunkte",
+    noWpMsg: "Vor dem Export Wegpunkte hinzufügen.",
+    exportUnavailable: "Export nicht verfügbar",
+    exportRequires: "Dateisystem und Teilen sind für den Export erforderlich.",
+    sharingUnavailable: "Teilen nicht verfügbar",
+    sharingUnavailableMsg: "Teilen ist auf diesem Gerät nicht verfügbar.",
+    exportFailed: "Export fehlgeschlagen",
+    exportFailedMsg: "Wegpunkte konnten nicht exportiert werden.",
+    exportFormat: "Exportformat",
+    exportFormatMsg: "„{{name}}\" exportieren als:",
+    export: "EXPORT",
     title: 'WEGPUNKTLISTEN',
     pro: '\u25c8 PRO',
     newList: '+ NEU',
@@ -325,6 +356,7 @@ export default {
     importRequires: 'expo-document-picker und expo-file-system sind f\u00fcr den Import erforderlich.',
   },
   proGate: {
+    saveVsMonthly: "{{pct}}% SPAREN",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} ist eine Pro-Funktion',
