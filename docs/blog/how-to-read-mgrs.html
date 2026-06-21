@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Read an MGRS Grid Coordinate (Step by Step)</title>
+<meta name="description" content="A practical, step-by-step guide to reading an MGRS coordinate: the four parts of a grid reference, the read-right-then-up rule, how precision scales with digits, and how to read a grid off a topographic map.">
+
+<!-- Open Graph -->
+<meta property="og:title" content="How to Read an MGRS Grid Coordinate (Step by Step)">
+<meta property="og:description" content="Learn to read an MGRS coordinate left to right: grid zone, 100km square, easting, northing, and the read-right-then-up rule, with a precision table and common mistakes to avoid.">
+<meta property="og:url" content="https://redgridtactical.github.io/RedGridMGRS/blog/how-to-read-mgrs.html">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png">
+<link rel="canonical" href="https://redgridtactical.github.io/RedGridMGRS/blog/how-to-read-mgrs.html">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How to Read an MGRS Grid Coordinate (Step by Step)">
+<meta name="twitter:description" content="Learn to read an MGRS coordinate left to right: grid zone, 100km square, easting, northing, and the read-right-then-up rule, with a precision table and common mistakes to avoid.">
+<meta name="twitter:image" content="https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png">
+
+<!-- Structured Data: BlogPosting -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to Read an MGRS Grid Coordinate (Step by Step)",
+  "description": "A practical, step-by-step guide to reading an MGRS coordinate: the four parts of a grid reference, the read-right-then-up rule, how precision scales with digits, and how to read a grid off a topographic map.",
+  "author": { "@type": "Organization", "name": "Red Grid Tactical", "url": "https://redgridtactical.com" },
+  "publisher": { "@type": "Organization", "name": "Red Grid Tactical", "url": "https://redgridtactical.com" },
+  "datePublished": "2026-06-21",
+  "dateModified": "2026-06-21",
+  "mainEntityOfPage": "https://redgridtactical.github.io/RedGridMGRS/blog/how-to-read-mgrs.html",
+  "image": "https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png"
+}
+</script>
+
+<!-- Structured Data: HowTo -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Read an MGRS Coordinate off a Topographic Map",
+  "description": "Read a Military Grid Reference System coordinate from a printed topographic map by identifying the grid zone, the 100km square, then the easting and northing using the read-right-then-up rule.",
+  "image": "https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png",
+  "totalTime": "PT3M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Identify the grid zone designation",
+      "text": "Read the grid zone designation from the map marginalia, for example 18S. This is the UTM zone number plus the latitude band letter.",
+      "url": "https://redgridtactical.github.io/RedGridMGRS/blog/how-to-read-mgrs.html#reading-a-map"
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Identify the 100km square",
+      "text": "Find the two-letter 100,000-meter square identifier in the map collar or grid reference box, for example UJ.",
+      "url": "https://redgridtactical.github.io/RedGridMGRS/blog/how-to-read-mgrs.html#reading-a-map"
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Read the easting (right)",
+      "text": "Find the vertical grid line to the left of your point, read its label, then measure the distance east into the square. Easting comes first.",
+      "url": "https://redgridtactical.github.io/RedGridMGRS/blog/how-to-read-mgrs.html#reading-a-map"
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Read the northing (up)",
+      "text": "Find the horizontal grid line below your point, read its label, then measure the distance north into the square. Northing comes second.",
+      "url": "https://redgridtactical.github.io/RedGridMGRS/blog/how-to-read-mgrs.html#reading-a-map"
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Assemble the coordinate",
+      "text": "Combine the parts in order: grid zone, 100km square, easting, then northing, using equal digit counts for the easting and northing.",
+      "url": "https://redgridtactical.github.io/RedGridMGRS/blog/how-to-read-mgrs.html#reading-a-map"
+    }
+  ]
+}
+</script>
+
+<style>
+  :root {
+    --red: #8B0000;
+    --dark: #0a0a0a;
+    --gray: #1a1a1a;
+    --gray-light: #666;
+    --bg: #fafafa;
+    --border: #e0e0e0;
+    --code-bg: #f4f4f4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    color: var(--gray);
+    line-height: 1.8;
+    background: var(--bg);
+  }
+
+  .header {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 50%, #2a0000 100%);
+    color: #fff;
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+
+  .header a {
+    color: #cc9999;
+    text-decoration: none;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .header a:hover { color: #fff; }
+
+  article {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+  }
+
+  .meta {
+    font-size: 0.9rem;
+    color: var(--gray-light);
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 2.5rem 0 0.75rem;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--gray);
+    margin: 2rem 0 0.5rem;
+  }
+
+  p {
+    margin-bottom: 1.25rem;
+    font-size: 1.05rem;
+  }
+
+  a { color: var(--red); }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    margin: 1.25rem 0;
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  code {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9em;
+  }
+
+  p code, li code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  ul, ol {
+    margin: 0.75rem 0 1.25rem 1.5rem;
+    font-size: 1.05rem;
+  }
+
+  li { margin-bottom: 0.4rem; }
+
+  blockquote {
+    border-left: 3px solid var(--red);
+    margin: 1.5rem 0;
+    padding: 0.75rem 1.25rem;
+    background: #fff;
+    color: var(--gray);
+    font-style: italic;
+  }
+
+  .callout {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--red);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+  }
+
+  .callout strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--red);
+  }
+
+  .file-tree {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    margin: 1.25rem 0;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--gray-light);
+    font-size: 0.85rem;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  footer a { color: var(--red); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* tables (this post uses comparison tables) */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.25rem 0;
+    font-size: 0.92rem;
+  }
+
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th { background: var(--code-bg); }
+
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .related {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+
+  .related strong { display: block; margin-bottom: 0.5rem; color: var(--dark); }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 1.6rem; }
+    article { padding: 1.5rem 1rem 3rem; }
+    pre { font-size: 0.8rem; padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../">Red Grid MGRS</a>
+</div>
+
+<article>
+
+<h1>How to Read an MGRS Grid Coordinate (Step by Step)</h1>
+<div class="meta">June 2026 &middot; 7 min read</div>
+
+<p>An MGRS coordinate is read left to right as four parts: the grid zone designation, the 100 km square identifier, the easting, and the northing. To locate the point those parts describe, you apply one rule: <strong>read right, then up.</strong> That means you always handle the easting (how far east) before the northing (how far north). Get the order and the four parts right, and you can read any MGRS coordinate in seconds.</p>
+
+<p>This guide walks through each part with a worked example, shows how precision changes with the number of digits, and explains how to pull a coordinate off a topographic map. If you would rather skip the manual work, you can paste any coordinate into the <a href="../tools.html">free web MGRS converter</a> and read it back instantly, but it is worth understanding the structure first.</p>
+
+<h2>The Anatomy of an MGRS Coordinate</h2>
+
+<p>Take this coordinate at 1-meter precision:</p>
+
+<pre><code>18S UJ 23480 06473</code></pre>
+
+<p>It looks like a wall of characters until you split it into four parts. Reading left to right:</p>
+
+<ol>
+  <li><strong>Grid Zone Designation (18S):</strong> A UTM zone number (18) plus a latitude band letter (S). This points to a 6&deg; wide by 8&deg; tall chunk of the planet. It is the coarse "which part of the world" component.</li>
+  <li><strong>100 km Square ID (UJ):</strong> Two letters that name a 100 km &times; 100 km square inside that zone. The first letter is the column, the second is the row.</li>
+  <li><strong>Easting (23480):</strong> How far east, in meters, your point sits from the western edge of that 100 km square.</li>
+  <li><strong>Northing (06473):</strong> How far north, in meters, your point sits from the southern edge of that 100 km square.</li>
+</ol>
+
+<p>The easting and northing always carry the same number of digits and are always read in that order. In <code>18S UJ 23480 06473</code>, the easting is <code>23480</code> (23,480 meters east) and the northing is <code>06473</code> (6,473 meters north). Together they pin the point to a single 1-meter square.</p>
+
+<div class="callout">
+  <strong>One thing to remember about the point itself</strong>
+  An MGRS coordinate does not mark the center of a square. It designates the <strong>southwest corner</strong> of the square it describes. The coordinate <code>18S UJ 234 064</code> refers to the southwest corner of a 100 m box, and everything from there up to the next grid line belongs to that box.
+</div>
+
+<h2>The "Read Right, Then Up" Rule</h2>
+
+<p>Every grid system has a built-in trap: it is just as easy to read up-then-right as right-then-up, and the two give you completely different points. MGRS removes the guesswork with a fixed convention. <strong>Easting first, northing second. Right, then up.</strong></p>
+
+<p>Here is the rule applied to our example. Start at the southwest corner of square UJ, the origin (0 east, 0 north) for that 100 km block.</p>
+
+<ol>
+  <li><strong>Read right (easting = 23480):</strong> Move 23,480 meters east from the western edge. You are now on a vertical line about 23.5 km in from the left.</li>
+  <li><strong>Read up (northing = 06473):</strong> From that line, move 6,473 meters north from the southern edge. You are now about 6.5 km up from the bottom.</li>
+</ol>
+
+<p>Where those two measurements meet is your point. Reverse the order, reading <code>06473</code> as the easting, and you land roughly 17 km away in the wrong direction. The order is part of the standard, not a stylistic choice.</p>
+
+<h2>How Precision Scales with Digit Count</h2>
+
+<p>One of the most useful properties of MGRS is that you control precision by adding or dropping digits. Each axis carries the same number of digits, and that count sets the size of the square. Fewer digits means a bigger box and a coarser fix; more digits means a tighter one.</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Digits per axis</th><th>Grid resolution</th><th>Example</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>10 km</td><td><code>18S UJ 2 0</code></td></tr>
+    <tr><td>2</td><td>1 km</td><td><code>18S UJ 23 06</code></td></tr>
+    <tr><td>3</td><td>100 m</td><td><code>18S UJ 234 064</code></td></tr>
+    <tr><td>4</td><td>10 m</td><td><code>18S UJ 2348 0647</code></td></tr>
+    <tr><td>5</td><td>1 m</td><td><code>18S UJ 23480 06473</code></td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Each row is simply the previous one with one more digit appended to each axis, never rearranged. The fix <code>23 06</code> sits inside <code>234 064</code>, which sits inside <code>23480 06473</code>. So you can shorten a coordinate to describe a wider area without recomputing anything: drop a digit off each axis and you have zoomed out by a factor of ten. Field shorthand counts the whole numeric tail, so a "6-digit grid" means 3 digits per axis, or 100 m resolution.</p>
+
+<h2 id="reading-a-map">Reading a Coordinate off a Topographic Map</h2>
+
+<p>Standard topographic maps from the USGS, the British Ordnance Survey, and military mapping agencies carry a UTM grid overlay: the thin blue or black lines that form 1 km squares across the sheet. The numbers along the edges are truncated grid labels showing only the meaningful digits. The procedure follows the same right-then-up rule.</p>
+
+<ol>
+  <li><strong>Identify the grid zone designation</strong> from the map marginalia, usually printed in the collar (for example, "Zone 18S").</li>
+  <li><strong>Identify the 100 km square</strong> from the two large reference letters shown in the grid reference box or printed faintly across the map face (for example, "UJ").</li>
+  <li><strong>Read the easting (right):</strong> find the vertical grid line just to the <em>left</em> of your point and note its printed label. Then measure or estimate how far east your point lies between that line and the next one.</li>
+  <li><strong>Read the northing (up):</strong> find the horizontal grid line just <em>below</em> your point and note its label. Then measure or estimate how far north your point lies between that line and the next one.</li>
+  <li><strong>Assemble</strong> the coordinate in order: zone + square letters + easting + northing, keeping the easting and northing digit counts equal.</li>
+</ol>
+
+<p>To split the distance inside a 1 km square down to 100 m or 10 m, field navigators use a plotting tool (a protractor or coordinate scale) with graduated edges sized to the map's scale. Line it up against the bottom-left grid line, read across for the easting, then up for the northing.</p>
+
+<blockquote>The mnemonic drilled into every land navigation course is "read right, then up." Easting before northing, every time.</blockquote>
+
+<h2>Four Common Mistakes (and How to Avoid Them)</h2>
+
+<p>Most MGRS reading errors come from a handful of predictable slips. Watch for these.</p>
+
+<ul>
+  <li><strong>Reading up-then-right.</strong> This is the single most frequent error. People instinctively read the larger number first or read in the order they scan a page. Always force easting first, northing second.</li>
+  <li><strong>Dropping or adding a digit.</strong> The easting and northing must have the same digit count. If you write <code>2348 0647</code> for one and <code>234 064</code> for the other, the coordinate is ambiguous and will plot in the wrong place. Count the digits on both sides before you trust a fix.</li>
+  <li><strong>Confusing the letters I and O.</strong> MGRS deliberately omits the letters I and O from grid zone bands and 100 km square IDs precisely because they look like the digits 1 and 0. If you think you see an I or an O in a square ID, you are misreading a 1 or a 0, or vice versa.</li>
+  <li><strong>Forgetting the southwest-corner convention.</strong> A coordinate names the southwest corner of its square, not the center. When you truncate a precise coordinate to a coarser one, you are snapping down to the corner of the larger box, which is why MGRS engines truncate rather than round.</li>
+</ul>
+
+<p>That last point matters when cross-checking results. A standards-compliant engine, including the one in Red Grid MGRS, follows DMA Technical Manual 8358.1 and <em>truncates</em> intermediate UTM values rather than rounding them. That is what makes its output agree with military receivers like the DAGR and PLGR and with NGA GeoTrans. If a handheld GPS and a phone disagree by a meter, rounding versus truncation is usually the reason.</p>
+
+<h2>Or Just Paste It Into the Converter</h2>
+
+<p>Doing this by hand is a genuinely useful skill when the batteries die. But when you just need a quick check, the fastest way to read an MGRS string is to drop it into the <a href="../tools.html">free web MGRS converter</a>. It parses the four parts, shows the latitude and longitude, and confirms the precision, so you can sanity-check a coordinate someone read to you over the radio. It runs in the browser with no account and no upload.</p>
+
+<div class="callout">
+  <strong>Get Red Grid MGRS</strong>
+  A DAGR-class MGRS navigator that implements the DMA TM 8358.1 algorithm with live MGRS coordinates, magnetic declination, waypoints, and 10 tactical tools, all with no accounts and no tracking. Free on the <a href="https://apps.apple.com/app/id6759629554">App Store</a> and <a href="https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical">Google Play</a>. Or read and convert a coordinate right now in the <a href="../tools.html">free web MGRS converter</a>. Source code on <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>.
+</div>
+
+<div class="related">
+  <strong>Related reading</strong>
+  <a href="understanding-mgrs.html">Understanding MGRS: Why It Beats Latitude/Longitude</a> &middot;
+  <a href="convert-mgrs-to-lat-long.html">How to Convert MGRS to Latitude/Longitude</a> &middot;
+  <a href="best-offline-mgrs-app.html">The Best Offline MGRS App for Field Navigation</a>
+</div>
+
+</article>
+
+<footer>
+  <a href="../">Red Grid MGRS</a> &middot;
+  <a href="index.html">Blog</a> &middot;
+  <a href="../privacy.html">Privacy</a> &middot;
+  <a href="../support.html">Support</a> &middot;
+  <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>
+  <p style="margin-top: 0.5rem;">&copy; 2026 Red Grid Tactical</p>
+</footer>
+
+</body>
+</html>

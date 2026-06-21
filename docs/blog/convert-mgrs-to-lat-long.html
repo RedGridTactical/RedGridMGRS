@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Convert MGRS to Latitude and Longitude (and Back)</title>
+<meta name="description" content="Convert MGRS to lat/long instantly with a free web tool, then learn the MGRS to UTM to lat/long pipeline, why the standard truncates to the southwest corner, and how to do it fully offline.">
+
+<!-- Open Graph -->
+<meta property="og:title" content="How to Convert MGRS to Latitude and Longitude (and Back)">
+<meta property="og:description" content="Convert MGRS to lat/long instantly with a free web tool, then learn the conversion pipeline, the southwest-corner truncation rule, and how to convert offline in the field.">
+<meta property="og:url" content="https://redgridtactical.github.io/RedGridMGRS/blog/convert-mgrs-to-lat-long.html">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png">
+<link rel="canonical" href="https://redgridtactical.github.io/RedGridMGRS/blog/convert-mgrs-to-lat-long.html">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How to Convert MGRS to Latitude and Longitude (and Back)">
+<meta name="twitter:description" content="Convert MGRS to lat/long instantly with a free web tool, then learn the conversion pipeline, the southwest-corner truncation rule, and how to convert offline in the field.">
+<meta name="twitter:image" content="https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png">
+
+<!-- Structured Data: BlogPosting -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "How to Convert MGRS to Latitude and Longitude (and Back)",
+  "description": "Convert MGRS to lat/long instantly with a free web tool, then learn the MGRS to UTM to lat/long pipeline, why the standard truncates to the southwest corner, and how to do it fully offline.",
+  "author": { "@type": "Organization", "name": "Red Grid Tactical", "url": "https://redgridtactical.com" },
+  "publisher": { "@type": "Organization", "name": "Red Grid Tactical", "url": "https://redgridtactical.com" },
+  "datePublished": "2026-06-21",
+  "dateModified": "2026-06-21",
+  "mainEntityOfPage": "https://redgridtactical.github.io/RedGridMGRS/blog/convert-mgrs-to-lat-long.html",
+  "image": "https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png"
+}
+</script>
+
+<!-- Structured Data: FAQPage -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can I convert MGRS to lat/long for free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The free web MGRS converter runs in your browser at no cost and with no account. Paste an MGRS string to get latitude and longitude, or paste lat/long to get MGRS. The same conversion is built into the free Red Grid MGRS app on iOS and Android."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does MGRS conversion work offline?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The math is pure computation with no server lookup, so it works fully offline. In the Red Grid MGRS app the conversion runs entirely on-device with zero network calls, which means it keeps working in airplane mode, in a dead zone, or with the radio off. The web converter also continues to work once the page has loaded."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does my converted coordinate differ slightly when I convert back?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "An MGRS coordinate names the southwest corner of its square, not the center, because the standard truncates rather than rounds. A 4-digit (1 km) MGRS string covers a whole kilometer square, so converting it to lat/long gives you that square's southwest corner, and converting that point back lands in the same square. The apparent shift is the width of the square you chose, not an error. Use more digits (10-digit for 1 m) to shrink the square and the difference."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What format does the converted result use?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Latitude and longitude are returned in decimal degrees on the WGS 84 datum, with positive values for north and east and negative values for south and west. MGRS results follow DMA Technical Manual 8358.1: a grid zone designation, a 100 km square pair, then equal-length easting and northing digits."
+      }
+    }
+  ]
+}
+</script>
+
+<style>
+  :root {
+    --red: #8B0000;
+    --dark: #0a0a0a;
+    --gray: #1a1a1a;
+    --gray-light: #666;
+    --bg: #fafafa;
+    --border: #e0e0e0;
+    --code-bg: #f4f4f4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    color: var(--gray);
+    line-height: 1.8;
+    background: var(--bg);
+  }
+
+  .header {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 50%, #2a0000 100%);
+    color: #fff;
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+
+  .header a {
+    color: #cc9999;
+    text-decoration: none;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .header a:hover { color: #fff; }
+
+  article {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+  }
+
+  .meta {
+    font-size: 0.9rem;
+    color: var(--gray-light);
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 2.5rem 0 0.75rem;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--gray);
+    margin: 2rem 0 0.5rem;
+  }
+
+  p {
+    margin-bottom: 1.25rem;
+    font-size: 1.05rem;
+  }
+
+  a { color: var(--red); }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    margin: 1.25rem 0;
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  code {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9em;
+  }
+
+  p code, li code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  ul, ol {
+    margin: 0.75rem 0 1.25rem 1.5rem;
+    font-size: 1.05rem;
+  }
+
+  li { margin-bottom: 0.4rem; }
+
+  blockquote {
+    border-left: 3px solid var(--red);
+    margin: 1.5rem 0;
+    padding: 0.75rem 1.25rem;
+    background: #fff;
+    color: var(--gray);
+    font-style: italic;
+  }
+
+  .callout {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--red);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+  }
+
+  .callout strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--red);
+  }
+
+  .file-tree {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    margin: 1.25rem 0;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--gray-light);
+    font-size: 0.85rem;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  footer a { color: var(--red); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* tables (this post uses comparison tables) */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.25rem 0;
+    font-size: 0.92rem;
+  }
+
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th { background: var(--code-bg); }
+
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .related {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+
+  .related strong { display: block; margin-bottom: 0.5rem; color: var(--dark); }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 1.6rem; }
+    article { padding: 1.5rem 1rem 3rem; }
+    pre { font-size: 0.8rem; padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../">Red Grid MGRS</a>
+</div>
+
+<article>
+
+<h1>How to Convert MGRS to Latitude and Longitude (and Back)</h1>
+<div class="meta">June 2026 &middot; 8 min read</div>
+
+<p>The fastest way to convert MGRS to latitude and longitude is to paste the coordinate into the <a href="../tools.html">free web MGRS converter</a>. Type or paste an MGRS string such as <code>18S UJ 23480 06473</code> and it returns the lat/long instantly. Paste a lat/long instead and it returns the MGRS. No account, no sign-up, and no data leaves the page once it has loaded.</p>
+
+<p>That covers the practical answer. The rest of this article explains what the converter is doing under the hood, why a round-trip conversion can land you a few meters or a few hundred meters away from where you started, and how to run the same conversion fully offline when you have no signal at all.</p>
+
+<h2>Why You Would Convert at All</h2>
+
+<p>MGRS is the better coordinate to work with on the ground. The numbers are meters, the precision is explicit, and a 1 km square is something you can actually search or sweep. But most of the technology around you does not speak MGRS natively. Consumer phone GPS, mapping apps, drone ground stations, fitness watches, and the geotags on photographs all store and display positions as latitude and longitude. So you constantly need to move between the two.</p>
+
+<p>A few concrete cases:</p>
+
+<ul>
+  <li>A teammate sends you a pin from a mapping app as decimal degrees, and you want to plot it on a gridded topographic map.</li>
+  <li>You read an 8-digit MGRS grid off a paper map and need to drop it into an app that only accepts lat/long.</li>
+  <li>A search-and-rescue dispatcher logs incidents in MGRS, but the helicopter avionics expect lat/long.</li>
+  <li>You exported a GPX track full of lat/long waypoints and want the MGRS grids for a radio brief.</li>
+</ul>
+
+<p>In every case the underlying position is identical. Only the notation changes.</p>
+
+<h2>The Conversion Pipeline, Explained Plainly</h2>
+
+<p>MGRS does not convert directly to latitude and longitude in one step. It passes through Universal Transverse Mercator (UTM) as an intermediate stage. The full pipeline runs in both directions:</p>
+
+<pre><code>MGRS  &rarr;  UTM  &rarr;  Latitude/Longitude
+MGRS  &larr;  UTM  &larr;  Latitude/Longitude</code></pre>
+
+<p>Going from MGRS to lat/long, the steps are:</p>
+
+<ol>
+  <li><strong>Read the grid zone.</strong> The leading part of the string, like <code>18S</code>, is the UTM zone number (18) and the latitude band letter (S). This tells the converter which 6&deg; wide projection zone and which hemisphere it is working in.</li>
+  <li><strong>Expand the 100 km square.</strong> The two letters, like <code>UJ</code>, identify a 100 km &times; 100 km square inside that zone. The converter looks up the column and row letters to recover the leading digits of the full UTM easting and northing.</li>
+  <li><strong>Add the easting and northing.</strong> The numeric pair, like <code>23480 06473</code>, is the offset in meters within the square. Combined with the square's base values, this produces a complete UTM coordinate (zone 18S, 323480 mE, 4306473 mN).</li>
+  <li><strong>Invert the projection.</strong> The converter runs the inverse Transverse Mercator equations on the WGS 84 ellipsoid to turn that flat grid coordinate back into latitude and longitude in decimal degrees.</li>
+</ol>
+
+<p>Going the other way, from lat/long to MGRS, the same steps run in reverse: project lat/long into UTM, then chop the UTM coordinate into the zone, the square letters, and the truncated easting/northing pair. The grid zone and 100 km square letters absorb the leading digits, which is why an MGRS string is so much shorter than the raw UTM it represents.</p>
+
+<h2>Doing It in the Browser</h2>
+
+<p>The <a href="../tools.html">free web MGRS converter</a> packages that entire pipeline into a single page. Using it takes seconds:</p>
+
+<ol>
+  <li>Open the converter in any browser, on a phone or a desktop.</li>
+  <li>To go from grid to coordinates, paste an MGRS string into the MGRS field. Spaces are optional, so <code>18SUJ2348006473</code> works as well as <code>18S UJ 23480 06473</code>.</li>
+  <li>Read the latitude and longitude out of the lat/long fields. They update as you type.</li>
+  <li>To go the other way, clear the fields and enter a decimal-degree latitude and longitude instead. The MGRS field fills in.</li>
+</ol>
+
+<p>Because the converter is a self-contained page, you can load it once on a connected network and keep using it afterward. There is no per-conversion server call, so nothing about your coordinates is transmitted anywhere.</p>
+
+<h2>The Accuracy Caveat: Southwest Corner, Not Center</h2>
+
+<p>This is the part that surprises people, and it is not a bug. <strong>An MGRS coordinate names the southwest corner of its square, not the center.</strong> The standard truncates the easting and northing rather than rounding them.</p>
+
+<p>Truncation is deliberate. It is what lets the same syntax express different precisions just by changing how many digits you write. The more digits, the smaller the square the coordinate points at:</p>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Digits per pair</th><th>Square size</th><th>What the coordinate marks</th></tr></thead>
+  <tbody>
+    <tr><td>2</td><td>1 km</td><td>Southwest corner of a 1 km square</td></tr>
+    <tr><td>3</td><td>100 m</td><td>Southwest corner of a 100 m square</td></tr>
+    <tr><td>4</td><td>10 m</td><td>Southwest corner of a 10 m square</td></tr>
+    <tr><td>5</td><td>1 m</td><td>Southwest corner of a 1 m square</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>Here is why this matters for round-tripping. Suppose your true position is in the middle of a kilometer square. If you write it as a 4-digit (1 km) MGRS grid, the standard drops every digit finer than a kilometer, so the grid points at the southwest corner of that square. Convert that grid back to lat/long and you get the corner, which can be hundreds of meters from where you actually stood. Convert the corner forward to MGRS again and you get the same grid. The system is perfectly consistent; the apparent drift is just the size of the square you chose to express.</p>
+
+<blockquote>The difference you see on a round-trip is the resolution you asked for, not the error of the tool. A 1 km grid is honest about being a 1 km grid.</blockquote>
+
+<p>To shrink the gap, use more digits. A 10-digit MGRS string (5 digits per pair) pins the position to a 1-meter square, so the southwest-corner offset is at most about 1.4 meters diagonally, which is well inside normal GPS error anyway.</p>
+
+<p>One more thing to check in any tool you trust: a correct implementation <strong>truncates</strong>. The DMA Technical Manual 8358.1 algorithm, the same one used by NGA GeoTrans and by military receivers like the DAGR and PLGR, truncates intermediate UTM values rather than rounding them. A converter that rounds will sometimes hand you a coordinate one square over from what a military receiver shows. The web converter and the Red Grid MGRS app both follow the truncating standard, so their output matches GeoTrans and a DAGR to the meter.</p>
+
+<h2>Doing It Fully Offline, With No Signal</h2>
+
+<p>Coordinate conversion is pure math. It needs the WGS 84 ellipsoid constants and the projection equations, both of which fit in a few kilobytes of code. Nothing about it requires a network connection, a tile server, or a lookup table hosted somewhere.</p>
+
+<p>That is exactly how the <a href="../tools.html">Red Grid MGRS</a> app does it. Your position is computed on-device from the GPS chip, converted on-device, and held in memory only. The app makes zero network calls for its core features, keeps no account, and runs no analytics or tracking. So you can be in airplane mode, deep in a canyon with no bars, or operating with the radio deliberately off, and the conversion still works the instant you need it.</p>
+
+<p>The free tier already converts to 6-digit MGRS (100 m resolution), which is enough for most navigation and reporting. Pro unlocks the full 10-digit (1 m) precision along with extra coordinate formats, so you can read out a position to the meter or hand off a grid that matches a DAGR exactly.</p>
+
+<div class="callout">
+  <strong>Get Red Grid MGRS</strong>
+  A DAGR-class MGRS navigator that implements the DMA TM 8358.1 algorithm with truncation, so its conversions match GeoTrans and military receivers to the meter. Live MGRS, magnetic declination, waypoints, and 10 tactical tools, with no accounts and no tracking. Free on the <a href="https://apps.apple.com/app/id6759629554">App Store</a> and <a href="https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical">Google Play</a>. Or convert coordinates right now in the <a href="../tools.html">free web MGRS converter</a>. Source code on <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>.
+</div>
+
+<div class="related">
+  <strong>Related reading</strong>
+  <a href="understanding-mgrs.html">Understanding MGRS</a> &middot;
+  <a href="how-to-read-mgrs.html">How to Read MGRS</a> &middot;
+  <a href="best-offline-mgrs-app.html">Best Offline MGRS App</a>
+</div>
+
+</article>
+
+<footer>
+  <a href="../">Red Grid MGRS</a> &middot;
+  <a href="index.html">Blog</a> &middot;
+  <a href="../privacy.html">Privacy</a> &middot;
+  <a href="../support.html">Support</a> &middot;
+  <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>
+  <p style="margin-top: 0.5rem;">&copy; 2026 Red Grid Tactical</p>
+</footer>
+
+</body>
+</html>

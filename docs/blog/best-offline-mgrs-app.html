@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Best Offline MGRS App: A Field Buyer's Guide</title>
+<meta name="description" content="An honest buyer's guide to choosing an offline MGRS and land-navigation app. Six criteria to judge any app by, with how to test each one in the field.">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Best Offline MGRS App: A Field Buyer's Guide">
+<meta property="og:description" content="Six honest criteria for choosing an offline MGRS app: truly offline, standards-compliant math, privacy, land-nav tools, battery, and transparent pricing.">
+<meta property="og:url" content="https://redgridtactical.github.io/RedGridMGRS/blog/best-offline-mgrs-app.html">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png">
+<link rel="canonical" href="https://redgridtactical.github.io/RedGridMGRS/blog/best-offline-mgrs-app.html">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Best Offline MGRS App: A Field Buyer's Guide">
+<meta name="twitter:description" content="Six honest criteria for choosing an offline MGRS app: truly offline, standards-compliant math, privacy, land-nav tools, battery, and transparent pricing.">
+<meta name="twitter:image" content="https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png">
+
+<!-- Structured Data: BlogPosting -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Best Offline MGRS App: A Field Buyer's Guide",
+  "description": "An honest buyer's guide to choosing an offline MGRS and land-navigation app. Six criteria to judge any app by, with how to test each one in the field.",
+  "author": { "@type": "Organization", "name": "Red Grid Tactical", "url": "https://redgridtactical.com" },
+  "publisher": { "@type": "Organization", "name": "Red Grid Tactical", "url": "https://redgridtactical.com" },
+  "datePublished": "2026-06-21",
+  "dateModified": "2026-06-21",
+  "mainEntityOfPage": "https://redgridtactical.github.io/RedGridMGRS/blog/best-offline-mgrs-app.html",
+  "image": "https://redgridtactical.github.io/RedGridMGRS/images/social-preview.png"
+}
+</script>
+
+<!-- Structured Data: FAQPage -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the best free offline MGRS app?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The best offline MGRS app is the one that keeps working with zero signal, gets the MGRS math right, and does not phone home. Judge any app against those three things first, then check its land-nav tools, battery behavior, and pricing. Red Grid MGRS is one option built on those principles: its free tier gives you 6-digit (100 m) MGRS, an offline map, three land-nav tools, three NATO reports, and one waypoint, with no account required."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does an offline MGRS app work with no cell signal?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It should. GPS positioning does not need a cell connection; the receiver in your phone listens to satellites directly. A properly offline app computes your MGRS coordinate on-device from that GPS fix and lets you pre-download map tiles for your area of operations. Test it by enabling airplane mode (which leaves GPS active on most phones) and confirming your position and grid still update."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is my location tracked?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "That depends entirely on the app. Many free navigation apps send your position to servers for ads or analytics. A privacy-respecting MGRS app makes zero network calls for core navigation, requires no account, and holds your location in memory on-device only. Red Grid MGRS works this way: no accounts, no analytics, no tracking, and location is computed on-device and never transmitted."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How accurate is the MGRS conversion?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Accuracy depends on two things: your GPS fix and the conversion math. The math should follow DMA Technical Manual 8358.1, which truncates intermediate UTM values rather than rounding them, so results match military receivers like the DAGR and PLGR and NGA GeoTrans. Red Grid MGRS uses a TM 8358.1-compliant engine and offers up to 10-digit (1 m) precision in its Pro tier. Remember that an MGRS coordinate designates the southwest corner of its square, so a 6-digit grid names a 100 m square, not a single point."
+      }
+    }
+  ]
+}
+</script>
+
+<style>
+  :root {
+    --red: #8B0000;
+    --dark: #0a0a0a;
+    --gray: #1a1a1a;
+    --gray-light: #666;
+    --bg: #fafafa;
+    --border: #e0e0e0;
+    --code-bg: #f4f4f4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    color: var(--gray);
+    line-height: 1.8;
+    background: var(--bg);
+  }
+
+  .header {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 50%, #2a0000 100%);
+    color: #fff;
+    padding: 2rem 1.5rem;
+    text-align: center;
+  }
+
+  .header a {
+    color: #cc9999;
+    text-decoration: none;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .header a:hover { color: #fff; }
+
+  article {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+  }
+
+  .meta {
+    font-size: 0.9rem;
+    color: var(--gray-light);
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 2.5rem 0 0.75rem;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--gray);
+    margin: 2rem 0 0.5rem;
+  }
+
+  p {
+    margin-bottom: 1.25rem;
+    font-size: 1.05rem;
+  }
+
+  a { color: var(--red); }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+    overflow-x: auto;
+    margin: 1.25rem 0;
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  code {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9em;
+  }
+
+  p code, li code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  ul, ol {
+    margin: 0.75rem 0 1.25rem 1.5rem;
+    font-size: 1.05rem;
+  }
+
+  li { margin-bottom: 0.4rem; }
+
+  blockquote {
+    border-left: 3px solid var(--red);
+    margin: 1.5rem 0;
+    padding: 0.75rem 1.25rem;
+    background: #fff;
+    color: var(--gray);
+    font-style: italic;
+  }
+
+  .callout {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--red);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+  }
+
+  .callout strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--red);
+  }
+
+  .file-tree {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    margin: 1.25rem 0;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--gray-light);
+    font-size: 0.85rem;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  footer a { color: var(--red); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* tables (this post uses comparison tables) */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.25rem 0;
+    font-size: 0.92rem;
+  }
+
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th { background: var(--code-bg); }
+
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  .related {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+
+  .related strong { display: block; margin-bottom: 0.5rem; color: var(--dark); }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 1.6rem; }
+    article { padding: 1.5rem 1rem 3rem; }
+    pre { font-size: 0.8rem; padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../">Red Grid MGRS</a>
+</div>
+
+<article>
+
+<h1>Best Offline MGRS App: A Field Buyer's Guide</h1>
+<div class="meta">June 2026 &middot; 8 min read</div>
+
+<p>The best offline MGRS app is the one that keeps working when you have zero signal, gets the MGRS math right, and does not phone home. Everything else is secondary. If an app fails any of those three tests, it does not matter how slick the interface looks: it will let you down on the ridge where the bars disappear, or it will hand you a coordinate that does not match the receiver everyone else on the net is using.</p>
+
+<p>This is a buyer's guide, not a sales pitch. Below are six criteria you can use to judge <em>any</em> MGRS or land-navigation app, along with a concrete way to test each one yourself. At the end, there is an honest accounting of how Red Grid MGRS measures against the same list, including where its free tier stops and Pro begins. The goal is to give you the questions, so you can pick the right tool whether or not it ends up being ours.</p>
+
+<h2>Six Criteria for Judging Any Offline MGRS App</h2>
+
+<h3>1. Truly offline</h3>
+
+<p>"Offline support" means different things to different developers. Some apps cache the last map you viewed and call it offline. Others refuse to display anything without a live connection. What you actually need is core navigation that runs in airplane mode and a map you can pre-download before you leave the trailhead.</p>
+
+<p>GPS itself does not need a cell connection. The satellite receiver in your phone listens to orbiting satellites directly, so your position keeps updating even with the radios off. The question is whether the <em>app</em> can compute and display your grid without a network call, and whether it lets you save map tiles for your area of operations in advance.</p>
+
+<p><strong>How to test it:</strong> Turn on airplane mode (this leaves GPS active on most phones), walk outside, and confirm the app still acquires a fix and shows a live MGRS coordinate. Then try to pan to a region you have not visited and see whether the map tiles are already there or whether you hit a gray void.</p>
+
+<h3>2. Standards-compliant MGRS math</h3>
+
+<p>An MGRS coordinate is only useful if it matches the coordinate your teammates, the topographic map, and the rescue helicopter are all working from. The reference standard is DMA Technical Manual 8358.1. A critical and frequently missed detail: the conversion must <em>truncate</em> intermediate UTM values, not round them. Truncation is what makes a software result match military receivers such as the DAGR and PLGR, and the NGA GeoTrans reference implementation. An app that rounds can be off by a full grid square at the boundary.</p>
+
+<p>You also want the precision the situation demands. A 6-digit grid resolves to 100 meters; a 10-digit grid resolves to 1 meter. Remember that an MGRS string designates the southwest corner of its square, so a coordinate like <code>18S UJ 23480 06473</code> names a 1 m square, not an abstract point.</p>
+
+<p><strong>How to test it:</strong> Pick a known landmark, read its coordinate in the app, and compare against an independent TM 8358.1 source such as NGA GeoTrans or a trusted online converter. They should agree to the last digit. Then check whether the app actually offers 10-digit output, or quietly caps you at coarser precision.</p>
+
+<h3>3. Privacy: does it phone home?</h3>
+
+<p>A navigation app knows exactly where you are. That is a sensitive thing to hand over. Many free apps monetize by sending your position to advertising or analytics servers, and most require you to create an account before you can use them. For field work, recreation, or anything where you would rather not broadcast your movements, that is the wrong trade.</p>
+
+<p>The privacy-respecting design makes zero network calls for core navigation, asks for no account, and keeps your location on the device, in memory, never transmitted.</p>
+
+<p><strong>How to test it:</strong> Check whether the app forces a sign-up. Read its App Store or Google Play privacy label for "Location" and "Identifiers" collection. If you are technical, put the phone behind a network monitor and watch whether the app reaches out while you navigate. Silence is the answer you want.</p>
+
+<h3>4. Land-navigation toolset</h3>
+
+<p>A coordinate readout is the floor, not the ceiling. Real land navigation needs supporting tools: magnetic declination so your compass bearing matches the map, a pace count for dead reckoning, back-azimuth and bearing calculations, structured reports for calling in what you see, and waypoints you can save and share. Waypoint portability matters specifically: GPX and KML import and export let you plan on a desktop and carry the route into the field, or hand it off afterward.</p>
+
+<p><strong>How to test it:</strong> List the tasks you actually do, then check the app one by one. Can you set declination for your region? Is there a pace-count tool? Can you build a waypoint and export it as GPX or KML? Can you produce the report formats your team uses?</p>
+
+<h3>5. Battery and field reliability</h3>
+
+<p>An app that drains your battery in three hours is a liability on a full-day movement. Continuous GPS and a bright screen are the main costs, but background network chatter and heavy animations add up too. An app that does no networking has one less thing quietly burning power.</p>
+
+<p><strong>How to test it:</strong> Run the app for an hour with the screen on and GPS active, then check the battery usage breakdown in your phone settings. Note whether it behaves predictably and whether it recovers gracefully after the screen sleeps and wakes, rather than losing its fix.</p>
+
+<h3>6. Transparent pricing</h3>
+
+<p>Watch for two failure modes: a "free" app that is unusable until you pay, and a paid app with murky, shifting pricing. A fair model has a free tier that genuinely does useful work, and clear, stated prices for the upgrade. You should be able to read exactly what you get for free and exactly what a subscription or one-time purchase unlocks before you commit.</p>
+
+<p><strong>How to test it:</strong> Use the free tier for a real outing and ask whether it stood on its own. Then read the Pro pricing in full. If you cannot find the monthly, annual, and lifetime numbers without starting a checkout flow, that is a yellow flag.</p>
+
+<h2>How Red Grid MGRS Measures Against the List</h2>
+
+<p>Here is the honest accounting. Red Grid MGRS was built around the first three criteria deliberately, so it does well on them; the rest is a matter of where the free line sits.</p>
+
+<p><strong>Truly offline:</strong> Core navigation runs with the radios off. There is an offline map, and offline tactical map packages in the Pro tier for pre-downloading larger areas of operation. Your position and grid update from GPS alone.</p>
+
+<p><strong>Standards-compliant math:</strong> The conversion engine implements DMA Technical Manual 8358.1, truncating intermediate UTM values so results match the DAGR, PLGR, and NGA GeoTrans. The free tier outputs 6-digit (100 m) MGRS; the Pro tier extends this to 10-digit (1 m) precision.</p>
+
+<p><strong>Privacy:</strong> Zero network calls for core features, no accounts, no analytics, no tracking. Location is computed on-device and held in memory only. The source is public on <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a> if you want to verify the claim rather than take it on faith.</p>
+
+<p><strong>Land-nav toolset:</strong> The free tier includes three land-nav tools, three NATO reports, one theme, and one waypoint. Pro unlocks all 10 tools, all 6 NATO reports, unlimited waypoints with GPX and KML import and export, route cards, all themes, Meshtastic mesh awareness, extra coordinate formats, and a HUD mode.</p>
+
+<p><strong>Battery:</strong> Because there is no background networking, that entire category of drain is absent. Continuous GPS still costs power, as it does in any navigator, so plan accordingly on long movements.</p>
+
+<p><strong>Transparent pricing:</strong> The core app is free and usable on its own. Pro adds a 7-day free trial, then $3.99 per month, $29.99 per year, or $199.99 for a lifetime license. Those are the full numbers, stated up front.</p>
+
+<p>That is the case, without the hype. We are not going to tell you Red Grid MGRS is objectively "the best," because the best app is the one that fits your mission and passes the six tests above in your hands. If you want to check the math before installing anything, you can run a conversion right now in the <a href="../tools.html">free web MGRS converter</a> and compare it against whatever you already trust.</p>
+
+<h2>The Short Version</h2>
+
+<p>Pick an app that works with zero signal, computes MGRS to the TM 8358.1 standard, and does not track you. Confirm it has the land-nav tools you personally use, behaves on battery, and prices itself honestly. Test all of it before you depend on it, ideally somewhere safe before somewhere remote. Whatever you choose, the discipline of judging it against fixed criteria beats trusting a star rating.</p>
+
+<div class="callout">
+  <strong>Get Red Grid MGRS</strong>
+  A DAGR-class MGRS navigator that implements the DMA TM 8358.1 algorithm, with live MGRS coordinates, magnetic declination, waypoints, and 10 tactical tools, no accounts and no tracking. Free on the <a href="https://apps.apple.com/app/id6759629554">App Store</a> and <a href="https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical">Google Play</a>. Or convert coordinates right now in the <a href="../tools.html">free web MGRS converter</a>. Source code on <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>.
+</div>
+
+<div class="related">
+  <strong>Related reading</strong>
+  <a href="zero-network-architecture.html">I Built a GPS App That Makes Zero Network Calls</a> &middot;
+  <a href="dagr-vs-smartphone.html">What a $2,500 Military GPS Can Teach You About Software Bloat</a> &middot;
+  <a href="understanding-mgrs.html">Understanding MGRS</a>
+</div>
+
+</article>
+
+<footer>
+  <a href="../">Red Grid MGRS</a> &middot;
+  <a href="index.html">Blog</a> &middot;
+  <a href="../privacy.html">Privacy</a> &middot;
+  <a href="../support.html">Support</a> &middot;
+  <a href="https://github.com/RedGridTactical/RedGridMGRS">GitHub</a>
+  <p style="margin-top: 0.5rem;">&copy; 2026 Red Grid Tactical</p>
+</footer>
+
+</body>
+</html>
