@@ -222,7 +222,7 @@
 
 <p>But beyond the tactical use case, I think most mobile apps have no business making the network calls they make. Your calculator app doesn't need analytics. Your flashlight doesn't need a crash reporter. And a GPS app that streams your coordinates to a telemetry server is doing something fundamentally hostile to the user, even if it's "anonymized."</p>
 
-<p>So the rule was simple: the app makes zero outbound connections during normal operation. The only exception is the App Store IAP flow, which is initiated by the user tapping a purchase button and handled entirely by Apple's StoreKit framework. (Since this was written the app has grown offline maps, and tile downloads are the single user-initiated exception on the data side: when you choose to save an area for offline use, the app fetches those tiles once from the public tile servers, caches them on-device, and goes quiet again.)</p>
+<p>So the rule was simple: the app makes zero outbound connections during normal operation. The only exception is the App Store IAP flow, which is initiated by the user tapping a purchase button and handled entirely by Apple's StoreKit framework. (Since this was written the app has grown offline maps, and tile downloads are the single user-initiated exception on the data side. When you choose to save an area for offline use, the app fetches those tiles once from the public tile servers, caches them on-device, and goes quiet again.)</p>
 
 <h2>The Architecture</h2>
 
@@ -247,7 +247,7 @@ src/<br>
 
 <p>Your coordinates exist in React state and nowhere else. When the component unmounts, the data is gone. There's no location history, no breadcrumb trail, no last-known-position cache.</p>
 
-<pre><code>// useLocation.js — data flow
+<pre><code>// useLocation.js: data flow
 //
 // GPS satellite → phone receiver → expo-location → React state → render
 //                                                              → gone
@@ -289,11 +289,11 @@ const updateLocationIfChanged = useCallback((newLoc) => {
 
 <p>That's it. Seven keys. No location history. No session data. No device fingerprint. No user ID.</p>
 
-<p>Waypoints are the one case where a coordinate hits disk — but only when the user explicitly taps "Save Waypoint" and names it. It's user-initiated, user-labeled, and user-deletable. It's their data, stored on their device, for their use.</p>
+<p>Waypoints are the one case where a coordinate hits disk, but only when the user explicitly taps "Save Waypoint" and names it. It's user-initiated, user-labeled, and user-deletable. It's their data, stored on their device, for their use.</p>
 
 <h3>All math is local</h3>
 
-<p>The MGRS conversion is implemented from the DMA (Defense Mapping Agency) Technical Manual 8358.1. It's about 300 lines of pure math — WGS84 ellipsoid constants, UTM projection, zone letter assignment, 100km square identification. Zero dependencies. No geocoding API. No coordinate lookup service.</p>
+<p>The MGRS conversion is implemented from the DMA (Defense Mapping Agency) Technical Manual 8358.1. It's about 300 lines of pure math: WGS84 ellipsoid constants, UTM projection, zone letter assignment, 100km square identification. Zero dependencies. No geocoding API. No coordinate lookup service.</p>
 
 <pre><code>// The entire MGRS pipeline is deterministic pure functions:
 //   latitude, longitude → UTM easting/northing → zone + square + digits
@@ -308,11 +308,11 @@ const updateLocationIfChanged = useCallback((newLoc) => {
 
 <p>This architecture has real costs. I want to be honest about them.</p>
 
-<p><strong>No crash reporting.</strong> When the app crashes, I don't know about it unless a user emails me. I can't see stack traces, device models, or OS versions. I compensate with aggressive defensive coding — every async call is wrapped in try/catch with timeouts, every external module is lazy-loaded with fallbacks, every JSON parse has corruption protection. The app has never crashed in production (that I know of), but I also can't prove that.</p>
+<p><strong>No crash reporting.</strong> When the app crashes, I don't know about it unless a user emails me. I can't see stack traces, device models, or OS versions. I compensate with aggressive defensive coding: every async call is wrapped in try/catch with timeouts, every external module is lazy-loaded with fallbacks, every JSON parse has corruption protection. The app has never crashed in production (that I know of), but I also can't prove that.</p>
 
 <p><strong>No usage analytics.</strong> I don't know how many people use the app daily. I don't know which features are popular. I don't know if anyone uses the resection tool or if the pace counter is just noise. I make product decisions based on what I think is useful, not data. App Store Connect gives me download counts and that's about it.</p>
 
-<p><strong>No remote configuration.</strong> If I bake in a wrong constant — say, a WMM coefficient — I can't hot-fix it. I have to push an App Store update and wait for review. This means I test math functions obsessively. The test suite has 142 tests, and the MGRS converter alone has edge cases for every UTM zone boundary, the Norway/Svalbard special zones, and both poles.</p>
+<p><strong>No remote configuration.</strong> If I bake in a wrong constant (say, a WMM coefficient), I can't hot-fix it. I have to push an App Store update and wait for review. This means I test math functions obsessively. The test suite has 142 tests, and the MGRS converter alone has edge cases for every UTM zone boundary, the Norway/Svalbard special zones, and both poles.</p>
 
 <p><strong>No A/B testing.</strong> I can't test two different UIs against each other. The version I ship is the version everyone gets. This is honestly fine for a utility app, but it means design decisions are based on gut feel.</p>
 
@@ -348,7 +348,7 @@ export async function loadSettings() {
 
     if (!items || !Array.isArray(items)) return DEFAULTS;
 
-    // Parse each value individually — one corrupted key
+    // Parse each value individually: one corrupted key
     // doesn't take down the others
     // ...
   } catch (err) {
@@ -364,7 +364,7 @@ export async function loadSettings() {
 
 <p>For most apps, probably not. If you're running a SaaS product with user accounts, you need a backend. If you're a team of 50, you need crash reporting to stay sane. If your business model depends on understanding user behavior, you need some form of analytics.</p>
 
-<p>But if you're building a utility — a calculator, a converter, a reference tool, a sensor reader — ask yourself: does this actually need a network connection? If the answer is "only for analytics," maybe the answer is that it doesn't need one at all.</p>
+<p>But if you're building a utility (a calculator, a converter, a reference tool, a sensor reader), ask yourself: does this actually need a network connection? If the answer is "only for analytics," maybe the answer is that it doesn't need one at all.</p>
 
 <p>The bar should be higher than "well, everyone adds analytics." Your user's data is theirs. If you don't need it, don't take it.</p>
 

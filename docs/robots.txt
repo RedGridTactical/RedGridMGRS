@@ -1,4 +1,4 @@
-# Red Grid MGRS GitHub Pages — crawlability policy
+# Red Grid MGRS GitHub Pages: crawlability policy
 # Indexing everything. Zero PII, zero trackers.
 
 User-agent: *
@@ -20,7 +20,7 @@ Allow: /
 User-agent: Baiduspider
 Allow: /
 
-# AI answer engines — allow indexing so Red Grid surfaces in AI search.
+# AI answer engines: allow indexing so Red Grid surfaces in AI search.
 User-agent: GPTBot
 Allow: /
 
