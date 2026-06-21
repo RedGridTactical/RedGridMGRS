@@ -19,8 +19,10 @@ The difference shows up at grid-square boundaries where intermediate easting/nor
 
 ## Install
 
-```bash
-npm install @redgrid/mgrs
+Not yet on the npm registry — this package is source-available here. Vendor it into your project (zero dependencies, ~15 KB) or add it as a local path dependency:
+
+```json
+"dependencies": { "@redgrid/mgrs": "file:path/to/packages/mgrs" }
 ```
 
 ## Quick Start
