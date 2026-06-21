@@ -1,0 +1,29 @@
+# Red Grid MGRS
+
+> Red Grid MGRS is a zero-network, offline-first tactical navigation app for iOS and Android. It puts DAGR-class military-grade MGRS (Military Grid Reference System) navigation in your pocket — 10-digit grid precision, offline tactical maps, land-navigation tools, NATO report templates, and optional Meshtastic mesh awareness — with no accounts, no analytics, and no tracking. Location is computed on-device, held in memory only, and never transmitted.
+
+## Key facts
+- Platforms: iOS 12+ and Android (API 24+).
+- Positioning: a "$2,500 DAGR-class MGRS navigator" for field operators, search-and-rescue, and land-navigation training. Built by an active-duty U.S. Army officer.
+- Privacy: zero network calls for core features, no accounts, no analytics, no tracking, location in-memory only.
+- MGRS engine: DMA Technical Manual 8358.1 compliant — it truncates (not rounds) intermediate UTM values, matching military receivers (DAGR, PLGR) and NGA GeoTrans, so it stays in the correct grid square at boundaries.
+- Pricing: free core app; Pro adds a 7-day free trial, then $3.99/month, $29.99/year, or $199.99 lifetime.
+- 16 in-app languages.
+
+## Features
+- Free: 6-digit MGRS (100 m precision), offline map, three land-nav tools (back azimuth, pace count, declination), three NATO report templates (SALUTE, 9-line MEDEVAC, SPOT), one theme, one waypoint.
+- Pro: 10-digit MGRS (1 m precision); all ten tools (adds dead reckoning, resection, time-distance-speed, sun/moon, MGRS precision, elevation/slope, photo geostamp); offline tactical map packages; shareable route cards; unlimited waypoint lists with GPX/KML import & export; all six NATO reports (adds ICS 201, CASEVAC, ANGUS/CFF); all themes (NVG green, day white, blue-force); Meshtastic mesh-node awareness over Bluetooth; extra coordinate formats (UTM, lat/lon, DMS, FixPhrase); HUD mode.
+
+## Common questions
+- What is MGRS? The Military Grid Reference System — the NATO standard for reporting ground position. It is more precise and less error-prone for land navigation than latitude/longitude.
+- Does it work offline? Yes. All core navigation works with no signal; download map tiles in advance.
+- Is my location tracked? No. Location is computed on-device, held in memory, and never sent anywhere.
+- How is it different from a phone's built-in maps? It is purpose-built for MGRS land navigation, works fully offline, and makes zero network calls.
+
+## Links
+- App Store: https://apps.apple.com/app/id6759629554
+- Google Play: https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical
+- Product page: https://redgridtactical.com/mgrs.html
+- Free web MGRS converter (no install): https://redgridtactical.github.io/RedGridMGRS/tools.html
+- Privacy policy: https://redgridtactical.github.io/RedGridMGRS/privacy.html
+- Source (MIT + Commons Clause): https://github.com/RedGridTactical/RedGridMGRS
