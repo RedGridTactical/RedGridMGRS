@@ -37,6 +37,27 @@ export default {
 
   // ─── Map screen ─────────────────────────────────────────────────────
   map: {
+    delete: 'DELETE',
+    optimize: 'OPTIMIZE',
+    clear: 'CLEAR',
+    done: 'DONE',
+    routeHintEmpty: 'Tap waypoints to add',
+    routeHintOne: '1 waypoint \u2022 need 2+',
+    label: 'LABEL',
+    waypointNamePlaceholder: 'Waypoint name',
+    addToList: 'ADD TO LIST',
+    newListNote: 'New "MAP" list will be created',
+    saveNav: 'SAVE + NAV',
+    navOnly: 'NAV ONLY',
+    offlineMapsReady: 'OFFLINE MAPS READY',
+    firstVisitBody: 'Download tiles for your area with Red Grid Pro. Never get caught with a blank map in the field.',
+    startFreeTrial: 'START FREE TRIAL',
+    upgrade: 'UPGRADE',
+    dismiss: 'DISMISS',
+    readyForField: 'READY FOR THE FIELD?',
+    firstVisitModalBody: "Download offline map tiles for your current area now. You'll have maps even when you lose cell service.",
+    download: 'DOWNLOAD',
+    later: 'LATER',
     center: 'CENTER',
     addWaypoint: 'ADD WAYPOINT',
     waypointAdded: 'WAYPOINT ADDED',
@@ -146,6 +167,7 @@ export default {
 
   // ─── Tool shared labels ───────────────────────────────────────────────
   toolLabels: {
+    slopeToWaypoint: 'SLOPE TO WAYPOINT',
     magneticBearing: 'MAGNETIC BEARING (\u00b0)',
     backAzimuthResult: 'BACK AZIMUTH',
     declinationLabel: 'DECLINATION',
@@ -301,6 +323,7 @@ export default {
 
   // ─── Support / Help screen ────────────────────────────────────────────
   support: {
+    giftFreeTrial: 'GIFT A FREE TRIAL',
     title: 'HELP & SUPPORT',
     close: 'CLOSE',
     contact: 'CONTACT',

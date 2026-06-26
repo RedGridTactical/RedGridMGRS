@@ -78,7 +78,7 @@ export function ElevationTool({ location }) {
 
       {/* Slope calculator inputs */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.border }]}>SLOPE TO WAYPOINT</Text>
+        <Text style={[styles.sectionTitle, { color: colors.border }]}>{t('toolLabels.slopeToWaypoint') || 'SLOPE TO WAYPOINT'}</Text>
         <ToolInput
           label="WAYPOINT LAT"
           value={wpLat}

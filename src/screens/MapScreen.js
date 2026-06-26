@@ -720,7 +720,7 @@ export function MapScreen({
               accessibilityRole="button"
               accessibilityLabel={`Delete ${selectedMarker.label || 'waypoint'}`}
             >
-              <Text style={[styles.markerCardBtnText, { color: colors.border }]}>DELETE</Text>
+              <Text style={[styles.markerCardBtnText, { color: colors.border }]}>{t('map.delete')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -866,12 +866,12 @@ export function MapScreen({
       {routeMode && (
         <View style={[styles.routePanel, { backgroundColor: colors.card, borderColor: colors.accent, borderTopColor: colors.accent }]}>
           <View style={styles.routePanelHeader}>
-            <Text style={[styles.routePanelTitle, { color: colors.accent }]}>ROUTE</Text>
+            <Text style={[styles.routePanelTitle, { color: colors.accent }]}>{t('map.route')}</Text>
             <Text style={[styles.routePanelHint, { color: colors.text3 }]} numberOfLines={1}>
               {routeWaypoints.length === 0
-                ? 'Tap waypoints to add'
+                ? t('map.routeHintEmpty')
                 : routeWaypoints.length === 1
-                  ? '1 waypoint • need 2+'
+                  ? t('map.routeHintOne')
                   : `${routeSummary.count} wps • ${routeSummary.distance} • ${routeSummary.time}`}
             </Text>
           </View>
@@ -886,7 +886,7 @@ export function MapScreen({
               accessibilityRole="button"
               accessibilityLabel="Optimize route order from current location"
             >
-              <Text style={[styles.routePanelBtnText, { color: routeWaypoints.length >= 2 ? colors.text2 : colors.border }]}>OPTIMIZE</Text>
+              <Text style={[styles.routePanelBtnText, { color: routeWaypoints.length >= 2 ? colors.text2 : colors.border }]}>{t('map.optimize')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.routePanelBtn, {
@@ -898,7 +898,7 @@ export function MapScreen({
               accessibilityRole="button"
               accessibilityLabel="Clear all waypoints from route"
             >
-              <Text style={[styles.routePanelBtnText, { color: colors.border }]}>CLEAR</Text>
+              <Text style={[styles.routePanelBtnText, { color: colors.border }]}>{t('map.clear')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.routePanelBtn, { borderColor: colors.text2 }]}
@@ -906,7 +906,7 @@ export function MapScreen({
               accessibilityRole="button"
               accessibilityLabel="Exit route planning mode"
             >
-              <Text style={[styles.routePanelBtnText, { color: colors.text2 }]}>DONE</Text>
+              <Text style={[styles.routePanelBtnText, { color: colors.text2 }]}>{t('map.done')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -938,7 +938,7 @@ export function MapScreen({
             </Text>
 
             {/* Rename input */}
-            <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>LABEL</Text>
+            <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>{t('map.label')}</Text>
             <TextInput
               style={[styles.wpMenuInput, { borderColor: colors.border, backgroundColor: colors.bg, color: colors.text }]}
               value={wpLabel}
@@ -946,11 +946,11 @@ export function MapScreen({
               maxLength={24}
               autoCapitalize="characters"
               placeholderTextColor={colors.text4}
-              placeholder="Waypoint name"
+              placeholder={t('map.waypointNamePlaceholder')}
             />
 
             {/* List picker */}
-            <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>ADD TO LIST</Text>
+            <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>{t('map.addToList')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.wpMenuListScroll}>
               {wpLists.map(list => (
                 <TouchableOpacity
@@ -967,7 +967,7 @@ export function MapScreen({
                 </TouchableOpacity>
               ))}
               {wpLists.length === 0 && (
-                <Text style={[styles.wpMenuHint, { color: colors.text4 }]}>New "MAP" list will be created</Text>
+                <Text style={[styles.wpMenuHint, { color: colors.text4 }]}>{t('map.newListNote')}</Text>
               )}
             </ScrollView>
 
@@ -977,7 +977,7 @@ export function MapScreen({
                 style={[styles.wpMenuBtn, { borderColor: colors.accent, backgroundColor: colors.border2 }]}
                 onPress={saveWaypointFromMenu}
               >
-                <Text style={[styles.wpMenuBtnText, { color: colors.accent }]}>SAVE</Text>
+                <Text style={[styles.wpMenuBtnText, { color: colors.accent }]}>{t('common.save')}</Text>
               </TouchableOpacity>
 
               {onSetWaypoint && (
@@ -985,7 +985,7 @@ export function MapScreen({
                   style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
                   onPress={() => { saveWaypointFromMenu().then(() => navigateToWaypoint()); }}
                 >
-                  <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>SAVE + NAV</Text>
+                  <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('map.saveNav')}</Text>
                 </TouchableOpacity>
               )}
 
@@ -994,7 +994,7 @@ export function MapScreen({
                   style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
                   onPress={navigateToWaypoint}
                 >
-                  <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>NAV ONLY</Text>
+                  <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('map.navOnly')}</Text>
                 </TouchableOpacity>
               )}
 
@@ -1002,7 +1002,7 @@ export function MapScreen({
                 style={[styles.wpMenuBtn, { borderColor: colors.border }]}
                 onPress={() => { setWpMenuVisible(false); setPendingWaypoint(null); }}
               >
-                <Text style={[styles.wpMenuBtnText, { color: colors.border }]}>CANCEL</Text>
+                <Text style={[styles.wpMenuBtnText, { color: colors.border }]}>{t('common.cancel')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1013,21 +1013,21 @@ export function MapScreen({
       {firstVisitBannerVisible && (
         <View style={[styles.firstVisitBanner, { backgroundColor: colors.card, borderColor: colors.text2 }]}>
           <View style={{ flex:1 }}>
-            <Text style={[styles.firstVisitTitle, { color: colors.text }]}>OFFLINE MAPS READY</Text>
-            <Text style={[styles.firstVisitBody, { color: colors.text3 }]}>Download tiles for your area with Red Grid Pro. Never get caught with a blank map in the field.</Text>
+            <Text style={[styles.firstVisitTitle, { color: colors.text }]}>{t('map.offlineMapsReady')}</Text>
+            <Text style={[styles.firstVisitBody, { color: colors.text3 }]}>{t('map.firstVisitBody')}</Text>
           </View>
           <View style={{ gap:6 }}>
             <TouchableOpacity
               style={[styles.firstVisitPrimary, { borderColor: colors.text, backgroundColor: colors.border2 }]}
               onPress={() => { setFirstVisitBannerVisible(false); onShowProGate && onShowProGate('Offline Maps'); }}
             >
-              <Text style={[styles.firstVisitPrimaryText, { color: colors.text }]}>{trialEligible ? 'START FREE TRIAL' : 'UPGRADE'}</Text>
+              <Text style={[styles.firstVisitPrimaryText, { color: colors.text }]}>{trialEligible ? t('map.startFreeTrial') : t('map.upgrade')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.firstVisitSecondary, { borderColor: colors.border }]}
               onPress={() => setFirstVisitBannerVisible(false)}
             >
-              <Text style={[styles.firstVisitSecondaryText, { color: colors.border }]}>DISMISS</Text>
+              <Text style={[styles.firstVisitSecondaryText, { color: colors.border }]}>{t('map.dismiss')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1037,22 +1037,22 @@ export function MapScreen({
       <Modal visible={firstVisitModalVisible} transparent animationType="fade" onRequestClose={() => setFirstVisitModalVisible(false)}>
         <View style={styles.wpMenuOverlay}>
           <View style={[styles.wpMenuBox, { backgroundColor: colors.card, borderColor: colors.text2 }]}>
-            <Text style={[styles.wpMenuTitle, { color: colors.text }]}>READY FOR THE FIELD?</Text>
+            <Text style={[styles.wpMenuTitle, { color: colors.text }]}>{t('map.readyForField')}</Text>
             <Text style={[styles.firstVisitBody, { color: colors.text3, marginBottom:16 }]}>
-              Download offline map tiles for your current area now. You'll have maps even when you lose cell service.
+              {t('map.firstVisitModalBody')}
             </Text>
             <View style={styles.wpMenuActions}>
               <TouchableOpacity
                 style={[styles.wpMenuBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]}
                 onPress={() => { setFirstVisitModalVisible(false); setTimeout(() => handleDownloadTiles(), 250); }}
               >
-                <Text style={[styles.wpMenuBtnText, { color: colors.text }]}>DOWNLOAD</Text>
+                <Text style={[styles.wpMenuBtnText, { color: colors.text }]}>{t('map.download')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.wpMenuBtn, { borderColor: colors.border }]}
                 onPress={() => setFirstVisitModalVisible(false)}
               >
-                <Text style={[styles.wpMenuBtnText, { color: colors.border }]}>LATER</Text>
+                <Text style={[styles.wpMenuBtnText, { color: colors.border }]}>{t('map.later')}</Text>
               </TouchableOpacity>
             </View>
           </View>

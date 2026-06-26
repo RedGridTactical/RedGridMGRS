@@ -137,7 +137,7 @@ export function SupportScreen({ visible, onClose }) {
           </TouchableOpacity>
 
           {/* Share a free trial */}
-          <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>GIFT A FREE TRIAL</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>{t('support.giftFreeTrial')}</Text>
           <View style={[styles.shareCard, { borderColor: colors.text2, backgroundColor: colors.card }]}>
             <Text style={[styles.shareTitle, { color: colors.text }]}>SHARE 30 DAYS OF PRO</Text>
             <Text style={[styles.shareBody, { color: colors.text3 }]}>
