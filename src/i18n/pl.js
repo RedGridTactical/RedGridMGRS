@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  whatsNew: {
+    title: "CO NOWEGO",
+    continue: "KONTYNUUJ",
+    startTrial: "ROZPOCZNIJ 7-DNIOWY BEZPŁATNY OKRES PRÓBNY",
+    current: {
+      f1: { title: "KARTA TRASY", body: "Zamień dowolną listę punktów nawigacyjnych w gotową do użycia w terenie kartę trasy z azymutem, odległością i siatką dla każdego odcinka, a następnie udostępnij ją jako obraz. Pro." },
+      f2: { title: "7-DNIOWY BEZPŁATNY OKRES PRÓBNY", body: "Wypróbuj Red Grid Pro bezpłatnie przez 7 dni w planie rocznym: wszystkie narzędzia, motywy i funkcje offline. Dziś bez opłat, anuluj w dowolnej chwili." },
+      f3: { title: "DOPRACOWANIE I TŁUMACZENIA", body: "Czytelniejsze oszczędności w planie rocznym na ekranie aktualizacji, więcej przetłumaczonych ekranów oraz poprawki stabilności. Nadal offline na pierwszym miejscu, bez kont i bez śledzenia." },
+    },
+  },
   tabs: {
     grid: 'SIATKA',
     tools: 'NARZĘDZIA',

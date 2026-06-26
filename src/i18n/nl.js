@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  whatsNew: {
+    title: "NIEUW",
+    continue: "DOORGAAN",
+    startTrial: "START GRATIS PROEFPERIODE VAN 7 DAGEN",
+    current: {
+      f1: { title: "ROUTEKAART", body: "Zet elke waypointlijst om in een veldklare routekaart, met peiling, afstand en grid voor elk traject, en deel deze als afbeelding. Pro." },
+      f2: { title: "GRATIS PROEFPERIODE VAN 7 DAGEN", body: "Probeer Red Grid Pro 7 dagen gratis met het jaarabonnement: elk gereedschap, elk thema en elke offlinefunctie. Vandaag geen kosten, altijd opzegbaar." },
+      f3: { title: "VERFIJNING EN VERTALINGEN", body: "Duidelijkere jaarlijkse besparing op het upgradescherm, meer vertaalde schermen en stabiliteitsverbeteringen. Nog steeds offline-first, zonder accounts en zonder tracking." },
+    },
+  },
   tabs: {
     grid: 'GRID',
     tools: 'TOOLS',

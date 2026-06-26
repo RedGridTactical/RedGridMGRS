@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  whatsNew: {
+    title: "YENİLİKLER",
+    continue: "DEVAM ET",
+    startTrial: "7 GÜNLÜK ÜCRETSİZ DENEMEYİ BAŞLAT",
+    current: {
+      f1: { title: "ROTA KARTI", body: "Herhangi bir rota noktası listesini, her etap için kerteriz, mesafe ve grid içeren sahaya hazır bir rota kartına dönüştürün ve görsel olarak paylaşın. Pro." },
+      f2: { title: "7 GÜNLÜK ÜCRETSİZ DENEME", body: "Red Grid Pro'yu yıllık planda 7 gün boyunca ücretsiz deneyin: tüm araçlar, temalar ve çevrimdışı özellikler. Bugün hiçbir ücret yok, istediğiniz zaman iptal edebilirsiniz." },
+      f3: { title: "İYİLEŞTİRMELER VE ÇEVİRİLER", body: "Yükseltme ekranında daha net yıllık tasarruf, daha fazla çevrilmiş ekran ve kararlılık düzeltmeleri. Hâlâ çevrimdışı öncelikli, hesap ve takip yok." },
+    },
+  },
   tabs: {
     grid: 'IZGARA',
     tools: 'ARAÇLAR',

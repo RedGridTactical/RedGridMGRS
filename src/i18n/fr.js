@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  whatsNew: {
+    title: "NOUVEAUTÉS",
+    continue: "CONTINUER",
+    startTrial: "DÉMARRER L'ESSAI GRATUIT DE 7 JOURS",
+    current: {
+      f1: { title: "FICHE D'ITINÉRAIRE", body: "Transformez n'importe quelle liste de points de cheminement en une fiche d'itinéraire prête pour le terrain, avec azimut, distance et grille pour chaque segment, puis partagez-la sous forme d'image. Pro." },
+      f2: { title: "ESSAI GRATUIT DE 7 JOURS", body: "Essayez Red Grid Pro gratuitement pendant 7 jours avec l'abonnement annuel : tous les outils, thèmes et fonctions hors ligne. Aucun débit aujourd'hui, annulable à tout moment." },
+      f3: { title: "FINITIONS ET TRADUCTIONS", body: "Économies annuelles plus claires sur l'écran de mise à niveau, davantage d'écrans traduits et corrections de stabilité. Toujours hors ligne avant tout, sans comptes ni suivi." },
+    },
+  },
   routeCard: {
     title: "FICHE D'ITINÉRAIRE",
     button: "ITINÉRAIRE",

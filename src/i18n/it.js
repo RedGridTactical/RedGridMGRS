@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  whatsNew: {
+    title: "NOVITÀ",
+    continue: "CONTINUA",
+    startTrial: "INIZIA LA PROVA GRATUITA DI 7 GIORNI",
+    current: {
+      f1: { title: "SCHEDA ROTTA", body: "Trasforma qualsiasi elenco di waypoint in una scheda rotta pronta per il campo, con azimut, distanza e griglia per ogni tratta, e condividila come immagine. Pro." },
+      f2: { title: "PROVA GRATUITA DI 7 GIORNI", body: "Prova Red Grid Pro gratis per 7 giorni con il piano annuale: ogni strumento, tema e funzione offline. Nessun addebito oggi, disdici quando vuoi." },
+      f3: { title: "RIFINITURE E TRADUZIONI", body: "Risparmio annuale più chiaro nella schermata di upgrade, più schermate tradotte e correzioni di stabilità. Sempre offline-first, senza account e senza tracciamento." },
+    },
+  },
   routeCard: {
     title: "SCHEDA DI ROTTA",
     button: "ROTTA",

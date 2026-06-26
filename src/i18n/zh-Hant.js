@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  whatsNew: {
+    title: "更新內容",
+    continue: "繼續",
+    startTrial: "開始 7 天免費試用",
+    current: {
+      f1: { title: "路線卡", body: "將任何航點清單轉換為可用於野外的路線卡，每一段都附有方位、距離和網格座標，並可以圖片形式分享。Pro 功能。" },
+      f2: { title: "7 天免費試用", body: "以年度方案免費試用 Red Grid Pro 7 天：所有工具、主題和離線功能一應俱全。今日不收費，隨時可取消。" },
+      f3: { title: "優化與翻譯", body: "升級畫面上更清楚地顯示年度方案的節省金額，更多畫面已完成翻譯，並修正了穩定性問題。仍以離線為先，無需帳號，也不進行任何追蹤。" },
+    },
+  },
   tabs: {
     grid: '網格',
     tools: '工具',

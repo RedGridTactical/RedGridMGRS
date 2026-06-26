@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  whatsNew: {
+    title: "새로운 기능",
+    continue: "계속",
+    startTrial: "7일 무료 체험 시작",
+    current: {
+      f1: { title: "루트 카드", body: "웨이포인트 목록을 현장에서 바로 쓸 수 있는 루트 카드로 만들고, 각 구간의 방위, 거리, 좌표를 확인한 뒤 이미지로 공유하세요. Pro 기능입니다." },
+      f2: { title: "7일 무료 체험", body: "연간 요금제로 Red Grid Pro를 7일간 무료로 사용해 보세요. 모든 도구, 테마, 오프라인 기능을 이용할 수 있습니다. 오늘은 요금이 청구되지 않으며 언제든 취소할 수 있습니다." },
+      f3: { title: "개선 및 번역", body: "업그레이드 화면에서 연간 절약 금액이 더 명확해졌고, 번역된 화면이 늘었으며, 안정성이 개선되었습니다. 여전히 오프라인 우선이며 계정도 추적도 없습니다." },
+    },
+  },
   routeCard: {
     title: "경로 카드",
     button: "경로",

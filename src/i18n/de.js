@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  whatsNew: {
+    title: "NEUIGKEITEN",
+    continue: "WEITER",
+    startTrial: "7-TAGE-TESTPHASE STARTEN",
+    current: {
+      f1: { title: "ROUTENKARTE", body: "Verwandle jede Wegpunktliste in eine einsatzbereite Routenkarte, mit Peilung, Distanz und Gitterposition für jeden Abschnitt, und teile sie als Bild. Pro." },
+      f2: { title: "7 TAGE GRATIS TESTEN", body: "Teste Red Grid Pro 7 Tage lang kostenlos im Jahresabo: alle Werkzeuge, Themes und Offline-Funktionen. Heute keine Kosten, jederzeit kündbar." },
+      f3: { title: "FEINSCHLIFF & ÜBERSETZUNGEN", body: "Klarere Jahresersparnis auf dem Upgrade-Bildschirm, mehr übersetzte Bildschirme und Stabilitätsverbesserungen. Weiterhin Offline-First, ohne Konten und ohne Tracking." },
+    },
+  },
   routeCard: {
     title: "ROUTENKARTE",
     button: "ROUTE",

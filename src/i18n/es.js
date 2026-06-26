@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  whatsNew: {
+    title: "NOVEDADES",
+    continue: "CONTINUAR",
+    startTrial: "INICIAR PRUEBA GRATIS DE 7 DÍAS",
+    current: {
+      f1: { title: "FICHA DE RUTA", body: "Convierte cualquier lista de waypoints en una ficha de ruta lista para el campo, con rumbo, distancia y cuadrícula para cada tramo, y compártela como imagen. Pro." },
+      f2: { title: "PRUEBA GRATIS DE 7 DÍAS", body: "Prueba Red Grid Pro gratis durante 7 días con el plan anual: todas las herramientas, temas y funciones sin conexión. Sin cargo hoy, cancela cuando quieras." },
+      f3: { title: "MEJORAS Y TRADUCCIONES", body: "Ahorro anual más claro en la pantalla de mejora, más pantallas traducidas y correcciones de estabilidad. Sigue siendo sin conexión primero, sin cuentas y sin seguimiento." },
+    },
+  },
   routeCard: {
     title: "TARJETA DE RUTA",
     button: "RUTA",
