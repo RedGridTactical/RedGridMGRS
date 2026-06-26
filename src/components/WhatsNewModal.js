@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '../utils/ThemeContext';
+import { useTranslation } from '../hooks/useTranslation';
 import { tapLight } from '../utils/haptics';
 
 const SEEN_KEY = 'rg_whatsnew_seen_version';
@@ -148,11 +149,16 @@ const FEATURES_BY_VERSION = {
 export function WhatsNewModal({ currentVersion, showTrialCta, onStartTrial }) {
   const [visible, setVisible] = useState(false);
   const colors = useColors();
-  const features = FEATURES_BY_VERSION[currentVersion] || [];
+  const { t } = useTranslation();
+  const baseFeatures = FEATURES_BY_VERSION[currentVersion] || [];
+  // Localize the current release's bullets via i18n; older versions are never displayed.
+  const features = currentVersion === '3.5.0'
+    ? baseFeatures.map((f, i) => ({ icon: f.icon, title: t('whatsNew.current.f' + (i + 1) + '.title'), body: t('whatsNew.current.f' + (i + 1) + '.body') }))
+    : baseFeatures;
   // Every fresh install sees this modal (first launch counts as a version
   // change), so when the version notes lead with the free trial, give the
   // reader a direct path into the paywall instead of a dead-end CONTINUE.
-  const hasTrialCard = features.some((f) => /FREE TRIAL/i.test(f.title || ''));
+  const hasTrialCard = baseFeatures.some((f) => /FREE TRIAL/i.test(f.title || ''));
   const showCta = !!showTrialCta && !!onStartTrial && hasTrialCard;
 
   useEffect(() => {
@@ -181,7 +187,7 @@ export function WhatsNewModal({ currentVersion, showTrialCta, onStartTrial }) {
       <View style={styles.overlay}>
         <View style={[styles.box, { backgroundColor: colors.card, borderColor: colors.text2 }]}>
           <Text style={[styles.badge, { color: colors.bg, backgroundColor: colors.text }]}>v{currentVersion}</Text>
-          <Text style={[styles.title, { color: colors.text }]}>WHAT'S NEW</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t('whatsNew.title')}</Text>
           <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
             {features.map((f, i) => (
               <View key={i} style={[styles.row, { borderBottomColor: colors.border2 }]}>
@@ -200,7 +206,7 @@ export function WhatsNewModal({ currentVersion, showTrialCta, onStartTrial }) {
               accessibilityRole="button"
               accessibilityLabel="Start 7-day free trial"
             >
-              <Text style={[styles.ctaText, { color: colors.bg }]}>START 7-DAY FREE TRIAL</Text>
+              <Text style={[styles.ctaText, { color: colors.bg }]}>{t('whatsNew.startTrial')}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity
@@ -209,7 +215,7 @@ export function WhatsNewModal({ currentVersion, showTrialCta, onStartTrial }) {
             accessibilityRole="button"
             accessibilityLabel="Continue"
           >
-            <Text style={[styles.dismissText, { color: colors.text }]}>CONTINUE</Text>
+            <Text style={[styles.dismissText, { color: colors.text }]}>{t('whatsNew.continue')}</Text>
           </TouchableOpacity>
         </View>
       </View>

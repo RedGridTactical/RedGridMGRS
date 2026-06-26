@@ -498,6 +498,17 @@ export default {
   },
 
   // \u2500\u2500\u2500 Mission Preflight (v3.4) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  whatsNew: {
+    title: "WHAT'S NEW",
+    continue: 'CONTINUE',
+    startTrial: 'START 7-DAY FREE TRIAL',
+    current: {
+      f1: { title: 'ROUTE CARD', body: 'Turn any waypoint list into a field-ready route card, with bearing, distance, and grid for every leg, and share it as an image. Pro.' },
+      f2: { title: '7-DAY FREE TRIAL', body: 'Try Red Grid Pro free for 7 days on the annual plan: every tool, theme, and offline feature. No charge today, cancel anytime.' },
+      f3: { title: 'POLISH & TRANSLATIONS', body: 'Clearer annual savings on the upgrade screen, more translated screens, and stability fixes. Still offline-first, with no accounts and no tracking.' },
+    },
+  },
+
   preflight: {
     title: 'MISSION PREFLIGHT',
     summary: {
