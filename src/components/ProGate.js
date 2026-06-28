@@ -66,6 +66,21 @@ export function ProGate({
     return pct > 5 && pct < 90 ? pct : null;
   })();
 
+  // Per-month equivalent of the annual plan, formatted in the store's OWN
+  // currency (never a hardcoded $) so the annual tier visibly undercuts the
+  // monthly price. Degrades to null if prices/currency are unavailable or Intl
+  // currency formatting is unsupported on the device — the line just won't render.
+  const annualPerMonth = (() => {
+    const a = parseFloat(products?.annual?.price);
+    const cur = products?.annual?.currency;
+    if (!a || a <= 0 || !cur) return null;
+    try {
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur }).format(a / 12);
+    } catch (e) {
+      return null;
+    }
+  })();
+
   return (
     <Modal
       visible={visible}
@@ -136,6 +151,11 @@ export function ProGate({
                   {tier.id === 'annual' && annualSavingsPct != null && (
                     <Text style={[styles.tierSavings, { color: colors.text2 }]} maxFontSizeMultiplier={1.2}>
                       {t('proGate.saveVsMonthly', { pct: annualSavingsPct })}
+                    </Text>
+                  )}
+                  {tier.id === 'annual' && annualPerMonth && (
+                    <Text style={[styles.tierSavings, { color: colors.text3 }]} maxFontSizeMultiplier={1.2}>
+                      {`≈ ${annualPerMonth}${t('proGate.perMonth')}`}
                     </Text>
                   )}
                 </TouchableOpacity>
