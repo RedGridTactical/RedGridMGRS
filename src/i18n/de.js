@@ -396,7 +396,7 @@ export default {
     subtitleGeneric: 'Das volle Red Grid Erlebnis freischalten',
     unlockButton: 'RED GRID PRO FREISCHALTEN',
     startTrial: '7 TAGE KOSTENLOS TESTEN',
-    thenPrice: 'heute keine Kosten · danach {{price}}/Jahr · jederzeit kündbar',
+    thenPrice: 'heute keine Kosten · danach {{price}} · jederzeit kündbar',
     restore: 'FR\u00dcHEREN KAUF WIEDERHERSTELLEN',
     notNow: 'NICHT JETZT',
     priceSubtitle: 'PLAN WÄHLEN',

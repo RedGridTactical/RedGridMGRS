@@ -364,7 +364,11 @@ export function useIAP() {
     let cancelled = false;
     (async () => {
       try {
-        if (!detectFreeTrial(products.annual).hasTrial) {
+        // Trial follows store config: eligible if ANY sub tier currently
+        // advertises a free-trial intro offer (monthly first per the
+        // 2026-06-26 pricing strategy, annual as fallback).
+        const hasTrial = detectFreeTrial(products.monthly).hasTrial || detectFreeTrial(products.annual).hasTrial;
+        if (!hasTrial) {
           if (!cancelled && mounted.current) setTrialEligible(false);
           return;
         }
@@ -396,7 +400,7 @@ export function useIAP() {
       }
     })();
     return () => { cancelled = true; };
-  }, [products.annual]);
+  }, [products.monthly, products.annual]);
 
   // ── Persist Pro unlock ─────────────────────────────────────────────────────
   // Records WHICH product unlocked Pro (drives subscription re-verification)
@@ -513,8 +517,12 @@ export function useIAP() {
       // server-side, so an ineligible trial-token purchase fails gracefully.)
       let subscriptionOffers;
       if (isAndroid && sub) {
+        // Apply the free-trial offer token only when buying the tier that
+        // carries the trial (follows store config: monthly per the strategy).
+        const trialTier = detectFreeTrial(products.monthly).hasTrial ? 'monthly'
+                        : detectFreeTrial(products.annual).hasTrial ? 'annual' : null;
         const offerToken =
-          (effectiveTier === 'annual' && trialEligible && getAndroidTrialOfferToken(entry)) ||
+          (effectiveTier === trialTier && trialEligible && getAndroidTrialOfferToken(entry)) ||
           getAndroidOfferToken(entry);
         if (!offerToken) {
           try {

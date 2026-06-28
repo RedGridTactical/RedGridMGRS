@@ -10,6 +10,7 @@ import {
 import { useColors } from '../utils/ThemeContext';
 import { tapMedium, tapLight } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
+import { detectFreeTrial } from '../utils/iapOffers';
 
 // Outcome-led rows matching what the gates actually sell \u2014 a user gated on
 // "Offline Maps" must land on a list that leads with offline maps.
@@ -54,7 +55,12 @@ export function ProGate({
   const activeTier = selectedTier || 'annual';
   // Surface the live 7-day free trial when the annual tier is selected and the
   // user is intro-offer eligible; otherwise fall back to the standard unlock CTA.
-  const showTrial = activeTier === 'annual' && !!trialEligible;
+  // Which sub tier currently carries the free-trial offer (follows store
+  // config: monthly per the 2026-06-26 pricing strategy, annual as fallback).
+  // Derived locally from the same products prop — no extra prop threading.
+  const trialTier = detectFreeTrial(products?.monthly).hasTrial ? 'monthly'
+                  : detectFreeTrial(products?.annual).hasTrial ? 'annual' : null;
+  const showTrial = !!trialEligible && trialTier != null && activeTier === trialTier;
 
   // Live "save X% vs monthly" framing — computed from real store prices so it
   // stays correct across all territories/PPP. Hidden when prices unavailable.
@@ -126,7 +132,7 @@ export function ProGate({
               // When the user is trial-eligible, the annual card leads with the
               // free-trial hook instead of "best value" — surfaces the $0-to-start
               // offer at tier selection, not just after the annual tier is picked.
-              const badgeKey = (tier.id === 'annual' && trialEligible) ? 'proGate.freeTrialBadge' : tier.badge;
+              const badgeKey = (tier.id === trialTier && trialEligible) ? 'proGate.freeTrialBadge' : tier.badge;
               return (
                 <TouchableOpacity
                   key={tier.id}
@@ -171,7 +177,7 @@ export function ProGate({
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel={showTrial
-              ? `${t('proGate.startTrial')}. ${t('proGate.thenPrice', { price: getPriceForTier('annual') || '' })}`
+              ? `${t('proGate.startTrial')}. ${t('proGate.thenPrice', { price: getPriceForTier(trialTier) || '' })}`
               : `${t('proGate.unlockButton')} ${getPriceForTier(activeTier) || ''}`}
             accessibilityState={{ disabled: isPurchasing || !pricesLoaded }}
           >
@@ -191,7 +197,7 @@ export function ProGate({
           {/* Trial terms subtext — only when the free trial is being offered */}
           {showTrial && !isPurchasing && pricesLoaded && (
             <Text style={[styles.trialSub, { color: colors.text3 }]}>
-              {t('proGate.thenPrice', { price: getPriceForTier('annual') })}
+              {t('proGate.thenPrice', { price: getPriceForTier(trialTier) })}
             </Text>
           )}
 

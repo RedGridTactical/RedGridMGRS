@@ -396,7 +396,7 @@ export default {
     subtitleGeneric: 'Red Grid\u306e\u30d5\u30eb\u4f53\u9a13\u3092\u30a2\u30f3\u30ed\u30c3\u30af',
     unlockButton: 'RED GRID PRO\u3092\u30a2\u30f3\u30ed\u30c3\u30af',
     startTrial: '7日間無料トライアル',
-    thenPrice: '本日の請求なし · その後 {{price}}/年 · いつでも解約可能',
+    thenPrice: '本日の請求なし · その後 {{price}} · いつでも解約可能',
     restore: '\u4ee5\u524d\u306e\u8cfc\u5165\u3092\u5fa9\u5143',
     notNow: '\u4eca\u306f\u3057\u306a\u3044',
     priceSubtitle: 'プランを選択',

@@ -396,7 +396,7 @@ export default {
     subtitleGeneric: 'Desbloquea la experiencia completa de Red Grid',
     unlockButton: 'DESBLOQUEAR RED GRID PRO',
     startTrial: 'PRUEBA GRATIS DE 7 DÍAS',
-    thenPrice: 'sin cargo hoy · luego {{price}}/año · cancela cuando quieras',
+    thenPrice: 'sin cargo hoy · luego {{price}} · cancela cuando quieras',
     restore: 'RESTAURAR COMPRA ANTERIOR',
     notNow: 'AHORA NO',
     priceSubtitle: 'ELIGE TU PLAN',

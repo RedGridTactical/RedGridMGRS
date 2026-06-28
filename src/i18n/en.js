@@ -416,7 +416,7 @@ export default {
     subtitleGeneric: 'Unlock the full Red Grid experience',
     unlockButton: 'UNLOCK RED GRID PRO',
     startTrial: 'START 7-DAY FREE TRIAL',
-    thenPrice: 'no charge today · then {{price}}/yr · cancel anytime',
+    thenPrice: 'no charge today · then {{price}} · cancel anytime',
     restore: 'RESTORE PREVIOUS PURCHASE',
     notNow: 'NOT NOW',
     priceSubtitle: 'CHOOSE YOUR PLAN',

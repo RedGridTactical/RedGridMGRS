@@ -396,7 +396,7 @@ export default {
     subtitleGeneric: 'Red Grid\uc758 \uc804\uccb4 \uacbd\ud5d8\uc744 \uc7a0\uae08 \ud574\uc81c',
     unlockButton: 'RED GRID PRO \uc7a0\uae08 \ud574\uc81c',
     startTrial: '7일 무료 체험',
-    thenPrice: '오늘 청구 없음 · 이후 {{price}}/년 · 언제든지 취소 가능',
+    thenPrice: '오늘 청구 없음 · 이후 {{price}} · 언제든지 취소 가능',
     restore: '\uc774\uc804 \uad6c\ub9e4 \ubcf5\uc6d0',
     notNow: '\ub098\uc911\uc5d0',
     priceSubtitle: '플랜 선택',
