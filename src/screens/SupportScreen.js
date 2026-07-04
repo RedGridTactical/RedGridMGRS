@@ -12,7 +12,7 @@ import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptic
 import { useTranslation } from '../hooks/useTranslation';
 import { hasSharedTrial, mintShareLink, getTrialStatus } from '../utils/referral';
 
-const APP_VERSION = '3.5.0';
+const APP_VERSION = '3.5.1';
 const SUPPORT_EMAIL = 'support@redgridtactical.com';
 const GITHUB_URL = 'https://github.com/RedGridTactical/RedGridMGRS';
 const PRIVACY_URL = 'https://redgridtactical.github.io/RedGridMGRS/privacy.html';
@@ -58,7 +58,7 @@ export function SupportScreen({ visible, onClose }) {
       try {
         Alert.alert(
           'Already Shared',
-          'You have already shared your free trial. Each device can give exactly one 30-day Pro trial to a friend — and you already did. Thank you.'
+          'You have already shared your free trial. Each device can give exactly one 7-day Pro trial to a friend — and you already did. Thank you.'
         );
       } catch {}
       setAlreadyShared(true);
@@ -66,7 +66,7 @@ export function SupportScreen({ visible, onClose }) {
     }
     try {
       await Share.share({
-        message: `I'm using Red Grid MGRS — a free tactical MGRS navigator. Here's 30 days of Pro on me:\n\n${result.url}\n\nZero tracking, offline maps, Meshtastic mesh. Works without cell service.`,
+        message: `I'm using Red Grid MGRS — a free tactical MGRS navigator. Here's 7 days of Pro on me:\n\n${result.url}\n\nZero tracking, offline maps, Meshtastic mesh. Works without cell service.`,
         url: result.url,
       });
       notifySuccess();
@@ -139,9 +139,9 @@ export function SupportScreen({ visible, onClose }) {
           {/* Share a free trial */}
           <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>{t('support.giftFreeTrial')}</Text>
           <View style={[styles.shareCard, { borderColor: colors.text2, backgroundColor: colors.card }]}>
-            <Text style={[styles.shareTitle, { color: colors.text }]}>SHARE 30 DAYS OF PRO</Text>
+            <Text style={[styles.shareTitle, { color: colors.text }]}>SHARE 7 DAYS OF PRO</Text>
             <Text style={[styles.shareBody, { color: colors.text3 }]}>
-              Give a friend 30 days of Red Grid Pro free. One gift per device, ever — choose your friend carefully.
+              Give a friend 7 days of Red Grid Pro free. One gift per device, ever — choose your friend carefully.
             </Text>
             {trialStatus.active && (
               <Text style={[styles.shareStatus, { color: colors.text2 }]}>

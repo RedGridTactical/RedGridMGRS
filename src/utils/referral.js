@@ -5,7 +5,7 @@
  *   - Every device can RECEIVE one trial, exactly once, ever.
  *   - Every device can SHARE one trial (one link that successfully redeems), exactly once, ever.
  *   - These are two independent one-shot permissions.
- *   - Receiver gets a 30-day Pro grant when TRIAL_ENTITLEMENT_GRANTED is true.
+ *   - Receiver gets a 7-day Pro grant when TRIAL_ENTITLEMENT_GRANTED is true.
  *     Sender gets no reward — sharing is altruistic.
  *   - Zero network: all token signing/validation happens locally via HMAC-SHA256.
  *
@@ -67,7 +67,7 @@ const SHARED_SECRET = 'rg-mgrs-trial-v1-7f3e2c9d4a1b8e5f6c0d';
 export const TRIAL_ENTITLEMENT_GRANTED = true;
 
 // Trial length in days. Only meaningful when TRIAL_ENTITLEMENT_GRANTED is true.
-const TRIAL_DAYS = 30;
+const TRIAL_DAYS = 7;
 
 // Token freshness window — links older than this cannot be redeemed. Reduced
 // from 90 to 14 days so a leaked link has a tighter blast radius. Existing

@@ -45,7 +45,7 @@ const FEATURES_BY_VERSION = {
     {
       icon: '⤴',
       title: 'SHARE FREE TRIAL',
-      body: 'Give a friend 30 days of Red Grid Pro. One gift, one trial — both directions, just once.',
+      body: 'Give a friend 7 days of Red Grid Pro. One gift, one trial — both directions, just once.',
     },
   ],
   '3.3.2': [

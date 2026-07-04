@@ -643,7 +643,7 @@ function AppContent({
           users the trial card carries a START FREE TRIAL action into the
           paywall (every fresh install sees this modal; it used to be read-only). */}
       <WhatsNewModal
-        currentVersion="3.5.0"
+        currentVersion="3.5.1"
         showTrialCta={!isPro}
         onStartTrial={() => showProGate('Red Grid Pro')}
       />
