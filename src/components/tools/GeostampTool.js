@@ -98,7 +98,7 @@ export function GeostampTool({ location }) {
       tapMedium();
     } catch (err) {
       if (mounted.current) {
-        Alert.alert(t('toolLabels.cameraError'), err?.message || 'Could not take photo.');
+        Alert.alert(t('toolLabels.cameraError'), err?.message || t('alerts.couldNotTakePhoto'));
       }
     }
   }, [mgrsNow]);
@@ -132,7 +132,7 @@ export function GeostampTool({ location }) {
       tapMedium();
     } catch (err) {
       if (mounted.current) {
-        Alert.alert(t('toolLabels.libraryError'), err?.message || 'Could not pick photo.');
+        Alert.alert(t('toolLabels.libraryError'), err?.message || t('alerts.couldNotPickPhoto'));
       }
     }
   }, [mgrsNow]);
@@ -172,7 +172,7 @@ export function GeostampTool({ location }) {
     } catch (err) {
       if (mounted.current) setSaving(false);
       notifyWarning();
-      Alert.alert(t('toolLabels.saveError'), err?.message || 'Could not save photo.');
+      Alert.alert(t('toolLabels.saveError'), err?.message || t('alerts.couldNotSavePhoto'));
     }
   }, []);
 

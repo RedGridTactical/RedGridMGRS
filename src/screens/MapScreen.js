@@ -237,14 +237,14 @@ export function MapScreen({
     if (totalTiles > MAX_TILES) {
       Alert.alert(
         t('map.downloadTiles'),
-        `Too many tiles (${totalTiles}). Zoom in to a smaller area.`
+        t('alerts.tooManyTiles', { count: totalTiles })
       );
       return;
     }
 
     Alert.alert(
       t('map.downloadTiles'),
-      `Download ${totalTiles} tiles for this area? (zoom 10-16)`,
+      t('alerts.confirmDownloadTiles', { count: totalTiles }),
       [
         { text: t('waypoints.cancel'), style: 'cancel' },
         {
@@ -431,11 +431,11 @@ export function MapScreen({
   const confirmDeleteSelectedMarker = useCallback(() => {
     if (!selectedMarker) return;
     Alert.alert(
-      'Delete waypoint?',
-      `Remove ${selectedMarker.label || 'this waypoint'} from the map.`,
+      t('alerts.deleteWaypointTitle'),
+      t('alerts.deleteWaypointBody', { label: selectedMarker.label || t('alerts.thisWaypoint') }),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => deleteWaypointById(selectedMarker.id) },
+        { text: t('waypoints.cancel'), style: 'cancel' },
+        { text: t('waypoints.delete'), style: 'destructive', onPress: () => deleteWaypointById(selectedMarker.id) },
       ],
     );
   }, [selectedMarker, deleteWaypointById]);

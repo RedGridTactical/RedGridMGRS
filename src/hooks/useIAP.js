@@ -17,6 +17,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { detectFreeTrial, hasPriorSubscription, getAndroidTrialOfferToken } from '../utils/iapOffers';
+import i18n from '../i18n';
 
 const PRO_KEY         = 'rg_pro_unlocked';
 const PRO_RECEIPT_KEY = 'rg_pro_receipt';
@@ -474,7 +475,7 @@ export function useIAP() {
   const purchase = useCallback(async (tier) => {
     if (!IAPModule) {
       try {
-        Alert.alert('Unavailable', 'In-app purchases are not available in this build.');
+        Alert.alert(i18n.t('iap.unavailableTitle'), i18n.t('iap.unavailableBody'));
       } catch {}
       return;
     }
@@ -504,8 +505,8 @@ export function useIAP() {
       if (!entry) {
         try {
           Alert.alert(
-            'Store unavailable',
-            'Could not load product details from the store. Please check your network and try again.'
+            i18n.t('iap.storeUnavailableTitle'),
+            i18n.t('iap.storeUnavailableBody')
           );
         } catch {}
         return;
@@ -527,8 +528,8 @@ export function useIAP() {
         if (!offerToken) {
           try {
             Alert.alert(
-              'Subscription unavailable',
-              'No active subscription offer was found for this product. Please try again later.'
+              i18n.t('iap.subUnavailableTitle'),
+              i18n.t('iap.subUnavailableBody')
             );
           } catch {}
           return;
@@ -573,8 +574,8 @@ export function useIAP() {
           matched.purchaseStateAndroid != null && Number(matched.purchaseStateAndroid) === 2) {
         try {
           Alert.alert(
-            'Payment pending',
-            'Your payment is still processing. Pro will unlock automatically as soon as it completes.'
+            i18n.t('iap.paymentPendingTitle'),
+            i18n.t('iap.paymentPendingBody')
           );
         } catch {}
         return;
@@ -614,10 +615,10 @@ export function useIAP() {
       if (!wasCancelled) {
         try {
           Alert.alert(
-            wasTimeout ? 'Still waiting on the store' : 'Purchase failed',
+            wasTimeout ? i18n.t('iap.stillWaitingTitle') : i18n.t('iap.purchaseFailedTitle'),
             wasTimeout
-              ? 'The store is taking longer than expected. If you completed the purchase, Pro will unlock automatically — or tap RESTORE in a moment.'
-              : (e?.message || 'Please try again.')
+              ? i18n.t('iap.stillWaitingBody')
+              : (e?.message || i18n.t('iap.tryAgain'))
           );
         } catch {}
       }
@@ -630,7 +631,7 @@ export function useIAP() {
   const restore = useCallback(async () => {
     if (!IAPModule) {
       try {
-        Alert.alert('Unavailable', 'In-app purchases are not available in this build.');
+        Alert.alert(i18n.t('iap.unavailableTitle'), i18n.t('iap.unavailableBody'));
       } catch {}
       return;
     }
@@ -662,19 +663,19 @@ export function useIAP() {
         const best = lifetimeOwned || ownedPro[0];
         await persistPro('restored', best.id || best.productId || 'unknown');
         try {
-          Alert.alert('Restored', 'Red Grid Pro has been restored.');
+          Alert.alert(i18n.t('iap.restoredTitle'), i18n.t('iap.restoredBody'));
         } catch {}
       } else {
         try {
           Alert.alert(
-            'Nothing to restore',
-            'No previous Pro purchase found on this account.'
+            i18n.t('iap.nothingToRestoreTitle'),
+            i18n.t('iap.nothingToRestoreBody')
           );
         } catch {}
       }
     } catch (e) {
       try {
-        Alert.alert('Restore failed', e?.message || 'Please try again.');
+        Alert.alert(i18n.t('iap.restoreFailedTitle'), e?.message || i18n.t('iap.tryAgain'));
       } catch {}
     } finally {
       if (mounted.current) setIsRestoring(false);

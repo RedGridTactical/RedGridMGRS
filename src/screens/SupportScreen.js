@@ -57,8 +57,8 @@ export function SupportScreen({ visible, onClose }) {
       notifyError();
       try {
         Alert.alert(
-          'Already Shared',
-          'You have already shared your free trial. Each device can give exactly one 7-day Pro trial to a friend — and you already did. Thank you.'
+          t('trial.alreadySharedTitle'),
+          t('trial.alreadySharedBody')
         );
       } catch {}
       setAlreadyShared(true);
@@ -66,7 +66,7 @@ export function SupportScreen({ visible, onClose }) {
     }
     try {
       await Share.share({
-        message: `I'm using Red Grid MGRS — a free tactical MGRS navigator. Here's 7 days of Pro on me:\n\n${result.url}\n\nZero tracking, offline maps, Meshtastic mesh. Works without cell service.`,
+        message: t('trial.shareMessage', { url: result.url }),
         url: result.url,
       });
       notifySuccess();
@@ -139,9 +139,9 @@ export function SupportScreen({ visible, onClose }) {
           {/* Share a free trial */}
           <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>{t('support.giftFreeTrial')}</Text>
           <View style={[styles.shareCard, { borderColor: colors.text2, backgroundColor: colors.card }]}>
-            <Text style={[styles.shareTitle, { color: colors.text }]}>SHARE 7 DAYS OF PRO</Text>
+            <Text style={[styles.shareTitle, { color: colors.text }]}>{t('trial.shareCardTitle')}</Text>
             <Text style={[styles.shareBody, { color: colors.text3 }]}>
-              Give a friend 7 days of Red Grid Pro free. One gift per device, ever — choose your friend carefully.
+              {t('trial.shareCardBody')}
             </Text>
             {trialStatus.active && (
               <Text style={[styles.shareStatus, { color: colors.text2 }]}>

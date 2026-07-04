@@ -176,16 +176,16 @@ function App() {
         setTrialDaysLeft(status.daysLeft);
         try {
           Alert.alert(
-            '30 DAYS OF PRO UNLOCKED',
-            `A friend has shared Red Grid Pro with you. All features are now active for ${status.daysLeft} days. Enjoy.`
+            t('trial.receivedTitle'),
+            t('trial.receivedBody', { days: status.daysLeft })
           );
         } catch {}
       } else if (result.reason === 'already_received') {
-        try { Alert.alert('Trial Already Used', 'You have already redeemed a shared trial on this device.'); } catch {}
+        try { Alert.alert(t('trial.alreadyUsedTitle'), t('trial.alreadyUsedBody')); } catch {}
       } else if (result.reason === 'expired') {
-        try { Alert.alert('Link Expired', 'This trial link has expired. Ask for a new one.'); } catch {}
+        try { Alert.alert(t('trial.linkExpiredTitle'), t('trial.linkExpiredBody')); } catch {}
       } else {
-        try { Alert.alert('Invalid Trial Link', 'This trial link could not be verified.'); } catch {}
+        try { Alert.alert(t('trial.invalidTitle'), t('trial.invalidBody')); } catch {}
       }
     };
     // Handle cold-start deep link
@@ -253,7 +253,7 @@ function App() {
       setProGateVisible(false);
       notifySuccess();
       trackEvent('purchase_success');
-      try { Alert.alert('PRO UNLOCKED', 'All Red Grid Pro features are now active.'); } catch {}
+      try { Alert.alert(t('iap.purchasedTitle'), t('iap.purchasedBody')); } catch {}
     }
     wasProRef.current = isPro;
   }, [isPro, proGateVisible]);
@@ -272,7 +272,7 @@ function App() {
   const [markToast, setMarkToast] = useState(null);
   const handleMarkPosition = useCallback(() => {
     if (!location?.lat || !location?.lon) {
-      try { Alert.alert('No GPS fix', 'Waiting for a valid position. Move to open sky and try again.'); } catch {}
+      try { Alert.alert(t('alerts.noGpsFixTitle'), t('alerts.noGpsFixBody')); } catch {}
       return;
     }
     const now = new Date();
