@@ -20,7 +20,7 @@
     "expo-file-system": "~18.1.11",
     "expo-font": "~13.3.2",
     "expo-haptics": "~14.1.4",
-    "expo-iap": "~2.4.0",
+    "expo-iap": "2.8.0",
     "expo-image-picker": "~16.1.4",
     "expo-localization": "~16.1.6",
     "expo-location": "~18.1.6",
@@ -59,7 +59,14 @@
     "type": "git",
     "url": "git+https://github.com/RedGridTactical/RedGridMGRS.git"
   },
-  "keywords": ["mgrs", "navigation", "tactical", "military", "gps", "offline-maps"],
+  "keywords": [
+    "mgrs",
+    "navigation",
+    "tactical",
+    "military",
+    "gps",
+    "offline-maps"
+  ],
   "author": "Red Grid Tactical",
   "license": "SEE LICENSE IN LICENSE",
   "bugs": {

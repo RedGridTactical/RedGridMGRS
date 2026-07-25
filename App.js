@@ -13,8 +13,12 @@ import './src/i18n';
 import React, { useState, useMemo, useCallback, useRef, useEffect, Component } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated,
-  SafeAreaView, StatusBar, useWindowDimensions, AccessibilityInfo, Alert, Linking,
+  StatusBar, useWindowDimensions, AccessibilityInfo, Alert, Linking,
 } from 'react-native';
+// SafeAreaView MUST come from react-native-safe-area-context, not react-native:
+// RN's built-in SafeAreaView is a no-op on Android, so with edge-to-edge enforced
+// (targetSdk 35+) content renders under the status bar and gesture bar.
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from './src/hooks/useTranslation';
 
 import { useLocation }  from './src/hooks/useLocation';
@@ -492,7 +496,9 @@ function AppContent({
   return (
     <View style={staticStyles.root}>
     <SafeAreaView style={[staticStyles.root, { backgroundColor: colors.bg }]}>
-      <StatusBar barStyle={statusBarStyle} backgroundColor={colors.bg} hidden={isLandscape || hudMode} />
+      {/* backgroundColor is deprecated and ignored under edge-to-edge (Android 15+);
+          the SafeAreaView background supplies the status-bar backdrop instead. */}
+      <StatusBar barStyle={statusBarStyle} translucent hidden={isLandscape || hudMode} />
 
       {/* Screen content with fade transition */}
       <Animated.View style={[staticStyles.screenContent, { opacity: fadeAnim }]}>
@@ -643,7 +649,7 @@ function AppContent({
           users the trial card carries a START FREE TRIAL action into the
           paywall (every fresh install sees this modal; it used to be read-only). */}
       <WhatsNewModal
-        currentVersion="3.5.1"
+        currentVersion="3.5.2"
         showTrialCta={!isPro}
         onStartTrial={() => showProGate('Red Grid Pro')}
       />
@@ -669,9 +675,11 @@ function AppContent({
 // Export the app wrapped in error boundary
 export default function AppWithErrorBoundary() {
   return (
-    <AppErrorBoundary>
-      <App />
-    </AppErrorBoundary>
+    <SafeAreaProvider>
+      <AppErrorBoundary>
+        <App />
+      </AppErrorBoundary>
+    </SafeAreaProvider>
   );
 }
 
