@@ -4,6 +4,15 @@
  */
 export default {
   team: {
+    msgRoger: "수신",
+    msgMoving: "이동 중",
+    msgHolding: "대기 중",
+    msgContact: "적 접촉",
+    msgAssist: "지원 요청",
+    msgRally: "집결",
+    msgCustom: "직접 입력",
+    msgSend: "전송",
+    msgPlaceholder: "짧게. 무선 대역은 공유됩니다",
     rosterTitle: "팀",
     emptyTitle: "메시에 피어 없음",
     emptyBody: "Meshtastic 무전기를 연결하면 Red Grid를 사용하는 팀원이 여기에 자동으로 표시됩니다.",

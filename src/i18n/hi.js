@@ -4,6 +4,15 @@
  */
 export default {
   team: {
+    msgRoger: "समझ गया",
+    msgMoving: "गतिमान",
+    msgHolding: "स्थिति पर",
+    msgContact: "संपर्क",
+    msgAssist: "सहायता",
+    msgRally: "एकत्र",
+    msgCustom: "अपना संदेश",
+    msgSend: "भेजें",
+    msgPlaceholder: "संक्षिप्त रखें, रेडियो बैंडविड्थ साझा है",
     rosterTitle: "टीम",
     emptyTitle: "मेश पर कोई साथी नहीं",
     emptyBody: "Meshtastic रेडियो कनेक्ट करें, Red Grid चलाने वाले साथी यहाँ अपने आप दिखेंगे।",

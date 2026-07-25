@@ -4,6 +4,15 @@
  */
 export default {
   team: {
+    msgRoger: "ENTENDIDO",
+    msgMoving: "EM MOVIMENTO",
+    msgHolding: "EM POSIÇÃO",
+    msgContact: "CONTATO",
+    msgAssist: "APOIO",
+    msgRally: "REUNIR",
+    msgCustom: "MENSAGEM PRÓPRIA",
+    msgSend: "ENVIAR",
+    msgPlaceholder: "Seja breve, a banda do rádio é compartilhada",
     rosterTitle: "EQUIPE",
     emptyTitle: "NENHUM PAR NA MALHA",
     emptyBody: "Conecte um rádio Meshtastic e os companheiros com Red Grid aparecerão aqui automaticamente.",

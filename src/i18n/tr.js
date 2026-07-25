@@ -4,6 +4,15 @@
  */
 export default {
   team: {
+    msgRoger: "ANLAŞILDI",
+    msgMoving: "HAREKETTE",
+    msgHolding: "MEVZİDE",
+    msgContact: "TEMAS",
+    msgAssist: "DESTEK",
+    msgRally: "TOPLANMA",
+    msgCustom: "ÖZEL MESAJ",
+    msgSend: "GÖNDER",
+    msgPlaceholder: "Kısa tutun, telsiz bant genişliği ortaktır",
     rosterTitle: "EKİP",
     emptyTitle: "AĞDA EŞ YOK",
     emptyBody: "Bir Meshtastic telsizi bağlayın; Red Grid kullanan ekip arkadaşları burada otomatik olarak görünür.",

@@ -492,6 +492,15 @@ export default {
 
   // \u2500\u2500\u2500 Common verbs (shared across screens) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
   team: {
+    msgRoger: "ROGER",
+    msgMoving: "MOVING",
+    msgHolding: "HOLDING",
+    msgContact: "CONTACT",
+    msgAssist: "ASSIST",
+    msgRally: "RALLY",
+    msgCustom: "CUSTOM MESSAGE",
+    msgSend: "SEND",
+    msgPlaceholder: "Keep it short, radio bandwidth is shared",
     rosterTitle: 'TEAM',
     emptyTitle: 'NO PEERS ON MESH',
     emptyBody: 'Connect a Meshtastic radio and teammates running Red Grid will appear here automatically.',

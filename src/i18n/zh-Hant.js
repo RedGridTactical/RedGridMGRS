@@ -4,6 +4,15 @@
  */
 export default {
   team: {
+    msgRoger: "收到",
+    msgMoving: "移動中",
+    msgHolding: "原地待命",
+    msgContact: "接敵",
+    msgAssist: "請求支援",
+    msgRally: "集合",
+    msgCustom: "自訂訊息",
+    msgSend: "傳送",
+    msgPlaceholder: "簡短些，無線頻寬是共享的",
     rosterTitle: "小隊",
     emptyTitle: "網狀網路中無成員",
     emptyBody: "連接 Meshtastic 電台後，使用 Red Grid 的隊友會自動顯示在這裡。",

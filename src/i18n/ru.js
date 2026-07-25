@@ -4,6 +4,15 @@
  */
 export default {
   team: {
+    msgRoger: "ПРИНЯЛ",
+    msgMoving: "В ДВИЖЕНИИ",
+    msgHolding: "НА МЕСТЕ",
+    msgContact: "КОНТАКТ",
+    msgAssist: "ПОМОЩЬ",
+    msgRally: "СБОР",
+    msgCustom: "СВОЁ СООБЩЕНИЕ",
+    msgSend: "ОТПРАВИТЬ",
+    msgPlaceholder: "Короче: радиоканал общий",
     rosterTitle: "ГРУППА",
     emptyTitle: "НЕТ УЧАСТНИКОВ В СЕТИ",
     emptyBody: "Подключите рацию Meshtastic, и участники с Red Grid появятся здесь автоматически.",

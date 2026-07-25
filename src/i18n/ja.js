@@ -4,6 +4,15 @@
  */
 export default {
   team: {
+    msgRoger: "了解",
+    msgMoving: "移動中",
+    msgHolding: "待機中",
+    msgContact: "接敵",
+    msgAssist: "支援要請",
+    msgRally: "集合",
+    msgCustom: "カスタム送信",
+    msgSend: "送信",
+    msgPlaceholder: "短く。無線帯域は共有です",
     rosterTitle: "チーム",
     emptyTitle: "メッシュに相手がいません",
     emptyBody: "Meshtastic無線機を接続すると、Red Gridを使用中の仲間がここに自動的に表示されます。",

@@ -4,6 +4,15 @@
  */
 export default {
   team: {
+    msgRoger: "VERSTANDEN",
+    msgMoving: "IN BEWEGUNG",
+    msgHolding: "HALTE",
+    msgContact: "FEINDKONTAKT",
+    msgAssist: "HILFE",
+    msgRally: "SAMMELN",
+    msgCustom: "EIGENE NACHRICHT",
+    msgSend: "SENDEN",
+    msgPlaceholder: "Kurz halten, die Funkbandbreite wird geteilt",
     rosterTitle: "TEAM",
     emptyTitle: "KEINE TEILNEHMER IM MESH",
     emptyBody: "Verbinde ein Meshtastic-Funkgerät, dann erscheinen Teammitglieder mit Red Grid hier automatisch.",

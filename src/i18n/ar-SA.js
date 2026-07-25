@@ -6,6 +6,15 @@
  */
 export default {
   team: {
+    msgRoger: "عُلم",
+    msgMoving: "في الحركة",
+    msgHolding: "في الموضع",
+    msgContact: "اشتباك",
+    msgAssist: "طلب إسناد",
+    msgRally: "تجمّع",
+    msgCustom: "رسالة مخصصة",
+    msgSend: "إرسال",
+    msgPlaceholder: "اختصر، فعرض النطاق اللاسلكي مشترك",
     rosterTitle: "الفريق",
     emptyTitle: "لا يوجد أقران على الشبكة",
     emptyBody: "وصّل جهاز Meshtastic وسيظهر هنا تلقائيا زملاء الفريق الذين يستخدمون Red Grid.",
