@@ -47,7 +47,7 @@ PODS:
     - ExpoModulesCore
   - ExpoHaptics (14.1.4):
     - ExpoModulesCore
-  - ExpoIap (2.4.5):
+  - ExpoIap (2.8.0):
     - ExpoModulesCore
   - ExpoImagePicker (16.1.4):
     - ExpoModulesCore
@@ -2123,7 +2123,7 @@ SPEC CHECKSUMS:
   ExpoFileSystem: 7f92f7be2f5c5ed40a7c9efc8fa30821181d9d63
   ExpoFont: cf508bc2e6b70871e05386d71cab927c8524cc8e
   ExpoHaptics: 0ff6e0d83cd891178a306e548da1450249d54500
-  ExpoIap: 2475af1804c937a7aad83cbaa14dccd24f7aa56c
+  ExpoIap: ef121533fb22b81e4b88ead520e011abd24d2a29
   ExpoImagePicker: 0963da31800c906e01c03e25d7c849f16ebf02a2
   ExpoKeepAwake: bf0811570c8da182bfb879169437d4de298376e7
   ExpoLocalization: 999a1ff61a7f5917d65c2bd9234883009019ca9f
