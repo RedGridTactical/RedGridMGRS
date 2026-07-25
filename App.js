@@ -593,6 +593,9 @@ function AppContent({
             onToggleAutoShare={mesh.toggleAutoShare}
             teamCount={team.activeCount}
             onOpenTeamRoster={() => setShowTeamRoster(true)}
+            onSendTeamMessage={team.sendMessage}
+            lastInboundMessage={team.lastInbound}
+            onDismissInbound={team.dismissInbound}
           />
         )}
 

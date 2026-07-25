@@ -9,6 +9,7 @@ import {
 import { useColors } from '../utils/ThemeContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { tapLight, tapMedium } from '../utils/haptics';
+import { TeamMessageBar } from '../components/TeamMessageBar';
 import { CONNECTION_STATES } from '../utils/meshtastic';
 import { toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
 
@@ -35,6 +36,9 @@ export function MeshScreen({
   onToggleAutoShare,
   teamCount = 0,
   onOpenTeamRoster,
+  onSendTeamMessage,
+  lastInboundMessage,
+  onDismissInbound,
 }) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -136,6 +140,17 @@ export function MeshScreen({
             <Text style={[styles.toggleText, { color: colors.text2 }]}>{'>'}</Text>
           </View>
         </TouchableOpacity>
+      )}
+
+      {/* Tactical message bar — one-tap canned calls to the mesh. */}
+      {isConnected && onSendTeamMessage && (
+        <View style={styles.card}>
+          <TeamMessageBar
+            onSend={onSendTeamMessage}
+            lastInbound={lastInboundMessage}
+            onDismissInbound={onDismissInbound}
+          />
+        </View>
       )}
 
       {/* Scan section */}

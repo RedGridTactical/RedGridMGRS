@@ -16,6 +16,8 @@ import {
   normalizeRole,
   PEER_STATUS,
 } from '../utils/teamAwareness';
+import { onTeamPacketReceived, sendTeamPacket } from '../utils/meshtastic';
+import { encodeMessagePacket, encodeSosPacket, TEAM_PACKET } from '../utils/teamPackets';
 
 const NAMES_KEY = 'rg_team_names_v1';
 const ROLES_KEY = 'rg_team_roles_v1';
@@ -30,6 +32,8 @@ export function useTeamAwareness(meshPositions) {
   const [roles, setRoles] = useState({});
   const [sos, setSos] = useState({});
   const [tick, setTick] = useState(0);
+  const [lastInbound, setLastInbound] = useState(null);
+  const seqRef = useRef(0);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -62,6 +66,30 @@ export function useTeamAwareness(meshPositions) {
     return () => clearInterval(id);
   }, []);
 
+  // Subscribe to inbound TEAM packets from the radio. Without this the
+  // codec is write-only: SOS beacons and messages from peers are dropped.
+  useEffect(() => {
+    const unsubscribe = onTeamPacketReceived((pkt) => {
+      if (!pkt || !mounted.current) return;
+      if (pkt.kind === TEAM_PACKET.SOS) {
+        setSos(prev => reduceSosState(prev, pkt, Date.now()));
+        return;
+      }
+      if (pkt.kind === TEAM_PACKET.IDENT) {
+        // A peer broadcasting its own callsign/role beats our local guess,
+        // but never overwrites a name the operator set by hand.
+        const key = String(pkt.nodeId);
+        setNames(prev => (prev[key] ? prev : { ...prev, [key]: pkt.name }));
+        setRoles(prev => ({ ...prev, [key]: normalizeRole(pkt.role) }));
+        return;
+      }
+      if (pkt.kind === TEAM_PACKET.MESSAGE) {
+        setLastInbound({ from: String(pkt.nodeId), type: pkt.type, text: pkt.text || '', at: Date.now() });
+      }
+    });
+    return unsubscribe;
+  }, []);
+
   const roster = useMemo(
     // `tick` is intentionally read so decay recomputes on the timer.
     () => buildRoster(meshPositions, { names, roles, sos, now: Date.now() }),
@@ -89,6 +117,22 @@ export function useTeamAwareness(meshPositions) {
     setSos(prev => reduceSosState(prev, packet, Date.now()));
   }, []);
 
+  /** Send a tactical message. Returns false if the radio refused it. */
+  const sendMessage = useCallback(async ({ type, text }) => {
+    seqRef.current = (seqRef.current + 1) & 0xffff;
+    const pkt = encodeMessagePacket({ type, text, seq: seqRef.current });
+    if (!pkt) return false;
+    return sendTeamPacket(pkt);
+  }, []);
+
+  /** Broadcast (or cancel) an SOS beacon at the given position. */
+  const sendSos = useCallback(async (lat, lon, cancel = false) => {
+    seqRef.current = (seqRef.current + 1) & 0xffff;
+    const pkt = encodeSosPacket({ lat, lon, seq: seqRef.current, cancel });
+    if (!pkt) return false;
+    return sendTeamPacket(pkt);
+  }, []);
+
   const activeCount = useMemo(
     () => roster.filter(p => p.status === PEER_STATUS.LIVE).length,
     [roster]
@@ -103,5 +147,9 @@ export function useTeamAwareness(meshPositions) {
     namePeer,
     assignRole,
     ingestSos,
+    sendMessage,
+    sendSos,
+    lastInbound,
+    dismissInbound: () => setLastInbound(null),
   };
 }
