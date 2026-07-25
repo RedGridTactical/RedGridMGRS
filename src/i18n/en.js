@@ -491,6 +491,17 @@ export default {
   },
 
   // \u2500\u2500\u2500 Common verbs (shared across screens) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  team: {
+    rosterTitle: 'TEAM',
+    emptyTitle: 'NO PEERS ON MESH',
+    emptyBody: 'Connect a Meshtastic radio and teammates running Red Grid will appear here automatically.',
+    sos: 'SOS',
+    roleLead: 'LEAD',
+    roleScout: 'SCOUT',
+    roleMedic: 'MEDIC',
+    roleComms: 'COMMS',
+  },
+
   common: {
     cancel: 'CANCEL',
     save: 'SAVE',
