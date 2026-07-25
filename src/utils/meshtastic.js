@@ -15,6 +15,13 @@ try {
   // BLE module unavailable — mesh features degrade gracefully
 }
 
+import {
+  PORTNUM_PRIVATE_APP,
+  parseTeamPayload,
+  decodeTeamPacket,
+  serializeTeamPayload,
+} from './teamPackets';
+
 // ─── Meshtastic BLE Protocol Constants ────────────────────────────────────────
 const MESHTASTIC_SERVICE_UUID = '6ba1b218-15a8-461f-9fa8-5dcae273eafd';
 const FROMRADIO_UUID = '2c55e69e-4993-11ed-b878-0242ac120002';
@@ -56,6 +63,7 @@ let connectedDevice = null;
 let connectionState = CONNECTION_STATES.DISCONNECTED;
 let stateListeners = [];
 let positionListeners = [];
+let teamListeners = [];
 let fromNumSubscription = null;
 let disconnectSubscription = null;
 let reconnectTimer = null;
@@ -306,7 +314,18 @@ function parseFromRadio(bytes) {
       if (f.fieldNumber === 2 && f.wireType === 2) payload = f.value;
     }
 
-    if (portnum !== PORTNUM_POSITION || !payload) return null;
+    if (!payload) return null;
+
+    // Team-layer traffic (SOS, tactical messages, ident) rides the private-app
+    // portnum. Return it tagged so callers can route it separately from
+    // standard position packets.
+    if (portnum === PORTNUM_PRIVATE_APP) {
+      const body = parseTeamPayload(payload);
+      const team = decodeTeamPacket(body, fromNode);
+      return team ? { __team: true, ...team } : null;
+    }
+
+    if (portnum !== PORTNUM_POSITION) return null;
 
     const pos = decodePosition(payload);
     if (!pos) return null;
@@ -523,6 +542,43 @@ export async function sendPosition(lat, lon, altitude) {
 }
 
 /**
+ * Register callback for incoming TEAM packets (SOS, tactical messages,
+ * ident). Separate from position packets so callers can route them without
+ * filtering. Returns an unsubscribe function.
+ */
+export function onTeamPacketReceived(callback) {
+  teamListeners.push(callback);
+  return () => { teamListeners = teamListeners.filter(fn => fn !== callback); };
+}
+
+/**
+ * Send a team payload (from teamPackets encode*) over the mesh on the
+ * private-app portnum. Returns false rather than throwing when the payload
+ * is over the LoRa frame budget or the radio is not connected.
+ */
+export async function sendTeamPacket(payload) {
+  if (!connectedDevice) return false;
+  const bytes = serializeTeamPayload(payload);
+  if (!bytes) return false;
+  try {
+    const dataMsg = [
+      ...encodeVarintField(1, PORTNUM_PRIVATE_APP),
+      ...encodeLengthDelimited(2, [...bytes]),
+    ];
+    const meshPacket = encodeLengthDelimited(3, dataMsg);
+    const toRadio = new Uint8Array(encodeLengthDelimited(2, meshPacket));
+    await connectedDevice.writeCharacteristicWithResponseForService(
+      MESHTASTIC_SERVICE_UUID,
+      TORADIO_UUID,
+      bytesToBase64(toRadio),
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Register callback for incoming position packets.
  */
 export function onPositionReceived(callback) {
@@ -608,10 +664,14 @@ function startFromNumMonitoring(device) {
  * Process raw FromRadio bytes — extract position if present and notify listeners.
  */
 function processFromRadioBytes(raw) {
-  const pos = parseFromRadio(raw);
-  if (pos) {
-    positionListeners.forEach(fn => { try { fn(pos); } catch {} });
+  const msg = parseFromRadio(raw);
+  if (!msg) return;
+  if (msg.__team) {
+    const { __team, ...team } = msg;
+    teamListeners.forEach(fn => { try { fn(team); } catch {} });
+    return;
   }
+  positionListeners.forEach(fn => { try { fn(msg); } catch {} });
 }
 
 function scheduleReconnect() {
