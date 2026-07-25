@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  team: {
+    rosterTitle: "小隊",
+    emptyTitle: "網狀網路中無成員",
+    emptyBody: "連接 Meshtastic 電台後，使用 Red Grid 的隊友會自動顯示在這裡。",
+    sos: "SOS",
+    roleLead: "隊長",
+    roleScout: "偵察",
+    roleMedic: "醫療",
+    roleComms: "通訊",
+  },
   whatsNew: {
     title: "更新內容",
     continue: "繼續",

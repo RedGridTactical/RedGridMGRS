@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  team: {
+    rosterTitle: "チーム",
+    emptyTitle: "メッシュに相手がいません",
+    emptyBody: "Meshtastic無線機を接続すると、Red Gridを使用中の仲間がここに自動的に表示されます。",
+    sos: "SOS",
+    roleLead: "リーダー",
+    roleScout: "偵察",
+    roleMedic: "衛生",
+    roleComms: "通信",
+  },
   whatsNew: {
     title: "新着情報",
     continue: "続ける",

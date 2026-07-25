@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  team: {
+    rosterTitle: "टीम",
+    emptyTitle: "मेश पर कोई साथी नहीं",
+    emptyBody: "Meshtastic रेडियो कनेक्ट करें, Red Grid चलाने वाले साथी यहाँ अपने आप दिखेंगे।",
+    sos: "SOS",
+    roleLead: "लीड",
+    roleScout: "स्काउट",
+    roleMedic: "मेडिक",
+    roleComms: "संचार",
+  },
   whatsNew: {
     title: "नया क्या है",
     continue: "जारी रखें",

@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  team: {
+    rosterTitle: "SQUADRA",
+    emptyTitle: "NESSUN PARI SULLA MESH",
+    emptyBody: "Collega una radio Meshtastic e i compagni che usano Red Grid appariranno qui automaticamente.",
+    sos: "SOS",
+    roleLead: "CAPO",
+    roleScout: "ESPLORATORE",
+    roleMedic: "MEDICO",
+    roleComms: "RADIO",
+  },
   whatsNew: {
     title: "NOVITÀ",
     continue: "CONTINUA",

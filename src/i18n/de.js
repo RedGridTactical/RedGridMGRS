@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  team: {
+    rosterTitle: "TEAM",
+    emptyTitle: "KEINE TEILNEHMER IM MESH",
+    emptyBody: "Verbinde ein Meshtastic-Funkgerät, dann erscheinen Teammitglieder mit Red Grid hier automatisch.",
+    sos: "SOS",
+    roleLead: "FÜHRUNG",
+    roleScout: "SPÄHER",
+    roleMedic: "SANI",
+    roleComms: "FUNK",
+  },
   whatsNew: {
     title: "NEUIGKEITEN",
     continue: "WEITER",

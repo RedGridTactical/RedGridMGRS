@@ -3,6 +3,16 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
+  team: {
+    rosterTitle: "EKİP",
+    emptyTitle: "AĞDA EŞ YOK",
+    emptyBody: "Bir Meshtastic telsizi bağlayın; Red Grid kullanan ekip arkadaşları burada otomatik olarak görünür.",
+    sos: "SOS",
+    roleLead: "LİDER",
+    roleScout: "KEŞİF",
+    roleMedic: "SIHHİYE",
+    roleComms: "MUHABERE",
+  },
   whatsNew: {
     title: "YENİLİKLER",
     continue: "DEVAM ET",

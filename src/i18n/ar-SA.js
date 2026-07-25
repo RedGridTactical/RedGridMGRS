@@ -5,6 +5,16 @@
  * use plain text and rely on the UI layer for emphasis.
  */
 export default {
+  team: {
+    rosterTitle: "الفريق",
+    emptyTitle: "لا يوجد أقران على الشبكة",
+    emptyBody: "وصّل جهاز Meshtastic وسيظهر هنا تلقائيا زملاء الفريق الذين يستخدمون Red Grid.",
+    sos: "SOS",
+    roleLead: "القائد",
+    roleScout: "استطلاع",
+    roleMedic: "مسعف",
+    roleComms: "اتصالات",
+  },
   whatsNew: {
     title: "الجديد",
     continue: "متابعة",
