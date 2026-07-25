@@ -25,6 +25,7 @@ import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptic
 import { loadWaypointLists, saveWaypointLists } from '../utils/storage';
 import { MGRSGridOverlay } from '../components/MGRSGridOverlay';
 import { RouteOverlay } from '../components/RouteOverlay';
+import { TeamMarkers } from '../components/TeamMarkers';
 import { calculateRoute, estimateTime, formatTime, optimizeRoute } from '../utils/routePlanner';
 import { downloadTilesForRegion, checkTilesForRegion, clearTileCache, getLocalTilePathTemplate, estimateTilesForRegion } from '../utils/tileManager';
 import { PreflightScreen } from './PreflightScreen';
@@ -99,6 +100,7 @@ export function MapScreen({
   gpsSource,
   gpsDeviceName,
   mesh,
+  team,
 }) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -665,6 +667,18 @@ export function MapScreen({
             </Marker>
           );
         })}
+
+        {/* Team layer — named peers with ghost decay and SOS. Renders
+            nothing when no roster is present, so free/solo users and
+            radio-less sessions are unaffected. */}
+        {isPro && team && team.roster && team.roster.length > 0 && (
+          <TeamMarkers
+            roster={team.roster}
+            origin={location}
+            colors={colors}
+            now={Date.now()}
+          />
+        )}
       </MapView>
 
       {/* Center reticle */}

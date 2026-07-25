@@ -36,6 +36,7 @@ import { WayfinderArrow } from './src/components/WayfinderArrow';
 import { WaypointModal }  from './src/components/WaypointModal';
 import { ProGate }        from './src/components/ProGate';
 import { WhatsNewModal }  from './src/components/WhatsNewModal';
+import { TeamRosterSheet } from './src/components/TeamRosterSheet';
 import { extractTokenFromUrl, redeemShareToken, getTrialStatus } from './src/utils/referral';
 import { ToolsScreen }    from './src/screens/ToolsScreen';
 import { ReportScreen }   from './src/screens/ReportScreen';
@@ -46,6 +47,7 @@ import { SupportScreen } from './src/screens/SupportScreen';
 import { MapScreen }     from './src/screens/MapScreen';
 import { MeshScreen }    from './src/screens/MeshScreen';
 import { useMeshtastic } from './src/hooks/useMeshtastic';
+import { useTeamAwareness } from './src/hooks/useTeamAwareness';
 
 import {
   toMGRS, formatMGRS, formatPosition, calculateBearing, calculateDistance, formatDistance, getDisplayPrecision,
@@ -201,7 +203,11 @@ function App() {
 
   const themeData = useTheme(theme || 'red');
   const { checkAndPromptReview, promptReviewOnPositiveMoment, openStoreReview } = useStoreReview();
+  const [showTeamRoster, setShowTeamRoster] = useState(false);
   const mesh = useMeshtastic();
+  // Team layer rides the mesh transport the app already has. Derives a roster
+  // (named peers, roles, ghost decay) from the same position packets.
+  const team = useTeamAwareness(mesh.meshPositions);
 
   // Prompt for App Store review once per launch (gated by open count, install
   // age, cooldown). Pro users bypass the open/install-date gates. Runs once,
@@ -515,6 +521,7 @@ function AppContent({
             gpsSource={gpsSource}
             gpsDeviceName={gpsDeviceName}
             mesh={mesh}
+            team={team}
           />
         )}
 
@@ -584,6 +591,8 @@ function AppContent({
             onConnect={mesh.connect}
             onDisconnect={mesh.disconnect}
             onToggleAutoShare={mesh.toggleAutoShare}
+            teamCount={team.activeCount}
+            onOpenTeamRoster={() => setShowTeamRoster(true)}
           />
         )}
 
@@ -648,6 +657,15 @@ function AppContent({
       {/* What's new in this version — first launch post-update only. For free
           users the trial card carries a START FREE TRIAL action into the
           paywall (every fresh install sees this modal; it used to be read-only). */}
+      {/* Team roster — Pro feature; opens from the mesh screen. Peers come
+          from the mesh transport, so this is empty until a radio is connected. */}
+      <TeamRosterSheet
+        visible={showTeamRoster}
+        onClose={() => setShowTeamRoster(false)}
+        roster={team.roster}
+        origin={location}
+      />
+
       <WhatsNewModal
         currentVersion="3.5.2"
         showTrialCta={!isPro}

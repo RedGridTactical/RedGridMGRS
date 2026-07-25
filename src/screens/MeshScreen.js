@@ -33,6 +33,8 @@ export function MeshScreen({
   onConnect,
   onDisconnect,
   onToggleAutoShare,
+  teamCount = 0,
+  onOpenTeamRoster,
 }) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -113,6 +115,27 @@ export function MeshScreen({
             </TouchableOpacity>
           </View>
         </View>
+      )}
+
+      {/* Team roster — the live team picture derived from mesh positions.
+          Only shown while connected, since peers arrive over the radio. */}
+      {isConnected && onOpenTeamRoster && (
+        <TouchableOpacity
+          style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }]}
+          onPress={() => { tapLight(); onOpenTeamRoster(); }}
+          accessibilityRole="button"
+          accessibilityLabel={t('team.rosterTitle', 'TEAM')}
+        >
+          <View style={styles.toggleRow}>
+            <View>
+              <Text style={[styles.cardTitle, { color: colors.text }]}>{t('team.rosterTitle', 'TEAM')}</Text>
+              <Text style={[styles.cardSub, { color: colors.text3 }]}>
+                {teamCount > 0 ? String(teamCount) : t('team.emptyTitle', 'NO PEERS ON MESH')}
+              </Text>
+            </View>
+            <Text style={[styles.toggleText, { color: colors.text2 }]}>{'>'}</Text>
+          </View>
+        </TouchableOpacity>
       )}
 
       {/* Scan section */}
