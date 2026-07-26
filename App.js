@@ -461,6 +461,9 @@ function App() {
         showSupport={showSupport}
         setShowSupport={setShowSupport}
         mesh={mesh}
+        team={team}
+        showTeamRoster={showTeamRoster}
+        setShowTeamRoster={setShowTeamRoster}
         gpsSource={gpsSource}
         gpsDeviceName={gpsDeviceName}
       />
@@ -470,6 +473,10 @@ function App() {
 
 /** Inner component that can call useColors() since it lives inside ThemeProvider */
 function AppContent({
+  // Team layer state lives in App() but is consumed here, so it must be
+  // threaded through explicitly — referencing it directly throws
+  // "Property 'showTeamRoster' doesn't exist" and trips the error boundary.
+  team, showTeamRoster, setShowTeamRoster,
   safeTab, setTab, TABS, isPro, isLandscape,
   gridContent, location, declination, paceCount,
   setDeclination, setPaceCount, mgrsFormatted, showProGate,
