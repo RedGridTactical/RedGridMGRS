@@ -128,6 +128,10 @@ class AppErrorBoundary extends Component {
 }
 
 function App() {
+  // App() raises seven user-facing alerts (trial redemption, purchase
+  // confirmation, no-GPS-fix). Each call sits inside try/catch, so a missing
+  // `t` failed silently and the alerts simply never appeared.
+  const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
 
