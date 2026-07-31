@@ -21,6 +21,17 @@ export const PORTNUM_PRIVATE_APP = 256;
 // enclosing Data/MeshPacket protobuf wrappers.
 export const MAX_TEAM_PAYLOAD_BYTES = 200;
 
+// Every team frame is sealed (AES-256-GCM), which costs a fixed
+// 1 magic + 12 IV + 16 tag = 29 bytes on top of the plaintext. Reserve it
+// unconditionally: budgeting only when encryption happens to be on would let
+// a message fit in the clear and then silently overflow the radio frame once
+// sealed, which fails in the field rather than in a test.
+// Kept in sync with teamCrypto.CRYPTO_OVERHEAD_BYTES (asserted in tests).
+export const CRYPTO_RESERVE_BYTES = 29;
+
+/** Plaintext budget once the seal overhead is accounted for. */
+export const MAX_PLAINTEXT_PAYLOAD_BYTES = MAX_TEAM_PAYLOAD_BYTES - CRYPTO_RESERVE_BYTES;
+
 // Packet kinds. One letter each — this key is on every frame.
 export const TEAM_PACKET = {
   SOS: 's',
@@ -36,10 +47,14 @@ export function utf8ByteLength(str) {
   return unescape(encodeURIComponent(str)).length;
 }
 
-/** Does this payload fit in a single LoRa frame? */
+/**
+ * Does this payload fit in a single LoRa frame once sealed?
+ * Measures the plaintext against the post-encryption budget, so the encoders'
+ * shrink-to-fit loops converge on a size that still fits after sealing.
+ */
 export function fitsLoRaFrame(obj) {
   try {
-    return utf8ByteLength(JSON.stringify(obj)) <= MAX_TEAM_PAYLOAD_BYTES;
+    return utf8ByteLength(JSON.stringify(obj)) <= MAX_PLAINTEXT_PAYLOAD_BYTES;
   } catch {
     return false;
   }

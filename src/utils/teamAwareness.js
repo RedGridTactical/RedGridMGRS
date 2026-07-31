@@ -163,7 +163,17 @@ export const MESSAGE_TYPES = {
   RALLY_ON_ME: 'y',
 };
 
-export const MAX_FREE_TEXT = 160;
+// 136, not 160: every frame is sealed with AES-256-GCM, which costs a fixed 29
+// bytes (magic + IV + tag). 136 ASCII characters is the longest message that
+// still lands inside the 200-byte LoRa budget once encrypted (199 bytes sealed,
+// measured). Keeping the old 160 would have let the composer promise a length
+// the radio silently truncates.
+//
+// CAVEAT: this is a CHARACTER cap but the budget is in BYTES, so multibyte text
+// (CJK, Cyrillic) still hits the byte ceiling well before 136 characters. The
+// packet encoder's shrink-to-fit loop truncates safely in that case; the
+// composer's counter is optimistic for those scripts. Pre-existing, not new.
+export const MAX_FREE_TEXT = 136;
 
 const CANNED = new Set(Object.values(MESSAGE_TYPES));
 

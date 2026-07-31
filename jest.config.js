@@ -15,7 +15,9 @@ module.exports = {
     },
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(expo|@expo|react-native|@react-native|expo-location|expo-status-bar|expo-iap|@react-native-async-storage)/)',
+    // @noble/* ships ESM-only (package "type": "module", no CJS condition), so
+    // it has to go through babel or every crypto test dies on `import`.
+    'node_modules/(?!(expo|@expo|react-native|@react-native|expo-location|expo-status-bar|expo-iap|@react-native-async-storage|@noble)/)',
   ],
   setupFilesAfterEnv: [],
 };
