@@ -1,5 +1,5 @@
 /**
- * ToolsScreen — Nine tactical tools, each as an expandable card.
+ * ToolsScreen — Twelve tactical tools, each as an expandable card.
  * All computation is local. No network. No location data stored.
  */
 import React, { useState, useCallback } from 'react';
@@ -31,6 +31,8 @@ import { SolarTool }         from '../components/tools/SolarTool';
 import { PrecisionTool }     from '../components/tools/PrecisionTool';
 import { GeostampTool }      from '../components/tools/GeostampTool';
 import { ElevationTool }     from '../components/tools/ElevationTool';
+import { BarometerTool }     from '../components/tools/BarometerTool';
+import { SignalTool }        from '../components/tools/SignalTool';
 
 const TOOLS = [
   { id: 'backaz',   labelKey: 'tools.backAzimuth',    subKey: 'tools.backAzimuthSub',         Component: BackAzimuthTool   },
@@ -43,6 +45,10 @@ const TOOLS = [
   { id: 'prec',     labelKey: 'tools.mgrsPrecision',   subKey: 'tools.mgrsPrecisionSub',       Component: PrecisionTool,     pro: true },
   { id: 'elev',     labelKey: 'tools.elevation',         subKey: 'tools.elevationSub',           Component: ElevationTool,  pro: true },
   { id: 'geostamp', labelKey: 'tools.photoGeostamp',   subKey: 'tools.photoGeostampSub',       Component: GeostampTool,  pro: true },
+  // Distress signalling is deliberately NOT Pro: gating an emergency signal
+  // behind a paywall is indefensible.
+  { id: 'signal',   labelKey: 'tools.signal',          subKey: 'tools.signalSub',              Component: SignalTool },
+  { id: 'baro',     labelKey: 'tools.barometer',       subKey: 'tools.barometerSub',           Component: BarometerTool, pro: true },
 ];
 
 export function ToolsScreen({ location, declination, paceCount, setDeclination, setPaceCount, compassHeading, isPro, trialEligible, onShowProGate }) {
