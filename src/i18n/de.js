@@ -223,6 +223,11 @@ export default {
     stop: 'ZUM STOPPEN TIPPEN',
   },
   toolLabels: {
+    gridConvergence: 'MERIDIANKONVERGENZ',
+    gmAngle: 'G-M-WINKEL',
+    gmExplain: 'G-M-Winkel = Deklination minus Meridiankonvergenz. Das ist der Wert, der zwischen Kompass und MGRS-Karte umrechnet.',
+    noFixDeclinationOnly: 'Keine Position, daher ist die Konvergenz unbekannt. Die Umrechnungen unten nutzen nur die Deklination und liefern RECHTWEISENDE, keine Gitterwerte.',
+    trueBearingResult: 'RECHTWEISENDE PEILUNG',
     slopeToWaypoint: "GEFÄLLE ZUM WEGPUNKT",
     magneticBearing: 'MAGNETPEILUNG (\u00b0)',
     backAzimuthResult: 'R\u00dcCKW\u00c4RTSPEILUNG',

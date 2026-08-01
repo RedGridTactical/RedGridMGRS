@@ -202,6 +202,11 @@ export default {
     stop: 'रोकने के लिए टैप करें',
   },
   toolLabels: {
+    gridConvergence: 'ग्रिड अभिसरण',
+    gmAngle: 'G-M कोण',
+    gmExplain: 'G-M कोण = चुंबकीय दिक्पात घटा ग्रिड अभिसरण। यही मान आपके कम्पास और MGRS मानचित्र के बीच रूपांतरण करता है।',
+    noFixDeclinationOnly: 'स्थिति उपलब्ध नहीं, इसलिए अभिसरण अज्ञात है। नीचे के रूपांतरण केवल दिक्पात का उपयोग करते हैं और ग्रिड नहीं, वास्तविक दिशा देते हैं।',
+    trueBearingResult: 'वास्तविक दिशा',
     slopeToWaypoint: "वेपॉइंट तक ढलान",
     magneticBearing: 'चुंबकीय दिकमान (°)',
     backAzimuthResult: 'विपरीत दिगंश',

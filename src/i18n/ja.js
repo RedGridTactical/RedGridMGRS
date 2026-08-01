@@ -223,6 +223,11 @@ export default {
     stop: 'タップして停止',
   },
   toolLabels: {
+    gridConvergence: '子午線収差',
+    gmAngle: 'G-M角',
+    gmExplain: 'G-M角 = 磁気偏角 − 子午線収差。コンパスとMGRS地図の間を換算する値です。',
+    noFixDeclinationOnly: '測位できないため収差が不明です。以下の換算は偏角のみを使い、真方位を返します（座標方位ではありません）。',
+    trueBearingResult: '真方位',
     slopeToWaypoint: "ウェイポイントへの傾斜",
     magneticBearing: '\u78c1\u6c17\u65b9\u4f4d (\u00b0)',
     backAzimuthResult: '\u30d0\u30c3\u30af\u30a2\u30b8\u30de\u30b9',

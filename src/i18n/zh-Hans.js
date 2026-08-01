@@ -202,6 +202,11 @@ export default {
     stop: '点按停止',
   },
   toolLabels: {
+    gridConvergence: '子午线收敛角',
+    gmAngle: 'G-M 角',
+    gmExplain: 'G-M 角 = 磁偏角 − 子午线收敛角。这是在罗盘与 MGRS 地图之间换算所需的数值。',
+    noFixDeclinationOnly: '没有定位，收敛角未知。下面的换算仅使用磁偏角，得到的是真方位而非坐标方位。',
+    trueBearingResult: '真方位',
     slopeToWaypoint: "到航点的坡度",
     magneticBearing: '磁方位角 (°)',
     backAzimuthResult: '反方位角',

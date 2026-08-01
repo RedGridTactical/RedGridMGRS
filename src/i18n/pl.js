@@ -202,6 +202,11 @@ export default {
     stop: 'DOTKNIJ, ABY ZATRZYMAĆ',
   },
   toolLabels: {
+    gridConvergence: 'ZBIEŻNOŚĆ POŁUDNIKÓW',
+    gmAngle: 'KĄT G-M',
+    gmExplain: 'Kąt G-M = deklinacja minus zbieżność południków. To wartość przeliczająca między kompasem a mapą MGRS.',
+    noFixDeclinationOnly: 'Brak pozycji, więc zbieżność jest nieznana. Poniższe przeliczenia używają tylko deklinacji i dają azymuty RZECZYWISTE, nie siatkowe.',
+    trueBearingResult: 'AZYMUT RZECZYWISTY',
     slopeToWaypoint: "NACHYLENIE DO PUNKTU TRASY",
     magneticBearing: 'NAMIAR MAGNETYCZNY (°)',
     backAzimuthResult: 'AZYMUT POWROTNY',

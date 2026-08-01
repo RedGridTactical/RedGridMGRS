@@ -208,6 +208,11 @@ export default {
     stop: 'TAP TO STOP',
   },
   toolLabels: {
+    gridConvergence: 'GRID CONVERGENCE',
+    gmAngle: 'G-M ANGLE',
+    gmExplain: 'G-M angle = declination minus grid convergence. This is the number that converts between your compass and an MGRS map.',
+    noFixDeclinationOnly: 'No position fix, so grid convergence is unknown. Conversions below use declination only and give TRUE bearings, not grid.',
+    trueBearingResult: 'TRUE BEARING',
     slopeToWaypoint: 'SLOPE TO WAYPOINT',
     magneticBearing: 'MAGNETIC BEARING (\u00b0)',
     backAzimuthResult: 'BACK AZIMUTH',

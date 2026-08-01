@@ -202,6 +202,11 @@ export default {
     stop: 'DURDURMAK İÇİN DOKUNUN',
   },
   toolLabels: {
+    gridConvergence: 'MERIDYEN YAKINSAMASI',
+    gmAngle: 'G-M AÇISI',
+    gmExplain: 'G-M açısı = sapma eksi meridyen yakınsaması. Pusulanız ile MGRS haritası arasında dönüşümü sağlayan değer budur.',
+    noFixDeclinationOnly: 'Konum yok, bu yüzden yakınsama bilinmiyor. Aşağıdaki dönüşümler yalnızca sapmayı kullanır ve GERÇEK yön verir, grid değil.',
+    trueBearingResult: 'GERÇEK YÖN',
     slopeToWaypoint: "NOKTAYA EĞİM",
     magneticBearing: 'MANYETİK KERTERİZ (°)',
     backAzimuthResult: 'GERİ AZİMUT',

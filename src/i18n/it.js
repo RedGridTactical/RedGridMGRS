@@ -222,6 +222,11 @@ export default {
     stop: 'TOCCA PER FERMARE',
   },
   toolLabels: {
+    gridConvergence: 'CONVERGENZA DEL RETICOLO',
+    gmAngle: 'ANGOLO G-M',
+    gmExplain: 'Angolo G-M = declinazione meno convergenza. È il valore che converte tra la bussola e una carta MGRS.',
+    noFixDeclinationOnly: 'Nessuna posizione, quindi la convergenza è ignota. Le conversioni sotto usano solo la declinazione e danno rilevamenti VERI, non reticolari.',
+    trueBearingResult: 'RILEVAMENTO VERO',
     slopeToWaypoint: "PENDENZA AL WAYPOINT",
     magneticBearing: 'RILEVAMENTO MAGNETICO (°)',
     backAzimuthResult: 'AZIMUT INVERSO',

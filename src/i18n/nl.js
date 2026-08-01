@@ -202,6 +202,11 @@ export default {
     stop: 'TIK OM TE STOPPEN',
   },
   toolLabels: {
+    gridConvergence: 'MERIDIAANCONVERGENTIE',
+    gmAngle: 'G-M-HOEK',
+    gmExplain: 'G-M-hoek = declinatie min convergentie. Dit is de waarde die tussen je kompas en een MGRS-kaart omrekent.',
+    noFixDeclinationOnly: 'Geen positie, dus de convergentie is onbekend. De omrekeningen hieronder gebruiken alleen declinatie en geven WARE peilingen, geen rasterpeilingen.',
+    trueBearingResult: 'WARE PEILING',
     slopeToWaypoint: "HELLING NAAR WAYPOINT",
     magneticBearing: 'MAGNETISCHE PEILING (°)',
     backAzimuthResult: 'TERUGAZIMUT',

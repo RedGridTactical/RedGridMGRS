@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { applyDeclination, removeDeclination } from '../../utils/tactical';
+import { gridConvergence, gmAngle, magneticToGrid, gridToMagnetic } from '../../utils/geodesy';
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
 import { useTranslation } from '../../hooks/useTranslation';
 
-export function DeclinationTool({ declination, setDeclination }) {
+/**
+ * Magnetic / grid / true bearing conversion.
+ *
+ * This tool previously offered "MAG -> GRID" but computed magnetic -> TRUE,
+ * because it only applied declination. On a UTM/MGRS map the number you need is
+ * the G-M angle (FM 3-25.26):
+ *
+ *     G-M angle = declination - grid convergence
+ *
+ * Convergence needs a position, so with no fix we fall back to declination
+ * alone and label the result TRUE rather than silently mislabelling it.
+ */
+export function DeclinationTool({ declination, setDeclination, location }) {
   const colors = useColors();
   const { t } = useTranslation();
   const [decInput, setDecInput]   = useState(String(declination));
@@ -17,13 +30,29 @@ export function DeclinationTool({ declination, setDeclination }) {
     if (!isNaN(v)) setDeclination(v);
   };
 
+  const hasFix = !!location && Number.isFinite(location.lat) && Number.isFinite(location.lon);
+  const convergence = hasFix ? gridConvergence(location.lat, location.lon) : null;
+  const gm = hasFix ? gmAngle(location.lat, location.lon, declination) : null;
+
   const b = parseFloat(bearing);
   const valid = !isNaN(b) && b >= 0 && b <= 360;
-  const converted = valid
-    ? (mode === 'mag2grid' ? applyDeclination(b, declination) : removeDeclination(b, declination))
-    : null;
+
+  let converted = null;
+  if (valid) {
+    if (hasFix) {
+      converted = mode === 'mag2grid'
+        ? magneticToGrid(b, location.lat, location.lon, declination)
+        : gridToMagnetic(b, location.lat, location.lon, declination);
+    } else {
+      // No position: declination only, which yields TRUE, not grid.
+      converted = mode === 'mag2grid'
+        ? applyDeclination(b, declination)
+        : removeDeclination(b, declination);
+    }
+  }
 
   const dir = declination > 0 ? 'EAST' : declination < 0 ? 'WEST' : 'NONE';
+  const signed = (v, dp = 2) => `${v > 0 ? '+' : ''}${v.toFixed(dp)}°`;
 
   return (
     <View>
@@ -37,6 +66,17 @@ export function DeclinationTool({ declination, setDeclination }) {
         </TouchableOpacity>
       </View>
       <ToolHint text={`${t('toolLabels.saved')}: ${declination > 0 ? '+' : ''}${declination}° (${dir})  ·  + = EAST, - = WEST`} />
+
+      <ToolDivider />
+      {hasFix ? (
+        <>
+          <ToolRow label={t('toolLabels.gridConvergence')} value={signed(convergence)} />
+          <ToolRow label={t('toolLabels.gmAngle')} value={signed(gm)} />
+          <ToolHint text={t('toolLabels.gmExplain')} />
+        </>
+      ) : (
+        <ToolHint text={t('toolLabels.noFixDeclinationOnly')} />
+      )}
 
       <ToolDivider />
       <Text style={[styles.sectionLabel, { color: colors.border }]}>{t('toolLabels.bearingConverter')}</Text>
@@ -60,7 +100,11 @@ export function DeclinationTool({ declination, setDeclination }) {
 
       {converted !== null && (
         <ToolResult
-          label={mode === 'mag2grid' ? t('toolLabels.gridBearingResult') : t('toolLabels.magneticBearingResult')}
+          label={
+            mode === 'mag2grid'
+              ? (hasFix ? t('toolLabels.gridBearingResult') : t('toolLabels.trueBearingResult'))
+              : t('toolLabels.magneticBearingResult')
+          }
           value={`${Math.round(converted)}°`}
           primary
         />

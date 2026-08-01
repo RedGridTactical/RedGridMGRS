@@ -6,9 +6,14 @@
 
 const MGRS_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 
+// Exported so the geodesy module measures on the same ellipsoid the grid
+// projection uses, rather than re-declaring its own constants.
+export const WGS84_A = 6378137.0;
+export const WGS84_F = 1 / 298.257223563;
+
 const WGS84 = {
-  a: 6378137.0,
-  f: 1 / 298.257223563,
+  a: WGS84_A,
+  f: WGS84_F,
 };
 
 WGS84.b = WGS84.a * (1 - WGS84.f);
@@ -20,7 +25,13 @@ function degToRad(deg) {
   return (deg * Math.PI) / 180;
 }
 
-function getZoneNumber(lat, lon) {
+/**
+ * Exported so geodesy.js derives the central meridian from the SAME zone
+ * finder the grid uses. The Norway and Svalbard exceptions below shift the
+ * central meridian, so a second implementation would silently disagree with
+ * the MGRS string we display.
+ */
+export function getZoneNumber(lat, lon) {
   // Special zones for Norway/Svalbard
   if (lat >= 56 && lat < 64 && lon >= 3 && lon < 12) return 32;
   if (lat >= 72 && lat < 84) {
@@ -156,32 +167,26 @@ export function formatMGRS(mgrs) {
  * @returns {number} Bearing in degrees (0-360, 0=North)
  */
 export function calculateBearing(lat1, lon1, lat2, lon2) {
-  const φ1 = degToRad(lat1);
-  const φ2 = degToRad(lat2);
-  const Δλ = degToRad(lon2 - lon1);
-
-  const y = Math.sin(Δλ) * Math.cos(φ2);
-  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-  const θ = Math.atan2(y, x);
-
-  return ((θ * 180) / Math.PI + 360) % 360;
+  // Ellipsoidal (Vincenty) initial azimuth. This file already projects on the
+  // WGS84 ellipsoid; measuring direction on a sphere was inconsistent with it.
+  // eslint-disable-next-line global-require
+  return require('./geodesy').geodesicBearing(lat1, lon1, lat2, lon2);
 }
 
 /**
  * Calculate distance between two points in meters
  */
 export function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371000; // Earth radius in meters
-  const φ1 = degToRad(lat1);
-  const φ2 = degToRad(lat2);
-  const Δφ = degToRad(lat2 - lat1);
-  const Δλ = degToRad(lon2 - lon1);
-
-  const a =
-    Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c;
+  // Ellipsoidal (Vincenty) distance, falling back to the spherical formula only
+  // for near-antipodal pairs that cannot converge. The previous haversine
+  // implementation was off by 0.22-0.36% against the ellipsoid, which is hard
+  // to defend beside a "1-metre precision" claim.
+  //
+  // Required lazily: geodesy.js imports the ellipsoid constants and the zone
+  // finder from this module, so a static import here would create a cycle at
+  // module-init time. Resolution at call time keeps that safe.
+  // eslint-disable-next-line global-require
+  return require('./geodesy').geodesicDistance(lat1, lon1, lat2, lon2);
 }
 
 /**

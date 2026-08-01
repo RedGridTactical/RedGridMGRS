@@ -223,6 +223,11 @@ export default {
     stop: '탭하여 중지',
   },
   toolLabels: {
+    gridConvergence: '자오선 수렴각',
+    gmAngle: 'G-M 각',
+    gmExplain: 'G-M 각 = 편각 − 자오선 수렴각. 나침반과 MGRS 지도 사이를 환산하는 값입니다.',
+    noFixDeclinationOnly: '위치를 알 수 없어 수렴각을 계산할 수 없습니다. 아래 변환은 편각만 사용하며 도북이 아닌 진북 방위를 표시합니다.',
+    trueBearingResult: '진방위',
     slopeToWaypoint: "경유지까지 경사",
     magneticBearing: '\uc790\uae30 \ubc29\uc704 (\u00b0)',
     backAzimuthResult: '\uc5ed\ubc29\uc704\uac01',

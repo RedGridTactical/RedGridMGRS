@@ -223,6 +223,11 @@ export default {
     stop: 'TOCA PARA DETENER',
   },
   toolLabels: {
+    gridConvergence: 'CONVERGENCIA DE CUADRÍCULA',
+    gmAngle: 'ÁNGULO G-M',
+    gmExplain: 'Ángulo G-M = declinación menos convergencia. Es el valor que convierte entre tu brújula y un mapa MGRS.',
+    noFixDeclinationOnly: 'Sin posición, la convergencia es desconocida. Las conversiones de abajo usan solo la declinación y dan rumbos VERDADEROS, no de cuadrícula.',
+    trueBearingResult: 'RUMBO VERDADERO',
     slopeToWaypoint: "PENDIENTE AL PUNTO DE RUTA",
     magneticBearing: 'RUMBO MAGN\u00c9TICO (\u00b0)',
     backAzimuthResult: 'AZIMUT INVERSO',

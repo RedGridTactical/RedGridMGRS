@@ -222,6 +222,11 @@ export default {
     stop: 'TOUCHER POUR ARRÊTER',
   },
   toolLabels: {
+    gridConvergence: 'CONVERGENCE DES MÉRIDIENS',
+    gmAngle: 'ANGLE G-M',
+    gmExplain: "Angle G-M = déclinaison moins convergence. C’est la valeur qui convertit entre votre boussole et une carte MGRS.",
+    noFixDeclinationOnly: "Pas de position, donc convergence inconnue. Les conversions ci-dessous n’utilisent que la déclinaison et donnent des azimuts VRAIS, pas de quadrillage.",
+    trueBearingResult: 'AZIMUT VRAI',
     slopeToWaypoint: "PENTE VERS LE POINT DE NAV",
     magneticBearing: 'REL\u00c8VEMENT MAGN\u00c9TIQUE (\u00b0)',
     backAzimuthResult: 'AZIMUT INVERSE',

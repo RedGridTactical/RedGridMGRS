@@ -202,6 +202,11 @@ export default {
     stop: 'TOQUE PARA PARAR',
   },
   toolLabels: {
+    gridConvergence: 'CONVERGÊNCIA DA QUADRÍCULA',
+    gmAngle: 'ÂNGULO G-M',
+    gmExplain: 'Ângulo G-M = declinação menos convergência. É o valor que converte entre a bússola e um mapa MGRS.',
+    noFixDeclinationOnly: 'Sem posição, a convergência é desconhecida. As conversões abaixo usam só a declinação e dão azimutes VERDADEIROS, não de quadrícula.',
+    trueBearingResult: 'AZIMUTE VERDADEIRO',
     slopeToWaypoint: "INCLINAÇÃO ATÉ O PONTO",
     magneticBearing: 'AZIMUTE MAGNÉTICO (°)',
     backAzimuthResult: 'AZIMUTE INVERSO',

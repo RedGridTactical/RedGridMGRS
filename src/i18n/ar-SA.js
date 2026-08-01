@@ -204,6 +204,11 @@ export default {
     stop: 'المس للإيقاف',
   },
   toolLabels: {
+    gridConvergence: 'تقارب خطوط الطول',
+    gmAngle: 'زاوية G-M',
+    gmExplain: 'زاوية G-M = الانحراف المغناطيسي ناقص تقارب خطوط الطول. هذه هي القيمة التي تحوّل بين البوصلة وخريطة MGRS.',
+    noFixDeclinationOnly: 'لا يوجد تحديد للموقع، لذا التقارب غير معروف. التحويلات أدناه تستخدم الانحراف فقط وتعطي اتجاهات حقيقية وليست شبكية.',
+    trueBearingResult: 'الاتجاه الحقيقي',
     slopeToWaypoint: "الانحدار إلى نقطة الطريق",
     magneticBearing: 'الاتجاه المغناطيسي (°)',
     backAzimuthResult: 'الاتجاه العكسي',
