@@ -12,8 +12,35 @@ import { tapLight } from '../utils/haptics';
 
 const SEEN_KEY = 'rg_whatsnew_seen_version';
 
+// The release whose bullets are translated under `whatsNew.current` in i18n.
+// Bump this in lockstep with the entry added to FEATURES_BY_VERSION below, or
+// the modal silently falls back to English.
+const LOCALIZED_VERSION = '4.0.0';
+
 // Features to showcase for a given version. Keep terse — this is a glance screen.
 const FEATURES_BY_VERSION = {
+  '4.0.0': [
+    {
+      icon: '◉',
+      title: 'TRUE GRID NORTH',
+      body: 'Red Grid now computes the G-M angle where you stand and converts between magnetic, true, and grid north, per FM 3-25.26.',
+    },
+    {
+      icon: '◆',
+      title: 'STORM WARNING',
+      body: "Reads your phone's barometer on device and warns you when pressure is falling fast. Altitude-corrected. Pro.",
+    },
+    {
+      icon: '★',
+      title: 'DISTRESS SIGNALLING',
+      body: 'SOS, Morse, and the standard ground-to-air pattern on screen and torch. Free for everyone.',
+    },
+    {
+      icon: '⤴',
+      title: 'ENCRYPTED TEAM MAP',
+      body: 'See your team on the same offline map and trade short tactical messages over Meshtastic, sealed end to end. Pro.',
+    },
+  ],
   '3.5.0': [
     {
       icon: '⤴',
@@ -152,7 +179,7 @@ export function WhatsNewModal({ currentVersion, showTrialCta, onStartTrial }) {
   const { t } = useTranslation();
   const baseFeatures = FEATURES_BY_VERSION[currentVersion] || [];
   // Localize the current release's bullets via i18n; older versions are never displayed.
-  const features = currentVersion === '3.5.0'
+  const features = currentVersion === LOCALIZED_VERSION
     ? baseFeatures.map((f, i) => ({ icon: f.icon, title: t('whatsNew.current.f' + (i + 1) + '.title'), body: t('whatsNew.current.f' + (i + 1) + '.body') }))
     : baseFeatures;
   // Every fresh install sees this modal (first launch counts as a version

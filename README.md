@@ -21,7 +21,8 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 - **Live MGRS coordinates** — 4/6/8/10-digit precision, 1-meter resolution, free for everyone
 - **Magnetic declination** — WMM model, auto or manual offset
 - **Waypoints & wayfinder** — bearing and distance to any saved position
-- **10 tactical tools** — Back Azimuth, Dead Reckoning, Resection, Pace Count, Declination, Time-Distance-Speed, Sun & Moon, Precision selector, Elevation & Slope, Photo Geostamp
+- **12 tactical tools** — Back Azimuth, Dead Reckoning, Resection, Pace Count, Declination, Time-Distance-Speed, Sun & Moon, Precision selector, Elevation & Slope, Photo Geostamp, Barometer & Storm Warning, Distress Signalling
+- **True grid direction** — grid convergence and the G-M angle computed at your position, so magnetic, true, and grid north agree with the map in your hand (FM 3-25.26). Distances and bearings are solved on the WGS84 ellipsoid, not a sphere
 - **Offline tactical maps** — download OpenStreetMap / topographic tiles for your AO, dark tiles for low-vis, zero-network use
 - **Mission Preflight** — one-glance READY / CAUTION / NOT READY check across GPS, mesh, tile coverage, permissions, and battery
 - **Meshtastic mesh** — share your grid over LoRa via BLE and see other nodes; no cell, no internet
@@ -43,7 +44,7 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 
 The app is free to download. Full 10-digit MGRS (1-meter precision) is never gated.
 
-**Free:** live 10-digit MGRS, map screen, 1 saved AO package, 1 theme, 3 tools (Back Azimuth, Pace Count, Declination), 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
+**Free:** live 10-digit MGRS, map screen, 1 saved AO package, 1 theme, 4 tools (Back Azimuth, Pace Count, Declination, Distress Signalling), 3 report templates (SALUTE, 9-Line MEDEVAC, SPOT), 1 waypoint.
 
 | Tier | Price |
 |------|-------|
@@ -51,7 +52,7 @@ The app is free to download. Full 10-digit MGRS (1-meter precision) is never gat
 | Annual | $29.99/yr — **best value, save 37% vs monthly** |
 | Lifetime | $199.99 one-time |
 
-Pro unlocks all 10 tools, all 6 reports, offline tactical maps, Meshtastic mesh, external GPS, mission planning, GPX/KML import & export, NATO voice readout, shake-to-speak, HUD mode, photo geostamp, grid-crossing alerts, coordinate formats, FixPhrase, all 4 themes, unlimited waypoints, and adjustable grid scale. In-app purchases are processed by Apple or Google — Red Grid MGRS never sees your payment details.
+Pro unlocks all 12 tools, all 6 reports, offline tactical maps, Meshtastic mesh, external GPS, mission planning, GPX/KML import & export, NATO voice readout, shake-to-speak, HUD mode, photo geostamp, grid-crossing alerts, coordinate formats, FixPhrase, all 4 themes, unlimited waypoints, and adjustable grid scale. In-app purchases are processed by Apple or Google — Red Grid MGRS never sees your payment details.
 
 ---
 
@@ -114,9 +115,36 @@ Military personnel, search-and-rescue teams, law enforcement, wildland firefight
 | **Red Grid MGRS** | Solo MGRS navigator (DAGR-class) | iOS + Android | [App Store](https://apps.apple.com/app/id6759629554) · [Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) |
 | **Red Grid Link** | Team coordination + encrypted P2P sync | iOS + Android | [GitHub](https://github.com/RedGridTactical/RedGridLink) · [App Store](https://apps.apple.com/app/red-grid-link/id6760084718) |
 
-Red Grid MGRS is the solo navigator; [Red Grid Link](https://github.com/RedGridTactical/RedGridLink) is the team coordinator (roles, boundary alerts, waypoint sharing, NATO voice callouts) over encrypted Bluetooth, free on [iOS](https://apps.apple.com/app/red-grid-link/id6760084718). Same MGRS engine, same precision.
+**Red Grid Link is merging into Red Grid MGRS.** Team awareness is becoming an encrypted layer on the same offline map in v4.0, so there is one app and no second purchase. Link stays installed and working on devices that have it, but it is feature-frozen and all new work happens here.
 
 The `@redgrid/mgrs` library (DMA TM 8358.1 compliant, zero dependencies, ~15 KB) lives in [`packages/mgrs`](packages/mgrs). Full roadmap at [redgridtactical.com/roadmap](https://redgridtactical.com/roadmap.html).
+
+---
+
+## Roadmap
+
+Full detail at [redgridtactical.com/roadmap](https://redgridtactical.com/roadmap.html).
+
+### v4.0 — The Survival Update (next)
+
+The release that makes the app tell you the truth about where you are, and keeps working when things go wrong.
+
+- **Grid convergence and the G-M angle** — your compass, true north, and the grid north printed on your map are three different directions. Red Grid computes the difference at your position and converts between them, per FM 3-25.26. Declination on its own is not the number a grid map needs, and convergence reaches 2.7° near a UTM zone edge at 65°N: 475 m of lateral error over a 10 km leg.
+- **Ellipsoidal distance and bearing** — solved on WGS84 with Vincenty's inverse instead of a spherical approximation, which was off by 0.22–0.36% (about 200 m over 92 km).
+- **Point scale factor** — what a distance measured off the grid actually costs you on the ground.
+- **Barometric storm warning** — on-device pressure trend with altitude correction, so a climb is not mistaken for a front. No forecast service, no network.
+- **Distress signalling** — SOS, arbitrary Morse, and the standard ground-to-air pattern on screen and torch, with battery-aware duty cycles. Free for everyone; an emergency signal is not a paid feature.
+- **Encrypted team awareness over Meshtastic** — your team on the same offline map plus short tactical messages, sealed end to end with AES-256-GCM. Pairing by QR code, keys generated on device and never transmitted. No server, no accounts, no tracking.
+
+### After that
+
+| Version | Theme |
+|---------|-------|
+| v4.1 | Interoperability Pack — Cursor-on-Target export, KML/KMZ mission packages, "Copy as" |
+| v4.2 | SAR / ICS Field Pack — mobile-scoped FEMA/NIMS forms, incident folders, segment helper |
+| v4.3 | Land Nav Training Mode — course mode, pace and azimuth drills, instructor export |
+| v5.0 | Glanceable Field Companion — Apple Watch, widgets, Live Activity, Siri shortcuts |
+| v5.x | R&D — GPS spoof/jam integrity, camera target acquisition, GPS-denied dead reckoning |
 
 ---
 

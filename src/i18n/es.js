@@ -27,9 +27,10 @@ export default {
     continue: "CONTINUAR",
     startTrial: "INICIAR PRUEBA GRATIS DE 7 DÍAS",
     current: {
-      f1: { title: "FICHA DE RUTA", body: "Convierte cualquier lista de waypoints en una ficha de ruta lista para el campo, con rumbo, distancia y cuadrícula para cada tramo, y compártela como imagen. Pro." },
-      f2: { title: "PRUEBA GRATIS DE 7 DÍAS", body: "Prueba Red Grid Pro gratis durante 7 días con el plan anual: todas las herramientas, temas y funciones sin conexión. Sin cargo hoy, cancela cuando quieras." },
-      f3: { title: "MEJORAS Y TRADUCCIONES", body: "Ahorro anual más claro en la pantalla de mejora, más pantallas traducidas y correcciones de estabilidad. Sigue siendo sin conexión primero, sin cuentas y sin seguimiento." },
+      f1: { title: "NORTE DE CUADRÍCULA REAL", body: "Tu brújula, el norte verdadero y el norte de cuadrícula del mapa son tres direcciones distintas. Red Grid calcula ahora el ángulo G-M donde estás y convierte entre las tres, según FM 3-25.26." },
+      f2: { title: "AVISO DE TORMENTA", body: "Lee el barómetro del teléfono en el dispositivo y avisa cuando la presión cae rápido. Con corrección de altitud, para no confundir una subida con un frente. Pro." },
+      f3: { title: "SEÑALES DE SOCORRO", body: "SOS, Morse y el patrón estándar tierra-aire en pantalla y linterna, con temporización que cuida la batería. Gratis para todos." },
+      f4: { title: "MAPA DE EQUIPO CIFRADO", body: "Ve a tu equipo en el mismo mapa offline e intercambia mensajes tácticos breves por Meshtastic, sellados de extremo a extremo. Las claves nunca salen de tus dispositivos. Pro." },
     },
   },
   routeCard: {

@@ -27,9 +27,10 @@ export default {
     continue: "KONTYNUUJ",
     startTrial: "ROZPOCZNIJ 7-DNIOWY BEZPŁATNY OKRES PRÓBNY",
     current: {
-      f1: { title: "KARTA TRASY", body: "Zamień dowolną listę punktów nawigacyjnych w gotową do użycia w terenie kartę trasy z azymutem, odległością i siatką dla każdego odcinka, a następnie udostępnij ją jako obraz. Pro." },
-      f2: { title: "7-DNIOWY BEZPŁATNY OKRES PRÓBNY", body: "Wypróbuj Red Grid Pro bezpłatnie przez 7 dni w planie rocznym: wszystkie narzędzia, motywy i funkcje offline. Dziś bez opłat, anuluj w dowolnej chwili." },
-      f3: { title: "DOPRACOWANIE I TŁUMACZENIA", body: "Czytelniejsze oszczędności w planie rocznym na ekranie aktualizacji, więcej przetłumaczonych ekranów oraz poprawki stabilności. Nadal offline na pierwszym miejscu, bez kont i bez śledzenia." },
+      f1: { title: "PRAWDZIWA PÓŁNOC SIATKI", body: "Kompas, północ geograficzna i północ siatki na mapie to trzy różne kierunki. Red Grid liczy teraz kąt G-M w Twoim położeniu i przelicza między wszystkimi trzema, zgodnie z FM 3-25.26." },
+      f2: { title: "OSTRZEŻENIE O BURZY", body: "Odczytuje barometr telefonu lokalnie i ostrzega, gdy ciśnienie szybko spada. Z korektą wysokości, żeby podejście nie zostało wzięte za front. Pro." },
+      f3: { title: "SYGNAŁY RATUNKOWE", body: "SOS, alfabet Morse'a i standardowy wzór ziemia-powietrze na ekranie i latarce, z rytmem oszczędzającym baterię. Bezpłatnie dla wszystkich." },
+      f4: { title: "SZYFROWANA MAPA ZESPOŁU", body: "Zobacz zespół na tej samej mapie offline i wymieniaj krótkie wiadomości taktyczne przez Meshtastic, zapieczętowane end-to-end. Klucze nigdy nie opuszczają Twoich urządzeń. Pro." },
     },
   },
   tabs: {

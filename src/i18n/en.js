@@ -620,9 +620,10 @@ export default {
     continue: 'CONTINUE',
     startTrial: 'START 7-DAY FREE TRIAL',
     current: {
-      f1: { title: 'ROUTE CARD', body: 'Turn any waypoint list into a field-ready route card, with bearing, distance, and grid for every leg, and share it as an image. Pro.' },
-      f2: { title: '7-DAY FREE TRIAL', body: 'Try Red Grid Pro free for 7 days on the annual plan: every tool, theme, and offline feature. No charge today, cancel anytime.' },
-      f3: { title: 'POLISH & TRANSLATIONS', body: 'Clearer annual savings on the upgrade screen, more translated screens, and stability fixes. Still offline-first, with no accounts and no tracking.' },
+      f1: { title: "TRUE GRID NORTH", body: "Your compass, true north, and the grid north on your map are three different directions. Red Grid now computes the G-M angle where you stand and converts between all three, per FM 3-25.26." },
+      f2: { title: "STORM WARNING", body: "Reads your phone's barometer on device and warns you when pressure is falling fast. Altitude-corrected, so a climb is not mistaken for a front. Pro." },
+      f3: { title: "DISTRESS SIGNALLING", body: "SOS, Morse, and the standard ground-to-air pattern on screen and torch, with battery-aware timing. Free for everyone." },
+      f4: { title: "ENCRYPTED TEAM MAP", body: "See your team on the same offline map and trade short tactical messages over Meshtastic, sealed end to end. Keys never leave your devices. Pro." },
     },
   },
 

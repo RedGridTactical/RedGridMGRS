@@ -27,9 +27,10 @@ export default {
     continue: "WEITER",
     startTrial: "7-TAGE-TESTPHASE STARTEN",
     current: {
-      f1: { title: "ROUTENKARTE", body: "Verwandle jede Wegpunktliste in eine einsatzbereite Routenkarte, mit Peilung, Distanz und Gitterposition für jeden Abschnitt, und teile sie als Bild. Pro." },
-      f2: { title: "7 TAGE GRATIS TESTEN", body: "Teste Red Grid Pro 7 Tage lang kostenlos im Jahresabo: alle Werkzeuge, Themes und Offline-Funktionen. Heute keine Kosten, jederzeit kündbar." },
-      f3: { title: "FEINSCHLIFF & ÜBERSETZUNGEN", body: "Klarere Jahresersparnis auf dem Upgrade-Bildschirm, mehr übersetzte Bildschirme und Stabilitätsverbesserungen. Weiterhin Offline-First, ohne Konten und ohne Tracking." },
+      f1: { title: "ECHTES GITTER-NORD", body: "Kompass, geografisch Nord und Gitter-Nord auf Ihrer Karte sind drei verschiedene Richtungen. Red Grid berechnet jetzt den G-M-Winkel an Ihrem Standort und rechnet zwischen allen dreien um, nach FM 3-25.26." },
+      f2: { title: "STURMWARNUNG", body: "Liest das Barometer Ihres Geräts lokal aus und warnt bei schnell fallendem Druck. Höhenkorrigiert, damit ein Aufstieg nicht als Front gilt. Pro." },
+      f3: { title: "NOTSIGNALE", body: "SOS, Morse und das genormte Boden-Luft-Muster über Display und Taschenlampe, mit akkuschonendem Timing. Für alle kostenlos." },
+      f4: { title: "VERSCHLÜSSELTE TEAMKARTE", body: "Sehen Sie Ihr Team auf derselben Offline-Karte und tauschen Sie kurze taktische Nachrichten über Meshtastic aus, Ende-zu-Ende versiegelt. Schlüssel verlassen Ihr Gerät nie. Pro." },
     },
   },
   routeCard: {

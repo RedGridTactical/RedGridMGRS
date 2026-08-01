@@ -27,9 +27,10 @@ export default {
     continue: "CONTINUER",
     startTrial: "DÉMARRER L'ESSAI GRATUIT DE 7 JOURS",
     current: {
-      f1: { title: "FICHE D'ITINÉRAIRE", body: "Transformez n'importe quelle liste de points de cheminement en une fiche d'itinéraire prête pour le terrain, avec azimut, distance et grille pour chaque segment, puis partagez-la sous forme d'image. Pro." },
-      f2: { title: "ESSAI GRATUIT DE 7 JOURS", body: "Essayez Red Grid Pro gratuitement pendant 7 jours avec l'abonnement annuel : tous les outils, thèmes et fonctions hors ligne. Aucun débit aujourd'hui, annulable à tout moment." },
-      f3: { title: "FINITIONS ET TRADUCTIONS", body: "Économies annuelles plus claires sur l'écran de mise à niveau, davantage d'écrans traduits et corrections de stabilité. Toujours hors ligne avant tout, sans comptes ni suivi." },
+      f1: { title: "VRAI NORD DE QUADRILLAGE", body: "Votre boussole, le nord vrai et le nord de quadrillage de la carte sont trois directions différentes. Red Grid calcule désormais l'angle G-M là où vous êtes et convertit entre les trois, selon FM 3-25.26." },
+      f2: { title: "ALERTE ORAGE", body: "Lit le baromètre du téléphone sur l'appareil et vous alerte quand la pression chute vite. Corrigé en altitude, pour ne pas confondre une montée avec un front. Pro." },
+      f3: { title: "SIGNAUX DE DÉTRESSE", body: "SOS, morse et le motif sol-air normalisé sur l'écran et la lampe, avec un rythme économe en batterie. Gratuit pour tous." },
+      f4: { title: "CARTE D'ÉQUIPE CHIFFRÉE", body: "Voyez votre équipe sur la même carte hors ligne et échangez de courts messages tactiques via Meshtastic, scellés de bout en bout. Les clés ne quittent jamais vos appareils. Pro." },
     },
   },
   routeCard: {

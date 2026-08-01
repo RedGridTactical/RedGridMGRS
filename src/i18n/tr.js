@@ -27,9 +27,10 @@ export default {
     continue: "DEVAM ET",
     startTrial: "7 GÜNLÜK ÜCRETSİZ DENEMEYİ BAŞLAT",
     current: {
-      f1: { title: "ROTA KARTI", body: "Herhangi bir rota noktası listesini, her etap için kerteriz, mesafe ve grid içeren sahaya hazır bir rota kartına dönüştürün ve görsel olarak paylaşın. Pro." },
-      f2: { title: "7 GÜNLÜK ÜCRETSİZ DENEME", body: "Red Grid Pro'yu yıllık planda 7 gün boyunca ücretsiz deneyin: tüm araçlar, temalar ve çevrimdışı özellikler. Bugün hiçbir ücret yok, istediğiniz zaman iptal edebilirsiniz." },
-      f3: { title: "İYİLEŞTİRMELER VE ÇEVİRİLER", body: "Yükseltme ekranında daha net yıllık tasarruf, daha fazla çevrilmiş ekran ve kararlılık düzeltmeleri. Hâlâ çevrimdışı öncelikli, hesap ve takip yok." },
+      f1: { title: "GERÇEK GRID KUZEYİ", body: "Pusulanız, gerçek kuzey ve haritadaki grid kuzeyi üç ayrı yöndür. Red Grid artık FM 3-25.26'ya göre bulunduğunuz noktada G-M açısını hesaplıyor ve üçü arasında dönüşüm yapıyor." },
+      f2: { title: "FIRTINA UYARISI", body: "Telefonun barometresini cihaz üzerinde okur ve basınç hızla düşerken sizi uyarır. İrtifa düzeltmeli, böylece tırmanış cephe sanılmaz. Pro." },
+      f3: { title: "İMDAT SİNYALLERİ", body: "SOS, Mors ve standart yer-hava deseni ekranda ve fenerde, pili gözeten zamanlamayla. Herkes için ücretsiz." },
+      f4: { title: "ŞİFRELİ EKİP HARİTASI", body: "Ekibinizi aynı çevrimdışı haritada görün ve Meshtastic üzerinden kısa taktik mesajları uçtan uca şifreli değişin. Anahtarlar cihazınızdan hiç çıkmaz. Pro." },
     },
   },
   tabs: {

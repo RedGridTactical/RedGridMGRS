@@ -27,9 +27,10 @@ export default {
     continue: "CONTINUA",
     startTrial: "INIZIA LA PROVA GRATUITA DI 7 GIORNI",
     current: {
-      f1: { title: "SCHEDA ROTTA", body: "Trasforma qualsiasi elenco di waypoint in una scheda rotta pronta per il campo, con azimut, distanza e griglia per ogni tratta, e condividila come immagine. Pro." },
-      f2: { title: "PROVA GRATUITA DI 7 GIORNI", body: "Prova Red Grid Pro gratis per 7 giorni con il piano annuale: ogni strumento, tema e funzione offline. Nessun addebito oggi, disdici quando vuoi." },
-      f3: { title: "RIFINITURE E TRADUZIONI", body: "Risparmio annuale più chiaro nella schermata di upgrade, più schermate tradotte e correzioni di stabilità. Sempre offline-first, senza account e senza tracciamento." },
+      f1: { title: "NORD GRIGLIA REALE", body: "La bussola, il nord vero e il nord di griglia della carta sono tre direzioni diverse. Red Grid calcola ora l'angolo G-M dove ti trovi e converte fra tutte e tre, secondo FM 3-25.26." },
+      f2: { title: "ALLERTA TEMPORALE", body: "Legge il barometro del telefono sul dispositivo e avvisa quando la pressione cala in fretta. Corretto in quota, così una salita non viene scambiata per un fronte. Pro." },
+      f3: { title: "SEGNALI DI SOCCORSO", body: "SOS, Morse e il pattern standard terra-aria su schermo e torcia, con tempi che rispettano la batteria. Gratis per tutti." },
+      f4: { title: "MAPPA DI SQUADRA CIFRATA", body: "Vedi la tua squadra sulla stessa mappa offline e scambia brevi messaggi tattici via Meshtastic, sigillati end-to-end. Le chiavi non lasciano mai i tuoi dispositivi. Pro." },
     },
   },
   routeCard: {

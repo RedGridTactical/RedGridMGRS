@@ -27,9 +27,10 @@ export default {
     continue: "DOORGAAN",
     startTrial: "START GRATIS PROEFPERIODE VAN 7 DAGEN",
     current: {
-      f1: { title: "ROUTEKAART", body: "Zet elke waypointlijst om in een veldklare routekaart, met peiling, afstand en grid voor elk traject, en deel deze als afbeelding. Pro." },
-      f2: { title: "GRATIS PROEFPERIODE VAN 7 DAGEN", body: "Probeer Red Grid Pro 7 dagen gratis met het jaarabonnement: elk gereedschap, elk thema en elke offlinefunctie. Vandaag geen kosten, altijd opzegbaar." },
-      f3: { title: "VERFIJNING EN VERTALINGEN", body: "Duidelijkere jaarlijkse besparing op het upgradescherm, meer vertaalde schermen en stabiliteitsverbeteringen. Nog steeds offline-first, zonder accounts en zonder tracking." },
+      f1: { title: "ECHT RASTERNOORDEN", body: "Je kompas, het ware noorden en het rasternoorden op je kaart zijn drie verschillende richtingen. Red Grid berekent nu de G-M-hoek op je positie en rekent tussen alle drie om, volgens FM 3-25.26." },
+      f2: { title: "STORMWAARSCHUWING", body: "Leest de barometer van je toestel lokaal uit en waarschuwt bij snel dalende druk. Hoogtegecorrigeerd, zodat een klim niet voor een front wordt aangezien. Pro." },
+      f3: { title: "NOODSIGNALEN", body: "SOS, morse en het standaard grond-luchtpatroon via scherm en zaklamp, met accuvriendelijke timing. Gratis voor iedereen." },
+      f4: { title: "VERSLEUTELDE TEAMKAART", body: "Zie je team op dezelfde offlinekaart en wissel korte tactische berichten uit via Meshtastic, end-to-end verzegeld. Sleutels verlaten je toestel nooit. Pro." },
     },
   },
   tabs: {
