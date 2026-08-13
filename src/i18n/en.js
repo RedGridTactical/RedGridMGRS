@@ -488,7 +488,7 @@ export default {
     offlineMapsSub: 'Download your AO, never a blank map in the field',
     meshAwareness: 'Meshtastic Mesh',
     meshAwarenessSub: 'See mesh nodes on the map, no cell service needed',
-    allTools: 'All 10 Tactical Tools',
+    allTools: 'All 12 Tactical Tools',
     allToolsSub: 'Dead reckoning, resection, sun/moon, geostamp, and more',
     waypointsRoutes: 'Unlimited Waypoints & Routes',
     waypointsRoutesSub: 'Plan routes, save lists, import/export GPX & KML',

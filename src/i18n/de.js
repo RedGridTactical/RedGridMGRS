@@ -487,7 +487,7 @@ export default {
     offlineMapsSub: 'Einsatzgebiet vorab laden, nie wieder eine leere Karte im Feld',
     meshAwareness: 'Meshtastic-Mesh',
     meshAwarenessSub: 'Mesh-Knoten auf der Karte, ganz ohne Mobilfunk',
-    allTools: 'Alle 10 Taktik-Tools',
+    allTools: 'Alle 12 Taktik-Tools',
     allToolsSub: 'Koppelnavigation, R\u00fcckw\u00e4rtseinschnitt, Sonne/Mond, Geostempel u. v. m.',
     waypointsRoutes: 'Unbegrenzte Wegpunkte und Routen',
     waypointsRoutesSub: 'Routen planen, Listen speichern, GPX/KML-Import und -Export',
