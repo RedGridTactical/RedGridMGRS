@@ -49,8 +49,7 @@ The app is free to download. Full 10-digit MGRS (1-meter precision) is never gat
 | Tier | Price |
 |------|-------|
 | Monthly | $3.99/mo |
-| Annual | $29.99/yr — **best value, save 37% vs monthly** |
-| Lifetime | $199.99 one-time |
+| Lifetime | $49.99 one-time — **buy it once, keep it forever** |
 
 Pro unlocks all 12 tools, all 6 reports, offline tactical maps, Meshtastic mesh, external GPS, mission planning, GPX/KML import & export, NATO voice readout, shake-to-speak, HUD mode, photo geostamp, grid-crossing alerts, coordinate formats, FixPhrase, all 4 themes, unlimited waypoints, and adjustable grid scale. In-app purchases are processed by Apple or Google — Red Grid MGRS never sees your payment details.
 

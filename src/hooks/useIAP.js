@@ -35,10 +35,15 @@ export const PRO_PRODUCT_ID = 'redgrid_pro_lifetime';
 
 // Subscription product IDs (same tier, different billing)
 const SUB_MONTHLY_ID = 'redgrid_mgrs_pro_monthly';
+// RETIRED 2026-08-01: annual is no longer sold (2 paid SKUs — monthly + lifetime).
+// It is deliberately kept as a constant, and kept in ALL_PRODUCT_IDS and in the
+// entitlement checks, because existing annual subscribers keep renewing until
+// they cancel and must still be recognised, validated, and revoked correctly.
+// It is only removed from SUB_IDS, which is what the paywall offers for sale.
 const SUB_ANNUAL_ID  = 'redgrid_mgrs_pro_annual';
 const INAPP_IDS = [PRO_PRODUCT_ID];
-const SUB_IDS = [SUB_MONTHLY_ID, SUB_ANNUAL_ID];
-const ALL_PRODUCT_IDS = [...INAPP_IDS, ...SUB_IDS];
+const SUB_IDS = [SUB_MONTHLY_ID];
+const ALL_PRODUCT_IDS = [...INAPP_IDS, SUB_MONTHLY_ID, SUB_ANNUAL_ID];
 
 const isAndroid = Platform.OS === 'android';
 
@@ -58,7 +63,10 @@ try {
 
 const tierToSku = (tier) => {
   if (tier === 'monthly') return SUB_MONTHLY_ID;
-  if (tier === 'annual') return SUB_ANNUAL_ID;
+  // 'annual' is retired and no longer purchasable. Map it to monthly rather than
+  // falling through to the lifetime SKU, which would charge the wrong product if
+  // a stale tier value ever reached here.
+  if (tier === 'annual') return SUB_MONTHLY_ID;
   return PRO_PRODUCT_ID;
 };
 
@@ -82,7 +90,7 @@ export function useIAP() {
   const [isRestoring,  setIsRestoring]  = useState(false);
   const [product,      setProduct]      = useState(null);      // lifetime (legacy)
   const [products,     setProducts]     = useState({});         // { lifetime, monthly, annual }
-  const [selectedTier, setSelectedTier] = useState('annual');   // default selection
+  const [selectedTier, setSelectedTier] = useState('monthly');  // default selection (annual retired 2026-08-01)
   const [trialEligible, setTrialEligible] = useState(false);    // annual free-trial intro offer eligibility
   const mounted = useRef(true);
 

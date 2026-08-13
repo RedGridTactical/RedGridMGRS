@@ -1,5 +1,5 @@
 /**
- * ProGate — Paywall overlay with 3-tier pricing (Monthly / Annual / Lifetime).
+ * ProGate — Paywall overlay with 2-tier pricing (Monthly / Lifetime).
  * Shows feature list, tier selector, and purchase/restore buttons.
  */
 import React from 'react';
@@ -22,16 +22,17 @@ const PRO_FEATURES = [
   { icon: '\ud83d\udccb', labelKey: 'proGate.reportsThemes', subKey: 'proGate.reportsThemesSub' },
 ];
 
-// Pricing emphasis (May 26, 2026): tuned for recurring MRR. Annual is
-// featured and the default selection — it counts fully toward MRR with the
-// strongest retention. Lifetime stays available but is intentionally NOT
-// featured/default, since a one-time purchase contributes $0 to recurring
-// revenue and cannibalizes a would-be subscriber. (Reverses the May 24
-// lifetime-first test now that the goal is strict MRR, not total proceeds.)
+// Pricing (2026-08-01, owner): two paid SKUs. Annual sold one unit in its entire
+// existence and was retired; lifetime was repriced far down after $149.99/$199.99
+// sold zero. Monthly stays the default selection so the recurring option is what
+// a user lands on, with lifetime carrying the value badge.
+// RETIRED 2026-08-01: the annual tier is gone. Two paid SKUs only — monthly and
+// lifetime. Annual must not appear here even as a disabled card: a tier rendered
+// from this array is selectable, and selecting a SKU the store no longer sells
+// produces a purchase that always fails.
 const TIERS = [
   { id: 'monthly',  labelKey: 'proGate.tierMonthly',  periodKey: 'proGate.perMonth' },
-  { id: 'annual',   labelKey: 'proGate.tierAnnual',   periodKey: 'proGate.perYear', badge: 'proGate.bestValue' },
-  { id: 'lifetime', labelKey: 'proGate.tierLifetime', periodKey: 'proGate.oneTime' },
+  { id: 'lifetime', labelKey: 'proGate.tierLifetime', periodKey: 'proGate.oneTime', badge: 'proGate.bestValue' },
 ];
 
 export function ProGate({
@@ -49,43 +50,14 @@ export function ProGate({
     if (tier === 'lifetime' && product?.displayPrice) return product.displayPrice;
     return null;
   };
-  const pricesLoaded = !!(products?.monthly?.displayPrice || products?.annual?.displayPrice ||
+  const pricesLoaded = !!(products?.monthly?.displayPrice ||
     products?.lifetime?.displayPrice || product?.displayPrice);
 
-  const activeTier = selectedTier || 'annual';
-  // Surface the live 7-day free trial when the annual tier is selected and the
-  // user is intro-offer eligible; otherwise fall back to the standard unlock CTA.
-  // Which sub tier currently carries the free-trial offer (follows store
-  // config: monthly per the 2026-06-26 pricing strategy, annual as fallback).
-  // Derived locally from the same products prop — no extra prop threading.
-  const trialTier = detectFreeTrial(products?.monthly).hasTrial ? 'monthly'
-                  : detectFreeTrial(products?.annual).hasTrial ? 'annual' : null;
+  const activeTier = selectedTier || 'monthly';
+  // Which sub tier currently carries a free-trial offer. Only monthly remains
+  // sellable, so this is monthly or nothing. Derived from the same products prop.
+  const trialTier = detectFreeTrial(products?.monthly).hasTrial ? 'monthly' : null;
   const showTrial = !!trialEligible && trialTier != null && activeTier === trialTier;
-
-  // Live "save X% vs monthly" framing — computed from real store prices so it
-  // stays correct across all territories/PPP. Hidden when prices unavailable.
-  const annualSavingsPct = (() => {
-    const m = parseFloat(products?.monthly?.price);
-    const a = parseFloat(products?.annual?.price);
-    if (!m || !a || m <= 0) return null;
-    const pct = Math.round((1 - a / (m * 12)) * 100);
-    return pct > 5 && pct < 90 ? pct : null;
-  })();
-
-  // Per-month equivalent of the annual plan, formatted in the store's OWN
-  // currency (never a hardcoded $) so the annual tier visibly undercuts the
-  // monthly price. Degrades to null if prices/currency are unavailable or Intl
-  // currency formatting is unsupported on the device — the line just won't render.
-  const annualPerMonth = (() => {
-    const a = parseFloat(products?.annual?.price);
-    const cur = products?.annual?.currency;
-    if (!a || a <= 0 || !cur) return null;
-    try {
-      return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur }).format(a / 12);
-    } catch (e) {
-      return null;
-    }
-  })();
 
   return (
     <Modal
@@ -129,9 +101,8 @@ export function ProGate({
           <View style={styles.tierRow}>
             {TIERS.map((tier) => {
               const isActive = activeTier === tier.id;
-              // When the user is trial-eligible, the annual card leads with the
-              // free-trial hook instead of "best value" — surfaces the $0-to-start
-              // offer at tier selection, not just after the annual tier is picked.
+              // A trial-eligible tier leads with the free-trial hook instead of
+              // its normal badge, surfacing the offer at tier selection.
               const badgeKey = (tier.id === trialTier && trialEligible) ? 'proGate.freeTrialBadge' : tier.badge;
               return (
                 <TouchableOpacity
@@ -154,16 +125,6 @@ export function ProGate({
                   )}
                   <Text style={[styles.tierPrice, { color: colors.text }]} maxFontSizeMultiplier={1.2}>{getPriceForTier(tier.id) || '—'}</Text>
                   <Text style={[styles.tierPeriod, { color: colors.text3 }]}>{t(tier.periodKey)}</Text>
-                  {tier.id === 'annual' && annualSavingsPct != null && (
-                    <Text style={[styles.tierSavings, { color: colors.text2 }]} maxFontSizeMultiplier={1.2}>
-                      {t('proGate.saveVsMonthly', { pct: annualSavingsPct })}
-                    </Text>
-                  )}
-                  {tier.id === 'annual' && annualPerMonth && (
-                    <Text style={[styles.tierSavings, { color: colors.text3 }]} maxFontSizeMultiplier={1.2}>
-                      {`≈ ${annualPerMonth}${t('proGate.perMonth')}`}
-                    </Text>
-                  )}
                 </TouchableOpacity>
               );
             })}

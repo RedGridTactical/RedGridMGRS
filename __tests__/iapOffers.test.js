@@ -148,3 +148,51 @@ describe('getAndroidTrialOfferToken', () => {
     expect(getAndroidTrialOfferToken({})).toBe(null);
   });
 });
+
+// ─── Retired SKU guard (2026-08-01) ──────────────────────────────────────────
+// Annual was retired from sale. The dangerous failure is not a crash: a tier
+// listed in ProGate's TIERS array renders as a selectable card, and because
+// pricesLoaded stays true as long as ANY price resolves, the purchase button
+// stays enabled. Re-adding annual would therefore ship a paywall whose default
+// or selectable tier maps to a SKU the store refuses to sell — a purchase that
+// always fails, on the highest-intent screen in the app. Asserted against the
+// source so it fails on reintroduction rather than in the field.
+const fs = require('fs');
+const path = require('path');
+const read = (p) => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
+
+describe('retired annual SKU', () => {
+  const gate = read('src/components/ProGate.js');
+  const iap = read('src/hooks/useIAP.js');
+
+  const tiersBlock = gate.slice(gate.indexOf('const TIERS = ['), gate.indexOf('];', gate.indexOf('const TIERS = [')));
+
+  it('is not offered as a purchasable tier in the paywall', () => {
+    expect(tiersBlock).not.toMatch(/id:\s*'annual'/);
+    expect(tiersBlock).toMatch(/id:\s*'monthly'/);
+    expect(tiersBlock).toMatch(/id:\s*'lifetime'/);
+  });
+
+  it('is not the default selected tier anywhere', () => {
+    expect(gate).not.toMatch(/selectedTier\s*\|\|\s*'annual'/);
+    expect(iap).not.toMatch(/useState\('annual'\)/);
+  });
+
+  it('is not fetched as a for-sale subscription', () => {
+    const subIds = iap.slice(iap.indexOf('const SUB_IDS'), iap.indexOf('\n', iap.indexOf('const SUB_IDS')));
+    expect(subIds).not.toMatch(/SUB_ANNUAL_ID/);
+  });
+
+  it('is still recognised for existing subscribers, who keep renewing', () => {
+    // Removing it here would strand the annual subscribers who are still active.
+    expect(iap).toMatch(/const ALL_PRODUCT_IDS = \[[^\]]*SUB_ANNUAL_ID/);
+    expect(iap).toMatch(/SUB_ANNUAL_ID\s*=\s*'redgrid_mgrs_pro_annual'/);
+  });
+
+  it('never maps a stale annual tier onto the lifetime SKU', () => {
+    // A persisted 'annual' tier must not fall through to PRO_PRODUCT_ID, which
+    // would charge a one-time purchase to someone who picked a subscription.
+    const fn = iap.slice(iap.indexOf('const tierToSku'), iap.indexOf('};', iap.indexOf('const tierToSku')));
+    expect(fn).toMatch(/tier === 'annual'\) return SUB_MONTHLY_ID/);
+  });
+});
