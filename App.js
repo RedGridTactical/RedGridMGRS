@@ -631,7 +631,12 @@ function AppContent({
             accessibilityLabel={`${t?.label || ''} tab${locked ? '. Pro feature, locked' : ''}`}
           >
             {safeTab === t?.id && <View style={[staticStyles.tabIndicatorTop, { backgroundColor: colors.text }]} />}
-            <Text maxFontSizeMultiplier={1.2} style={[staticStyles.tabLabel, TABS.length > 4 && staticStyles.tabLabelCompact, { color: colors.border }, safeTab === t?.id && { color: colors.text }]}>
+            <Text
+              maxFontSizeMultiplier={1.2}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              style={[staticStyles.tabLabel, TABS.length > 4 && staticStyles.tabLabelCompact, { color: colors.border }, safeTab === t?.id && { color: colors.text }]}>
               {t?.label || ''}{locked ? <Text style={[staticStyles.tabLockMark, { color: colors.border }]}>{'ᴾᴿᴼ'}</Text> : null}
             </Text>
           </TouchableOpacity>
@@ -1012,9 +1017,9 @@ const staticStyles = StyleSheet.create({
   // Tab bar
   tabBar: { flexDirection:'row', borderTopWidth:1, alignItems:'center' },
   tabBarLandscape: { paddingBottom: 0 },
-  tabItem: { flex:1, alignItems:'center', paddingVertical:12, position:'relative' },
+  tabItem: { flex:1, alignItems:'center', paddingVertical:12, paddingHorizontal:2, position:'relative' },
   tabLabel: { fontSize:10, letterSpacing:3, fontWeight:'700' },
-  tabLabelCompact: { letterSpacing:1, fontSize:9 },
+  tabLabelCompact: { letterSpacing:0.5, fontSize:9 },
   tabLockMark: { fontSize:7, letterSpacing:0.5 },
   tabIndicatorTop: { position:'absolute', top:0, left:'10%', right:'10%', height:2 },
   screenContent: { flex:1 },

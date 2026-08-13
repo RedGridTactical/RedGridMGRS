@@ -55,7 +55,7 @@ export default {
   },
   tabs: {
     grid: 'CUADR\u00cdCULA',
-    tools: 'HERRAMIENTAS',
+    tools: 'HERRAM.',
     reports: 'INFORMES',
     lists: 'LISTAS',
     coords: 'COORDS',

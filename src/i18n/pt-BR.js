@@ -35,7 +35,7 @@ export default {
   },
   tabs: {
     grid: 'GRADE',
-    tools: 'FERRAMENTAS',
+    tools: 'FERRAM.',
     reports: 'RELATÓRIOS',
     lists: 'LISTAS',
     coords: 'COORDS',

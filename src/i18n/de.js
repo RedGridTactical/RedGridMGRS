@@ -55,7 +55,7 @@ export default {
   },
   tabs: {
     grid: 'GITTER',
-    tools: 'WERKZEUGE',
+    tools: 'TOOLS',
     reports: 'BERICHTE',
     lists: 'LISTEN',
     coords: 'KOORD',
