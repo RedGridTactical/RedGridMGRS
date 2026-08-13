@@ -6,14 +6,31 @@
         "title": "Red Grid MGRS",
         "subtitle": "DAGR-Class MGRS Navigator",
         "description": "The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for free. No network required. No data collected. No accounts to create.\n\n\nYOUR PHONE. DAGR CAPABILITY.\n\n\nLike the Defense Advanced GPS Receiver carried by warfighters worldwide, Red Grid displays your Military Grid Reference System position in real time with 1-meter precision. But Red Grid goes further — adding offline tactical maps, Meshtastic mesh networking, NATO voice readout, tactical report generation, and pace counting that the DAGR doesn't offer.\n\n\nOFFLINE TACTICAL MAPS:\n\n- Three map styles: Standard, Dark Tactical, and Topographic (contour lines)\n- Download tiles for your area of operations\n- Toggle offline mode for zero-network map use\n- MGRS grid overlay on all map styles\n- Works completely disconnected from any network\n\n\nMESTASTIC MESH NETWORKING:\n\n- Share your grid position over LoRa mesh via BLE\n- See other mesh users on the map in real time\n- No cell service, no internet, no infrastructure needed\n- Just Meshtastic radios and phones\n\n\nDAGR-EQUIVALENT FEATURES:\n\n- Live MGRS coordinates (4/6/8/10-digit precision)\n- Magnetic declination (WMM model)\n- Waypoint storage with bearing and distance\n- Back azimuth and dead reckoning\n- Speed, elevation, and heading display\n- Multiple coordinate formats (MGRS, UTM, DD, DMS)\n- Full offline operation — zero cloud dependency\n\n\n12 TACTICAL TOOLS:\n\n- Back Azimuth calculator\n- Dead Reckoning plotter\n- Two-point Resection\n- Pace Count tracker\n- Magnetic Declination reference\n- Time-Distance-Speed solver\n- Sun & Moon position data\n- MGRS Precision selector (1m to 100km)\n- Elevation & Slope calculator\n- Photo Geostamp (MGRS/DTG burned into images)\n- Barometer & Storm Warning (on-device pressure trend)\n- Distress Signalling (SOS, Morse, ground-to-air; free for everyone)\n\n\n6 RADIO-READY REPORT TEMPLATES:\n\nGenerate formatted reports ready to transmit over any net — a capability the DAGR hardware doesn't include:\n\n- SALUTE (Size, Activity, Location, Unit, Time, Equipment)\n- 9-Line MEDEVAC request\n- SPOT report\n- ICS 201 incident briefing\n- CASEVAC request\n- ANGUS/CFF fire mission\n\n\nMORE CAPABILITIES:\n\n- NATO phonetic voice readout (hands-free grid calls)\n- HUD mode (full-screen tactical display)\n- External GPS support (Garmin GLO, Bad Elf)\n- GPX/KML import and export\n- FixPhrase: open-source What3Words alternative\n- Mission planning with route overlay\n- 4 tactical display themes (red, NVG, day, blue)\n- Haptic feedback for eyes-free operation\n- 16 languages (EN, FR, DE, ES, JA, KO, IT, NL, PT-BR, RU, ZH-Hans, ZH-Hant, TR, PL, AR, HI)\n\n\nBUILT FOR OPERATORS:\n\nRed Grid MGRS is designed for military personnel, search and rescue teams, law enforcement, wildland firefighters, first responders, hunters, and backcountry hikers who depend on accurate grid coordinates in austere environments. Whether you trained on a DAGR or a lensatic compass, Red Grid speaks your language.\n\n\nZERO FOOTPRINT PRIVACY:\n\n- No accounts. No sign-up. No login.\n- No cloud sync. No analytics. No tracking.\n- No ads. No data leaves your device.\n- Location data is held in memory only and never stored or transmitted.\n\n\nDownload free — includes live 10-digit MGRS display, 1 theme, basic tools, and 3 report templates. Upgrade to Red Grid Pro for all 12 tools, offline maps, mesh networking, all themes, unlimited waypoints, and all 6 reports. Monthly or lifetime options available.",
-        "keywords": ["mgrs", "gps", "military", "grid", "navigation", "tactical", "offline", "army", "bearing", "mesh", "meshtastic", "sar", "utm", "declination"],
-        "releaseNotes": "v3.3.4 — Tap-to-Delete Waypoints\n\n- Tap any waypoint pin on the map to see its details and remove it. No more stuck markers after you plot them. Works on free and Pro plans.\n- Minor stability and readability tweaks across the map and grid screens.",
+        "keywords": [
+          "mgrs",
+          "gps",
+          "military",
+          "grid",
+          "navigation",
+          "tactical",
+          "offline",
+          "army",
+          "bearing",
+          "mesh",
+          "meshtastic",
+          "sar",
+          "utm",
+          "declination"
+        ],
+        "releaseNotes": "THE SURVIVAL UPDATE\n\nTRUE GRID NORTH\nYour compass, true north, and the grid north printed on your map are three different directions. Red Grid now computes the G-M angle at your position and converts between all three, per FM 3-25.26. Distance and bearing are solved on the WGS84 ellipsoid instead of a sphere.\n\nSTORM WARNING\nReads your device barometer on board and warns you when pressure is falling fast. Altitude corrected, so a climb is not mistaken for a front. Pro.\n\nDISTRESS SIGNALLING\nSOS, Morse, and the standard ground-to-air pattern on screen and flashlight, with battery aware timing. Free for everyone.\n\nENCRYPTED TEAM MAP\nSee your team on the same offline map and trade short tactical messages over Meshtastic, sealed end to end. Pair by QR code. Keys never leave your devices. No server, no accounts. Pro.\n\nStill zero network, zero tracking, zero accounts.",
         "promotionalText": "One-tap MARK POSITION. Give a friend 7 days of Pro. Offline tactical maps, Meshtastic mesh, 12 tactical tools. DAGR-class navigation — zero network required.",
         "privacyPolicyUrl": "https://redgridtactical.com/privacy.html",
         "supportUrl": "https://redgridtactical.com/mgrs.html"
       }
     },
-    "categories": ["NAVIGATION"],
+    "categories": [
+      "NAVIGATION"
+    ],
     "copyright": "2026 Red Grid Tactical"
   },
   "google": {
@@ -22,7 +39,7 @@
         "title": "Red Grid MGRS",
         "shortDescription": "DAGR-class MGRS navigator — offline maps, Meshtastic mesh, 12 tactical tools",
         "fullDescription": "<<same as apple.info.en-US.description — copy verbatim>>",
-        "releaseNotes": "v3.3.4 — Tap-to-Delete Waypoints\n\n• Tap any waypoint pin on the map to see its details and remove it. No more stuck markers after you plot them. Works on free and Pro plans.\n• Native libraries rebuilt with 16 KB page-size alignment for Android 15+ compatibility.\n• Minor stability and readability tweaks across the map and grid screens",
+        "releaseNotes": "THE SURVIVAL UPDATE\n\nTRUE GRID NORTH: the G-M angle at your position, converting between magnetic, true and grid north per FM 3-25.26. Distance and bearing now solved on the WGS84 ellipsoid.\n\nSTORM WARNING: on-device barometer trend, altitude corrected. Pro.\n\nDISTRESS SIGNALLING: SOS, Morse and ground-to-air on screen and flashlight. Free for everyone.\n\nENCRYPTED TEAM MAP: your team on one offline map, short messages over Meshtastic, sealed end to end. Pro.",
         "privacyPolicyUrl": "https://redgridtactical.github.io/RedGridMGRS/privacy.html",
         "contactEmail": "support@redgridtactical.com",
         "contactWebsite": "https://redgridtactical.com"
@@ -30,95 +47,97 @@
       "fr-FR": {
         "title": "Red Grid MGRS",
         "shortDescription": "Navigateur MGRS classe DAGR — cartes hors ligne, mesh Meshtastic, 10 outils tactiques",
-        "releaseNotes": "v3.3.4 — Toucher pour supprimer\n\n• Touchez n'importe quelle épingle de waypoint sur la carte pour voir ses détails et la supprimer. Plus de marqueurs bloqués après les avoir placés. Fonctionne sur les plans gratuit et Pro.\n• Bibliothèques natives reconstruites avec alignement 16 Ko pour la compatibilité Android 15+.\n• Petites améliorations de stabilité et de lisibilité sur les écrans de carte et de grille."
+        "releaseNotes": "LA MISE À JOUR SURVIE\n\nVRAI NORD DE QUADRILLAGE : l'angle G-M à votre position, conversion entre nord magnétique, vrai et de quadrillage selon FM 3-25.26. Distance et relèvement sur l'ellipsoïde WGS84.\n\nALERTE ORAGE : tendance barométrique sur l'appareil, corrigée en altitude. Pro.\n\nSIGNAUX DE DÉTRESSE : SOS, morse et sol-air sur écran et lampe. Gratuit pour tous.\n\nCARTE D'ÉQUIPE CHIFFRÉE : votre équipe sur une carte hors ligne, messages courts via Meshtastic, scellés de bout en bout. Pro."
       },
       "de-DE": {
         "title": "Red Grid MGRS",
         "shortDescription": "DAGR-Klasse MGRS-Navigator — Offline-Karten, Meshtastic Mesh, 10 taktische Werkzeuge",
-        "releaseNotes": "v3.3.4 — Antippen zum Löschen\n\n• Tippen Sie auf eine beliebige Wegpunkt-Markierung auf der Karte, um Details zu sehen und sie zu entfernen. Keine festsitzenden Marker mehr nach dem Setzen. Funktioniert auf dem kostenlosen und Pro-Tarif.\n• Native Bibliotheken mit 16-KB-Seitengrößen-Ausrichtung für Android 15+ neu kompiliert.\n• Kleinere Stabilitäts- und Lesbarkeitsverbesserungen auf den Karten- und Grid-Bildschirmen."
+        "releaseNotes": "DAS SURVIVAL-UPDATE\n\nECHTES GITTER-NORD: der G-M-Winkel an Ihrem Standort, Umrechnung zwischen magnetisch, geografisch und Gitter-Nord nach FM 3-25.26. Distanz und Peilung jetzt auf dem WGS84-Ellipsoid.\n\nSTURMWARNUNG: Druckverlauf auf dem Gerät, höhenkorrigiert. Pro.\n\nNOTSIGNALE: SOS, Morse und Boden-Luft über Display und Taschenlampe. Für alle kostenlos.\n\nVERSCHLÜSSELTE TEAMKARTE: Ihr Team auf einer Offline-Karte, kurze Nachrichten über Meshtastic, Ende-zu-Ende versiegelt. Pro."
       },
       "es-ES": {
         "title": "Red Grid MGRS",
         "shortDescription": "Navegador MGRS clase DAGR — mapas offline, malla Meshtastic, 10 herramientas tácticas",
-        "releaseNotes": "v3.3.4 — Tocar para eliminar\n\n• Toca cualquier marcador de waypoint en el mapa para ver sus detalles y eliminarlo. Ya no hay marcadores atascados después de colocarlos. Funciona en los planes gratuito y Pro.\n• Bibliotecas nativas recompiladas con alineación de página de 16 KB para compatibilidad con Android 15+.\n• Pequeños ajustes de estabilidad y legibilidad en las pantallas de mapa y cuadrícula."
+        "releaseNotes": "LA ACTUALIZACIÓN DE SUPERVIVENCIA\n\nNORTE DE CUADRÍCULA REAL: el ángulo G-M en tu posición, conversión entre norte magnético, verdadero y de cuadrícula según FM 3-25.26. Distancia y rumbo sobre el elipsoide WGS84.\n\nAVISO DE TORMENTA: tendencia barométrica en el dispositivo, con corrección de altitud. Pro.\n\nSEÑALES DE SOCORRO: SOS, Morse y tierra-aire en pantalla y linterna. Gratis para todos.\n\nMAPA DE EQUIPO CIFRADO: tu equipo en un mapa offline, mensajes breves por Meshtastic. Pro."
       },
       "es-419": {
         "title": "Red Grid MGRS",
         "shortDescription": "Navegador MGRS clase DAGR — mapas offline, red Meshtastic, 10 herramientas tácticas",
-        "releaseNotes": "v3.3.4 — Toca para eliminar\n\n• Toca cualquier marcador de waypoint en el mapa para ver sus detalles y eliminarlo. Ya no hay marcadores atorados después de colocarlos. Funciona en los planes gratis y Pro.\n• Bibliotecas nativas recompiladas con alineación de página de 16 KB para compatibilidad con Android 15+.\n• Ajustes menores de estabilidad y legibilidad en las pantallas de mapa y cuadrícula."
+        "releaseNotes": "LA ACTUALIZACIÓN DE SUPERVIVENCIA\n\nNORTE DE CUADRÍCULA REAL: el ángulo G-M en tu posición, conversión entre norte magnético, verdadero y de cuadrícula según FM 3-25.26. Distancia y rumbo sobre el elipsoide WGS84.\n\nAVISO DE TORMENTA: tendencia barométrica en el dispositivo, con corrección de altitud. Pro.\n\nSEÑALES DE SOCORRO: SOS, Morse y tierra-aire en pantalla y linterna. Gratis para todos.\n\nMAPA DE EQUIPO CIFRADO: tu equipo en un mapa offline, mensajes breves por Meshtastic. Pro."
       },
       "ja-JP": {
         "title": "Red Grid MGRS",
         "shortDescription": "DAGRクラスMGRSナビゲーター - オフラインマップ、Meshtasticメッシュ、戦術ツール10種",
-        "releaseNotes": "v3.3.4 — タップで削除\n\n• 地図上のウェイポイントピンをタップして詳細を表示し、削除できます。プロットした後にマーカーが動かなくなることはありません。無料プランとProプランの両方で動作します。\n• Android 15+ 対応のため、ネイティブライブラリを 16 KB ページサイズアライメントで再ビルド。\n• 地図とグリッド画面全体にわたる小さな安定性と可読性の改善。"
+        "releaseNotes": "サバイバル・アップデート\n\n真のグリッド北：現在地でG-M角を計算し、磁北・真北・グリッド北を相互変換（FM 3-25.26）。距離と方位はWGS84楕円体上で計算。\n\n荒天警告：端末内で気圧傾向を解析、高度補正付き。Pro。\n\n遭難信号：SOS、モールス、対空地上信号を画面とライトで送信。全ユーザー無料。\n\n暗号化チームマップ：同じオフライン地図に仲間を表示し、Meshtasticで短いメッセージを端末内の鍵でエンドツーエンド暗号化。Pro。"
       },
       "ko-KR": {
         "title": "Red Grid MGRS",
         "shortDescription": "DAGR급 MGRS 내비게이터 — 오프라인 지도, Meshtastic 메시, 전술 도구 10종",
-        "releaseNotes": "v3.3.4 — 탭하여 삭제\n\n• 지도의 웨이포인트 핀을 탭하여 세부 정보를 확인하고 제거하세요. 배치한 후 고정되는 마커가 더 이상 없습니다. 무료 및 Pro 요금제에서 작동합니다.\n• Android 15+ 호환성을 위해 네이티브 라이브러리를 16 KB 페이지 크기 정렬로 재빌드.\n• 지도 및 그리드 화면 전반에 걸친 소소한 안정성 및 가독성 개선."
+        "releaseNotes": "서바이벌 업데이트\n\n진짜 도북: 현재 위치에서 G-M 각을 계산해 자북, 진북, 도북을 서로 변환 (FM 3-25.26). 거리와 방위는 WGS84 타원체 기반.\n\n악천후 경고: 기기 내 기압 추세 분석, 고도 보정 적용. Pro.\n\n조난 신호: SOS, 모스 부호, 지대공 신호를 화면과 손전등으로 송출. 모두에게 무료.\n\n암호화 팀 지도: 같은 오프라인 지도에 팀원 표시, Meshtastic으로 짧은 메시지를 종단간 암호화. Pro."
       },
       "it-IT": {
         "title": "Red Grid MGRS",
         "shortDescription": "Navigatore MGRS classe DAGR — mappe offline, mesh Meshtastic, 10 strumenti tattici",
-        "releaseNotes": "v3.3.4 — Tocca per eliminare\n\n• Tocca qualsiasi segnalino waypoint sulla mappa per vederne i dettagli e rimuoverlo. Basta con i marcatori bloccati dopo averli piazzati. Funziona sui piani gratuito e Pro.\n• Librerie native ricompilate con allineamento a pagine da 16 KB per la compatibilità con Android 15+.\n• Piccoli miglioramenti di stabilità e leggibilità nelle schermate mappa e griglia."
+        "releaseNotes": "L'AGGIORNAMENTO SOPRAVVIVENZA\n\nNORD GRIGLIA REALE: l'angolo G-M nella tua posizione, conversione fra nord magnetico, vero e di griglia secondo FM 3-25.26. Distanza e rilevamento sull'ellissoide WGS84.\n\nALLERTA TEMPORALE: tendenza barica sul dispositivo, corretta in quota. Pro.\n\nSEGNALI DI SOCCORSO: SOS, Morse e terra-aria su schermo e torcia. Gratis per tutti.\n\nMAPPA DI SQUADRA CIFRATA: la tua squadra su una mappa offline, messaggi brevi via Meshtastic. Pro."
       },
       "nl-NL": {
         "title": "Red Grid MGRS",
         "shortDescription": "DAGR-klasse MGRS-navigator — offline kaarten, Meshtastic mesh, 10 tactische tools",
-        "releaseNotes": "v3.3.4 — Tikken om te verwijderen\n\n• Tik op een waypoint-speld op de kaart om de details te bekijken en deze te verwijderen. Geen vastzittende markers meer nadat je ze hebt geplaatst. Werkt op gratis en Pro plannen.\n• Native bibliotheken opnieuw gebouwd met 16 KB-paginagrootte-uitlijning voor Android 15+ compatibiliteit.\n• Kleine verbeteringen aan stabiliteit en leesbaarheid in de kaart- en rasterschermen."
+        "releaseNotes": "DE SURVIVAL-UPDATE\n\nECHT RASTERNOORDEN: de G-M-hoek op je positie, omrekenen tussen magnetisch, waar en rasternoorden volgens FM 3-25.26. Afstand en peiling op de WGS84-ellipsoïde.\n\nSTORMWAARSCHUWING: druktrend op het toestel, hoogtegecorrigeerd. Pro.\n\nNOODSIGNALEN: SOS, morse en grond-lucht via scherm en zaklamp. Gratis voor iedereen.\n\nVERSLEUTELDE TEAMKAART: je team op één offlinekaart, korte berichten via Meshtastic, end-to-end verzegeld. Pro."
       },
       "pt-BR": {
         "title": "Red Grid MGRS",
         "shortDescription": "Navegador MGRS classe DAGR — mapas offline, mesh Meshtastic, 10 ferramentas táticas",
-        "releaseNotes": "v3.3.4 — Toque para excluir\n\n• Toque em qualquer pino de waypoint no mapa para ver seus detalhes e removê-lo. Chega de marcadores presos depois de colocá-los. Funciona nos planos gratuito e Pro.\n• Bibliotecas nativas recompiladas com alinhamento de página de 16 KB para compatibilidade com Android 15+.\n• Pequenos ajustes de estabilidade e legibilidade nas telas de mapa e grade."
+        "releaseNotes": "A ATUALIZAÇÃO DE SOBREVIVÊNCIA\n\nNORTE DE QUADRÍCULA REAL: o ângulo G-M na sua posição, conversão entre norte magnético, verdadeiro e de quadrícula conforme o FM 3-25.26. Distância e rumo no elipsoide WGS84.\n\nALERTA DE TEMPESTADE: tendência barométrica no aparelho, com correção de altitude. Pro.\n\nSINAIS DE SOCORRO: SOS, Morse e solo-ar na tela e na lanterna. Grátis para todos.\n\nMAPA DE EQUIPE CRIPTOGRAFADO: sua equipe em um mapa offline, mensagens curtas via Meshtastic. Pro."
       },
       "pt-PT": {
         "title": "Red Grid MGRS",
         "shortDescription": "Navegador MGRS classe DAGR — mapas offline, mesh Meshtastic, 10 ferramentas táticas",
-        "releaseNotes": "v3.3.4 — Tocar para eliminar\n\n• Toque em qualquer pino de waypoint no mapa para ver os seus detalhes e removê-lo. Fim dos marcadores presos depois de colocados. Funciona nos planos gratuito e Pro.\n• Bibliotecas nativas recompiladas com alinhamento de página de 16 KB para compatibilidade com Android 15+.\n• Pequenos ajustes de estabilidade e legibilidade nos ecrãs de mapa e grelha."
+        "releaseNotes": "A ATUALIZAÇÃO DE SOBREVIVÊNCIA\n\nNORTE DE QUADRÍCULA REAL: o ângulo G-M na sua posição, conversão entre norte magnético, verdadeiro e de quadrícula conforme o FM 3-25.26. Distância e rumo no elipsoide WGS84.\n\nAVISO DE TEMPESTADE: tendência barométrica no aparelho, com correção de altitude. Pro.\n\nSINAIS DE SOCORRO: SOS, Morse e solo-ar no ecrã e na lanterna. Grátis para todos.\n\nMAPA DE EQUIPA CIFRADO: a sua equipa num mapa offline, mensagens curtas via Meshtastic. Pro."
       },
       "ru-RU": {
         "title": "Red Grid MGRS",
         "shortDescription": "MGRS-навигатор класса DAGR — офлайн-карты, Meshtastic mesh, 10 тактических инструментов",
-        "releaseNotes": "v3.3.4 — Касание для удаления\n\n• Коснитесь любой метки путевой точки на карте, чтобы увидеть её данные и удалить. Больше никаких застрявших маркеров после установки. Работает на бесплатном и Pro тарифе.\n• Нативные библиотеки пересобраны с выравниванием страниц 16 КБ для совместимости с Android 15+.\n• Небольшие улучшения стабильности и читаемости на экранах карты и сетки."
+        "releaseNotes": "ОБНОВЛЕНИЕ ДЛЯ ВЫЖИВАНИЯ\n\nИСТИННЫЙ СЕВЕР СЕТКИ: угол G-M в вашей точке, перевод между магнитным, истинным и севером сетки по FM 3-25.26. Расстояние и азимут на эллипсоиде WGS84.\n\nШТОРМОВОЕ ПРЕДУПРЕЖДЕНИЕ: тренд давления на устройстве, с поправкой на высоту. Pro.\n\nСИГНАЛЫ БЕДСТВИЯ: SOS, Морзе и «земля-воздух» на экране и фонарём. Бесплатно для всех.\n\nЗАШИФРОВАННАЯ КАРТА ГРУППЫ: группа на офлайн-карте, короткие сообщения по Meshtastic. Pro."
       },
       "uk": {
         "title": "Red Grid MGRS",
         "shortDescription": "MGRS-навігатор класу DAGR — офлайн-карти, Meshtastic mesh, 10 тактичних інструментів",
-        "releaseNotes": "v3.3.4 — Торкніться, щоб видалити\n\n• Торкніться будь-якої позначки путньої точки на карті, щоб переглянути її деталі та видалити. Більше жодних застряглих маркерів після розміщення. Працює на безкоштовному та Pro-тарифах.\n• Нативні бібліотеки перезібрані з вирівнюванням сторінок 16 КБ для сумісності з Android 15+.\n• Незначні покращення стабільності та читабельності на екранах карти й сітки."
+        "releaseNotes": "ОНОВЛЕННЯ ДЛЯ ВИЖИВАННЯ\n\nСПРАВЖНЯ ПІВНІЧ СІТКИ: кут G-M у вашій точці, переведення між магнітною, істинною північчю та північчю сітки за FM 3-25.26. Відстань і азимут на еліпсоїді WGS84.\n\nШТОРМОВЕ ПОПЕРЕДЖЕННЯ: тренд тиску на пристрої, з поправкою на висоту. Pro.\n\nСИГНАЛИ ЛИХА: SOS, Морзе і «земля-повітря» на екрані та ліхтариком. Безкоштовно для всіх.\n\nЗАШИФРОВАНА КАРТА ГРУПИ: група на офлайн-карті, короткі повідомлення через Meshtastic. Pro."
       },
       "pl-PL": {
         "title": "Red Grid MGRS",
         "shortDescription": "Nawigator MGRS klasy DAGR — mapy offline, mesh Meshtastic, 10 narzędzi taktycznych",
-        "releaseNotes": "v3.3.4 — Dotknij, aby usunąć\n\n• Dotknij dowolnej pinezki punktu trasy na mapie, aby zobaczyć jej szczegóły i ją usunąć. Koniec z zatrzymanymi znacznikami po ich ustawieniu. Działa w planach darmowym i Pro.\n• Biblioteki natywne przebudowane z wyrównaniem stron 16 KB dla zgodności z Androidem 15+.\n• Drobne usprawnienia stabilności i czytelności na ekranach mapy i siatki."
+        "releaseNotes": "AKTUALIZACJA PRZETRWANIA\n\nPRAWDZIWA PÓŁNOC SIATKI: kąt G-M w Twoim położeniu, przeliczanie między północą magnetyczną, geograficzną i siatki wg FM 3-25.26. Odległość i azymut na elipsoidzie WGS84.\n\nOSTRZEŻENIE O BURZY: trend ciśnienia na urządzeniu, z korektą wysokości. Pro.\n\nSYGNAŁY RATUNKOWE: SOS, Morse i ziemia-powietrze na ekranie i latarce. Bezpłatnie dla wszystkich.\n\nSZYFROWANA MAPA ZESPOŁU: zespół na mapie offline, krótkie wiadomości przez Meshtastic. Pro."
       },
       "tr-TR": {
         "title": "Red Grid MGRS",
         "shortDescription": "DAGR sınıfı MGRS gezginer — çevrimdışı haritalar, Meshtastic mesh, 10 taktik araç",
-        "releaseNotes": "v3.3.4 — Silmek için dokun\n\n• Haritadaki herhangi bir ara nokta iğnesine dokunarak ayrıntılarını görüp kaldırabilirsin. Yerleştirdikten sonra takılı kalan işaretçi yok. Ücretsiz ve Pro planlarında çalışır.\n• Android 15+ uyumluluğu için yerel kütüphaneler 16 KB sayfa boyutu hizalamasıyla yeniden derlendi.\n• Harita ve grid ekranlarında küçük kararlılık ve okunabilirlik iyileştirmeleri."
+        "releaseNotes": "HAYATTA KALMA GÜNCELLEMESİ\n\nGERÇEK GRID KUZEYİ: bulunduğunuz noktada G-M açısı, manyetik, gerçek ve grid kuzeyi arasında dönüşüm (FM 3-25.26). Mesafe ve kerteriz WGS84 elipsoidinde.\n\nFIRTINA UYARISI: cihaz üzerinde basınç eğilimi, irtifa düzeltmeli. Pro.\n\nİMDAT SİNYALLERİ: SOS, Mors ve yer-hava ekranda ve fenerde. Herkes için ücretsiz.\n\nŞİFRELİ EKİP HARİTASI: ekibiniz tek çevrimdışı haritada, Meshtastic üzerinden kısa mesajlar. Pro."
       },
       "zh-CN": {
         "title": "Red Grid MGRS",
         "shortDescription": "DAGR 级 MGRS 导航器 — 离线地图、Meshtastic 网状网络、10 种战术工具",
-        "releaseNotes": "v3.3.4 — 轻触删除航点\n\n• 轻触地图上任何航点标记即可查看其详细信息并将其移除。放置后不再有卡住的标记。在免费版和 Pro 版中均可使用。\n• 原生库以 16 KB 页面大小对齐重新编译，以兼容 Android 15+。\n• 地图和网格屏幕的细微稳定性与可读性优化。"
+        "releaseNotes": "生存更新\n\n真正的方格北：在你所处位置计算 G-M 角，在磁北、真北与方格北之间换算（FM 3-25.26）。距离和方位改用 WGS84 椭球体求解。\n\n风暴预警：设备本地气压趋势，已做高度校正。Pro。\n\n求救信号：屏幕与手电筒发送 SOS、摩尔斯电码及对空地面信号。所有人免费。\n\n加密团队地图：同一张离线地图上显示队友，通过 Meshtastic 端到端加密收发简短消息。Pro。"
       },
       "zh-TW": {
         "title": "Red Grid MGRS",
         "shortDescription": "DAGR 級 MGRS 導航器 — 離線地圖、Meshtastic 網狀網路、10 種戰術工具",
-        "releaseNotes": "v3.3.4 — 輕觸以刪除航點\n\n• 輕觸地圖上任何航點標記即可查看其詳細資訊並將其移除。放置後不再有卡住的標記。在免費方案與 Pro 方案中均可使用。\n• 原生程式庫以 16 KB 頁面大小對齊重新編譯,以相容 Android 15+。\n• 地圖與網格畫面的細微穩定性與可讀性優化。"
+        "releaseNotes": "生存更新\n\n真正的方格北：在你所在位置計算 G-M 角，在磁北、真北與方格北之間換算（FM 3-25.26）。距離與方位改用 WGS84 橢球體求解。\n\n風暴預警：裝置本機氣壓趨勢，已做高度校正。Pro。\n\n求救訊號：螢幕與手電筒發送 SOS、摩斯電碼及對空地面訊號。所有人免費。\n\n加密團隊地圖：同一張離線地圖上顯示隊友，透過 Meshtastic 端到端加密收發簡短訊息。Pro。"
       },
       "ar": {
         "title": "Red Grid MGRS",
         "shortDescription": "ملاح MGRS من فئة DAGR — خرائط دون إنترنت، شبكة Meshtastic، 10 أدوات تكتيكية",
-        "releaseNotes": "v3.3.4 — انقر للحذف\n\n• انقر على أي دبوس نقطة طريق على الخريطة لعرض تفاصيلها وإزالتها. لا مزيد من العلامات العالقة بعد وضعها. يعمل على الخطتين المجانية وPro.\n• إعادة بناء المكتبات الأصلية بمحاذاة صفحات 16 كيلوبايت لتوافق Android 15+.\n• تحسينات طفيفة في الاستقرار وإمكانية القراءة في شاشتي الخريطة والشبكة."
+        "releaseNotes": "تحديث النجاة\n\nشمال الشبكة الحقيقي: زاوية G-M في موقعك، والتحويل بين الشمال المغناطيسي والحقيقي وشمال الشبكة وفق FM 3-25.26. المسافة والاتجاه على مجسم WGS84.\n\nتحذير من العواصف: اتجاه الضغط على الجهاز مع تصحيح الارتفاع. Pro.\n\nإشارات الاستغاثة: SOS ومورس والأرض إلى الجو عبر الشاشة والكشاف. مجاني للجميع.\n\nخريطة فريق مشفّرة: فريقك على خريطة واحدة دون اتصال، ورسائل قصيرة عبر Meshtastic. Pro."
       },
       "hi-IN": {
         "title": "Red Grid MGRS",
         "shortDescription": "DAGR श्रेणी MGRS नेविगेटर — ऑफ़लाइन नक्शे, Meshtastic मेश, 10 सामरिक उपकरण",
-        "releaseNotes": "v3.3.4 — हटाने के लिए टैप करें\n\n• मानचित्र पर किसी भी वेपॉइंट पिन पर टैप करके उसका विवरण देखें और उसे हटाएँ। रखने के बाद अटके हुए मार्कर अब नहीं। मुफ़्त और Pro प्लान दोनों पर काम करता है।\n• Android 15+ संगतता के लिए 16 KB पेज-आकार संरेखण के साथ नेटिव लाइब्रेरी फिर से बनाई गईं।\n• मानचित्र और ग्रिड स्क्रीन में छोटे-छोटे स्थिरता और पठनीयता सुधार।"
+        "releaseNotes": "सर्वाइवल अपडेट\n\nसच्चा ग्रिड नॉर्थ: आपकी जगह पर G-M कोण, और मैग्नेटिक, ट्रू व ग्रिड नॉर्थ के बीच बदलाव (FM 3-25.26)। दूरी और दिशा अब WGS84 दीर्घवृत्ताभ पर।\n\nतूफ़ान चेतावनी: डिवाइस पर दबाव प्रवृत्ति, ऊँचाई सुधार सहित। Pro।\n\nसंकट संकेत: स्क्रीन और टॉर्च से SOS, मोर्स और ग्राउंड-टू-एयर। सबके लिए मुफ़्त।\n\nएन्क्रिप्टेड टीम मैप: एक ऑफ़लाइन नक्शे पर टीम, Meshtastic से छोटे संदेश। Pro।"
       }
     },
-    "categories": ["MAPS_AND_NAVIGATION"],
+    "categories": [
+      "MAPS_AND_NAVIGATION"
+    ],
     "contentRating": "Everyone",
     "pricing": "Free (with in-app purchases)",
     "assets": {

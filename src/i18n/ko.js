@@ -475,6 +475,7 @@ export default {
     bestValue: '최고 가치',
     freeTrialBadge: '무료 체험',
     legal: '결제는 확인 시 App Store / Google Play 계정에 청구됩니다. 구독은 취소할 때까지 자동 갱신됩니다. 설정 > 구독에서 관리하세요.',
+    legalOneTime: "확인 시 App Store / Google Play 계정으로 청구되는 일회성 구매입니다. 구독이 아니며 자동 갱신되지 않습니다.",
     voiceReadout: '\uc74c\uc131 \uc74d\uae30',
     voiceReadoutSub: 'NATO \uc74c\uc131 \uadf8\ub9ac\ub4dc \uc74d\uae30, \ud578\uc988\ud504\ub9ac',
     savedWaypoints: '\uc800\uc7a5\ub41c \uc6e8\uc774\ud3ec\uc778\ud2b8 \ubaa9\ub85d',

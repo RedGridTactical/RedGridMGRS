@@ -439,6 +439,7 @@ export default {
     oneTime: 'eenmalig',
     bestValue: 'BESTE WAARDE',
     legal: 'Betaling in rekening gebracht op je App Store / Google Play-account bij bevestiging. Abonnementen worden automatisch verlengd tot annulering. Beheer in Instellingen > Abonnementen.',
+    legalOneTime: "Eenmalige aankoop, bij bevestiging afgeschreven via je App Store-/Google Play-account. Geen abonnement — er wordt niets verlengd.",
     voiceReadout: 'Spraakuitlezing',
     voiceReadoutSub: 'NATO-fonetische griduitlezing, handsfree gebruik',
     savedWaypoints: 'Opgeslagen waypoint-lijsten',

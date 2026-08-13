@@ -475,6 +475,7 @@ export default {
     bestValue: 'MEJOR VALOR',
     freeTrialBadge: 'PRUEBA GRATIS',
     legal: 'Pago cargado a tu cuenta de App Store / Google Play al confirmar. Las suscripciones se renuevan automáticamente. Gestiona en Ajustes > Suscripciones.',
+    legalOneTime: "Compra única que se cobra a tu cuenta de App Store / Google Play al confirmar. No es una suscripción: no se renueva.",
     voiceReadout: 'Lectura de voz',
     voiceReadoutSub: 'Lectura fon\u00e9tica NATO de cuadr\u00edcula, manos libres',
     savedWaypoints: 'Listas de puntos guardadas',

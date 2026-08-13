@@ -16,7 +16,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { detectFreeTrial, hasPriorSubscription, getAndroidTrialOfferToken } from '../utils/iapOffers';
+import {
+  detectFreeTrial, hasPriorSubscription, getAndroidTrialOfferToken,
+  PRO_PRODUCT_ID, SUB_MONTHLY_ID, SUB_ANNUAL_ID, tierToSku, isSubTier,
+} from '../utils/iapOffers';
+
+// Re-exported for existing consumers of this module's public surface.
+export { PRO_PRODUCT_ID };
 import i18n from '../i18n';
 
 const PRO_KEY         = 'rg_pro_unlocked';
@@ -31,19 +37,13 @@ const PRO_VERIFIED_AT = 'rg_pro_verified_at_v1';
 // on purpose: this is a field app — never punish a user for being off-grid,
 // and never let one transient empty store response revoke a paying customer.
 const SUB_REVERIFY_GRACE_MS = 21 * 24 * 60 * 60 * 1000;
-export const PRO_PRODUCT_ID = 'redgrid_pro_lifetime';
-
-// Subscription product IDs (same tier, different billing)
-const SUB_MONTHLY_ID = 'redgrid_mgrs_pro_monthly';
-// RETIRED 2026-08-01: annual is no longer sold (2 paid SKUs — monthly + lifetime).
-// It is deliberately kept as a constant, and kept in ALL_PRODUCT_IDS and in the
-// entitlement checks, because existing annual subscribers keep renewing until
-// they cancel and must still be recognised, validated, and revoked correctly.
-// It is only removed from SUB_IDS, which is what the paywall offers for sale.
-const SUB_ANNUAL_ID  = 'redgrid_mgrs_pro_annual';
 const INAPP_IDS = [PRO_PRODUCT_ID];
+// What the paywall offers FOR SALE. Annual was retired 2026-08-01.
 const SUB_IDS = [SUB_MONTHLY_ID];
-const ALL_PRODUCT_IDS = [...INAPP_IDS, SUB_MONTHLY_ID, SUB_ANNUAL_ID];
+// What grants/validates ENTITLEMENT. Derived from the sale list so a future
+// SKU added to SUB_IDS automatically entitles — plus the retired annual, which
+// existing subscribers keep renewing and must always be recognised.
+const ALL_PRODUCT_IDS = [...INAPP_IDS, ...SUB_IDS, SUB_ANNUAL_ID];
 
 const isAndroid = Platform.OS === 'android';
 
@@ -60,17 +60,6 @@ try {
 } catch (e) {
   IAPModule = null;
 }
-
-const tierToSku = (tier) => {
-  if (tier === 'monthly') return SUB_MONTHLY_ID;
-  // 'annual' is retired and no longer purchasable. Map it to monthly rather than
-  // falling through to the lifetime SKU, which would charge the wrong product if
-  // a stale tier value ever reached here.
-  if (tier === 'annual') return SUB_MONTHLY_ID;
-  return PRO_PRODUCT_ID;
-};
-
-const isSubTier = (tier) => tier === 'monthly' || tier === 'annual';
 
 // Pick the first usable offerToken from a fetched Android subscription product.
 // Returns null if no offer details are present (e.g. iOS shape or empty array).
@@ -89,7 +78,7 @@ export function useIAP() {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring,  setIsRestoring]  = useState(false);
   const [product,      setProduct]      = useState(null);      // lifetime (legacy)
-  const [products,     setProducts]     = useState({});         // { lifetime, monthly, annual }
+  const [products,     setProducts]     = useState({});         // { lifetime, monthly }
   const [selectedTier, setSelectedTier] = useState('monthly');  // default selection (annual retired 2026-08-01)
   const [trialEligible, setTrialEligible] = useState(false);    // annual free-trial intro offer eligibility
   const mounted = useRef(true);
@@ -262,7 +251,7 @@ export function useIAP() {
   }, []);
 
   // ── Fetch product + subscription details (cache-aware, dedup'd) ───────────
-  // Returns a snapshot { lifetime, monthly, annual } so callers can decide
+  // Returns a snapshot { lifetime, monthly } so callers can decide
   // whether the SKU they're about to buy has details ready.
   const fetchProductDetails = useCallback(async () => {
     if (!IAPModule) return {};
@@ -328,12 +317,11 @@ export function useIAP() {
         }
         for (const p of (subList || [])) {
           if (p?.id === SUB_MONTHLY_ID) map.monthly = p;
-          else if (p?.id === SUB_ANNUAL_ID) map.annual = p;
         }
 
         if (mounted.current) {
           if (map.lifetime) setProduct(map.lifetime);
-          if (map.lifetime || map.monthly || map.annual) {
+          if (map.lifetime || map.monthly) {
             setProducts((prev) => ({ ...prev, ...map }));
           }
         }
@@ -373,10 +361,11 @@ export function useIAP() {
     let cancelled = false;
     (async () => {
       try {
-        // Trial follows store config: eligible if ANY sub tier currently
-        // advertises a free-trial intro offer (monthly first per the
-        // 2026-06-26 pricing strategy, annual as fallback).
-        const hasTrial = detectFreeTrial(products.monthly).hasTrial || detectFreeTrial(products.annual).hasTrial;
+        // Trial follows store config: eligible only if the monthly sub
+        // currently advertises a free-trial intro offer. (Self-serve store
+        // trials were removed 2026-07-25; annual is retired and never fetched,
+        // so this stays false unless an offer is re-created on monthly.)
+        const hasTrial = detectFreeTrial(products.monthly).hasTrial;
         if (!hasTrial) {
           if (!cancelled && mounted.current) setTrialEligible(false);
           return;
@@ -409,7 +398,7 @@ export function useIAP() {
       }
     })();
     return () => { cancelled = true; };
-  }, [products.monthly, products.annual]);
+  }, [products.monthly]);
 
   // ── Persist Pro unlock ─────────────────────────────────────────────────────
   // Records WHICH product unlocked Pro (drives subscription re-verification)
@@ -490,7 +479,11 @@ export function useIAP() {
 
     if (mounted.current) setIsPurchasing(true);
 
-    const effectiveTier = tier || selectedTier;
+    // Normalize BEFORE anything is keyed off the tier: 'annual' is retired, so
+    // a stale value (persisted state, deep link) buys monthly instead of
+    // dead-ending on a product lookup that can no longer resolve.
+    const requestedTier = tier || selectedTier;
+    const effectiveTier = requestedTier === 'annual' ? 'monthly' : requestedTier;
     const sub = isSubTier(effectiveTier);
     const sku = tierToSku(effectiveTier);
 
@@ -526,12 +519,12 @@ export function useIAP() {
       // server-side, so an ineligible trial-token purchase fails gracefully.)
       let subscriptionOffers;
       if (isAndroid && sub) {
-        // Apply the free-trial offer token only when buying the tier that
-        // carries the trial (follows store config: monthly per the strategy).
-        const trialTier = detectFreeTrial(products.monthly).hasTrial ? 'monthly'
-                        : detectFreeTrial(products.annual).hasTrial ? 'annual' : null;
+        // Apply the free-trial offer token only when buying monthly (the only
+        // sub on sale) while it carries a trial and the user is eligible.
+        const useTrialOffer =
+          effectiveTier === 'monthly' && trialEligible && detectFreeTrial(products.monthly).hasTrial;
         const offerToken =
-          (effectiveTier === trialTier && trialEligible && getAndroidTrialOfferToken(entry)) ||
+          (useTrialOffer && getAndroidTrialOfferToken(entry)) ||
           getAndroidOfferToken(entry);
         if (!offerToken) {
           try {

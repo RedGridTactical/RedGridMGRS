@@ -439,6 +439,7 @@ export default {
     oneTime: 'tek seferlik',
     bestValue: 'EN İYİ DEĞER',
     legal: 'Ödeme, onay sırasında App Store / Google Play hesabınızdan tahsil edilir. Abonelikler iptal edilene kadar otomatik olarak yenilenir. Ayarlar > Abonelikler\'den yönetin.',
+    legalOneTime: "Onaylandığında App Store / Google Play hesabınızdan tahsil edilen tek seferlik satın alma. Abonelik değildir — yenilenmez.",
     voiceReadout: 'Sesli Okuma',
     voiceReadoutSub: 'NATO fonetik ızgara okuması, eller serbest çalışma',
     savedWaypoints: 'Kaydedilmiş Waypoint Listeleri',

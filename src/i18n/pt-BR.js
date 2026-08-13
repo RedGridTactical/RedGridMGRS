@@ -439,6 +439,7 @@ export default {
     oneTime: 'pagamento único',
     bestValue: 'MELHOR VALOR',
     legal: 'Pagamento cobrado em sua conta App Store / Google Play na confirmação. Assinaturas renovam automaticamente até o cancelamento. Gerencie em Ajustes > Assinaturas.',
+    legalOneTime: "Compra única cobrada na sua conta da App Store / Google Play na confirmação. Não é assinatura: nada é renovado.",
     voiceReadout: 'Leitura por voz',
     voiceReadoutSub: 'Leitura fonética NATO da grade, operação mãos-livres',
     savedWaypoints: 'Listas de waypoints salvas',

@@ -475,6 +475,7 @@ export default {
     bestValue: 'BEST VALUE',
     freeTrialBadge: 'FREE TRIAL',
     legal: 'Payment charged to your App Store / Google Play account at confirmation. Subscriptions auto-renew until cancelled. Manage in Settings > Subscriptions.',
+    legalOneTime: "One-time purchase charged to your App Store / Google Play account at confirmation. Not a subscription — nothing renews.",
     // Feature list
     voiceReadout: 'Voice Readout',
     voiceReadoutSub: 'NATO phonetic grid readout, hands-free operation',

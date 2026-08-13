@@ -50,10 +50,15 @@ export function ProGate({
     if (tier === 'lifetime' && product?.displayPrice) return product.displayPrice;
     return null;
   };
-  const pricesLoaded = !!(products?.monthly?.displayPrice ||
-    products?.lifetime?.displayPrice || product?.displayPrice);
+
 
   const activeTier = selectedTier || 'monthly';
+  // Gate the purchase button on the SELECTED tier's own price, not on "any
+  // price loaded": the two tiers come from two independent store fetches with
+  // separate timeouts, so one can resolve while the other doesn't. An OR here
+  // enabled the button on a card rendering '—' — the exact tap that cannot
+  // succeed — while suppressing the prices-unavailable notice.
+  const selectedPriceLoaded = !!getPriceForTier(activeTier);
   // Which sub tier currently carries a free-trial offer. Only monthly remains
   // sellable, so this is monthly or nothing. Derived from the same products prop.
   const trialTier = detectFreeTrial(products?.monthly).hasTrial ? 'monthly' : null;
@@ -132,15 +137,15 @@ export function ProGate({
 
           {/* Purchase button — disabled until live store prices load */}
           <TouchableOpacity
-            style={[styles.purchaseBtn, { backgroundColor: colors.text }, (isPurchasing || !pricesLoaded) && { backgroundColor: colors.border }]}
+            style={[styles.purchaseBtn, { backgroundColor: colors.text }, (isPurchasing || !selectedPriceLoaded) && { backgroundColor: colors.border }]}
             onPress={() => { tapMedium(); onPurchase(activeTier); }}
-            disabled={isPurchasing || !pricesLoaded}
+            disabled={isPurchasing || !selectedPriceLoaded}
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel={showTrial
               ? `${t('proGate.startTrial')}. ${t('proGate.thenPrice', { price: getPriceForTier(trialTier) || '' })}`
               : `${t('proGate.unlockButton')} ${getPriceForTier(activeTier) || ''}`}
-            accessibilityState={{ disabled: isPurchasing || !pricesLoaded }}
+            accessibilityState={{ disabled: isPurchasing || !selectedPriceLoaded }}
           >
             {isPurchasing
               ? <ActivityIndicator color={colors.bg} />
@@ -149,14 +154,14 @@ export function ProGate({
           </TouchableOpacity>
 
           {/* Offline note — store unreachable, prices unavailable */}
-          {!pricesLoaded && !isPurchasing && (
+          {!selectedPriceLoaded && !isPurchasing && (
             <Text style={[styles.trialSub, { color: colors.text3 }]}>
               {t('proGate.pricesUnavailable')}
             </Text>
           )}
 
           {/* Trial terms subtext — only when the free trial is being offered */}
-          {showTrial && !isPurchasing && pricesLoaded && (
+          {showTrial && !isPurchasing && selectedPriceLoaded && (
             <Text style={[styles.trialSub, { color: colors.text3 }]}>
               {t('proGate.thenPrice', { price: getPriceForTier(trialTier) })}
             </Text>
@@ -174,7 +179,7 @@ export function ProGate({
 
           {/* Legal */}
           <Text style={[styles.legal, { color: colors.text4 }]}>
-            {t('proGate.legal')}
+            {t(activeTier === 'monthly' ? 'proGate.legal' : 'proGate.legalOneTime')}
           </Text>
 
         </View>
@@ -247,9 +252,6 @@ const styles = StyleSheet.create({
   },
   tierPeriod: {
     fontSize: 8, letterSpacing: 1,
-  },
-  tierSavings: {
-    fontFamily: 'monospace', fontSize: 7, letterSpacing: 1, fontWeight: '700', marginTop: 3,
   },
   purchaseBtn: {
     paddingVertical: 14, alignItems: 'center', marginBottom: 10, minHeight: 44,

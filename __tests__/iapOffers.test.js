@@ -1,6 +1,8 @@
 const { detectFreeTrial, hasPriorSubscription, isTrialEligible, getAndroidTrialOfferToken } = require('../src/utils/iapOffers');
 
-// Mirrors the live ASC offer: FREE_TRIAL / ONE_WEEK / 1 period on the annual sub.
+// HISTORICAL fixture shape (the self-serve store trial was removed from both
+// stores 2026-07-25, and annual was retired from sale 2026-08-01). Kept to
+// exercise the platform-shape parsing in detectFreeTrial, not store reality.
 const iosAnnualWithTrial = {
   id: 'redgrid_mgrs_pro_annual',
   displayPrice: '$29.99',
@@ -150,49 +152,77 @@ describe('getAndroidTrialOfferToken', () => {
 });
 
 // ─── Retired SKU guard (2026-08-01) ──────────────────────────────────────────
-// Annual was retired from sale. The dangerous failure is not a crash: a tier
-// listed in ProGate's TIERS array renders as a selectable card, and because
-// pricesLoaded stays true as long as ANY price resolves, the purchase button
-// stays enabled. Re-adding annual would therefore ship a paywall whose default
-// or selectable tier maps to a SKU the store refuses to sell — a purchase that
-// always fails, on the highest-intent screen in the app. Asserted against the
-// source so it fails on reintroduction rather than in the field.
+// Annual was retired from sale. The dangerous regression is not a crash: a tier
+// rendered in ProGate's TIERS array is selectable, and a selectable tier whose
+// SKU the store no longer sells is a purchase that always fails on the
+// highest-intent screen. Where the symbols are importable (iapOffers owns the
+// SKU constants and tier mapping) we assert BEHAVIOR; the two arrays that live
+// in RN modules (TIERS, SUB_IDS) are checked in source with anchors asserted
+// found and slices taken to the closing bracket, so a reformat or rename fails
+// LOUD instead of passing vacuously against an empty string.
 const fs = require('fs');
 const path = require('path');
-const read = (p) => fs.readFileSync(path.join(__dirname, '..', p), 'utf8');
+const readSource = (rel) => fs.readFileSync(path.join(__dirname, '..', rel), 'utf8');
+const {
+  PRO_PRODUCT_ID, SUB_MONTHLY_ID, SUB_ANNUAL_ID, tierToSku, isSubTier,
+} = require('../src/utils/iapOffers');
+
+// Slice from an anchor to the next closing token, asserting both exist —
+// indexOf() misses must fail the test, never silently yield ''.
+function sliceBlock(src, anchor, closer) {
+  const i = src.indexOf(anchor);
+  expect(i).toBeGreaterThan(-1);
+  const j = src.indexOf(closer, i);
+  expect(j).toBeGreaterThan(i);
+  return src.slice(i, j + closer.length);
+}
 
 describe('retired annual SKU', () => {
-  const gate = read('src/components/ProGate.js');
-  const iap = read('src/hooks/useIAP.js');
+  it('maps every tier to a sellable SKU — stale annual buys monthly, never lifetime', () => {
+    expect(tierToSku('monthly')).toBe(SUB_MONTHLY_ID);
+    expect(tierToSku('annual')).toBe(SUB_MONTHLY_ID);
+    expect(tierToSku('lifetime')).toBe(PRO_PRODUCT_ID);
+    // Annual is still subscription-shaped for entitlement logic.
+    expect(isSubTier('annual')).toBe(true);
+    expect(isSubTier('lifetime')).toBe(false);
+  });
 
-  const tiersBlock = gate.slice(gate.indexOf('const TIERS = ['), gate.indexOf('];', gate.indexOf('const TIERS = [')));
+  it('purchase() normalizes the tier BEFORE the product lookup', () => {
+    // The SKU mapping alone is not enough: purchase() keys detailsMap by tier,
+    // so without normalization a stale annual dead-ends at "store unavailable"
+    // instead of buying monthly. Pin the normalization line itself.
+    const iap = readSource('src/hooks/useIAP.js');
+    const block = sliceBlock(iap, 'const requestedTier', ';');
+    expect(iap).toMatch(/requestedTier === 'annual' \? 'monthly' : requestedTier/);
+    expect(block).toContain('tier || selectedTier');
+  });
 
   it('is not offered as a purchasable tier in the paywall', () => {
-    expect(tiersBlock).not.toMatch(/id:\s*'annual'/);
-    expect(tiersBlock).toMatch(/id:\s*'monthly'/);
-    expect(tiersBlock).toMatch(/id:\s*'lifetime'/);
+    const gate = readSource('src/components/ProGate.js');
+    const tiers = sliceBlock(gate, 'const TIERS = [', '];');
+    expect(tiers).toMatch(/id:\s*['"]monthly['"]/);
+    expect(tiers).toMatch(/id:\s*['"]lifetime['"]/);
+    expect(tiers).not.toMatch(/annual/i);
   });
 
-  it('is not the default selected tier anywhere', () => {
-    expect(gate).not.toMatch(/selectedTier\s*\|\|\s*'annual'/);
-    expect(iap).not.toMatch(/useState\('annual'\)/);
+  it('is not fetched for sale, but still grants entitlement', () => {
+    const iap = readSource('src/hooks/useIAP.js');
+    const subIds = sliceBlock(iap, 'const SUB_IDS', '];');
+    expect(subIds).toContain('SUB_MONTHLY_ID');
+    expect(subIds).not.toContain('SUB_ANNUAL_ID');
+    // Entitlement list must keep annual (existing subscribers keep renewing)
+    // AND stay derived from the sale list, so a future for-sale SKU is
+    // automatically entitled rather than charged-but-locked-out.
+    const all = sliceBlock(iap, 'const ALL_PRODUCT_IDS', '];');
+    expect(all).toContain('...SUB_IDS');
+    expect(all).toContain('SUB_ANNUAL_ID');
   });
 
-  it('is not fetched as a for-sale subscription', () => {
-    const subIds = iap.slice(iap.indexOf('const SUB_IDS'), iap.indexOf('\n', iap.indexOf('const SUB_IDS')));
-    expect(subIds).not.toMatch(/SUB_ANNUAL_ID/);
-  });
-
-  it('is still recognised for existing subscribers, who keep renewing', () => {
-    // Removing it here would strand the annual subscribers who are still active.
-    expect(iap).toMatch(/const ALL_PRODUCT_IDS = \[[^\]]*SUB_ANNUAL_ID/);
-    expect(iap).toMatch(/SUB_ANNUAL_ID\s*=\s*'redgrid_mgrs_pro_annual'/);
-  });
-
-  it('never maps a stale annual tier onto the lifetime SKU', () => {
-    // A persisted 'annual' tier must not fall through to PRO_PRODUCT_ID, which
-    // would charge a one-time purchase to someone who picked a subscription.
-    const fn = iap.slice(iap.indexOf('const tierToSku'), iap.indexOf('};', iap.indexOf('const tierToSku')));
-    expect(fn).toMatch(/tier === 'annual'\) return SUB_MONTHLY_ID/);
+  it('never defaults the selection to a retired tier', () => {
+    const gate = readSource('src/components/ProGate.js');
+    const iap = readSource('src/hooks/useIAP.js');
+    expect(gate).toContain("selectedTier || 'monthly'");
+    const def = sliceBlock(iap, 'const [selectedTier', ';');
+    expect(def).toContain("useState('monthly')");
   });
 });

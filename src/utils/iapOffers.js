@@ -13,9 +13,29 @@
  * intro offer again — so we fall back to the standard paywall for them.
  */
 
+// ── Product IDs (single source of truth — useIAP imports these) ─────────────
+export const PRO_PRODUCT_ID = 'redgrid_pro_lifetime';
+export const SUB_MONTHLY_ID = 'redgrid_mgrs_pro_monthly';
+// RETIRED from sale 2026-08-01 (two paid SKUs: monthly + lifetime). Kept for
+// entitlement checks: existing annual subscribers renew until they cancel.
+export const SUB_ANNUAL_ID = 'redgrid_mgrs_pro_annual';
+
 // Subscriptions in the "Red Grid Pro" group. Lifetime is a separate non-sub
 // product type and does not affect subscription intro-offer eligibility.
-const SUB_PRODUCT_IDS = ['redgrid_mgrs_pro_monthly', 'redgrid_mgrs_pro_annual'];
+const SUB_PRODUCT_IDS = [SUB_MONTHLY_ID, SUB_ANNUAL_ID];
+
+/**
+ * Tier name -> store SKU. 'annual' is retired and normalizes to monthly; the
+ * caller (useIAP.purchase) must normalize the TIER before any product lookup,
+ * not just the SKU — a lookup keyed by an unnormalized tier bypasses this.
+ */
+export const tierToSku = (tier) => {
+  if (tier === 'monthly' || tier === 'annual') return SUB_MONTHLY_ID;
+  return PRO_PRODUCT_ID;
+};
+
+/** Is this tier billed as a subscription (vs a one-time purchase)? */
+export const isSubTier = (tier) => tier === 'monthly' || tier === 'annual';
 
 // StoreKit period unit → days (best-effort, for a human label only).
 function iosPeriodToDays(period, count) {

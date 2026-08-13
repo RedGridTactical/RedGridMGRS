@@ -475,6 +475,7 @@ export default {
     bestValue: 'お得',
     freeTrialBadge: '無料体験',
     legal: 'お支払いは確認時にApp Store / Google Playアカウントに請求されます。サブスクリプションはキャンセルするまで自動更新されます。設定 > サブスクリプションで管理できます。',
+    legalOneTime: "確認時にApp Store / Google Playアカウントに請求される買い切りです。サブスクリプションではなく、自動更新はありません。",
     voiceReadout: '\u97f3\u58f0\u8aad\u307f\u4e0a\u3052',
     voiceReadoutSub: 'NATO\u97f3\u58f0\u30b0\u30ea\u30c3\u30c9\u8aad\u307f\u4e0a\u3052, \u30cf\u30f3\u30ba\u30d5\u30ea\u30fc',
     savedWaypoints: '\u4fdd\u5b58\u6e08\u307f\u30a6\u30a7\u30a4\u30dd\u30a4\u30f3\u30c8\u30ea\u30b9\u30c8',

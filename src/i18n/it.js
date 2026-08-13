@@ -471,6 +471,7 @@ export default {
     oneTime: 'una tantum',
     bestValue: 'MIGLIOR VALORE',
     legal: 'Pagamento addebitato sul tuo account App Store / Google Play alla conferma. Gli abbonamenti si rinnovano automaticamente fino all\'annullamento. Gestisci in Impostazioni > Abbonamenti.',
+    legalOneTime: "Acquisto una tantum addebitato sul tuo account App Store / Google Play alla conferma. Non è un abbonamento: non si rinnova.",
     voiceReadout: 'Lettura vocale',
     voiceReadoutSub: 'Lettura fonetica NATO della griglia, a mani libere',
     savedWaypoints: 'Liste waypoint salvate',

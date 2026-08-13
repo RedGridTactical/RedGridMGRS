@@ -475,6 +475,7 @@ export default {
     bestValue: 'BESTER WERT',
     freeTrialBadge: 'GRATIS TESTEN',
     legal: 'Zahlung wird bei Bestätigung Ihrem App Store / Google Play Konto belastet. Abonnements verlängern sich automatisch. Verwalten unter Einstellungen > Abonnements.',
+    legalOneTime: "Einmaliger Kauf, bei Bestätigung über Ihr App-Store-/Google-Play-Konto abgerechnet. Kein Abo — nichts verlängert sich.",
     voiceReadout: 'Sprachausgabe',
     voiceReadoutSub: 'NATO-phonetische Gitterablesung, freih\u00e4ndiger Betrieb',
     savedWaypoints: 'Gespeicherte Wegpunktlisten',

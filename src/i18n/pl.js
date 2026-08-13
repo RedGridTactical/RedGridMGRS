@@ -439,6 +439,7 @@ export default {
     oneTime: 'jednorazowo',
     bestValue: 'NAJLEPSZA OFERTA',
     legal: 'Płatność pobierana z konta App Store / Google Play przy potwierdzeniu. Subskrypcje odnawiają się automatycznie do anulowania. Zarządzaj w Ustawieniach > Subskrypcje.',
+    legalOneTime: "Jednorazowy zakup, pobierany z konta App Store / Google Play przy potwierdzeniu. To nie subskrypcja — nic się nie odnawia.",
     voiceReadout: 'Odczyt głosowy',
     voiceReadoutSub: 'Fonetyczny odczyt siatki NATO, obsługa bez rąk',
     savedWaypoints: 'Zapisane listy waypointów',
