@@ -455,7 +455,6 @@ export default {
 
   // ─── ProGate / paywall ────────────────────────────────────────────────
   proGate: {
-    saveVsMonthly: "SAVE {{pct}}%",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} is a Pro feature',
@@ -467,10 +466,8 @@ export default {
     notNow: 'NOT NOW',
     priceSubtitle: 'CHOOSE YOUR PLAN',
     tierMonthly: 'Monthly',
-    tierAnnual: 'Annual',
     tierLifetime: 'Lifetime',
     perMonth: '/month',
-    perYear: '/year',
     oneTime: 'one-time',
     bestValue: 'BEST VALUE',
     freeTrialBadge: 'FREE TRIAL',

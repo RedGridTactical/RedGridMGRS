@@ -454,7 +454,6 @@ export default {
     importRequires: 'expo-document-picker e expo-file-system sono richiesti per l\'importazione.',
   },
   proGate: {
-    saveVsMonthly: "RISPARMIA {{pct}}%",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} è una funzione Pro',
@@ -464,10 +463,8 @@ export default {
     notNow: 'NON ORA',
     priceSubtitle: 'SCEGLI IL TUO PIANO',
     tierMonthly: 'Mensile',
-    tierAnnual: 'Annuale',
     tierLifetime: 'A vita',
     perMonth: '/mese',
-    perYear: '/anno',
     oneTime: 'una tantum',
     bestValue: 'MIGLIOR VALORE',
     legal: 'Pagamento addebitato sul tuo account App Store / Google Play alla conferma. Gli abbonamenti si rinnovano automaticamente fino all\'annullamento. Gestisci in Impostazioni > Abbonamenti.',

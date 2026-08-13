@@ -454,7 +454,6 @@ export default {
     importRequires: 'expo-document-picker et expo-file-system sont requis pour l\'importation.',
   },
   proGate: {
-    saveVsMonthly: "ÉCONOMISEZ {{pct}}%",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} est une fonction Pro',
@@ -466,10 +465,8 @@ export default {
     notNow: 'PAS MAINTENANT',
     priceSubtitle: 'CHOISISSEZ VOTRE PLAN',
     tierMonthly: 'Mensuel',
-    tierAnnual: 'Annuel',
     tierLifetime: 'À vie',
     perMonth: '/mois',
-    perYear: '/an',
     oneTime: 'unique',
     bestValue: 'MEILLEURE VALEUR',
     freeTrialBadge: 'ESSAI GRATUIT',

@@ -455,7 +455,6 @@ export default {
     importRequires: '\u30a4\u30f3\u30dd\u30fc\u30c8\u306b\u306fexpo-document-picker\u3068expo-file-system\u304c\u5fc5\u8981\u3067\u3059\u3002',
   },
   proGate: {
-    saveVsMonthly: "{{pct}}%お得",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}}\u306fPro\u6a5f\u80fd\u3067\u3059',
@@ -467,10 +466,8 @@ export default {
     notNow: '\u4eca\u306f\u3057\u306a\u3044',
     priceSubtitle: 'プランを選択',
     tierMonthly: '月額',
-    tierAnnual: '年額',
     tierLifetime: '永久',
     perMonth: '/月',
-    perYear: '/年',
     oneTime: '買い切り',
     bestValue: 'お得',
     freeTrialBadge: '無料体験',

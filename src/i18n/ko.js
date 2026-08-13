@@ -455,7 +455,6 @@ export default {
     importRequires: '\uac00\uc838\uc624\uae30\uc5d0\ub294 expo-document-picker\uc640 expo-file-system\uc774 \ud544\uc694\ud569\ub2c8\ub2e4.',
   },
   proGate: {
-    saveVsMonthly: "{{pct}}% 절약",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}}\uc740(\ub294) Pro \uae30\ub2a5\uc785\ub2c8\ub2e4',
@@ -467,10 +466,8 @@ export default {
     notNow: '\ub098\uc911\uc5d0',
     priceSubtitle: '플랜 선택',
     tierMonthly: '월간',
-    tierAnnual: '연간',
     tierLifetime: '평생',
     perMonth: '/월',
-    perYear: '/년',
     oneTime: '일회성',
     bestValue: '최고 가치',
     freeTrialBadge: '무료 체험',
