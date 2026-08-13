@@ -487,7 +487,7 @@ export default {
     offlineMapsSub: 'Descarga tu zona, nunca un mapa en blanco en el campo',
     meshAwareness: 'Malla Meshtastic',
     meshAwarenessSub: 'Nodos de la malla en el mapa, sin cobertura m\u00f3vil',
-    allTools: 'Las 10 herramientas t\u00e1cticas',
+    allTools: 'Las 12 herramientas t\u00e1cticas',
     allToolsSub: 'Estima, resecci\u00f3n, sol/luna, geosello y m\u00e1s',
     waypointsRoutes: 'Puntos y rutas ilimitados',
     waypointsRoutesSub: 'Planifica rutas, guarda listas, importa/exporta GPX y KML',

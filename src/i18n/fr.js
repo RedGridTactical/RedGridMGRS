@@ -486,7 +486,7 @@ export default {
     offlineMapsSub: 'T\u00e9l\u00e9chargez votre zone, jamais de carte vide sur le terrain',
     meshAwareness: 'Mesh Meshtastic',
     meshAwarenessSub: 'N\u0153uds mesh sur la carte, sans r\u00e9seau cellulaire',
-    allTools: 'Les 10 outils tactiques',
+    allTools: 'Les 12 outils tactiques',
     allToolsSub: 'Navigation \u00e0 l\u2019estime, r\u00e9section, soleil/lune, g\u00e9otampon et plus',
     waypointsRoutes: 'Points et itin\u00e9raires illimit\u00e9s',
     waypointsRoutesSub: 'Planifiez des itin\u00e9raires, listes, import/export GPX et KML',
