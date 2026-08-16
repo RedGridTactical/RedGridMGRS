@@ -686,7 +686,7 @@ function AppContent({
       />
 
       <WhatsNewModal
-        currentVersion="4.0.0"
+        currentVersion="4.0.1"
         showTrialCta={!isPro}
         onStartTrial={() => showProGate('Red Grid Pro')}
       />
