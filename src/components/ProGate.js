@@ -24,8 +24,10 @@ const PRO_FEATURES = [
 
 // Pricing (2026-08-01, owner): two paid SKUs. Annual sold one unit in its entire
 // existence and was retired; lifetime was repriced far down after $149.99/$199.99
-// sold zero. Monthly stays the default selection so the recurring option is what
-// a user lands on, with lifetime carrying the value badge.
+// sold zero. LIFETIME is the default selection as of 2026-08-15: month-3
+// retention is 11.11% on monthly against $49.99 banked once, so landing users
+// on monthly pointed them at the worst-LTV tier. Lifetime also carries the
+// value badge, so the default and the badge now agree.
 // RETIRED 2026-08-01: the annual tier is gone. Two paid SKUs only — monthly and
 // lifetime. Annual must not appear here even as a disabled card: a tier rendered
 // from this array is selectable, and selecting a SKU the store no longer sells
@@ -52,7 +54,9 @@ export function ProGate({
   };
 
 
-  const activeTier = selectedTier || 'monthly';
+  // Fallback must match useIAP's initial selectedTier, or the card highlighted
+  // on open differs from the tier a blind tap would actually buy.
+  const activeTier = selectedTier || 'lifetime';
   // Gate the purchase button on the SELECTED tier's own price, not on "any
   // price loaded": the two tiers come from two independent store fetches with
   // separate timeouts, so one can resolve while the other doesn't. An OR here

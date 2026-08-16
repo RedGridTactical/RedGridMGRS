@@ -218,11 +218,26 @@ describe('retired annual SKU', () => {
     expect(all).toContain('SUB_ANNUAL_ID');
   });
 
-  it('never defaults the selection to a retired tier', () => {
+  it('never defaults the selection to a retired tier, and both defaults agree', () => {
     const gate = readSource('src/components/ProGate.js');
     const iap = readSource('src/hooks/useIAP.js');
-    expect(gate).toContain("selectedTier || 'monthly'");
+
+    // Safety invariant (the reason this test exists): the pre-selected tier
+    // must be one the store actually sells. Defaulting to the retired annual
+    // would open the paywall on a purchase that always fails.
     const def = sliceBlock(iap, 'const [selectedTier', ';');
-    expect(def).toContain("useState('monthly')");
+    const initial = def.match(/useState\('(\w+)'\)/);
+    expect(initial).not.toBeNull();
+    expect(['monthly', 'lifetime']).toContain(initial[1]);
+
+    // ProGate's fallback must agree with useIAP's initial value, otherwise the
+    // highlighted card is not the tier a blind tap buys.
+    const fallback = gate.match(/selectedTier \|\| '(\w+)'/);
+    expect(fallback).not.toBeNull();
+    expect(fallback[1]).toBe(initial[1]);
+
+    // Product decision 2026-08-15: default to lifetime. Monthly retains 11.11%
+    // at month 3 (~$10 LTV) vs $49.99 banked once. Change deliberately.
+    expect(initial[1]).toBe('lifetime');
   });
 });

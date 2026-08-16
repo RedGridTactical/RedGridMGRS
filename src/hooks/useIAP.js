@@ -79,7 +79,12 @@ export function useIAP() {
   const [isRestoring,  setIsRestoring]  = useState(false);
   const [product,      setProduct]      = useState(null);      // lifetime (legacy)
   const [products,     setProducts]     = useState({});         // { lifetime, monthly }
-  const [selectedTier, setSelectedTier] = useState('monthly');  // default selection (annual retired 2026-08-01)
+  // Default selection = lifetime (2026-08-15). Cohort data: month-3 retention
+  // is 11.11% on monthly vs 100% on annual, so a monthly subscriber is worth
+  // ~2-3 months x $3.99 (~$10 LTV) against $49.99 banked once for lifetime.
+  // Pre-selecting monthly pointed every buyer at the worst-LTV tier. Must stay
+  // a SELLABLE tier — never 'annual', which is retired from the paywall.
+  const [selectedTier, setSelectedTier] = useState('lifetime');
   const [trialEligible, setTrialEligible] = useState(false);    // annual free-trial intro offer eligibility
   const mounted = useRef(true);
 
