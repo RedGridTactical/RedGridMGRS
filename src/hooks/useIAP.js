@@ -17,7 +17,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  detectFreeTrial, hasPriorSubscription, getAndroidTrialOfferToken,
+  detectFreeTrial, hasPriorSubscription, getAndroidTrialOfferToken, entitlingSku,
   PRO_PRODUCT_ID, SUB_MONTHLY_ID, SUB_ANNUAL_ID, tierToSku, isSubTier,
 } from '../utils/iapOffers';
 
@@ -46,12 +46,29 @@ const SUB_REVERIFY_GRACE_MS = 21 * 24 * 60 * 60 * 1000;
 const INAPP_IDS = [PRO_PRODUCT_ID];
 // What the paywall offers FOR SALE. Annual was retired 2026-08-01.
 const SUB_IDS = [SUB_MONTHLY_ID];
+// What we must RESOLVE from the store. This is NOT the sale list.
+//
+// On iOS, expo-iap filters StoreKit entitlements through a native product
+// cache (ExpoIapModule.swift: `if productStore.getProduct(productID:) != nil`),
+// and getProducts/getSubscriptions are that cache's only writers. A SKU we
+// never fetch is therefore INVISIBLE to getAvailablePurchases forever — so an
+// active annual subscriber reads as "no entitlement", RESTORE says nothing to
+// restore, and reverify eventually revokes Pro. Fetching a SKU does not put it
+// on sale; the paywall reads SUB_IDS.
+const SUB_FETCH_IDS = [SUB_MONTHLY_ID, SUB_ANNUAL_ID];
 // What grants/validates ENTITLEMENT. Derived from the sale list so a future
 // SKU added to SUB_IDS automatically entitles — plus the retired annual, which
 // existing subscribers keep renewing and must always be recognised.
 const ALL_PRODUCT_IDS = [...INAPP_IDS, ...SUB_IDS, SUB_ANNUAL_ID];
 
 const isAndroid = Platform.OS === 'android';
+
+// Android PENDING (purchaseState 2) means the payment has NOT completed, e.g.
+// cash or delayed-card flows. The purchase path already refuses to unlock on
+// it; the restore/entitlement paths must refuse too, or abandoning a payment
+// grants Pro permanently.
+const isPendingAndroid = (p) =>
+  isAndroid && p?.purchaseStateAndroid != null && Number(p.purchaseStateAndroid) === 2;
 
 // Safely require expo-iap — handles unavailability on iOS beta
 let IAPModule = null;
@@ -98,6 +115,10 @@ export function useIAP() {
   // requestPurchase before Play Billing has the ProductDetails cached.
   const fetchPromiseRef = useRef(null);
   const initConnectedRef = useRef(false);
+  // Always points at the current fetchProductDetails. The entitlement effect
+  // below is declared before that callback exists, and must be able to warm
+  // the native product cache before querying the store.
+  const fetchProductDetailsRef = useRef(null);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -134,7 +155,13 @@ export function useIAP() {
     const reverifyEntitlement = async (recordedProduct) => {
       if (!IAPModule?.getAvailablePurchases) return;
       try {
-        await ensureConnection();
+        // MUST warm the native product cache before querying entitlements: on
+        // iOS an unfetched SKU is invisible to getAvailablePurchases, so
+        // querying first makes every subscriber look unentitled. fetchProduct-
+        // Details also does initConnection and is deduped, so it replaces
+        // ensureConnection here rather than adding a second connect.
+        const cache = await fetchProductDetailsRef.current?.().catch(() => null);
+        const cacheWarm = !!(cache && (cache.lifetime || cache.monthly));
         let purchasesTimer;
         const result = await Promise.race([
           IAPModule.getAvailablePurchases(),
@@ -144,20 +171,28 @@ export function useIAP() {
         if (cancelled || !mounted.current) return;
         if (!Array.isArray(result)) return; // ambiguous response — keep Pro
 
-        const owned = result.filter((p) =>
-          p && (ALL_PRODUCT_IDS.includes(p.id) || ALL_PRODUCT_IDS.includes(p.productId))
+        const owned = result.filter(
+          (p) => !isPendingAndroid(p) && entitlingSku(p, ALL_PRODUCT_IDS)
         );
 
         if (owned.length > 0) {
           // Entitlement confirmed — refresh the verification clock and refine
           // the recorded product (prefer lifetime: the strongest claim).
-          const lifetimeOwned = owned.find((p) => p.id === PRO_PRODUCT_ID || p.productId === PRO_PRODUCT_ID);
+          const lifetimeOwned = owned.find(
+            (p) => entitlingSku(p, ALL_PRODUCT_IDS) === PRO_PRODUCT_ID
+          );
           const best = lifetimeOwned || owned[0];
-          const bestSku = best.id || best.productId || recordedProduct || 'unknown';
+          const bestSku =
+            entitlingSku(best, ALL_PRODUCT_IDS) || recordedProduct || 'unknown';
           await AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {});
           await AsyncStorage.setItem(PRO_PRODUCT_KEY, String(bestSku)).catch(() => {});
           return;
         }
+
+        // An empty result from a COLD cache is not evidence of no entitlement,
+        // it is evidence we never asked properly. Only a warm cache can make
+        // "no entitlement" trustworthy enough to revoke on.
+        if (!cacheWarm) return;
 
         // Store positively reports no active entitlement.
         if (recordedProduct !== SUB_MONTHLY_ID && recordedProduct !== SUB_ANNUAL_ID) {
@@ -221,7 +256,8 @@ export function useIAP() {
 
         if (IAPModule && IAPModule.getAvailablePurchases) {
           try {
-            await ensureConnection();
+            // Warm the native product cache first — see reverifyEntitlement.
+            await fetchProductDetailsRef.current?.().catch(() => {});
 
             let purchasesTimer;
             const purchases = await Promise.race([
@@ -229,16 +265,18 @@ export function useIAP() {
               new Promise((_, r) => { purchasesTimer = setTimeout(() => r(new Error('timeout')), 5000); })
             ]).finally(() => { if (purchasesTimer) clearTimeout(purchasesTimer); });
 
-            const ownedPro = (Array.isArray(purchases) ? purchases : []).filter(p =>
-              p && (ALL_PRODUCT_IDS.includes(p.id) || ALL_PRODUCT_IDS.includes(p.productId))
+            const ownedPro = (Array.isArray(purchases) ? purchases : []).filter(
+              (p) => !isPendingAndroid(p) && entitlingSku(p, ALL_PRODUCT_IDS)
             );
 
             if (ownedPro.length > 0) {
               if (!cancelled && mounted.current) setIsPro(true);
-              const lifetimeOwned = ownedPro.find((p) => p.id === PRO_PRODUCT_ID || p.productId === PRO_PRODUCT_ID);
+              const lifetimeOwned = ownedPro.find(
+                (p) => entitlingSku(p, ALL_PRODUCT_IDS) === PRO_PRODUCT_ID
+              );
               const best = lifetimeOwned || ownedPro[0];
               await AsyncStorage.setItem(PRO_RECEIPT_KEY, 'verified').catch(() => {});
-              await AsyncStorage.setItem(PRO_PRODUCT_KEY, String(best.id || best.productId || 'unknown')).catch(() => {});
+              await AsyncStorage.setItem(PRO_PRODUCT_KEY, String(entitlingSku(best, ALL_PRODUCT_IDS) || 'unknown')).catch(() => {});
               await AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {});
             } else {
               if (!cancelled && mounted.current) setIsPro(false);
@@ -302,7 +340,7 @@ export function useIAP() {
         if (IAPModule.getSubscriptions) {
           tasks.push(
             Promise.race([
-              IAPModule.getSubscriptions(SUB_IDS),
+              IAPModule.getSubscriptions(SUB_FETCH_IDS),
               new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('subs fetch timeout')), 6000)
               )
@@ -312,7 +350,7 @@ export function useIAP() {
           // Older expo-iap fallback: try getProducts for subs (iOS-friendly path).
           tasks.push(
             Promise.race([
-              IAPModule.getProducts(SUB_IDS),
+              IAPModule.getProducts(SUB_FETCH_IDS),
               new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('subs fetch timeout')), 6000)
               )
@@ -350,6 +388,9 @@ export function useIAP() {
       fetchPromiseRef.current = null;
     }
   }, []);
+
+  // Publish for the entitlement effect, which is declared above this callback.
+  fetchProductDetailsRef.current = fetchProductDetails;
 
   // Kick off the initial fetch with a small delay so the native bridge settles.
   useEffect(() => {
@@ -449,10 +490,7 @@ export function useIAP() {
       sub = IAPModule.purchaseUpdatedListener(async (p) => {
         try {
           if (!p) return;
-          const sku = p.id || p.productId;
-          const ids = Array.isArray(p.ids) ? p.ids : [];
-          const resolvedSku = (ALL_PRODUCT_IDS.includes(sku) && sku) ||
-            ids.find((x) => ALL_PRODUCT_IDS.includes(x));
+          const resolvedSku = entitlingSku(p, ALL_PRODUCT_IDS);
           if (!resolvedSku) return;
           // Android PENDING (purchaseState 2): payment not completed yet
           // (cash/slow methods). Don't unlock — Play re-delivers the event
@@ -581,9 +619,8 @@ export function useIAP() {
 
       // Android returns an array of purchases; iOS returns a single object.
       const purchases = Array.isArray(result) ? result : (result ? [result] : []);
-      const matched = purchases.find((p) =>
-        p && (p.id === sku || p.productId === sku ||
-              ALL_PRODUCT_IDS.includes(p.id) || ALL_PRODUCT_IDS.includes(p.productId))
+      const matched = purchases.find(
+        (p) => entitlingSku(p, [sku]) || entitlingSku(p, ALL_PRODUCT_IDS)
       ) || purchases[0];
 
       // Android PENDING purchase (purchaseState 2): payment hasn't completed —
@@ -624,6 +661,19 @@ export function useIAP() {
         }
       }
     } catch (e) {
+      // iOS Ask to Buy / Screen Time: StoreKit defers rather than declines, and
+      // expo-iap surfaces that as a THROWN E_DEFERRED_PAYMENT, not as a purchase
+      // with a pending state (the pending branch above is Android-only). Without
+      // this the parent-approval flow reads as "Purchase failed" and, worse,
+      // increments the purchase_failed canary that exists to detect outages.
+      if (e?.code === 'E_DEFERRED_PAYMENT') {
+        trackEvent('purchase_deferred');
+        try {
+          Alert.alert(i18n.t('iap.paymentPendingTitle'), i18n.t('iap.paymentPendingBody'));
+        } catch {}
+        return;
+      }
+
       const wasCancelled =
         e?.code === 'E_USER_CANCELLED' ||
         e?.code === 'user_cancelled' ||
@@ -668,6 +718,12 @@ export function useIAP() {
         return;
       }
 
+      // Warm the native product cache before asking. On iOS a SKU that was
+      // never fetched is invisible to getAvailablePurchases, which is exactly
+      // how RESTORE came to report "nothing to restore" to a paying annual
+      // subscriber.
+      await fetchProductDetails().catch(() => {});
+
       const purchases = await Promise.race([
         IAPModule.getAvailablePurchases(),
         new Promise((_, reject) =>
@@ -675,17 +731,18 @@ export function useIAP() {
         )
       ]);
 
-      // expo-iap may expose `id` (iOS) or `productId` (Android) on the purchase.
-      const ownedPro = (Array.isArray(purchases) ? purchases : []).filter(p =>
-        p && (ALL_PRODUCT_IDS.includes(p.id) || ALL_PRODUCT_IDS.includes(p.productId))
+      const ownedPro = (Array.isArray(purchases) ? purchases : []).filter(
+        (p) => !isPendingAndroid(p) && entitlingSku(p, ALL_PRODUCT_IDS)
       );
 
       if (ownedPro.length > 0) {
         // Record what restored (prefer lifetime — the strongest claim) so
         // subscription re-verification knows what it's enforcing.
-        const lifetimeOwned = ownedPro.find(p => p.id === PRO_PRODUCT_ID || p.productId === PRO_PRODUCT_ID);
+        const lifetimeOwned = ownedPro.find(
+          (p) => entitlingSku(p, ALL_PRODUCT_IDS) === PRO_PRODUCT_ID
+        );
         const best = lifetimeOwned || ownedPro[0];
-        await persistPro('restored', best.id || best.productId || 'unknown');
+        await persistPro('restored', entitlingSku(best, ALL_PRODUCT_IDS) || 'unknown');
         try {
           Alert.alert(i18n.t('iap.restoredTitle'), i18n.t('iap.restoredBody'));
         } catch {}
@@ -704,7 +761,7 @@ export function useIAP() {
     } finally {
       if (mounted.current) setIsRestoring(false);
     }
-  }, [persistPro]);
+  }, [persistPro, fetchProductDetails]);
 
   return {
     isPro,

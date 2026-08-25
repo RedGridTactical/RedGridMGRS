@@ -139,3 +139,30 @@ export function getAndroidTrialOfferToken(product) {
   }
   return null;
 }
+
+/**
+ * Resolve which of OUR product IDs a purchase actually entitles.
+ *
+ * `purchase.id` is NOT a SKU. expo-iap serializes it as the StoreKit
+ * transaction id on iOS (`"id": String(transaction.id)`) and the Play order id
+ * on Android (`"id" to purchase.orderId`, e.g. "GPA.3341-..."). It is truthy
+ * for every real purchase, so the once-common `p.id || p.productId` idiom
+ * always resolved to an identifier that can never equal a SKU. Written into
+ * the "which product unlocked Pro" record, it silently disables subscription
+ * re-verification.
+ *
+ * Prefer the real SKU fields, and only accept a value we actually sell.
+ *
+ * @param {object} purchase - a purchase object from expo-iap
+ * @param {string[]} allowedIds - the SKUs that legitimately grant entitlement
+ * @returns {string|null} the entitling SKU, or null if this purchase is not ours
+ */
+export function entitlingSku(purchase, allowedIds) {
+  if (!purchase || !Array.isArray(allowedIds)) return null;
+  const ids = Array.isArray(purchase.ids) ? purchase.ids : [];
+  const candidates = [purchase.productId, ...ids, purchase.id];
+  for (const c of candidates) {
+    if (c && allowedIds.includes(c)) return c;
+  }
+  return null;
+}
