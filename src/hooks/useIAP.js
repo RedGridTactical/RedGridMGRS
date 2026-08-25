@@ -543,15 +543,18 @@ export function useIAP() {
         subscriptionOffers = [{ sku, offerToken }];
       }
 
-      // Build platform-specific request payload.
-      let request;
-      if (isAndroid) {
-        request = sub
-          ? { skus: [sku], subscriptionOffers }
-          : { skus: [sku] };
-      } else {
-        request = { sku, andDangerouslyFinishTransactionAutomaticallyIOS: false };
-      }
+      // Build the request payload.
+      //
+      // expo-iap >= 2.8 REQUIRES platform-keyed sub-objects: its
+      // normalizeRequestProps() is literally `request[platform]`, so a flat
+      // `{ sku }` / `{ skus }` resolves to undefined and requestPurchase throws
+      // "Invalid request for iOS. The `sku` property is required...". The flat
+      // shape worked on 2.4.x and silently broke when 3.5.2 bumped the dep.
+      // Both keys are always sent; the library picks the one for the platform.
+      const request = {
+        ios: { sku, andDangerouslyFinishTransactionAutomaticallyIOS: false },
+        android: sub ? { skus: [sku], subscriptionOffers } : { skus: [sku] },
+      };
 
       const purchaseRequest = { request, type: sub ? 'subs' : 'inapp' };
 
