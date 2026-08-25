@@ -24,6 +24,12 @@ import {
 // Re-exported for existing consumers of this module's public surface.
 export { PRO_PRODUCT_ID };
 import i18n from '../i18n';
+// On-device counters only (AsyncStorage, zero network). These exist so a
+// checkout outage is VISIBLE next time: the 2.8 request-shape break failed
+// 100% of purchases for a month and left no trace anywhere, because a failed
+// purchase only ever raised an Alert. attempt climbing while success stays
+// flat is the signal that was missing.
+import { trackEvent } from '../utils/analytics';
 
 const PRO_KEY         = 'rg_pro_unlocked';
 const PRO_RECEIPT_KEY = 'rg_pro_receipt';
@@ -558,6 +564,10 @@ export function useIAP() {
 
       const purchaseRequest = { request, type: sub ? 'subs' : 'inapp' };
 
+      // Fire-and-forget: trackEvent swallows its own errors and never rejects,
+      // so it cannot break checkout. Not awaited, to keep the sheet instant.
+      trackEvent('purchase_attempt');
+
       // 120s: password / 2FA / payment-method sheets routinely exceed 30s, and
       // a timeout that fires while the sheet is still up drops the eventual
       // purchase on the floor. The purchaseUpdatedListener is the safety net
@@ -600,6 +610,7 @@ export function useIAP() {
           'verified';
 
         await persistPro(receiptToken, sku);
+        trackEvent('purchase_success');
 
         try {
           if (IAPModule.finishTransaction) {
@@ -620,6 +631,10 @@ export function useIAP() {
         e?.userInfo?.code === 2;
 
       const wasTimeout = e?.message === 'Purchase timeout';
+
+      // A cancel is a normal outcome, a failure is not. Counting them apart is
+      // what turns "purchases feel low" into "purchases are broken".
+      trackEvent(wasCancelled ? 'purchase_cancelled' : 'purchase_failed');
 
       if (!wasCancelled) {
         try {
