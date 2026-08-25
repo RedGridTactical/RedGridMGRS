@@ -49,12 +49,42 @@ const resources = {
   hi: { translation: hi },
 };
 
-// Get device locale (e.g. 'en-US' -> 'en')
+/**
+ * Resolve a device locale to one of our bundled resource keys.
+ *
+ * The obvious implementation, `locales[0].languageCode`, is WRONG for Chinese:
+ * it returns the bare language ('zh') and discards the script, so every
+ * Traditional device (Taiwan, Hong Kong, Macau) resolved to `resources.zh`,
+ * which is Simplified. We ship a complete Traditional file and it was never
+ * served to anyone. Script and region must be consulted before falling back to
+ * the bare language.
+ */
+export function resolveDeviceLang(locale) {
+  if (!locale) return 'en';
+  const base = String(locale.languageCode || '').toLowerCase();
+  const script = String(locale.languageScriptCode || '').toLowerCase();
+  const region = String(locale.regionCode || '').toUpperCase();
+  const tag = String(locale.languageTag || '').toLowerCase();
+
+  if (base === 'zh') {
+    if (script === 'hant' || tag.includes('hant')) return 'zh-Hant';
+    if (script === 'hans' || tag.includes('hans')) return 'zh-Hans';
+    // No script subtag: infer from region. Everything else stays Simplified.
+    if (region === 'TW' || region === 'HK' || region === 'MO') return 'zh-Hant';
+    return 'zh-Hans';
+  }
+
+  // Exact tag first (e.g. 'pt-BR'), then the bare language, then English.
+  const exact = Object.keys(resources).find((k) => k.toLowerCase() === tag);
+  if (exact) return exact;
+  return resources[base] ? base : 'en';
+}
+
 let deviceLang = 'en';
 try {
   const locales = Localization.getLocales?.();
   if (locales && locales.length > 0) {
-    deviceLang = locales[0].languageCode || 'en';
+    deviceLang = resolveDeviceLang(locales[0]);
   }
 } catch {
   // Fall back to English
