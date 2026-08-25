@@ -114,7 +114,9 @@ Military personnel, search-and-rescue teams, law enforcement, wildland firefight
 | **Red Grid MGRS** | DAGR-class MGRS navigator, solo and team | iOS + Android | [App Store](https://apps.apple.com/app/id6759629554) · [Google Play](https://play.google.com/store/apps/details?id=com.redgrid.redgridtactical) |
 | **Red Grid Link** | Merged into Red Grid MGRS, no longer distributed | — | [GitHub](https://github.com/RedGridTactical/RedGridLink) (archived source) |
 
-**Red Grid Link has merged into Red Grid MGRS.** Team awareness now ships here as an encrypted layer over Meshtastic on the same offline map, so there is one app and no second purchase. Link's final release, v1.7.0, unlocked every feature free for everyone; its subscriptions and lifetime purchase are removed from sale on both stores. Copies already installed keep working. All new work happens in this repo.
+**Red Grid Link has merged into Red Grid MGRS.** Team awareness ships here as an encrypted layer on the same offline map, so there is one app and no second purchase.
+
+**One important difference:** team awareness in Red Grid MGRS runs over **Meshtastic LoRa radios**. Link also supported phone-to-phone linking over Bluetooth with no extra hardware, and that transport is **not** part of Red Grid MGRS. If you rely on it, Link's final release, v1.7.0, keeps working on any device that already has it, with every feature unlocked free. Link's subscriptions and lifetime purchase are removed from sale on both stores. All new work happens in this repo.
 
 The `@redgrid/mgrs` library (DMA TM 8358.1 compliant, zero dependencies, ~15 KB) lives in [`packages/mgrs`](packages/mgrs). Full roadmap at [redgridtactical.com/roadmap](https://redgridtactical.com/roadmap.html).
 
