@@ -57,6 +57,20 @@
         <data android:scheme="com.redgrid.redgridtactical"/>
         <data android:scheme="redgrid"/>
       </intent-filter>
+      <!-- Verified Android App Link for the friend-gift referral trial.
+           autoVerify makes Android fetch
+           https://redgridtactical.com/.well-known/assetlinks.json at install
+           time; on a match the OS opens this app instead of a browser, with no
+           disambiguation dialog. Scoped to /trial on purpose: a broader path
+           would hijack the marketing site. The gift token rides in the URL
+           fragment, which is handled in App.js and never sent to a server. -->
+      <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="https" android:host="redgridtactical.com" android:pathPrefix="/trial"/>
+        <data android:scheme="https" android:host="www.redgridtactical.com" android:pathPrefix="/trial"/>
+      </intent-filter>
     </activity>
   </application>
 </manifest>
