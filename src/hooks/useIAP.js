@@ -18,6 +18,7 @@ import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   detectFreeTrial, hasPriorSubscription, getAndroidTrialOfferToken, entitlingSku,
+  needsAndroidAck,
   PRO_PRODUCT_ID, SUB_MONTHLY_ID, SUB_ANNUAL_ID, tierToSku, isSubTier,
 } from '../utils/iapOffers';
 
@@ -96,6 +97,27 @@ const getAndroidOfferToken = (subProduct) => {
   return first?.offerToken || null;
 };
 
+// ── Android acknowledgement retry ───────────────────────────────────────────
+// finishTransaction IS the acknowledgement on Android, and Play auto-refunds
+// anything left unacknowledged for 72 h. It was only ever called downstream of
+// a live requestPurchase, so a purchase that settled while the app was closed
+// reached us through getAvailablePurchases alone: Pro unlocked, never
+// acknowledged, silently refunded three days later. Retry for every owned
+// purchase the store still reports as unacknowledged. Module-level so the
+// mount effects can call it without declaration-order games; never throws.
+async function ackAndroid(purchases) {
+  if (!isAndroid || !IAPModule?.finishTransaction) return;
+  const list = Array.isArray(purchases) ? purchases : [];
+  for (const p of list) {
+    if (!needsAndroidAck(p, ALL_PRODUCT_IDS)) continue;
+    try {
+      await IAPModule.finishTransaction({ purchase: p, isConsumable: false });
+    } catch {
+      // Acknowledgement is idempotent; the next launch retries.
+    }
+  }
+}
+
 export function useIAP() {
   const [isPro,        setIsPro]        = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
@@ -109,6 +131,9 @@ export function useIAP() {
   // a SELLABLE tier — never 'annual', which is retired from the paywall.
   const [selectedTier, setSelectedTier] = useState('lifetime');
   const [trialEligible, setTrialEligible] = useState(false);    // annual free-trial intro offer eligibility
+  // Gates the purchase-event listener until initConnection has run. See the
+  // effect below — subscribing before connecting leaves the listener deaf.
+  const [iapReady, setIapReady] = useState(false);
   const mounted = useRef(true);
 
   // Track in-flight + completed product detail fetches so we never call
@@ -135,23 +160,6 @@ export function useIAP() {
   useEffect(() => {
     let cancelled = false;
 
-    const ensureConnection = async () => {
-      if (IAPModule?.initConnection && !initConnectedRef.current) {
-        let initTimer;
-        try {
-          await Promise.race([
-            IAPModule.initConnection(),
-            new Promise((_, r) => { initTimer = setTimeout(() => r(new Error('timeout')), 3000); }),
-          ]);
-          initConnectedRef.current = true;
-        } catch {
-          // Stay disconnected — callers degrade gracefully.
-        } finally {
-          if (initTimer) clearTimeout(initTimer);
-        }
-      }
-    };
-
     const reverifyEntitlement = async (recordedProduct) => {
       if (!IAPModule?.getAvailablePurchases) return;
       try {
@@ -168,8 +176,12 @@ export function useIAP() {
           new Promise((_, r) => { purchasesTimer = setTimeout(() => r(new Error('timeout')), 5000); }),
         ]).finally(() => { if (purchasesTimer) clearTimeout(purchasesTimer); });
 
-        if (cancelled || !mounted.current) return;
         if (!Array.isArray(result)) return; // ambiguous response — keep Pro
+        // Acknowledge before any early return below, and regardless of mount
+        // state: an unacknowledged purchase is refunded whether or not this
+        // screen is still alive.
+        ackAndroid(result);
+        if (cancelled || !mounted.current) return;
 
         const owned = result.filter(
           (p) => !isPendingAndroid(p) && entitlingSku(p, ALL_PRODUCT_IDS)
@@ -265,6 +277,8 @@ export function useIAP() {
               new Promise((_, r) => { purchasesTimer = setTimeout(() => r(new Error('timeout')), 5000); })
             ]).finally(() => { if (purchasesTimer) clearTimeout(purchasesTimer); });
 
+            ackAndroid(purchases);
+
             const ownedPro = (Array.isArray(purchases) ? purchases : []).filter(
               (p) => !isPendingAndroid(p) && entitlingSku(p, ALL_PRODUCT_IDS)
             );
@@ -321,6 +335,7 @@ export function useIAP() {
             })
           ]).finally(() => { if (initTimer) clearTimeout(initTimer); });
           initConnectedRef.current = true;
+          if (mounted.current) setIapReady(true);
         }
 
         const tasks = [];
@@ -427,6 +442,7 @@ export function useIAP() {
           if (IAPModule.initConnection && !initConnectedRef.current) {
             await IAPModule.initConnection().catch(() => {});
             initConnectedRef.current = true;
+            if (mounted.current) setIapReady(true);
           }
           // Eligibility must consider EXPIRED subscriptions too —
           // getAvailablePurchases returns only ACTIVE items, which would show
@@ -444,6 +460,9 @@ export function useIAP() {
             ]) || [];
           }
         } catch { purchases = []; }
+        // Eligibility is not why we're here, but any unacknowledged purchase we
+        // happen to see is one more chance to beat Play's 72 h refund clock.
+        ackAndroid(purchases);
         if (!cancelled && mounted.current) setTrialEligible(!hasPriorSubscription(purchases));
       } catch {
         if (!cancelled && mounted.current) setTrialEligible(false);
@@ -477,6 +496,41 @@ export function useIAP() {
     }
   }, []);
 
+  // ── Connect BEFORE subscribing to purchase events ─────────────────────────
+  // initConnection tears down StoreKit's Transaction.updates observer
+  // (cleanupExistingState) and only OnStartObserving re-arms it — which fires
+  // solely on the 0->1 JS listener transition. Registering the listener at
+  // mount, ~500 ms before the connection lands, therefore created the observer
+  // and then killed it for the entire process lifetime. In-app buys still
+  // worked because requestPurchase emits its own event, which is precisely why
+  // this read as healthy in testing while Ask-to-Buy approvals, offer-code
+  // redemptions, and cross-device or crash-interrupted purchases were dropped.
+  //
+  // Flip this AFTER the connect attempt settles, success or failure: ordering
+  // is what matters, and on Android delivery does not depend on this connect
+  // having succeeded, so a failed attempt must not cost us the listener.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (IAPModule && typeof IAPModule.initConnection === 'function' && !initConnectedRef.current) {
+        let initTimer;
+        try {
+          await Promise.race([
+            IAPModule.initConnection(),
+            new Promise((_, r) => { initTimer = setTimeout(() => r(new Error('timeout')), 3000); }),
+          ]);
+          initConnectedRef.current = true;
+        } catch {
+          // Degrade gracefully; subscribe anyway.
+        } finally {
+          if (initTimer) clearTimeout(initTimer);
+        }
+      }
+      if (!cancelled && mounted.current) setIapReady(true);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // ── Purchase event listener ────────────────────────────────────────────────
   // requestPurchase's promise can miss deliveries: payment sheets that outlive
   // the timeout, Ask-to-Buy approvals, promo-code redemptions, and purchases
@@ -484,6 +538,8 @@ export function useIAP() {
   // re-emits unfinished transactions on launch). Persist + finish here so a
   // paying user is never left locked out.
   useEffect(() => {
+    // Must not subscribe before initConnection has run — see above.
+    if (!iapReady) return;
     if (!IAPModule || typeof IAPModule.purchaseUpdatedListener !== 'function') return;
     let sub = null;
     try {
@@ -515,7 +571,7 @@ export function useIAP() {
       sub = null;
     }
     return () => { try { sub?.remove?.(); } catch {} };
-  }, [persistPro]);
+  }, [persistPro, iapReady]);
 
   // ── Purchase (supports lifetime IAP + subscriptions) ──────────────────────
   const purchase = useCallback(async (tier) => {
@@ -730,6 +786,8 @@ export function useIAP() {
           setTimeout(() => reject(new Error('Restore timeout')), 30000)
         )
       ]);
+
+      ackAndroid(purchases);
 
       const ownedPro = (Array.isArray(purchases) ? purchases : []).filter(
         (p) => !isPendingAndroid(p) && entitlingSku(p, ALL_PRODUCT_IDS)

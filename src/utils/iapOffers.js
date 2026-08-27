@@ -166,3 +166,30 @@ export function entitlingSku(purchase, allowedIds) {
   }
   return null;
 }
+
+/**
+ * Android only: does this purchase still need acknowledging?
+ *
+ * On Android `finishTransaction` IS the acknowledgement, and Play auto-refunds
+ * any purchase left unacknowledged after 72 hours. The live purchase path
+ * acknowledges inline, but a purchase that settles while the app is closed
+ * (slow payment methods, parental approval) surfaces only through
+ * getAvailablePurchases — which unlocked Pro and never acknowledged, so the
+ * user lost the entitlement three days later and we ate a refund.
+ *
+ * PENDING (purchaseStateAndroid === 2) cannot be acknowledged: payment has not
+ * completed. Anything the library already flags as acknowledged is skipped.
+ * When the flag is ABSENT we retry anyway — acknowledging twice is harmless and
+ * idempotent, while missing it once costs the sale.
+ *
+ * @param {object} purchase - a purchase object from expo-iap
+ * @param {string[]} allowedIds - SKUs we actually sell
+ * @returns {boolean}
+ */
+export function needsAndroidAck(purchase, allowedIds) {
+  if (!purchase) return false;
+  if (purchase.purchaseStateAndroid != null && Number(purchase.purchaseStateAndroid) === 2) return false;
+  if (purchase.isAcknowledgedAndroid === true) return false;
+  if (!(purchase.purchaseToken || purchase.purchaseTokenAndroid)) return false;
+  return !!entitlingSku(purchase, allowedIds);
+}
