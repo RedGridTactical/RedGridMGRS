@@ -43,13 +43,17 @@ platform :ios do
 
   desc "Build signed iOS .ipa for App Store (no upload)"
   lane :build do
-    # fetch_profile is skipped — sigh's Developer Portal API (via ASC API key) has been
-    # unreliable and returns "Unable to find a team with the given Team ID" even with a
-    # valid key. We rely on the pre-installed profile at
-    # ~/Library/MobileDevice/Provisioning Profiles/399b11f9-bd49-4144-a21c-839b99d8f1e7.mobileprovision
-    # (installed from secrets/AppStore_com.redgrid.redgridtactical.mobileprovision, valid
-    # until April 2027). Re-run `fastlane ios fetch_profile` manually if the profile needs
-    # to be refreshed.
+    # fetch_profile is skipped on normal builds; we rely on the pre-installed profile
+    # "Red Grid MGRS App Store", UUID e2df52a0-2a23-4678-974a-8591c710310e, installed from
+    # secrets/AppStore_com.redgrid.redgridtactical.mobileprovision and valid until April 2027.
+    # It carries com.apple.developer.associated-domains, required by the Universal Links
+    # entitlement in RedGridMGRS.entitlements.
+    #
+    # Changing any capability on the App ID INVALIDATES this profile. Regenerate with
+    # --force (this lane's `force: false` will happily reuse a stale one):
+    #   fastlane sigh --api_key_path secrets/asc_api_key.json \
+    #     --app_identifier com.redgrid.redgridtactical --team_id 79PGQG73FG \
+    #     --provisioning_name "Red Grid MGRS App Store" --force --output_path ./secrets
     cocoapods(
       podfile: "ios/Podfile",
       use_bundle_exec: false

@@ -38,7 +38,11 @@
         "SKAdNetworkItems": [],
         "ITSAppUsesNonExemptEncryption": false
       },
-      "icon": "./assets/icons/icon.png"
+      "icon": "./assets/icons/icon.png",
+      "associatedDomains": [
+        "applinks:redgridtactical.com",
+        "applinks:www.redgridtactical.com"
+      ]
     },
     "plugins": [
       [
