@@ -251,6 +251,24 @@ function App() {
   // desire, and left the upsell route as dead code.
   const TABS = tabDefs.pro;
 
+  // Deep link handler — jump straight to a top-level screen via
+  // redgrid://screen/<name>. Pure local navigation (no network); unknown
+  // names are ignored silently. Names match the tab ids above.
+  useEffect(() => {
+    const SCREENS = ['grid', 'map', 'tools', 'report', 'lists', 'coords', 'theme', 'mesh'];
+    const handleUrl = (url) => {
+      const match = /^redgrid:\/\/screen\/([a-z]+)/i.exec(url || '');
+      if (!match) return;
+      const name = match[1].toLowerCase();
+      if (SCREENS.includes(name)) setTab(name);
+    };
+    // Cold-start deep link
+    Linking.getInitialURL().then(handleUrl).catch(() => {});
+    // Warm deep links while running
+    const sub = Linking.addEventListener('url', (ev) => handleUrl(ev?.url));
+    return () => { try { sub?.remove?.(); } catch {} };
+  }, []);
+
   const showProGate = useCallback((featureName) => {
     setProGateFeature(featureName);
     setProGateVisible(true);
