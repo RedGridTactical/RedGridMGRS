@@ -26,6 +26,7 @@ The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS p
 - **Offline tactical maps** — download OpenStreetMap / topographic tiles for your AO, dark tiles for low-vis, zero-network use
 - **Mission Preflight** — one-glance READY / CAUTION / NOT READY check across GPS, mesh, tile coverage, permissions, and battery
 - **Meshtastic mesh** — share your grid over LoRa via BLE and see other nodes; no cell, no internet
+- **Team awareness** — your team on the same offline map plus short tactical messages, sealed end to end. Create a Team Key, share the pairing code, and everyone is on the same net. Keys never leave your devices
 - **External GPS** — Garmin GLO, Bad Elf and other BLE receivers feed every screen
 - **6 radio-ready reports** — SALUTE, 9-Line MEDEVAC, SPOT, ICS 201, CASEVAC, ANGUS/CFF fire mission
 - **Interop & export** — GPX/KML import & export, mission planning with route optimization
@@ -126,7 +127,7 @@ The `@redgrid/mgrs` library (DMA TM 8358.1 compliant, zero dependencies, ~15 KB)
 
 Full detail at [redgridtactical.com/roadmap](https://redgridtactical.com/roadmap.html).
 
-### v4.0 — The Survival Update (next)
+### v4.0 — The Survival Update (shipped, current release v4.0.4)
 
 The release that makes the app tell you the truth about where you are, and keeps working when things go wrong.
 
@@ -134,8 +135,8 @@ The release that makes the app tell you the truth about where you are, and keeps
 - **Ellipsoidal distance and bearing** — solved on WGS84 with Vincenty's inverse instead of a spherical approximation, which was off by 0.22–0.36% (about 200 m over 92 km).
 - **Point scale factor** — what a distance measured off the grid actually costs you on the ground.
 - **Barometric storm warning** — on-device pressure trend with altitude correction, so a climb is not mistaken for a front. No forecast service, no network.
-- **Distress signalling** — SOS, arbitrary Morse, and the standard ground-to-air pattern on screen and torch, with battery-aware duty cycles. Free for everyone; an emergency signal is not a paid feature.
-- **Encrypted team awareness over Meshtastic** — your team on the same offline map plus short tactical messages, sealed end to end with AES-256-GCM. Pairing by QR code, keys generated on device and never transmitted. No server, no accounts, no tracking.
+- **Distress signalling** — a full-screen SOS strobe, arbitrary Morse, and the standard ground-to-air signal reference, with battery-aware duty cycles. Free for everyone; an emergency signal is not a paid feature.
+- **Encrypted team awareness over Meshtastic** — your team on the same offline map plus short tactical messages, sealed end to end with AES-256-GCM. Create a Team Key and share the pairing code; keys are generated on device and never transmitted. No server, no accounts, no tracking.
 
 ### After that
 

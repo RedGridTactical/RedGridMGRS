@@ -5,7 +5,7 @@
       "en-US": {
         "title": "Red Grid MGRS",
         "subtitle": "DAGR-Class MGRS Navigator",
-        "description": "The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket — live 10-digit MGRS, magnetic declination, waypoints, bearing and distance — for free. No network required. No data collected. No accounts to create.\n\n\nYOUR PHONE. DAGR CAPABILITY.\n\n\nLike the Defense Advanced GPS Receiver carried by warfighters worldwide, Red Grid displays your Military Grid Reference System position in real time with 1-meter precision. But Red Grid goes further — adding offline tactical maps, Meshtastic mesh networking, NATO voice readout, tactical report generation, and pace counting that the DAGR doesn't offer.\n\n\nOFFLINE TACTICAL MAPS:\n\n- Three map styles: Standard, Dark Tactical, and Topographic (contour lines)\n- Download tiles for your area of operations\n- Toggle offline mode for zero-network map use\n- MGRS grid overlay on all map styles\n- Works completely disconnected from any network\n\n\nMESTASTIC MESH NETWORKING:\n\n- Share your grid position over LoRa mesh via BLE\n- See other mesh users on the map in real time\n- No cell service, no internet, no infrastructure needed\n- Just Meshtastic radios and phones\n\n\nDAGR-EQUIVALENT FEATURES:\n\n- Live MGRS coordinates (4/6/8/10-digit precision)\n- Magnetic declination (WMM model)\n- Waypoint storage with bearing and distance\n- Back azimuth and dead reckoning\n- Speed, elevation, and heading display\n- Multiple coordinate formats (MGRS, UTM, DD, DMS)\n- Full offline operation — zero cloud dependency\n\n\n12 TACTICAL TOOLS:\n\n- Back Azimuth calculator\n- Dead Reckoning plotter\n- Two-point Resection\n- Pace Count tracker\n- Magnetic Declination reference\n- Time-Distance-Speed solver\n- Sun & Moon position data\n- MGRS Precision selector (1m to 100km)\n- Elevation & Slope calculator\n- Photo Geostamp (MGRS/DTG burned into images)\n- Barometer & Storm Warning (on-device pressure trend)\n- Distress Signalling (SOS, Morse, ground-to-air; free for everyone)\n\n\n6 RADIO-READY REPORT TEMPLATES:\n\nGenerate formatted reports ready to transmit over any net — a capability the DAGR hardware doesn't include:\n\n- SALUTE (Size, Activity, Location, Unit, Time, Equipment)\n- 9-Line MEDEVAC request\n- SPOT report\n- ICS 201 incident briefing\n- CASEVAC request\n- ANGUS/CFF fire mission\n\n\nMORE CAPABILITIES:\n\n- NATO phonetic voice readout (hands-free grid calls)\n- HUD mode (full-screen tactical display)\n- External GPS support (Garmin GLO, Bad Elf)\n- GPX/KML import and export\n- FixPhrase: open-source What3Words alternative\n- Mission planning with route overlay\n- 4 tactical display themes (red, NVG, day, blue)\n- Haptic feedback for eyes-free operation\n- 16 languages (EN, FR, DE, ES, JA, KO, IT, NL, PT-BR, RU, ZH-Hans, ZH-Hant, TR, PL, AR, HI)\n\n\nBUILT FOR OPERATORS:\n\nRed Grid MGRS is designed for military personnel, search and rescue teams, law enforcement, wildland firefighters, first responders, hunters, and backcountry hikers who depend on accurate grid coordinates in austere environments. Whether you trained on a DAGR or a lensatic compass, Red Grid speaks your language.\n\n\nZERO FOOTPRINT PRIVACY:\n\n- No accounts. No sign-up. No login.\n- No cloud sync. No analytics. No tracking.\n- No ads. No data leaves your device.\n- Location data is held in memory only and never stored or transmitted.\n\n\nDownload free — includes live 10-digit MGRS display, 1 theme, basic tools, and 3 report templates. Upgrade to Red Grid Pro for all 12 tools, offline maps, mesh networking, all themes, unlimited waypoints, and all 6 reports. Monthly or lifetime options available.",
+        "description": "The military's DAGR (AN/PSN-13) costs $2,500 and weighs a pound. Red Grid MGRS puts the same core land navigation capabilities in your pocket, live 10-digit MGRS, magnetic declination, waypoints, bearing and distance, for free. No network required. No data collected. No accounts to create.\n\n\nYOUR PHONE. DAGR CAPABILITY.\n\n\nLike the Defense Advanced GPS Receiver carried by warfighters worldwide, Red Grid displays your Military Grid Reference System position in real time with 1-meter precision. But Red Grid goes further, adding offline tactical maps, Meshtastic mesh networking, NATO voice readout, tactical report generation, and pace counting that the DAGR doesn't offer.\n\n\nOFFLINE TACTICAL MAPS:\n\n- OpenStreetMap with MGRS grid overlay\n- Download tiles for your area of operations\n- Dark tactical tiles for low-vis environments\n- Toggle offline mode for zero-network map use\n- Works completely disconnected from any network\n\n\nMESHTASTIC MESH NETWORKING:\n\n- Share your grid position over LoRa mesh via BLE\n- See other mesh users on the map in real time\n- Team traffic sealed end to end: create a Team Key, share the pairing code\n- Keys are generated on device and never transmitted\n- No cell service, no internet, no infrastructure needed\n- Just Meshtastic radios and phones\n\n\nDAGR-EQUIVALENT FEATURES:\n\n- Live MGRS coordinates (4/6/8/10-digit precision)\n- Magnetic declination (WMM model)\n- Waypoint storage with bearing and distance\n- Back azimuth and dead reckoning\n- Speed, elevation, and heading display\n- Multiple coordinate formats (MGRS, UTM, DD, DMS)\n- Full offline operation, zero cloud dependency\n\n\n12 TACTICAL TOOLS:\n\n- Back Azimuth calculator\n- Dead Reckoning plotter\n- Two-point Resection\n- Pace Count tracker\n- Magnetic Declination reference\n- Time-Distance-Speed solver\n- Sun & Moon position data\n- MGRS Precision selector (1m to 100km)\n- Elevation & Slope calculator\n- Photo Geostamp (MGRS/DTG burned into images)\n- Barometer & Storm Warning (on-device pressure trend)\n- Distress Signalling (full-screen SOS strobe, Morse, ground-to-air reference)\n\n\n6 RADIO-READY REPORT TEMPLATES:\n\nGenerate formatted reports ready to transmit over any net, a capability the DAGR hardware doesn't include:\n\n- SALUTE (Size, Activity, Location, Unit, Time, Equipment)\n- 9-Line MEDEVAC request\n- SPOT report\n- ICS 201 incident briefing\n- CASEVAC request\n- ANGUS/CFF fire mission\n\n\nMORE CAPABILITIES:\n\n- NATO phonetic voice readout (hands-free grid calls)\n- HUD mode (full-screen tactical display)\n- External GPS support (Garmin GLO, Bad Elf)\n- GPX/KML import and export\n- FixPhrase: open-source What3Words alternative\n- Mission planning with route overlay\n- 4 tactical display themes (red, NVG, day, blue)\n- Haptic feedback for eyes-free operation\n- 16 languages (EN, FR, DE, ES, JA, KO, IT, NL, PT-BR, RU, ZH-Hans, ZH-Hant, TR, PL, AR, HI)\n\n\nBUILT FOR OPERATORS:\n\nRed Grid MGRS is designed for military personnel, search and rescue teams, law enforcement, wildland firefighters, first responders, hunters, and backcountry hikers who depend on accurate grid coordinates in austere environments. Whether you trained on a DAGR or a lensatic compass, Red Grid speaks your language.\n\n\nZERO FOOTPRINT PRIVACY:\n\n- No accounts. No sign-up. No login.\n- No cloud sync. No analytics. No tracking.\n- No ads. No data leaves your device.\n- Location data is held in memory only and never stored or transmitted.\n\n\nDownload free, includes live 10-digit MGRS display, 1 theme, basic tools, and 3 report templates. Upgrade to Red Grid Pro for all 12 tools, offline maps, mesh networking, all themes, unlimited waypoints, and all 6 reports. Monthly or lifetime options available.\n\nSubscriptions auto-renew until cancelled in your App Store account settings. Pro Lifetime is a one-time purchase, not a subscription.\nTerms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/",
         "keywords": [
           "mgrs",
           "gps",
@@ -22,8 +22,8 @@
           "utm",
           "declination"
         ],
-        "releaseNotes": "THE SURVIVAL UPDATE\n\nTRUE GRID NORTH\nYour compass, true north, and the grid north printed on your map are three different directions. Red Grid now computes the G-M angle at your position and converts between all three, per FM 3-25.26. Distance and bearing are solved on the WGS84 ellipsoid instead of a sphere.\n\nSTORM WARNING\nReads your device barometer on board and warns you when pressure is falling fast. Altitude corrected, so a climb is not mistaken for a front. Pro.\n\nDISTRESS SIGNALLING\nSOS, Morse, and the standard ground-to-air pattern on screen and flashlight, with battery aware timing. Free for everyone.\n\nENCRYPTED TEAM MAP\nSee your team on the same offline map and trade short tactical messages over Meshtastic, sealed end to end. Pair by QR code. Keys never leave your devices. No server, no accounts. Pro.\n\nStill zero network, zero tracking, zero accounts.",
-        "promotionalText": "One-tap MARK POSITION. Give a friend 7 days of Pro. Offline tactical maps, Meshtastic mesh, 12 tactical tools. DAGR-class navigation — zero network required.",
+        "releaseNotes": "Team traffic over Meshtastic is now sealed end to end. Create a team key, share the pairing code, and everyone is on the same net. Pro.\n\nThe Declination tool now shows the grid scale factor where you stand.\n\nDead reckoning and elevation distances now use ellipsoidal WGS84 math, so long legs stay accurate.\n\nDistress signalling is described accurately: a full screen SOS strobe with the ground to air signal reference. Plus purchase reliability fixes.",
+        "promotionalText": "New: Team Key pairing. Team traffic over Meshtastic radios is sealed end to end. No accounts, no servers, no signal needed.",
         "privacyPolicyUrl": "https://redgridtactical.com/privacy.html",
         "supportUrl": "https://redgridtactical.com/mgrs.html"
       }
@@ -37,102 +37,102 @@
     "info": {
       "en-US": {
         "title": "Red Grid MGRS",
-        "shortDescription": "DAGR-class MGRS navigator — offline maps, Meshtastic mesh, 12 tactical tools",
-        "fullDescription": "<<same as apple.info.en-US.description — copy verbatim>>",
-        "releaseNotes": "THE SURVIVAL UPDATE\n\nTRUE GRID NORTH: the G-M angle at your position, converting between magnetic, true and grid north per FM 3-25.26. Distance and bearing now solved on the WGS84 ellipsoid.\n\nSTORM WARNING: on-device barometer trend, altitude corrected. Pro.\n\nDISTRESS SIGNALLING: SOS, Morse and ground-to-air on screen and flashlight. Free for everyone.\n\nENCRYPTED TEAM MAP: your team on one offline map, short messages over Meshtastic, sealed end to end. Pro.",
+        "shortDescription": "DAGR-Class MGRS Navigator, offline maps, Meshtastic mesh, 12 tactical tools",
+        "fullDescription": "<<same as apple.info.en-US.description, copy verbatim, minus the two Apple-only trailing lines (auto-renew notice and EULA link)>>",
+        "releaseNotes": "Team traffic over Meshtastic is now sealed end to end. Create a team key, share the pairing code, and everyone is on the same net. Pro.\n\nThe Declination tool now shows the grid scale factor where you stand.\n\nDead reckoning and elevation distances now use ellipsoidal WGS84 math, so long legs stay accurate.\n\nDistress signalling is described accurately: a full screen SOS strobe with the ground to air signal reference. Plus purchase reliability fixes.",
         "privacyPolicyUrl": "https://redgridtactical.github.io/RedGridMGRS/privacy.html",
         "contactEmail": "support@redgridtactical.com",
         "contactWebsite": "https://redgridtactical.com"
       },
       "fr-FR": {
         "title": "Red Grid MGRS",
-        "shortDescription": "Navigateur MGRS classe DAGR — cartes hors ligne, mesh Meshtastic, 10 outils tactiques",
-        "releaseNotes": "LA MISE À JOUR SURVIE\n\nVRAI NORD DE QUADRILLAGE : l'angle G-M à votre position, conversion entre nord magnétique, vrai et de quadrillage selon FM 3-25.26. Distance et relèvement sur l'ellipsoïde WGS84.\n\nALERTE ORAGE : tendance barométrique sur l'appareil, corrigée en altitude. Pro.\n\nSIGNAUX DE DÉTRESSE : SOS, morse et sol-air sur écran et lampe. Gratuit pour tous.\n\nCARTE D'ÉQUIPE CHIFFRÉE : votre équipe sur une carte hors ligne, messages courts via Meshtastic, scellés de bout en bout. Pro."
+        "shortDescription": "Navigateur MGRS classe DAGR, cartes hors ligne, mesh Meshtastic, 12 outils tactiques",
+        "releaseNotes": "Le trafic d'équipe sur Meshtastic est scellé de bout en bout. Créez une clé d'équipe, transmettez le code d'appairage, et tout le monde partage le même réseau. Pro.\n\nL'outil de déclinaison affiche le facteur d'échelle à votre position.\n\nLa navigation à l'estime et les distances en altitude utilisent le calcul ellipsoïdal WGS84 : les longues branches restent exactes.\n\nLe signalement de détresse est décrit correctement : un stroboscope SOS plein écran. Plus des correctifs sur les achats."
       },
       "de-DE": {
         "title": "Red Grid MGRS",
-        "shortDescription": "DAGR-Klasse MGRS-Navigator — Offline-Karten, Meshtastic Mesh, 10 taktische Werkzeuge",
-        "releaseNotes": "DAS SURVIVAL-UPDATE\n\nECHTES GITTER-NORD: der G-M-Winkel an Ihrem Standort, Umrechnung zwischen magnetisch, geografisch und Gitter-Nord nach FM 3-25.26. Distanz und Peilung jetzt auf dem WGS84-Ellipsoid.\n\nSTURMWARNUNG: Druckverlauf auf dem Gerät, höhenkorrigiert. Pro.\n\nNOTSIGNALE: SOS, Morse und Boden-Luft über Display und Taschenlampe. Für alle kostenlos.\n\nVERSCHLÜSSELTE TEAMKARTE: Ihr Team auf einer Offline-Karte, kurze Nachrichten über Meshtastic, Ende-zu-Ende versiegelt. Pro."
+        "shortDescription": "DAGR-Klasse MGRS-Navigator, Offline-Karten, Meshtastic Mesh, 12 taktische Werkzeuge",
+        "releaseNotes": "Der Teamfunk über Meshtastic ist jetzt Ende zu Ende versiegelt. Erstelle einen Teamschlüssel, gib den Kopplungscode weiter, und alle teilen dasselbe Netz. Pro.\n\nDas Deklinations-Werkzeug zeigt jetzt den Maßstabsfaktor an deinem Standort.\n\nKoppelnavigation und Höhenentfernungen rechnen jetzt ellipsoidisch nach WGS84, damit auch lange Strecken stimmen.\n\nDie Notsignale sind korrekt beschrieben: ein bildschirmfüllendes SOS-Blinken. Dazu Korrekturen für die Kaufabwicklung."
       },
       "es-ES": {
         "title": "Red Grid MGRS",
-        "shortDescription": "Navegador MGRS clase DAGR — mapas offline, malla Meshtastic, 10 herramientas tácticas",
-        "releaseNotes": "LA ACTUALIZACIÓN DE SUPERVIVENCIA\n\nNORTE DE CUADRÍCULA REAL: el ángulo G-M en tu posición, conversión entre norte magnético, verdadero y de cuadrícula según FM 3-25.26. Distancia y rumbo sobre el elipsoide WGS84.\n\nAVISO DE TORMENTA: tendencia barométrica en el dispositivo, con corrección de altitud. Pro.\n\nSEÑALES DE SOCORRO: SOS, Morse y tierra-aire en pantalla y linterna. Gratis para todos.\n\nMAPA DE EQUIPO CIFRADO: tu equipo en un mapa offline, mensajes breves por Meshtastic. Pro."
+        "shortDescription": "Navegador MGRS clase DAGR, mapas offline, malla Meshtastic, 12 herramientas tácticas",
+        "releaseNotes": "El tráfico del equipo por Meshtastic va sellado de extremo a extremo. Crea una clave de equipo, pasa el código de emparejamiento y todos compartís la misma red. Pro.\n\nLa herramienta de declinación muestra el factor de escala en tu posición.\n\nLa navegación a estima y las distancias con altitud usan cálculo elipsoidal WGS84, así los tramos largos siguen siendo exactos.\n\nLas señales de socorro se describen con precisión: estroboscopio SOS a pantalla completa. Además, arreglos en las compras."
       },
       "es-419": {
         "title": "Red Grid MGRS",
-        "shortDescription": "Navegador MGRS clase DAGR — mapas offline, red Meshtastic, 10 herramientas tácticas",
-        "releaseNotes": "LA ACTUALIZACIÓN DE SUPERVIVENCIA\n\nNORTE DE CUADRÍCULA REAL: el ángulo G-M en tu posición, conversión entre norte magnético, verdadero y de cuadrícula según FM 3-25.26. Distancia y rumbo sobre el elipsoide WGS84.\n\nAVISO DE TORMENTA: tendencia barométrica en el dispositivo, con corrección de altitud. Pro.\n\nSEÑALES DE SOCORRO: SOS, Morse y tierra-aire en pantalla y linterna. Gratis para todos.\n\nMAPA DE EQUIPO CIFRADO: tu equipo en un mapa offline, mensajes breves por Meshtastic. Pro."
+        "shortDescription": "Navegador MGRS clase DAGR, mapas offline, red Meshtastic, 12 herramientas tácticas",
+        "releaseNotes": "El tráfico del equipo por Meshtastic va sellado de extremo a extremo. Crea una clave de equipo, comparte el código de emparejamiento y todos usan la misma red. Pro.\n\nLa herramienta de declinación muestra el factor de escala en tu posición.\n\nLa navegación a estima y las distancias con altitud usan cálculo elipsoidal WGS84, así los tramos largos siguen siendo exactos.\n\nLas señales de socorro se describen con precisión: estroboscopio SOS a pantalla completa. Además, correcciones en las compras."
       },
       "ja-JP": {
         "title": "Red Grid MGRS",
-        "shortDescription": "DAGRクラスMGRSナビゲーター - オフラインマップ、Meshtasticメッシュ、戦術ツール10種",
-        "releaseNotes": "サバイバル・アップデート\n\n真のグリッド北：現在地でG-M角を計算し、磁北・真北・グリッド北を相互変換（FM 3-25.26）。距離と方位はWGS84楕円体上で計算。\n\n荒天警告：端末内で気圧傾向を解析、高度補正付き。Pro。\n\n遭難信号：SOS、モールス、対空地上信号を画面とライトで送信。全ユーザー無料。\n\n暗号化チームマップ：同じオフライン地図に仲間を表示し、Meshtasticで短いメッセージを端末内の鍵でエンドツーエンド暗号化。Pro。"
+        "shortDescription": "DAGRクラスMGRSナビゲーター - オフラインマップ、Meshtasticメッシュ、戦術ツール12種",
+        "releaseNotes": "Meshtastic 経由のチーム通信がエンドツーエンドで保護されました。チームキーを作成し、ペアリングコードを共有すれば、全員が同じ網に乗れます。Pro。\n\n磁気偏角ツールが現在地の縮尺係数を表示します。\n\n推測航法と標高を含む距離が WGS84 の楕円体計算になり、長い区間でも精度を保ちます。\n\n遭難信号の説明を正確にしました。全画面の SOS ストロボと対空地上信号の一覧です。あわせて購入処理の信頼性を改善しました。"
       },
       "ko-KR": {
         "title": "Red Grid MGRS",
-        "shortDescription": "DAGR급 MGRS 내비게이터 — 오프라인 지도, Meshtastic 메시, 전술 도구 10종",
-        "releaseNotes": "서바이벌 업데이트\n\n진짜 도북: 현재 위치에서 G-M 각을 계산해 자북, 진북, 도북을 서로 변환 (FM 3-25.26). 거리와 방위는 WGS84 타원체 기반.\n\n악천후 경고: 기기 내 기압 추세 분석, 고도 보정 적용. Pro.\n\n조난 신호: SOS, 모스 부호, 지대공 신호를 화면과 손전등으로 송출. 모두에게 무료.\n\n암호화 팀 지도: 같은 오프라인 지도에 팀원 표시, Meshtastic으로 짧은 메시지를 종단간 암호화. Pro."
+        "shortDescription": "DAGR급 MGRS 내비게이터, 오프라인 지도, Meshtastic 메시, 전술 도구 12종",
+        "releaseNotes": "Meshtastic 팀 통신이 이제 종단 간 암호화됩니다. 팀 키를 만들고 페어링 코드를 전달하면 모두 같은 망을 씁니다. Pro.\n\n편각 도구가 현재 위치의 축척 계수를 표시합니다.\n\n추측 항법과 고도 반영 거리가 WGS84 타원체 계산으로 바뀌어 긴 구간도 정확합니다.\n\n조난 신호 설명을 정확히 고쳤습니다. 전체 화면 SOS 스트로브와 지대공 신호 참조표입니다. 구매 안정성 문제도 수정했습니다."
       },
       "it-IT": {
         "title": "Red Grid MGRS",
-        "shortDescription": "Navigatore MGRS classe DAGR — mappe offline, mesh Meshtastic, 10 strumenti tattici",
-        "releaseNotes": "L'AGGIORNAMENTO SOPRAVVIVENZA\n\nNORD GRIGLIA REALE: l'angolo G-M nella tua posizione, conversione fra nord magnetico, vero e di griglia secondo FM 3-25.26. Distanza e rilevamento sull'ellissoide WGS84.\n\nALLERTA TEMPORALE: tendenza barica sul dispositivo, corretta in quota. Pro.\n\nSEGNALI DI SOCCORSO: SOS, Morse e terra-aria su schermo e torcia. Gratis per tutti.\n\nMAPPA DI SQUADRA CIFRATA: la tua squadra su una mappa offline, messaggi brevi via Meshtastic. Pro."
+        "shortDescription": "Navigatore MGRS classe DAGR, mappe offline, mesh Meshtastic, 12 strumenti tattici",
+        "releaseNotes": "Il traffico di squadra su Meshtastic è sigillato end to end. Crea una chiave di squadra, comunica il codice di accoppiamento e tutti condividono la stessa rete. Pro.\n\nLo strumento declinazione mostra il fattore di scala nella tua posizione.\n\nNavigazione stimata e distanze in quota usano il calcolo ellissoidico WGS84: anche le tratte lunghe restano precise.\n\nI segnali di soccorso sono descritti correttamente: stroboscopio SOS a schermo intero. Più correzioni sugli acquisti."
       },
       "nl-NL": {
         "title": "Red Grid MGRS",
-        "shortDescription": "DAGR-klasse MGRS-navigator — offline kaarten, Meshtastic mesh, 10 tactische tools",
-        "releaseNotes": "DE SURVIVAL-UPDATE\n\nECHT RASTERNOORDEN: de G-M-hoek op je positie, omrekenen tussen magnetisch, waar en rasternoorden volgens FM 3-25.26. Afstand en peiling op de WGS84-ellipsoïde.\n\nSTORMWAARSCHUWING: druktrend op het toestel, hoogtegecorrigeerd. Pro.\n\nNOODSIGNALEN: SOS, morse en grond-lucht via scherm en zaklamp. Gratis voor iedereen.\n\nVERSLEUTELDE TEAMKAART: je team op één offlinekaart, korte berichten via Meshtastic, end-to-end verzegeld. Pro."
+        "shortDescription": "DAGR-klasse MGRS-navigator, offline kaarten, Meshtastic mesh, 12 tactische tools",
+        "releaseNotes": "Teamverkeer over Meshtastic is nu end to end verzegeld. Maak een teamsleutel, geef de koppelcode door en iedereen zit op hetzelfde net. Pro.\n\nDe declinatietool toont nu de schaalfactor op je positie.\n\nGegist bestek en hoogteafstanden rekenen nu ellipsoïdisch volgens WGS84, dus lange benen blijven kloppen.\n\nNoodsignalen zijn correct beschreven: een schermvullende SOS-stroboscoop. Plus verbeteringen voor aankopen."
       },
       "pt-BR": {
         "title": "Red Grid MGRS",
-        "shortDescription": "Navegador MGRS classe DAGR — mapas offline, mesh Meshtastic, 10 ferramentas táticas",
-        "releaseNotes": "A ATUALIZAÇÃO DE SOBREVIVÊNCIA\n\nNORTE DE QUADRÍCULA REAL: o ângulo G-M na sua posição, conversão entre norte magnético, verdadeiro e de quadrícula conforme o FM 3-25.26. Distância e rumo no elipsoide WGS84.\n\nALERTA DE TEMPESTADE: tendência barométrica no aparelho, com correção de altitude. Pro.\n\nSINAIS DE SOCORRO: SOS, Morse e solo-ar na tela e na lanterna. Grátis para todos.\n\nMAPA DE EQUIPE CRIPTOGRAFADO: sua equipe em um mapa offline, mensagens curtas via Meshtastic. Pro."
+        "shortDescription": "Navegador MGRS classe DAGR, mapas offline, mesh Meshtastic, 12 ferramentas táticas",
+        "releaseNotes": "O tráfego da equipe pelo Meshtastic agora é selado ponta a ponta. Crie uma chave de equipe, passe o código de pareamento e todos ficam na mesma rede. Pro.\n\nA ferramenta de declinação agora mostra o fator de escala na sua posição.\n\nNavegação estimada e distâncias com altitude agora usam cálculo elipsoidal WGS84, então trechos longos continuam precisos.\n\nOs sinais de socorro estão descritos com precisão: estroboscópio SOS em tela cheia. Mais correções nas compras."
       },
       "pt-PT": {
         "title": "Red Grid MGRS",
-        "shortDescription": "Navegador MGRS classe DAGR — mapas offline, mesh Meshtastic, 10 ferramentas táticas",
-        "releaseNotes": "A ATUALIZAÇÃO DE SOBREVIVÊNCIA\n\nNORTE DE QUADRÍCULA REAL: o ângulo G-M na sua posição, conversão entre norte magnético, verdadeiro e de quadrícula conforme o FM 3-25.26. Distância e rumo no elipsoide WGS84.\n\nAVISO DE TEMPESTADE: tendência barométrica no aparelho, com correção de altitude. Pro.\n\nSINAIS DE SOCORRO: SOS, Morse e solo-ar no ecrã e na lanterna. Grátis para todos.\n\nMAPA DE EQUIPA CIFRADO: a sua equipa num mapa offline, mensagens curtas via Meshtastic. Pro."
+        "shortDescription": "Navegador MGRS classe DAGR, mapas offline, mesh Meshtastic, 12 ferramentas táticas",
+        "releaseNotes": "O tráfego da equipa pelo Meshtastic é agora selado ponta a ponta. Crie uma chave de equipa, passe o código de emparelhamento e todos ficam na mesma rede. Pro.\n\nA ferramenta de declinação mostra agora o fator de escala na sua posição.\n\nNavegação estimada e distâncias com altitude passam a usar cálculo elipsoidal WGS84, por isso troços longos mantêm-se precisos.\n\nOs sinais de socorro estão descritos com rigor: estroboscópio SOS em ecrã inteiro. Mais correções nas compras."
       },
       "ru-RU": {
         "title": "Red Grid MGRS",
-        "shortDescription": "MGRS-навигатор класса DAGR — офлайн-карты, Meshtastic mesh, 10 тактических инструментов",
-        "releaseNotes": "ОБНОВЛЕНИЕ ДЛЯ ВЫЖИВАНИЯ\n\nИСТИННЫЙ СЕВЕР СЕТКИ: угол G-M в вашей точке, перевод между магнитным, истинным и севером сетки по FM 3-25.26. Расстояние и азимут на эллипсоиде WGS84.\n\nШТОРМОВОЕ ПРЕДУПРЕЖДЕНИЕ: тренд давления на устройстве, с поправкой на высоту. Pro.\n\nСИГНАЛЫ БЕДСТВИЯ: SOS, Морзе и «земля-воздух» на экране и фонарём. Бесплатно для всех.\n\nЗАШИФРОВАННАЯ КАРТА ГРУППЫ: группа на офлайн-карте, короткие сообщения по Meshtastic. Pro."
+        "shortDescription": "MGRS-навигатор класса DAGR, офлайн-карты, Meshtastic mesh, 12 тактических инструментов",
+        "releaseNotes": "Трафик группы через Meshtastic защищён сквозным шифрованием. Создайте ключ группы, передайте код сопряжения, и вся группа работает в одной сети. Pro.\n\nИнструмент склонения показывает масштабный коэффициент в вашей точке.\n\nСчисление пути и расстояния с учётом высоты считаются по эллипсоиду WGS84, поэтому длинные участки остаются точными.\n\nСигналы бедствия описаны корректно: полноэкранный проблесковый SOS. Плюс исправления надёжности покупок."
       },
       "uk": {
         "title": "Red Grid MGRS",
-        "shortDescription": "MGRS-навігатор класу DAGR — офлайн-карти, Meshtastic mesh, 10 тактичних інструментів",
-        "releaseNotes": "ОНОВЛЕННЯ ДЛЯ ВИЖИВАННЯ\n\nСПРАВЖНЯ ПІВНІЧ СІТКИ: кут G-M у вашій точці, переведення між магнітною, істинною північчю та північчю сітки за FM 3-25.26. Відстань і азимут на еліпсоїді WGS84.\n\nШТОРМОВЕ ПОПЕРЕДЖЕННЯ: тренд тиску на пристрої, з поправкою на висоту. Pro.\n\nСИГНАЛИ ЛИХА: SOS, Морзе і «земля-повітря» на екрані та ліхтариком. Безкоштовно для всіх.\n\nЗАШИФРОВАНА КАРТА ГРУПИ: група на офлайн-карті, короткі повідомлення через Meshtastic. Pro."
+        "shortDescription": "MGRS-навігатор класу DAGR, офлайн-карти, Meshtastic mesh, 12 тактичних інструментів",
+        "releaseNotes": "Трафік групи через Meshtastic захищений наскрізним шифруванням. Створіть ключ групи, передайте код пари, і вся група працює в одній мережі. Pro.\n\nІнструмент схилення показує масштабний коефіцієнт у вашій точці.\n\nЧислення шляху та відстані з урахуванням висоти рахуються за еліпсоїдом WGS84, тому довгі ділянки лишаються точними.\n\nСигнали лиха описано коректно: повноекранний проблисковий SOS. Плюс виправлення надійності покупок."
       },
       "pl-PL": {
         "title": "Red Grid MGRS",
-        "shortDescription": "Nawigator MGRS klasy DAGR — mapy offline, mesh Meshtastic, 10 narzędzi taktycznych",
-        "releaseNotes": "AKTUALIZACJA PRZETRWANIA\n\nPRAWDZIWA PÓŁNOC SIATKI: kąt G-M w Twoim położeniu, przeliczanie między północą magnetyczną, geograficzną i siatki wg FM 3-25.26. Odległość i azymut na elipsoidzie WGS84.\n\nOSTRZEŻENIE O BURZY: trend ciśnienia na urządzeniu, z korektą wysokości. Pro.\n\nSYGNAŁY RATUNKOWE: SOS, Morse i ziemia-powietrze na ekranie i latarce. Bezpłatnie dla wszystkich.\n\nSZYFROWANA MAPA ZESPOŁU: zespół na mapie offline, krótkie wiadomości przez Meshtastic. Pro."
+        "shortDescription": "Nawigator MGRS klasy DAGR, mapy offline, mesh Meshtastic, 12 narzędzi taktycznych",
+        "releaseNotes": "Ruch zespołu przez Meshtastic jest zabezpieczony end to end. Utwórz klucz zespołu, przekaż kod parowania i cały zespół pracuje na tej samej sieci. Pro.\n\nNarzędzie deklinacji pokazuje współczynnik skali w Twoim położeniu.\n\nNawigacja zliczeniowa i odległości z uwzględnieniem wysokości liczone są elipsoidalnie wg WGS84, więc długie odcinki pozostają dokładne.\n\nSygnalizacja ratunkowa jest opisana zgodnie z prawdą: pełnoekranowy stroboskop SOS. Do tego poprawki zakupów."
       },
       "tr-TR": {
         "title": "Red Grid MGRS",
-        "shortDescription": "DAGR sınıfı MGRS gezginer — çevrimdışı haritalar, Meshtastic mesh, 10 taktik araç",
-        "releaseNotes": "HAYATTA KALMA GÜNCELLEMESİ\n\nGERÇEK GRID KUZEYİ: bulunduğunuz noktada G-M açısı, manyetik, gerçek ve grid kuzeyi arasında dönüşüm (FM 3-25.26). Mesafe ve kerteriz WGS84 elipsoidinde.\n\nFIRTINA UYARISI: cihaz üzerinde basınç eğilimi, irtifa düzeltmeli. Pro.\n\nİMDAT SİNYALLERİ: SOS, Mors ve yer-hava ekranda ve fenerde. Herkes için ücretsiz.\n\nŞİFRELİ EKİP HARİTASI: ekibiniz tek çevrimdışı haritada, Meshtastic üzerinden kısa mesajlar. Pro."
+        "shortDescription": "DAGR sınıfı MGRS gezginer, çevrimdışı haritalar, Meshtastic mesh, 12 taktik araç",
+        "releaseNotes": "Meshtastic üzerindeki takım trafiği artık uçtan uca mühürlü. Bir takım anahtarı oluşturun, eşleştirme kodunu paylaşın, herkes aynı ağı kullansın. Pro.\n\nManyetik sapma aracı bulunduğunuz noktadaki ölçek katsayısını gösteriyor.\n\nKestirme seyir ve yükseklik mesafeleri artık WGS84 elipsoit hesabıyla yapılıyor; uzun kollar da doğru kalıyor.\n\nİmdat işaretleri doğru anlatılıyor: tam ekran SOS flaşı. Ayrıca satın alma düzeltmeleri."
       },
       "zh-CN": {
         "title": "Red Grid MGRS",
-        "shortDescription": "DAGR 级 MGRS 导航器 — 离线地图、Meshtastic 网状网络、10 种战术工具",
-        "releaseNotes": "生存更新\n\n真正的方格北：在你所处位置计算 G-M 角，在磁北、真北与方格北之间换算（FM 3-25.26）。距离和方位改用 WGS84 椭球体求解。\n\n风暴预警：设备本地气压趋势，已做高度校正。Pro。\n\n求救信号：屏幕与手电筒发送 SOS、摩尔斯电码及对空地面信号。所有人免费。\n\n加密团队地图：同一张离线地图上显示队友，通过 Meshtastic 端到端加密收发简短消息。Pro。"
+        "shortDescription": "DAGR 级 MGRS 导航器：离线地图、Meshtastic 网状网络、12 种战术工具",
+        "releaseNotes": "经 Meshtastic 的小队通信现已端到端加密。创建小队密钥，把配对码告诉队友，全队即可共用同一条链路。Pro。\n\n磁偏角工具现在会显示所在位置的比例因子。\n\n航位推算与含高程的距离改用 WGS84 椭球算法，长距离航段依然准确。\n\n求救信号的说明已改为准确描述：全屏 SOS 闪烁，并附对空地面信号对照。另修复了购买流程的可靠性问题。"
       },
       "zh-TW": {
         "title": "Red Grid MGRS",
-        "shortDescription": "DAGR 級 MGRS 導航器 — 離線地圖、Meshtastic 網狀網路、10 種戰術工具",
-        "releaseNotes": "生存更新\n\n真正的方格北：在你所在位置計算 G-M 角，在磁北、真北與方格北之間換算（FM 3-25.26）。距離與方位改用 WGS84 橢球體求解。\n\n風暴預警：裝置本機氣壓趨勢，已做高度校正。Pro。\n\n求救訊號：螢幕與手電筒發送 SOS、摩斯電碼及對空地面訊號。所有人免費。\n\n加密團隊地圖：同一張離線地圖上顯示隊友，透過 Meshtastic 端到端加密收發簡短訊息。Pro。"
+        "shortDescription": "DAGR 級 MGRS 導航器：離線地圖、Meshtastic 網狀網路、12 種戰術工具",
+        "releaseNotes": "經 Meshtastic 的小隊通訊現已端對端加密。建立小隊金鑰，把配對碼告訴隊友，全隊即可共用同一條鏈路。Pro。\n\n磁偏角工具現在會顯示所在位置的比例因子。\n\n航位推算與含高程的距離改用 WGS84 橢球演算法，長距離航段依然準確。\n\n求救訊號的說明已改為準確描述：全螢幕 SOS 閃爍，並附對空地面訊號對照。另修正了購買流程的可靠性問題。"
       },
       "ar": {
         "title": "Red Grid MGRS",
-        "shortDescription": "ملاح MGRS من فئة DAGR — خرائط دون إنترنت، شبكة Meshtastic، 10 أدوات تكتيكية",
-        "releaseNotes": "تحديث النجاة\n\nشمال الشبكة الحقيقي: زاوية G-M في موقعك، والتحويل بين الشمال المغناطيسي والحقيقي وشمال الشبكة وفق FM 3-25.26. المسافة والاتجاه على مجسم WGS84.\n\nتحذير من العواصف: اتجاه الضغط على الجهاز مع تصحيح الارتفاع. Pro.\n\nإشارات الاستغاثة: SOS ومورس والأرض إلى الجو عبر الشاشة والكشاف. مجاني للجميع.\n\nخريطة فريق مشفّرة: فريقك على خريطة واحدة دون اتصال، ورسائل قصيرة عبر Meshtastic. Pro."
+        "shortDescription": "ملاح MGRS من فئة DAGR، خرائط دون إنترنت، شبكة Meshtastic، 12 أدوات تكتيكية",
+        "releaseNotes": "صارت اتصالات الفريق عبر Meshtastic مشفَّرة من طرف إلى طرف. أنشئ مفتاح فريق، وامنح رمز الاقتران لفريقك، فيعمل الجميع على الشبكة نفسها. Pro.\n\nتعرض أداة الانحراف المغناطيسي الآن معامل المقياس عند موقعك.\n\nصار الحساب الاستنتاجي للمسير والمسافات مع الارتفاع يعتمد حساب المجسم الإهليلجي WGS84، فتبقى المراحل الطويلة دقيقة.\n\nوصف إشارات الاستغاثة صار دقيقاً: وميض SOS بملء الشاشة. مع إصلاحات في موثوقية الشراء."
       },
       "hi-IN": {
         "title": "Red Grid MGRS",
-        "shortDescription": "DAGR श्रेणी MGRS नेविगेटर — ऑफ़लाइन नक्शे, Meshtastic मेश, 10 सामरिक उपकरण",
-        "releaseNotes": "सर्वाइवल अपडेट\n\nसच्चा ग्रिड नॉर्थ: आपकी जगह पर G-M कोण, और मैग्नेटिक, ट्रू व ग्रिड नॉर्थ के बीच बदलाव (FM 3-25.26)। दूरी और दिशा अब WGS84 दीर्घवृत्ताभ पर।\n\nतूफ़ान चेतावनी: डिवाइस पर दबाव प्रवृत्ति, ऊँचाई सुधार सहित। Pro।\n\nसंकट संकेत: स्क्रीन और टॉर्च से SOS, मोर्स और ग्राउंड-टू-एयर। सबके लिए मुफ़्त।\n\nएन्क्रिप्टेड टीम मैप: एक ऑफ़लाइन नक्शे पर टीम, Meshtastic से छोटे संदेश। Pro।"
+        "shortDescription": "DAGR श्रेणी MGRS नेविगेटर, ऑफ़लाइन नक्शे, Meshtastic मेश, 12 सामरिक उपकरण",
+        "releaseNotes": "Meshtastic पर टीम का संचार अब एंड-टू-एंड सुरक्षित है। टीम की बनाइए, पेयरिंग कोड टीम को दीजिए, और पूरी टीम एक ही नेट पर रहेगी। Pro।\n\nडिक्लिनेशन टूल अब आपकी स्थिति का स्केल फ़ैक्टर दिखाता है।\n\nडेड रेकनिंग और ऊँचाई वाली दूरियाँ अब WGS84 दीर्घवृत्तीय गणित से निकलती हैं, इसलिए लंबे चरण भी सटीक रहते हैं।\n\nसंकट संकेत का विवरण अब सही है: पूरी स्क्रीन का SOS स्ट्रोब। साथ ही खरीद की विश्वसनीयता के सुधार।"
       }
     },
     "categories": [
