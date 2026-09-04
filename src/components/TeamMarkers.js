@@ -27,7 +27,7 @@ function ageLabel(ms) {
   return h < 24 ? `${h}H AGO` : `${Math.floor(h / 24)}D AGO`;
 }
 
-function TeamMarker({ peer, origin, colors, now, onPress }) {
+const TeamMarker = React.memo(function TeamMarker({ peer, origin, colors, now, onPress }) {
   if (!Number.isFinite(peer.lat) || !Number.isFinite(peer.lon)) return null;
 
   // For a decayed peer, prefer a dead-reckoned position when the track
@@ -83,16 +83,21 @@ function TeamMarker({ peer, origin, colors, now, onPress }) {
       </View>
     </Marker>
   );
-}
+});
 
 /**
  * @param {Array} roster    from useTeamAwareness
  * @param {object} origin   own position { lat, lon } (optional)
  * @param {object} colors   from useColors()
- * @param {number} now      caller-supplied clock, so decay is deterministic
+ * @param {number} now      REQUIRED caller-supplied clock. A Date.now() default
+ *                          made every parent render a new value, so React.memo
+ *                          could never hold and the whole marker layer redrew.
+ *                          The parent ticks it on an interval instead.
+ * @param {Function} onSelectPeer
  */
-export function TeamMarkers({ roster = [], origin, colors, now = Date.now(), onSelectPeer }) {
+export const TeamMarkers = React.memo(function TeamMarkers({ roster = [], origin, colors, now, onSelectPeer }) {
   if (!roster.length) return null;
+  if (!Number.isFinite(now)) return null;
   return (
     <>
       {roster.map(peer => (
@@ -107,7 +112,7 @@ export function TeamMarkers({ roster = [], origin, colors, now = Date.now(), onS
       ))}
     </>
   );
-}
+});
 
 const styles = StyleSheet.create({
   wrap: { alignItems: 'center', minWidth: 44, minHeight: 44, justifyContent: 'center' },

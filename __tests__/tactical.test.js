@@ -17,6 +17,7 @@ const {
   solarBearing,
   lunarBearing,
 } = require('../src/utils/tactical');
+const { geodesicDistance } = require('../src/utils/geodesy');
 
 describe('tactical.js - Tactical Land Navigation', () => {
 
@@ -131,6 +132,24 @@ describe('tactical.js - Tactical Land Navigation', () => {
     test('Long distance calculation should be valid', () => {
       const result = deadReckoning(40, -74, 0, 100000);
       expect(result.mgrs).toMatch(/^\d{1,2}[A-Z]/);
+    });
+
+    test('Lands on the WGS84 ellipsoid, not a 6371 km sphere', () => {
+      // 100 km due north from 40 N. Cross-checked against an independent
+      // Vincenty direct implementation: 40.90054959 N.
+      // The old spherical formula gave 40.899322 N — about 136 m short, on a
+      // readout the app prints to 1 m of MGRS.
+      const result = deadReckoning(40, -74, 0, 100000);
+      expect(result.lat).toBeCloseTo(40.90054959, 8);
+      expect(result.lon).toBeCloseTo(-74, 12);
+    });
+
+    test('A DR leg round-trips against the geodesic distance it was given', () => {
+      const result = deadReckoning(45, -117, 73, 8000);
+      // Residual ~3.5 um, which is the INVERSE's 1e-12 rad lambda floor, not
+      // any error in the DR leg. Five orders of magnitude inside the 1 m the
+      // app prints.
+      expect(geodesicDistance(45, -117, result.lat, result.lon)).toBeCloseTo(8000, 5);
     });
   });
 

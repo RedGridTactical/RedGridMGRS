@@ -1,6 +1,7 @@
 /**
  * useIAP — Crash-safe IAP hook (HARDENED for iOS beta + Android Play Billing).
- * Returns: { isPro, isPurchasing, product, products, selectedTier, setSelectedTier, purchase, restore }
+ * Returns: { isPro, isPurchasing, product, products, selectedTier, setSelectedTier,
+ *            trialEligible, purchase, restore, lastPurchaseError, clearPurchaseError }
  *
  * Android-specific notes:
  *   - expo-iap's getProducts() only caches `inapp` SKUs in Play Billing's
@@ -122,6 +123,9 @@ export function useIAP() {
   const [isPro,        setIsPro]        = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring,  setIsRestoring]  = useState(false);
+  // Last purchase failure surfaced by the error listener, for the paywall UI.
+  // null whenever the last outcome was a success, a cancel, or a deferral.
+  const [lastPurchaseError, setLastPurchaseError] = useState(null);
   const [product,      setProduct]      = useState(null);      // lifetime (legacy)
   const [products,     setProducts]     = useState({});         // { lifetime, monthly }
   // Default selection = lifetime (2026-08-15). Cohort data: month-3 retention
@@ -573,6 +577,73 @@ export function useIAP() {
     return () => { try { sub?.remove?.(); } catch {} };
   }, [persistPro, iapReady]);
 
+  // ── Purchase ERROR listener ────────────────────────────────────────────────
+  // The mirror of the update listener. requestPurchase's promise only rejects
+  // for failures that happen inside its own call; a StoreKit / Play Billing
+  // failure raised after the payment sheet is handed off arrives here instead.
+  // Without this the sheet dismisses, isPurchasing stays true, and the UNLOCK
+  // button is frozen for the rest of the session — a silently lost sale.
+  //
+  // Same iapReady gating as above: subscribing before initConnection settles
+  // is what broke the update observer, and the same ordering applies here.
+  useEffect(() => {
+    if (!iapReady) return;
+    if (!IAPModule || typeof IAPModule.purchaseErrorListener !== 'function') return;
+    let sub = null;
+    try {
+      sub = IAPModule.purchaseErrorListener((err) => {
+        try {
+          // Never leave the button frozen, whatever the outcome.
+          if (mounted.current) setIsPurchasing(false);
+
+          const code = err?.code || err?.userInfo?.code;
+
+          // A deferred payment is a pending approval, not a failure.
+          if (code === 'E_DEFERRED_PAYMENT') {
+            trackEvent('purchase_deferred');
+            if (mounted.current) setLastPurchaseError(null);
+            try {
+              Alert.alert(i18n.t('iap.paymentPendingTitle'), i18n.t('iap.paymentPendingBody'));
+            } catch {}
+            return;
+          }
+
+          const wasCancelled =
+            code === 'E_USER_CANCELLED' ||
+            code === 'user_cancelled' ||
+            code === 'E_USER_CANCELED' ||
+            err?.userInfo?.code === 2;
+
+          trackEvent(wasCancelled ? 'purchase_cancelled' : 'purchase_failed');
+
+          // A cancel is a normal outcome: clear state, show nothing.
+          if (wasCancelled) {
+            if (mounted.current) setLastPurchaseError(null);
+            return;
+          }
+
+          if (mounted.current) {
+            setLastPurchaseError({
+              code: code || 'E_UNKNOWN',
+              message: err?.message || i18n.t('iap.tryAgain'),
+            });
+          }
+          try {
+            Alert.alert(
+              i18n.t('iap.purchaseFailedTitle'),
+              err?.message || i18n.t('iap.tryAgain')
+            );
+          } catch {}
+        } catch {
+          // Never let a listener error crash the app.
+        }
+      });
+    } catch {
+      sub = null;
+    }
+    return () => { try { sub?.remove?.(); } catch {} };
+  }, [iapReady]);
+
   // ── Purchase (supports lifetime IAP + subscriptions) ──────────────────────
   const purchase = useCallback(async (tier) => {
     if (!IAPModule) {
@@ -757,6 +828,11 @@ export function useIAP() {
     }
   }, [persistPro, selectedTier, products, fetchProductDetails, trialEligible]);
 
+  // Lets the paywall dismiss the error banner without re-running a purchase.
+  const clearPurchaseError = useCallback(() => {
+    if (mounted.current) setLastPurchaseError(null);
+  }, []);
+
   // ── Restore ────────────────────────────────────────────────────────────────
   const restore = useCallback(async () => {
     if (!IAPModule) {
@@ -831,5 +907,7 @@ export function useIAP() {
     trialEligible,
     purchase,
     restore,
+    lastPurchaseError,
+    clearPurchaseError,
   };
 }

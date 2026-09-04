@@ -15,10 +15,32 @@ const SEEN_KEY = 'rg_whatsnew_seen_version';
 // The release whose bullets are translated under `whatsNew.current` in i18n.
 // Bump this in lockstep with the entry added to FEATURES_BY_VERSION below, or
 // the modal silently falls back to English.
-const LOCALIZED_VERSION = '4.0.0';
+const LOCALIZED_VERSION = '4.0.4';
 
 // Features to showcase for a given version. Keep terse — this is a glance screen.
 const FEATURES_BY_VERSION = {
+  '4.0.4': [
+    {
+      icon: '⤴',
+      title: 'TEAM KEY',
+      body: 'Team traffic over Meshtastic is now sealed end to end. Create a team key, read the pairing code to your team, and everyone on it shares the same net. Pro.',
+    },
+    {
+      icon: '◉',
+      title: 'GRID SCALE FACTOR',
+      body: 'The Declination tool now shows the scale factor where you stand, so you know how much ground you really cover per 1000 m measured off the grid.',
+    },
+    {
+      icon: '◆',
+      title: 'TRUER DISTANCES',
+      body: 'Dead reckoning and elevation distances now use ellipsoidal WGS84 math, so long legs stay accurate.',
+    },
+    {
+      icon: '✓',
+      title: 'CORRECTIONS & FIXES',
+      body: 'Distress signalling is now described accurately: a full-screen SOS strobe with the ground-to-air signal reference. Plus purchase reliability fixes.',
+    },
+  ],
   '4.0.0': [
     {
       icon: '◉',
@@ -33,7 +55,7 @@ const FEATURES_BY_VERSION = {
     {
       icon: '★',
       title: 'DISTRESS SIGNALLING',
-      body: 'SOS, Morse, and the standard ground-to-air pattern on screen and torch. Free for everyone.',
+      body: 'Full-screen SOS strobe, Morse, and the standard ground-to-air signal reference. Free for everyone.',
     },
     {
       icon: '⤴',

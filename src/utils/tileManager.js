@@ -13,9 +13,12 @@ const TILE_DIR = FileSystem?.documentDirectory
   ? `${FileSystem.documentDirectory}map_tiles/`
   : null;
 
-const OSM_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const DARK_TILE_URL = 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png';
-const TOPO_TILE_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
+// Single source of truth for the tile endpoints — MapScreen imports these
+// rather than re-declaring them, so the downloaded cache and the live map can
+// never drift onto different servers.
+export const OSM_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+export const DARK_TILE_URL = 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png';
+export const TOPO_TILE_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
 
 /**
  * Convert lat/lon to tile coordinates at a given zoom level.

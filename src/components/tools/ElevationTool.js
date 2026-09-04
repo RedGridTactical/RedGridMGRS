@@ -7,22 +7,12 @@ import { View, Text, StyleSheet, TextInput } from 'react-native';
 import { ToolResult, ToolRow, ToolHint, ToolInput } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
 import { useTranslation } from '../../hooks/useTranslation';
+// Ellipsoidal (Vincenty) horizontal distance — the slope angle is only as good
+// as the run it is measured over. geodesicDistance falls back to haversine
+// internally if Vincenty fails to converge.
+import { geodesicDistance } from '../../utils/geodesy';
 
 const M_TO_FT = 3.28084;
-const DEG = Math.PI / 180;
-
-/**
- * Haversine distance between two lat/lon points in metres.
- */
-function haversineM(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
-  const dLat = (lat2 - lat1) * DEG;
-  const dLon = (lon2 - lon1) * DEG;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * DEG) * Math.cos(lat2 * DEG) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 export function ElevationTool({ location }) {
   const colors = useColors();
@@ -42,7 +32,7 @@ export function ElevationTool({ location }) {
     if (!hasAlt || isNaN(lat2) || isNaN(lon2) || isNaN(alt2)) return null;
     if (!location?.lat || !location?.lon) return null;
 
-    const horizDist = haversineM(location.lat, location.lon, lat2, lon2);
+    const horizDist = geodesicDistance(location.lat, location.lon, lat2, lon2);
     if (horizDist < 1) return null; // too close
 
     const rise = alt2 - altM;

@@ -62,26 +62,20 @@ import { trackSession, trackEvent } from './src/utils/analytics';
 // Layout-critical Text now caps itself via explicit maxFontSizeMultiplier
 // props (MGRSDisplay locks to 1.0; tab bar / titles / paywall cap at 1.2).
 
+// One tab list for everyone. Pro tabs stay visible and render as locked for
+// free users; tapping one lands on the upsell.
 function useTabDefs() {
   const { t } = useTranslation();
-  return useMemo(() => ({
-    free: [
-      { id: 'grid',   label: t('tabs.grid')   },
-      { id: 'map',    label: t('tabs.map')    },
-      { id: 'tools',  label: t('tabs.tools')  },
-      { id: 'report', label: t('tabs.reports') },
-    ],
-    pro: [
-      { id: 'grid',   label: t('tabs.grid')   },
-      { id: 'map',    label: t('tabs.map')    },
-      { id: 'tools',  label: t('tabs.tools')  },
-      { id: 'report', label: t('tabs.reports') },
-      { id: 'lists',  label: t('tabs.lists'),  proOnly: true },
-      { id: 'coords', label: t('tabs.coords'), proOnly: true },
-      { id: 'theme',  label: t('tabs.theme'),  proOnly: true },
-      { id: 'mesh',   label: t('tabs.mesh'),   proOnly: true },
-    ],
-  }), [t]);
+  return useMemo(() => ([
+    { id: 'grid',   label: t('tabs.grid')   },
+    { id: 'map',    label: t('tabs.map')    },
+    { id: 'tools',  label: t('tabs.tools')  },
+    { id: 'report', label: t('tabs.reports') },
+    { id: 'lists',  label: t('tabs.lists'),  proOnly: true },
+    { id: 'coords', label: t('tabs.coords'), proOnly: true },
+    { id: 'theme',  label: t('tabs.theme'),  proOnly: true },
+    { id: 'mesh',   label: t('tabs.mesh'),   proOnly: true },
+  ]), [t]);
 }
 
 // ─── ERROR BOUNDARY ──────────────────────────────────────────────────────────
@@ -175,8 +169,8 @@ function App() {
         if (result.granted === false) {
           try {
             Alert.alert(
-              'WELCOME ABOARD',
-              'A friend has invited you to Red Grid Tactical. Explore the free features, then upgrade to Red Grid Pro from the home screen whenever you’re ready.'
+              t('trial.welcomeAboardTitle'),
+              t('trial.welcomeAboardBody')
             );
           } catch {}
           return;
@@ -244,12 +238,9 @@ function App() {
   const [hudMode, setHudMode]       = useState(false);
   const [showSupport, setShowSupport] = useState(false);
 
-  const tabDefs = useTabDefs();
   // All tabs are always visible. Free users see the four Pro tabs (LISTS /
   // COORDS / THEME / MESH) as locked — tapping one lands on the upsell screen.
-  // Hiding them meant the most differentiated Pro features could never create
-  // desire, and left the upsell route as dead code.
-  const TABS = tabDefs.pro;
+  const TABS = useTabDefs();
 
   // Deep link handler — jump straight to a top-level screen via
   // redgrid://screen/<name>. Pure local navigation (no network); unknown
@@ -325,18 +316,21 @@ function App() {
     if (waypoint) {
       try {
         Alert.alert(
-          'Replace current waypoint?',
-          `Current: ${waypoint.label || 'Unnamed'}\nNew: ${newWaypoint.label}`,
+          t('waypoint.replaceTitle'),
+          t('waypoint.replaceBody', {
+            current: waypoint.label || t('waypoint.unnamed'),
+            next: newWaypoint.label,
+          }),
           [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Replace', style: 'destructive', onPress: commit },
+            { text: t('common.cancel'), style: 'cancel' },
+            { text: t('waypoint.replaceConfirm'), style: 'destructive', onPress: commit },
           ]
         );
       } catch { commit(); }
     } else {
       commit();
     }
-  }, [location, waypoint]);
+  }, [location, waypoint, t]);
 
   // Tap-to-copy grid — copies whatever format is displayed (MGRS, UTM, DD, or DMS)
   const [copyToast, setCopyToast] = useState(false);

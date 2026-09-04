@@ -1,6 +1,6 @@
 {
   "name": "redgrid-tactical",
-  "version": "2.0.0",
+  "version": "4.0.4",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",

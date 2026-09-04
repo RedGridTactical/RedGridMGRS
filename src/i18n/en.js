@@ -500,6 +500,38 @@ export default {
 
   // ─── Mesh / Meshtastic ───────────────────────────────────────────────
   mesh: {
+    pairing: {
+      title: "TEAM KEY",
+      stateActive: "ACTIVE",
+      stateNone: "NO KEY",
+      subActive: "Team traffic is sealed end to end.",
+      subNone: "Team traffic is sent unencrypted. Create a team key or join one.",
+      fingerprint: "KEY",
+      undecryptable: "Sealed packets dropped (wrong or missing key):",
+      create: "CREATE TEAM KEY",
+      join: "JOIN TEAM",
+      joinConfirm: "JOIN",
+      joinHint: "Enter the pairing code from your team lead.",
+      joinPlaceholder: 'redgrid://team?...',
+      joinError: "That code is not valid.",
+      showCode: "SHOW PAIRING CODE",
+      hideCode: "HIDE PAIRING CODE",
+      codeHint: "Read this to your team, or share it. Anyone with this code can read your team traffic.",
+      codeLabel: "Pairing code",
+      copy: "COPY",
+      share: "SHARE",
+      leave: "LEAVE TEAM",
+      leaveConfirmTitle: "LEAVE TEAM?",
+      leaveConfirmBody: "The team key will be erased from this device. Your messages will go out unencrypted until you join a team again.",
+    },
+    errors: {
+      ble_unavailable: "Bluetooth LE is not available.",
+      ble_unauthorized: "Bluetooth permission denied. Check Settings > Privacy > Bluetooth.",
+      ble_off: "Bluetooth is turned off.",
+      ble_unsupported: "Bluetooth LE is not supported on this device.",
+      ble_timeout: "Bluetooth did not become available in time.",
+      not_connected: "No radio connected.",
+    },
     title: 'MESH',
     disconnected: 'DISCONNECTED',
     scanning: 'SCANNING',
@@ -584,6 +616,8 @@ export default {
   },
 
   trial: {
+    welcomeAboardTitle: "WELCOME ABOARD",
+    welcomeAboardBody: "A friend has invited you to Red Grid Tactical. Explore the free features, then upgrade to Red Grid Pro from the home screen whenever you're ready.",
     receivedTitle: 'PRO UNLOCKED',
     receivedBody: 'A friend has shared Red Grid Pro with you. All features are now active for {{days}} days. Enjoy.',
     alreadyUsedTitle: 'Trial Already Used',
@@ -618,10 +652,10 @@ export default {
     continue: 'CONTINUE',
     startTrial: 'START 7-DAY FREE TRIAL',
     current: {
-      f1: { title: "TRUE GRID NORTH", body: "Your compass, true north, and the grid north on your map are three different directions. Red Grid now computes the G-M angle where you stand and converts between all three, per FM 3-25.26." },
-      f2: { title: "STORM WARNING", body: "Reads your phone's barometer on device and warns you when pressure is falling fast. Altitude-corrected, so a climb is not mistaken for a front. Pro." },
-      f3: { title: "DISTRESS SIGNALLING", body: "SOS, Morse, and the standard ground-to-air pattern on screen and torch, with battery-aware timing. Free for everyone." },
-      f4: { title: "ENCRYPTED TEAM MAP", body: "See your team on the same offline map and trade short tactical messages over Meshtastic, sealed end to end. Keys never leave your devices. Pro." },
+      f1: { title: "TEAM KEY", body: "Team traffic over Meshtastic is now sealed end to end. Create a team key, read the pairing code to your team, and everyone on it shares the same net. Pro." },
+      f2: { title: "GRID SCALE FACTOR", body: "The Declination tool now shows the scale factor where you stand, so you know how much ground you really cover per 1000 m measured off the grid." },
+      f3: { title: "TRUER DISTANCES", body: "Dead reckoning and elevation distances now use ellipsoidal WGS84 math, so long legs stay accurate." },
+      f4: { title: "CORRECTIONS & FIXES", body: "Distress signalling is now described accurately: a full-screen SOS strobe with the ground-to-air signal reference. Plus purchase reliability fixes." },
     },
   },
 
@@ -734,5 +768,18 @@ export default {
       downloadFailed: 'Tile download failed. Check connectivity and try again.',
     },
     footnote: 'Preflight checks run on-device. AO packages stay local; tile downloads only start when you tap Download.',
+  },
+  waypoint: {
+    replaceTitle: "Replace current waypoint?",
+    replaceBody: "Current: {{current}}\nNew: {{next}}",
+    replaceConfirm: "Replace",
+    unnamed: "Unnamed",
+  },
+  declination: {
+    scale: {
+      factor: "SCALE FACTOR",
+      groundPerKm: "GROUND PER 1000M GRID",
+      explain: "Grid distance is not ground distance. Add this correction to every 1000 m measured off the grid.",
+    },
   },
 };

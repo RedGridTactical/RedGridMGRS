@@ -8,6 +8,7 @@
 import {
   UTM_K0,
   vincentyInverse, haversineDistance, geodesicDistance, geodesicBearing,
+  vincentyDirect, geodesicDestination,
   centralMeridian, gridConvergence, pointScaleFactor,
   gmAngle, magneticToGrid, gridToMagnetic, trueToGrid, gridToTrue,
 } from '../src/utils/geodesy';
@@ -247,5 +248,169 @@ describe('G-M angle and direction conversions (FM 3-25.26)', () => {
     expect(gmAngle(45, -117, null)).toBeNull();
     expect(magneticToGrid(null, 45, -117, 5)).toBeNull();
     expect(trueToGrid(NaN, 45, -117)).toBeNull();
+  });
+});
+
+// ─── Consumers must use the ellipsoid, not their own sphere ─────────────────
+describe('the slope tool measures its run on the ellipsoid', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const elevSrc = fs.readFileSync(
+    path.join(__dirname, '..', 'src/components/tools/ElevationTool.js'), 'utf8');
+
+  it('ElevationTool imports geodesicDistance and keeps no private haversine', () => {
+    expect(elevSrc).toMatch(/import \{ geodesicDistance \} from '\.\.\/\.\.\/utils\/geodesy'/);
+    expect(elevSrc).toMatch(/geodesicDistance\(location\.lat, location\.lon, lat2, lon2\)/);
+    expect(elevSrc).not.toMatch(/6371000/);
+    expect(elevSrc).not.toMatch(/haversineM/);
+  });
+
+  it('the swap changes the answer by the documented ellipsoid margin', () => {
+    // 1 deg of latitude at 45 N: the sphere is short of the ellipsoid by
+    // ~0.2%, which is metres of run and therefore a real slope-angle error.
+    const sphere = haversineDistance(45, -117, 46, -117);
+    const ellipsoid = geodesicDistance(45, -117, 46, -117);
+    expect(ellipsoid).toBeCloseTo(111141.5, 0);
+    expect(sphere).toBeCloseTo(111194.9, 0);
+    const relative = Math.abs(ellipsoid - sphere) / ellipsoid;
+    expect(relative).toBeGreaterThan(0.0004);
+    expect(relative).toBeLessThan(0.004);
+  });
+});
+
+describe('the declination tool surfaces the point scale factor', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const decSrc = fs.readFileSync(
+    path.join(__dirname, '..', 'src/components/tools/DeclinationTool.js'), 'utf8');
+
+  it('reads pointScaleFactor from geodesy and renders it', () => {
+    expect(decSrc).toMatch(/pointScaleFactor/);
+    expect(decSrc).toMatch(/declination\.scale\.factor/);
+    expect(decSrc).toMatch(/declination\.scale\.groundPerKm/);
+  });
+
+  it('the ground correction per 1000 m of grid is real and signed', () => {
+    // Near the central meridian k < 1: grid distance is SHORT of ground.
+    const kCm = pointScaleFactor(45, -117);
+    expect(kCm).toBeCloseTo(0.9996, 5);
+    expect(1000 / kCm - 1000).toBeGreaterThan(0.3);
+    // Out at the zone edge k > 1: grid distance OVERSTATES the ground.
+    const kEdge = pointScaleFactor(0, -114.0);
+    expect(kEdge).toBeGreaterThan(1);
+    expect(1000 / kEdge - 1000).toBeLessThan(0);
+  });
+});
+
+// ─── Direct problem (Vincenty direct) ────────────────────────────────────────
+describe('vincentyDirect', () => {
+  it('round-trips the classic Flinders Peak / Buninyong line through the inverse', () => {
+    // Round-trip against the inverse solution, which is itself checked above
+    // against published values: run the inverse's own answer back out and you
+    // must land on the point you started from.
+    const from = { lat: 37.95103, lon: 144.42487 };   // Flinders Peak
+    const to   = { lat: -37.65282, lon: 143.92649 };  // Buninyong
+    const inv = vincentyInverse(from.lat, from.lon, to.lat, to.lon);
+    expect(inv).not.toBeNull();
+    const back = vincentyDirect(from.lat, from.lon, inv.initialBearing, inv.distance);
+    expect(back).not.toBeNull();
+    expect(back.lat).toBeCloseTo(to.lat, 9);
+    expect(back.lon).toBeCloseTo(to.lon, 9);
+    expect(back.finalBearing).toBeCloseTo(inv.finalBearing, 8);
+  });
+
+  it('round-trips inverse -> direct to better than 1e-6 deg over 100 km', () => {
+    const cases = [
+      [45, -117, 12.5],
+      [-33.86, 151.21, 200],
+      [64.9, -147.7, 355],
+      [0.5, 32.5, 90],
+    ];
+    for (const [lat, lon, brg] of cases) {
+      const d = vincentyDirect(lat, lon, brg, 100000);
+      expect(d).not.toBeNull();
+      const inv = vincentyInverse(lat, lon, d.lat, d.lon);
+      expect(inv.distance).toBeCloseTo(100000, 6);
+      expect(inv.initialBearing).toBeCloseTo(brg, 8);
+      // And back out again lands on the same point.
+      const again = vincentyDirect(lat, lon, inv.initialBearing, inv.distance);
+      expect(Math.abs(again.lat - d.lat)).toBeLessThan(1e-6);
+      expect(Math.abs(again.lon - d.lon)).toBeLessThan(1e-6);
+    }
+  });
+
+  it('is measurably better than the sphere — the reason for the swap', () => {
+    // 100 km due north from 40 N. The sphere uses R=6371 km; the WGS84 meridian
+    // radius of curvature there is larger, so the sphere overshoots in latitude.
+    const ell = vincentyDirect(40, -74, 0, 100000);
+    const sph = geodesicDestination(40, -74, 0, 100000);
+    expect(ell.lat).toBeCloseTo(40.90054959, 8);
+    // Same point by construction (Vincenty converged), so compare against the
+    // spherical formula explicitly rather than through the wrapper.
+    const R = 6371000;
+    const sphLat = (Math.asin(Math.sin((40 * Math.PI) / 180) * Math.cos(100000 / R) +
+      Math.cos((40 * Math.PI) / 180) * Math.sin(100000 / R)) * 180) / Math.PI;
+    expect(sph.lat).toBeCloseTo(ell.lat, 5);          // wrapper used the ellipsoid
+    const offsetM = Math.abs(sphLat - ell.lat) * 111320;
+    expect(offsetM).toBeGreaterThan(50);              // ~180 m of real error
+  });
+
+  it('a zero-distance run stays put', () => {
+    const d = vincentyDirect(45, -117, 73, 0);
+    expect(d.lat).toBeCloseTo(45, 12);
+    expect(d.lon).toBeCloseTo(-117, 12);
+  });
+
+  it('short distances are exact enough for 1 m MGRS', () => {
+    const d = vincentyDirect(45, -117, 90, 1);
+    const inv = vincentyInverse(45, -117, d.lat, d.lon);
+    // The residual here is the INVERSE's floor, not the direct's: its lambda
+    // loop stops at 1e-12 rad, which is ~6 um on the ground. Six orders of
+    // magnitude inside the 1 m the app prints.
+    expect(inv.distance).toBeCloseTo(1, 5);
+  });
+
+  it('handles a near-antipodal run without blowing up', () => {
+    // The direct problem has no antipodal singularity — 20 000 km simply
+    // converges. This pins that it returns a usable point rather than null.
+    const d = vincentyDirect(0, 0, 90, 20000000);
+    expect(d).not.toBeNull();
+    expect(Number.isFinite(d.lat)).toBe(true);
+    expect(d.lon).toBeGreaterThanOrEqual(-180);
+    expect(d.lon).toBeLessThanOrEqual(180);
+  });
+
+  it('wraps longitude into -180..180 rather than running off the end', () => {
+    const d = vincentyDirect(0, 179, 90, 500000);
+    expect(d.lon).toBeLessThan(0);       // crossed the antimeridian
+    expect(d.lon).toBeGreaterThan(-180);
+  });
+
+  it('refuses bad input rather than returning NaN', () => {
+    expect(vincentyDirect(NaN, -117, 0, 1000)).toBeNull();
+    expect(vincentyDirect(45, -117, NaN, 1000)).toBeNull();
+    expect(vincentyDirect(45, -117, 0, Infinity)).toBeNull();
+    expect(vincentyDirect(45, -117, 0, -1)).toBeNull();
+    expect(geodesicDestination(45, null, 0, 1000)).toBeNull();
+    expect(geodesicDestination(45, -117, 0, -1000)).toBeNull();
+  });
+
+  it('geodesicDestination is the direct mirror of geodesicDistance', () => {
+    const d = geodesicDestination(51.5, -0.12, 45, 25000);
+    expect(geodesicDistance(51.5, -0.12, d.lat, d.lon)).toBeCloseTo(25000, 6);
+    // Wrapper exposes position only, like geodesicDistance exposes a scalar.
+    expect(Object.keys(d).sort()).toEqual(['lat', 'lon']);
+  });
+});
+
+describe('dead reckoning runs on the ellipsoid', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const tacSrc = fs.readFileSync(path.join(__dirname, '..', 'src/utils/tactical.js'), 'utf8');
+
+  it('tactical.js keeps no sphere radius of its own for DR', () => {
+    expect(tacSrc).toMatch(/import \{ geodesicDestination \} from '\.\/geodesy'/);
+    expect(tacSrc).toMatch(/geodesicDestination\(startLat, startLon, headingDeg, distanceM\)/);
+    expect(tacSrc).not.toMatch(/6371000/);
   });
 });

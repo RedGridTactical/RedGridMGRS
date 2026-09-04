@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { applyDeclination, removeDeclination } from '../../utils/tactical';
-import { gridConvergence, gmAngle, magneticToGrid, gridToMagnetic } from '../../utils/geodesy';
+import { gridConvergence, gmAngle, magneticToGrid, gridToMagnetic, pointScaleFactor } from '../../utils/geodesy';
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -33,6 +33,12 @@ export function DeclinationTool({ declination, setDeclination, location }) {
   const hasFix = !!location && Number.isFinite(location.lat) && Number.isFinite(location.lon);
   const convergence = hasFix ? gridConvergence(location.lat, location.lon) : null;
   const gm = hasFix ? gmAngle(location.lat, location.lon, declination) : null;
+  // Grid vs ground: a UTM grid distance is not the distance you walk. k < 1
+  // near the central meridian (grid short of ground), k > 1 out at the zone
+  // edge. Reported as metres of ground per 1000 m of grid so it is usable
+  // without doing the arithmetic in the field.
+  const scale = hasFix ? pointScaleFactor(location.lat, location.lon) : null;
+  const groundPerKm = Number.isFinite(scale) ? (1000 / scale) - 1000 : null;
 
   const b = parseFloat(bearing);
   const valid = !isNaN(b) && b >= 0 && b <= 360;
@@ -72,7 +78,17 @@ export function DeclinationTool({ declination, setDeclination, location }) {
         <>
           <ToolRow label={t('toolLabels.gridConvergence')} value={signed(convergence)} />
           <ToolRow label={t('toolLabels.gmAngle')} value={signed(gm)} />
+          {groundPerKm !== null && (
+            <>
+              <ToolRow label={t('declination.scale.factor')} value={scale.toFixed(6)} />
+              <ToolRow
+                label={t('declination.scale.groundPerKm')}
+                value={`${groundPerKm > 0 ? '+' : ''}${groundPerKm.toFixed(2)} m`}
+              />
+            </>
+          )}
           <ToolHint text={t('toolLabels.gmExplain')} />
+          {groundPerKm !== null && <ToolHint text={t('declination.scale.explain')} />}
         </>
       ) : (
         <ToolHint text={t('toolLabels.noFixDeclinationOnly')} />

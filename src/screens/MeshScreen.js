@@ -10,6 +10,7 @@ import { useColors } from '../utils/ThemeContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { tapLight, tapMedium } from '../utils/haptics';
 import { TeamMessageBar } from '../components/TeamMessageBar';
+import { TeamKeyPanel } from '../components/TeamKeyPanel';
 import { CONNECTION_STATES } from '../utils/meshtastic';
 import { toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
 
@@ -39,9 +40,20 @@ export function MeshScreen({
   onSendTeamMessage,
   lastInboundMessage,
   onDismissInbound,
+  sealedUndecryptable = 0,
 }) {
   const colors = useColors();
   const { t } = useTranslation();
+
+  // scanError carries a stable code from the transport plus the raw English
+  // message. Translate the code; fall back to the message for an untranslated
+  // locale or an error that came straight from the BLE library.
+  const scanErrorText = useMemo(() => {
+    if (!scanError) return null;
+    if (typeof scanError === 'string') return scanError;
+    const fallback = scanError.message || '';
+    return scanError.code ? t(`mesh.errors.${scanError.code}`, fallback) : fallback;
+  }, [scanError, t]);
 
   const isScanning = connectionState === CONNECTION_STATES.SCANNING;
   const isConnecting = connectionState === CONNECTION_STATES.CONNECTING;
@@ -121,6 +133,10 @@ export function MeshScreen({
         </View>
       )}
 
+      {/* Team key — set up before a radio is even connected, so a team can be
+          keyed indoors and then take the radios outside. */}
+      <TeamKeyPanel sealedUndecryptable={sealedUndecryptable} />
+
       {/* Team roster — the live team picture derived from mesh positions.
           Only shown while connected, since peers arrive over the radio. */}
       {isConnected && onOpenTeamRoster && (
@@ -170,8 +186,8 @@ export function MeshScreen({
             )}
           </TouchableOpacity>
 
-          {scanError && (
-            <Text style={[styles.errorText, { color: colors.text2 }]}>{scanError}</Text>
+          {!!scanErrorText && (
+            <Text style={[styles.errorText, { color: colors.text2 }]}>{scanErrorText}</Text>
           )}
 
           {/* Discovered devices */}

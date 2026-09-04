@@ -4,6 +4,7 @@
  */
 
 import { toMGRS, formatMGRS } from './mgrs';
+import { geodesicDestination } from './geodesy';
 
 const DEG = Math.PI / 180;
 const RAD = 180 / Math.PI;
@@ -24,23 +25,13 @@ export function backAzimuth(bearing) {
  */
 export function deadReckoning(startLat, startLon, headingDeg, distanceM) {
   if (!isFinite(distanceM) || distanceM < 0) return null;
-  const R = 6371000; // Earth radius metres
-  const δ = distanceM / R;
-  const θ = headingDeg * DEG;
-  const φ1 = startLat * DEG;
-  const λ1 = startLon * DEG;
+  // Ellipsoidal (Vincenty direct), not spherical: DR error lands as displaced
+  // POSITION, and this function's output is printed to 1 m of MGRS.
+  // geodesicDestination falls back to the sphere if the iteration fails.
+  const dest = geodesicDestination(startLat, startLon, headingDeg, distanceM);
+  if (!dest) return null;
 
-  const φ2 = Math.asin(
-    Math.sin(φ1) * Math.cos(δ) +
-    Math.cos(φ1) * Math.sin(δ) * Math.cos(θ)
-  );
-  const λ2 = λ1 + Math.atan2(
-    Math.sin(θ) * Math.sin(δ) * Math.cos(φ1),
-    Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2)
-  );
-
-  const lat = φ2 * RAD;
-  const lon = ((λ2 * RAD) + 540) % 360 - 180;
+  const { lat, lon } = dest;
   const mgrs = toMGRS(lat, lon, 5);
   return { lat, lon, mgrs, mgrsFormatted: formatMGRS(mgrs) };
 }

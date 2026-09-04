@@ -17,10 +17,37 @@ try {
 
 import {
   PORTNUM_PRIVATE_APP,
+  MAX_TEAM_PAYLOAD_BYTES,
   parseTeamPayload,
   decodeTeamPacket,
   serializeTeamPayload,
 } from './teamPackets';
+import {
+  seal,
+  open as openSealed,
+  isSealed,
+  getActiveTeamKey,
+} from './teamCrypto';
+
+/**
+ * Errors thrown out of this module carry a stable `code` so the UI can
+ * translate them. The English `message` stays as a last-resort fallback for a
+ * locale that has not been updated yet.
+ */
+export const MESH_ERRORS = {
+  BLE_UNAVAILABLE: 'ble_unavailable',
+  BLE_UNAUTHORIZED: 'ble_unauthorized',
+  BLE_OFF: 'ble_off',
+  BLE_UNSUPPORTED: 'ble_unsupported',
+  BLE_TIMEOUT: 'ble_timeout',
+  NOT_CONNECTED: 'not_connected',
+};
+
+function meshError(code, message) {
+  const err = new Error(message);
+  err.code = code;
+  return err;
+}
 
 // ─── Meshtastic BLE Protocol Constants ────────────────────────────────────────
 const MESHTASTIC_SERVICE_UUID = '6ba1b218-15a8-461f-9fa8-5dcae273eafd';
@@ -70,6 +97,22 @@ let reconnectTimer = null;
 let reconnectAttempts = 0;
 let lastConnectedDeviceId = null;
 let configId = 0; // increments each connection for startConfig
+
+// Sealed frames we could not open (no key, or the wrong one). Surfaced in the
+// MESH screen: silence with a non-zero counter means "your team is talking and
+// you are not on their key", which is otherwise indistinguishable from an
+// empty mesh.
+let sealedUndecryptable = 0;
+
+/** How many sealed frames have been dropped for want of a working key. */
+export function getSealedUndecryptableCount() {
+  return sealedUndecryptable;
+}
+
+/** Reset the drop counter — called when a new key is installed. */
+export function resetSealedCounters() {
+  sealedUndecryptable = 0;
+}
 
 function notifyStateChange(newState) {
   connectionState = newState;
@@ -320,9 +363,28 @@ function parseFromRadio(bytes) {
     // portnum. Return it tagged so callers can route it separately from
     // standard position packets.
     if (portnum === PORTNUM_PRIVATE_APP) {
-      const body = parseTeamPayload(payload);
+      let bodyBytes = payload instanceof Uint8Array ? payload : new Uint8Array(payload);
+      let encrypted = false;
+
+      // A sealed frame is only ours if our key opens it. Anything else on the
+      // private portnum — another team's traffic, a corrupted frame, our own
+      // traffic from before we rotated the key — is dropped silently and
+      // counted, so the UI can say "you are missing sealed traffic" without
+      // any of it reaching the roster.
+      if (isSealed(bodyBytes)) {
+        const active = getActiveTeamKey();
+        const opened = active ? openSealed(bodyBytes, active.key) : null;
+        if (!opened) {
+          sealedUndecryptable++;
+          return null;
+        }
+        bodyBytes = opened;
+        encrypted = true;
+      }
+
+      const body = parseTeamPayload(bodyBytes);
       const team = decodeTeamPacket(body, fromNode);
-      return team ? { __team: true, ...team } : null;
+      return team ? { __team: true, encrypted, ...team } : null;
     }
 
     if (portnum !== PORTNUM_POSITION) return null;
@@ -345,14 +407,14 @@ function parseFromRadio(bytes) {
 async function waitForPoweredOn(mgr, timeoutMs = 10000) {
   const state = await mgr.state();
   if (state === 'PoweredOn') return;
-  if (state === 'Unauthorized') throw new Error('Bluetooth permission denied. Check Settings > Privacy > Bluetooth.');
-  if (state === 'PoweredOff') throw new Error('Bluetooth is turned off.');
-  if (state === 'Unsupported') throw new Error('Bluetooth LE is not supported on this device.');
+  if (state === 'Unauthorized') throw meshError(MESH_ERRORS.BLE_UNAUTHORIZED, 'Bluetooth permission denied. Check Settings > Privacy > Bluetooth.');
+  if (state === 'PoweredOff') throw meshError(MESH_ERRORS.BLE_OFF, 'Bluetooth is turned off.');
+  if (state === 'Unsupported') throw meshError(MESH_ERRORS.BLE_UNSUPPORTED, 'Bluetooth LE is not supported on this device.');
 
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       sub.remove();
-      reject(new Error('Bluetooth did not become available within ' + (timeoutMs / 1000) + 's'));
+      reject(meshError(MESH_ERRORS.BLE_TIMEOUT, 'Bluetooth did not become available within ' + (timeoutMs / 1000) + 's'));
     }, timeoutMs);
 
     const sub = mgr.onStateChange((newState) => {
@@ -363,11 +425,11 @@ async function waitForPoweredOn(mgr, timeoutMs = 10000) {
       } else if (newState === 'Unauthorized') {
         clearTimeout(timer);
         sub.remove();
-        reject(new Error('Bluetooth permission denied. Check Settings > Privacy > Bluetooth.'));
+        reject(meshError(MESH_ERRORS.BLE_UNAUTHORIZED, 'Bluetooth permission denied. Check Settings > Privacy > Bluetooth.'));
       } else if (newState === 'PoweredOff') {
         clearTimeout(timer);
         sub.remove();
-        reject(new Error('Bluetooth is turned off.'));
+        reject(meshError(MESH_ERRORS.BLE_OFF, 'Bluetooth is turned off.'));
       }
     }, true); // true = emit current state immediately
   });
@@ -381,7 +443,7 @@ async function waitForPoweredOn(mgr, timeoutMs = 10000) {
  */
 export async function scanForDevices() {
   const mgr = getSharedBleManager();
-  if (!mgr) throw new Error('BLE not available');
+  if (!mgr) throw meshError(MESH_ERRORS.BLE_UNAVAILABLE, 'BLE not available');
 
   // Wait for BLE to be ready — this is the critical fix for iOS
   await waitForPoweredOn(mgr);
@@ -433,7 +495,7 @@ export async function scanForDevices() {
  */
 export async function connectToDevice(deviceId) {
   const mgr = getSharedBleManager();
-  if (!mgr) throw new Error('BLE not available');
+  if (!mgr) throw meshError(MESH_ERRORS.BLE_UNAVAILABLE, 'BLE not available');
 
   await waitForPoweredOn(mgr);
 
@@ -531,7 +593,7 @@ export async function disconnect() {
  * Send a position to the mesh network using Meshtastic protobuf encoding.
  */
 export async function sendPosition(lat, lon, altitude) {
-  if (!connectedDevice) throw new Error('Not connected');
+  if (!connectedDevice) throw meshError(MESH_ERRORS.NOT_CONNECTED, 'Not connected');
 
   const packet = encodeToRadioPosition(lat, lon, altitude);
   await connectedDevice.writeCharacteristicWithResponseForService(
@@ -558,8 +620,21 @@ export function onTeamPacketReceived(callback) {
  */
 export async function sendTeamPacket(payload) {
   if (!connectedDevice) return false;
-  const bytes = serializeTeamPayload(payload);
-  if (!bytes) return false;
+  const plain = serializeTeamPayload(payload);
+  if (!plain) return false;
+
+  // With a team key installed every frame goes out sealed. serializeTeamPayload
+  // has already held the plaintext under MAX_PLAINTEXT_PAYLOAD_BYTES (200 - 29),
+  // so the sealed frame fits; the explicit check is a belt-and-braces guard
+  // against a future encoder that forgets the reserve.
+  let bytes = plain;
+  const active = getActiveTeamKey();
+  if (active) {
+    const sealedBytes = seal(plain, active.key);
+    if (!sealedBytes || sealedBytes.length > MAX_TEAM_PAYLOAD_BYTES) return false;
+    bytes = sealedBytes;
+  }
+
   try {
     const dataMsg = [
       ...encodeVarintField(1, PORTNUM_PRIVATE_APP),

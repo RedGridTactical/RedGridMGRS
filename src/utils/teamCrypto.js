@@ -15,8 +15,10 @@
  *   - Confidentiality + integrity of the payload between peers holding the key.
  *   - It does NOT hide metadata. Meshtastic still exposes sender node id, packet
  *     timing and size to anyone listening. Traffic analysis remains possible.
- *   - Session keys live in memory only and are never persisted, so a seized
- *     device does not retroactively decrypt captured traffic.
+ *   - This module holds keys in memory only. The hook layer (useTeamKey) DOES
+ *     persist the active team key to AsyncStorage so a team survives an app
+ *     restart in the field; the cost is that a seized, unlocked device gives up
+ *     the key and can decrypt captured traffic. Leaving the team wipes it.
  *   - Replay is NOT prevented here. Packets carry a sequence number (`n`) and
  *     the team layer is responsible for rejecting stale/duplicate sequences.
  *
@@ -153,10 +155,20 @@ export function buildPairingPayload({ sessionId, key }) {
 /** Parse a scanned QR string. Returns { sessionId, key } or null. */
 export function parsePairingPayload(text) {
   try {
-    if (typeof text !== 'string' || !text.startsWith(QR_PREFIX)) return null;
-    const params = new URLSearchParams(text.slice(QR_PREFIX.length));
-    const sessionId = params.get('s');
-    const keyRaw = params.get('k');
+    if (typeof text !== 'string') return null;
+    // A hand-typed code arrives grouped and possibly wrapped across lines.
+    // Whitespace is never significant in the payload, so strip it all first.
+    const clean = text.replace(/\s+/g, '');
+    if (!clean.startsWith(QR_PREFIX)) return null;
+    // Hand-rolled query parse: React Native's URLSearchParams.get() throws
+    // "not implemented" on device, so the WHATWG API cannot be used here.
+    const params = {};
+    for (const pair of clean.slice(QR_PREFIX.length).split('&')) {
+      const eq = pair.indexOf('=');
+      if (eq > 0) params[pair.slice(0, eq)] = decodeURIComponent(pair.slice(eq + 1));
+    }
+    const sessionId = params.s;
+    const keyRaw = params.k;
     if (!sessionId || !keyRaw) return null;
     const key = base64UrlToBytes(keyRaw);
     if (!isValidKey(key)) return null;
@@ -169,6 +181,91 @@ export function parsePairingPayload(text) {
 /** Fresh random session key, for a lead starting a new team session. */
 export function generateSessionKey() {
   return randomBytes(KEY_BYTES);
+}
+
+// ─── Active team key registry ────────────────────────────────────────────────
+// The transport (meshtastic.js) needs the key on both the send and receive
+// path, and two independent React trees (App's useTeamAwareness and the MESH
+// screen's own useTeamKey) need to agree on it. Rather than thread it through
+// props from the app root, the key lives here as module state with a change
+// notification, and the hooks are thin views over it. Persistence is the
+// hooks' job — this module never touches AsyncStorage.
+//
+// The key material stays in memory as bytes; only the hook layer serializes it.
+
+let activeKey = null;        // Uint8Array | null
+let activeSessionId = null;  // string | null
+let keyListeners = [];
+
+/** Install the team key. Pass a bad key and the registry is left untouched. */
+export function setActiveTeamKey(key, sessionId = null) {
+  if (!isValidKey(key)) return false;
+  activeKey = key;
+  activeSessionId = sessionId ? String(sessionId) : null;
+  notifyKeyChange();
+  return true;
+}
+
+/** Drop the team key. Subsequent sends go out in the clear again. */
+export function clearActiveTeamKey() {
+  activeKey = null;
+  activeSessionId = null;
+  notifyKeyChange();
+}
+
+/** Current key as { key, sessionId }, or null when the team is unkeyed. */
+export function getActiveTeamKey() {
+  if (!activeKey) return null;
+  return { key: activeKey, sessionId: activeSessionId };
+}
+
+export function hasActiveTeamKey() {
+  return activeKey !== null;
+}
+
+/** Subscribe to key changes. Returns an unsubscribe function. */
+export function onTeamKeyChange(callback) {
+  if (typeof callback !== 'function') return () => {};
+  keyListeners.push(callback);
+  return () => { keyListeners = keyListeners.filter(fn => fn !== callback); };
+}
+
+function notifyKeyChange() {
+  const snapshot = getActiveTeamKey();
+  keyListeners.forEach(fn => { try { fn(snapshot); } catch {} });
+}
+
+/**
+ * Short human-comparable fingerprint of a key: SHA-256, first 4 bytes, hex,
+ * grouped as two pairs. Two operators read it aloud to confirm they are on the
+ * same key without either of them exposing the key itself.
+ */
+export function keyFingerprint(key) {
+  if (!isValidKey(key)) return null;
+  try {
+    const digest = sha256(key);
+    let hex = '';
+    for (let i = 0; i < 4; i++) hex += digest[i].toString(16).padStart(2, '0').toUpperCase();
+    return `${hex.slice(0, 4)} ${hex.slice(4)}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Render a pairing payload as a grouped code that a person can read off one
+ * screen and type into another without losing their place. Purely cosmetic —
+ * parsePairingPayload strips the whitespace back out.
+ */
+export function formatPairingCode(payload, group = 6) {
+  if (typeof payload !== 'string' || !payload) return '';
+  const i = payload.indexOf('?');
+  if (i === -1) return payload;
+  const head = payload.slice(0, i + 1);
+  const body = payload.slice(i + 1);
+  const chunks = [];
+  for (let p = 0; p < body.length; p += group) chunks.push(body.slice(p, p + group));
+  return head + chunks.join(' ');
 }
 
 // ─── base64url (no padding) — small, dependency-free ─────────────────────────

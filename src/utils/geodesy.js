@@ -116,6 +116,128 @@ export function vincentyInverse(lat1, lon1, lat2, lon2) {
   };
 }
 
+// ─── Geodesic destination (Vincenty direct) ──────────────────────────────────
+
+/**
+ * Vincenty DIRECT solution on the WGS84 ellipsoid: given a start point, an
+ * initial azimuth and a distance, where do you end up?
+ *
+ * The counterpart to vincentyInverse, and the same accuracy — sub-millimetre
+ * over any distance this app deals with. Dead reckoning used a sphere, which
+ * is the same 0.2-0.36% error the inverse path already documents, except it
+ * lands as displaced POSITION rather than a wrong number: ~2 m off after 1 km
+ * of DR, ~200 m after 100 km, and MGRS is printed to 1 m.
+ *
+ * Returns null on bad input or if the iteration does not converge (the same
+ * contract as vincentyInverse), so callers can fall back deliberately.
+ *
+ * @returns {{lat:number, lon:number, finalBearing:number, converged:boolean, iterations:number}|null}
+ */
+export function vincentyDirect(lat1, lon1, bearingDeg, distanceM) {
+  if (![lat1, lon1, bearingDeg, distanceM].every(isFiniteNum)) return null;
+  if (distanceM < 0) return null;
+
+  const a = WGS84_A;
+  const f = WGS84_F;
+  const b = a * (1 - f);
+
+  const alpha1 = d2r(bearingDeg);
+  const sinAlpha1 = Math.sin(alpha1);
+  const cosAlpha1 = Math.cos(alpha1);
+
+  const U1 = Math.atan((1 - f) * Math.tan(d2r(lat1)));
+  const sinU1 = Math.sin(U1), cosU1 = Math.cos(U1);
+  const tanU1 = (1 - f) * Math.tan(d2r(lat1));
+
+  const sigma1 = Math.atan2(tanU1, cosAlpha1);
+  const sinAlpha = cosU1 * sinAlpha1;
+  const cos2Alpha = 1 - sinAlpha * sinAlpha;
+  const uSq = (cos2Alpha * (a * a - b * b)) / (b * b);
+  const A = 1 + (uSq / 16384) * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)));
+  const B = (uSq / 1024) * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
+
+  let sigma = distanceM / (b * A);
+  let sigmaPrev;
+  let iterations = 0;
+  let sinSigma, cosSigma, cos2SigmaM, deltaSigma;
+
+  do {
+    cos2SigmaM = Math.cos(2 * sigma1 + sigma);
+    sinSigma = Math.sin(sigma);
+    cosSigma = Math.cos(sigma);
+    deltaSigma =
+      B * sinSigma *
+      (cos2SigmaM +
+        (B / 4) *
+          (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) -
+            (B / 6) * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)));
+    sigmaPrev = sigma;
+    sigma = distanceM / (b * A) + deltaSigma;
+    iterations += 1;
+  } while (Math.abs(sigma - sigmaPrev) > 1e-12 && iterations < 200);
+
+  if (iterations >= 200) return null; // did not converge
+
+  const tmp = sinU1 * sinSigma - cosU1 * cosSigma * cosAlpha1;
+  const lat2 = Math.atan2(
+    sinU1 * cosSigma + cosU1 * sinSigma * cosAlpha1,
+    (1 - f) * Math.sqrt(sinAlpha * sinAlpha + tmp * tmp)
+  );
+  const lambda = Math.atan2(
+    sinSigma * sinAlpha1,
+    cosU1 * cosSigma - sinU1 * sinSigma * cosAlpha1
+  );
+  const C = (f / 16) * cos2Alpha * (4 + f * (4 - 3 * cos2Alpha));
+  const L =
+    lambda -
+    (1 - C) * f * sinAlpha *
+      (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
+
+  const finalBearing = Math.atan2(sinAlpha, -tmp);
+
+  return {
+    lat: r2d(lat2),
+    // Normalise into -180..180 rather than letting a long easterly run walk
+    // off the end of the range.
+    lon: ((r2d(d2r(lon1) + L) + 540) % 360) - 180,
+    finalBearing: norm360(r2d(finalBearing)),
+    converged: true,
+    iterations,
+  };
+}
+
+/** Great-circle destination on a sphere. The documented fallback, not the default. */
+function sphericalDestination(lat1, lon1, bearingDeg, distanceM) {
+  const delta = distanceM / SPHERE_R;
+  const theta = d2r(bearingDeg);
+  const phi1 = d2r(lat1);
+  const lam1 = d2r(lon1);
+  const phi2 = Math.asin(
+    Math.sin(phi1) * Math.cos(delta) + Math.cos(phi1) * Math.sin(delta) * Math.cos(theta)
+  );
+  const lam2 =
+    lam1 +
+    Math.atan2(
+      Math.sin(theta) * Math.sin(delta) * Math.cos(phi1),
+      Math.cos(delta) - Math.sin(phi1) * Math.sin(phi2)
+    );
+  return { lat: r2d(phi2), lon: ((r2d(lam2) + 540) % 360) - 180 };
+}
+
+/**
+ * Ellipsoidal destination point, falling back to spherical if Vincenty fails.
+ * The direct-problem mirror of geodesicDistance.
+ *
+ * @returns {{lat:number, lon:number}|null}
+ */
+export function geodesicDestination(lat1, lon1, bearingDeg, distanceM) {
+  if (![lat1, lon1, bearingDeg, distanceM].every(isFiniteNum)) return null;
+  if (distanceM < 0) return null;
+  const r = vincentyDirect(lat1, lon1, bearingDeg, distanceM);
+  if (r) return { lat: r.lat, lon: r.lon };
+  return sphericalDestination(lat1, lon1, bearingDeg, distanceM);
+}
+
 /** Great-circle distance on a sphere. The documented fallback, not the default. */
 export function haversineDistance(lat1, lon1, lat2, lon2) {
   const p1 = d2r(lat1), p2 = d2r(lat2);

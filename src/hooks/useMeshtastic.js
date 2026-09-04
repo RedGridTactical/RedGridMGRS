@@ -3,7 +3,7 @@
  * Wraps src/utils/meshtastic.js with React state management.
  * Provides scan, connect, disconnect, position sharing, and received positions.
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   CONNECTION_STATES,
   scanForDevices,
@@ -127,7 +127,9 @@ export function useMeshtastic() {
       }
     } catch (err) {
       if (mounted.current) {
-        setScanError(err?.message || 'Scan failed');
+        // Carry the machine-readable code alongside the English message so the
+        // screen can translate it and still have something to show if it can't.
+        setScanError({ code: err?.code || null, message: err?.message || 'Scan failed' });
       }
     }
   }, []);
@@ -141,7 +143,7 @@ export function useMeshtastic() {
       }
     } catch (err) {
       if (mounted.current) {
-        setScanError(err?.message || 'Connection failed');
+        setScanError({ code: err?.code || null, message: err?.message || 'Connection failed' });
       }
     }
   }, []);
@@ -166,7 +168,14 @@ export function useMeshtastic() {
     setAutoShare(prev => !prev);
   }, []);
 
-  return {
+  const setLastPosition = useCallback((lat, lon, alt) => {
+    lastPosition.current = { lat, lon, alt };
+  }, []);
+
+  // Memoized so consumers' dependency arrays stop churning on every render —
+  // the object literal (and the inline setter it used to carry) invalidated
+  // every effect keyed on `mesh` once per render.
+  return useMemo(() => ({
     connectionState,
     nearbyDevices,
     connectedDevice,
@@ -178,6 +187,9 @@ export function useMeshtastic() {
     disconnect,
     sharePosition,
     toggleAutoShare,
-    setLastPosition: (lat, lon, alt) => { lastPosition.current = { lat, lon, alt }; },
-  };
+    setLastPosition,
+  }), [
+    connectionState, nearbyDevices, connectedDevice, meshPositions, autoShare,
+    scanError, scan, connect, disconnect, sharePosition, toggleAutoShare, setLastPosition,
+  ]);
 }

@@ -27,7 +27,10 @@ import { MGRSGridOverlay } from '../components/MGRSGridOverlay';
 import { RouteOverlay } from '../components/RouteOverlay';
 import { TeamMarkers } from '../components/TeamMarkers';
 import { calculateRoute, estimateTime, formatTime, optimizeRoute } from '../utils/routePlanner';
-import { downloadTilesForRegion, checkTilesForRegion, clearTileCache, getLocalTilePathTemplate, estimateTilesForRegion } from '../utils/tileManager';
+import {
+  downloadTilesForRegion, checkTilesForRegion, clearTileCache, getLocalTilePathTemplate,
+  estimateTilesForRegion, OSM_TILE_URL, DARK_TILE_URL, TOPO_TILE_URL,
+} from '../utils/tileManager';
 import { PreflightScreen } from './PreflightScreen';
 
 // Free-tier persistent-waypoint cap. Free users get 1 saved waypoint; Pro is
@@ -46,10 +49,6 @@ try {
   UrlTile = Maps.UrlTile;
   LocalTile = Maps.LocalTile;
 } catch {}
-
-// Dark tactical tile server (CartoDB dark matter — free, no key required)
-const DARK_TILE_URL = 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png';
-const OSM_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 // Pulsing location dot animation
 function PulsingDot({ color }) {
@@ -83,8 +82,8 @@ function timeSince(ts) {
   return `${Math.floor(sec / 3600)}h ago`;
 }
 
-// Tile sources — Standard (OSM), Dark (CartoDB), Topo (OpenTopoMap)
-const TOPO_TILE_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
+// Tile sources — Standard (OSM), Dark (CartoDB), Topo (OpenTopoMap).
+// URLs come from tileManager so the offline cache and the live map agree.
 const MAP_STYLES = ['standard', 'dark', 'topo'];
 const MAP_STYLE_KEY = 'rg_map_style';
 const FIRST_VISIT_PROMPT_KEY = 'rg_map_first_visit_prompted_v1';
@@ -120,6 +119,20 @@ export function MapScreen({
 
   // Map style: standard, dark, topo
   const [mapStyle, setMapStyle] = useState(isDark ? 'dark' : 'standard');
+
+  // Throttled clock for the team layer. Peer decay is time-based, so the
+  // markers need a moving `now` — but reading Date.now() inline made every
+  // MapScreen render redraw every marker. 5 s is far finer than the LIVE ->
+  // STALE -> GHOST thresholds and costs one re-render per tick. Only ticks
+  // while there is actually a team layer to decay.
+  const [teamClock, setTeamClock] = useState(() => Date.now());
+  const hasTeamLayer = !!(isPro && team && team.roster && team.roster.length > 0);
+  useEffect(() => {
+    if (!hasTeamLayer) return;
+    setTeamClock(Date.now());
+    const id = setInterval(() => setTeamClock(Date.now()), 5000);
+    return () => clearInterval(id);
+  }, [hasTeamLayer]);
 
   // Load persisted map style preference
   useEffect(() => {
@@ -629,6 +642,7 @@ export function MapScreen({
               description={description}
               onPress={() => handleWaypointPress(wp)}
               pinColor={colors.accent}
+              tracksViewChanges={false}
             />
           );
         })}
@@ -671,12 +685,12 @@ export function MapScreen({
         {/* Team layer — named peers with ghost decay and SOS. Renders
             nothing when no roster is present, so free/solo users and
             radio-less sessions are unaffected. */}
-        {isPro && team && team.roster && team.roster.length > 0 && (
+        {hasTeamLayer && (
           <TeamMarkers
             roster={team.roster}
             origin={location}
             colors={colors}
-            now={Date.now()}
+            now={teamClock}
           />
         )}
       </MapView>

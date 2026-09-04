@@ -209,7 +209,10 @@ describe('iOS deferred payment is not reported as a failure', () => {
   test('E_DEFERRED_PAYMENT is handled before the failure counter', () => {
     const i = src.indexOf("e?.code === 'E_DEFERRED_PAYMENT'");
     expect(i).toBeGreaterThan(-1);
-    const failedAt = src.indexOf("trackEvent(wasCancelled ? 'purchase_cancelled' : 'purchase_failed')");
+    // Search forward from the deferred branch: the purchaseErrorListener
+    // classifies the same three outcomes with an identical line, and this
+    // test is about ordering inside purchase()'s own catch.
+    const failedAt = src.indexOf("trackEvent(wasCancelled ? 'purchase_cancelled' : 'purchase_failed')", i);
     expect(failedAt).toBeGreaterThan(-1);
     // Must return before reaching the outage canary.
     expect(i).toBeLessThan(failedAt);
