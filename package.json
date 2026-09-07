@@ -76,5 +76,8 @@
   "bugs": {
     "url": "https://github.com/RedGridTactical/RedGridMGRS/issues"
   },
-  "homepage": "https://github.com/RedGridTactical/RedGridMGRS#readme"
+  "homepage": "https://github.com/RedGridTactical/RedGridMGRS#readme",
+  "overrides": {
+    "tar": "7.5.21"
+  }
 }
