@@ -391,9 +391,7 @@
       "icon": "assets/icons/icon-512.png",
       "featureGraphic": "assets/icons/feature-graphic-1024x500.png",
       "screenshots": {
-        "phone": "screenshots/output/phone/",
-        "tablet7": "screenshots/output/tablet7/",
-        "tablet10": "screenshots/output/tablet10/"
+        "phone": "screenshots/output/current-phone/"
       }
     }
   }
