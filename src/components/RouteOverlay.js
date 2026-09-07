@@ -4,6 +4,7 @@
  */
 
 import React from 'react';
+import { TYPE } from '../utils/typography';
 import { View, Text, StyleSheet } from 'react-native';
 import { Polyline, Marker } from 'react-native-maps';
 import { formatDistance } from '../utils/mgrs';
@@ -77,7 +78,7 @@ export function RouteOverlay({ waypoints, colors }) {
         tracksViewChanges={false}
       >
         <View style={[styles.totalLabel, { backgroundColor: colors.accent }]}>
-          <Text style={[styles.totalText, { color: colors.bg }]}>
+          <Text style={[styles.totalText, { color: colors.actionText }]}>
             {t('map.totalDistance')}: {formatDistance(totalDistance)}
           </Text>
         </View>
@@ -94,10 +95,9 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   labelText: {
-    fontFamily: 'monospace',
+    ...TYPE.data,
     fontSize: 10,
     letterSpacing: 1,
-    fontWeight: '600',
   },
   totalLabel: {
     paddingHorizontal: 8,
@@ -105,9 +105,8 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   totalText: {
-    fontFamily: 'monospace',
+    ...TYPE.data,
     fontSize: 11,
     letterSpacing: 2,
-    fontWeight: '700',
   },
 });

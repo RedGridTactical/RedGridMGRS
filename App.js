@@ -12,13 +12,23 @@
 import './src/i18n';
 import React, { useState, useMemo, useCallback, useRef, useEffect, Component } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Animated,
-  StatusBar, useWindowDimensions, AccessibilityInfo, Alert, Linking,
+  View, Text, StyleSheet, TouchableOpacity, Animated, ScrollView,
+  StatusBar, useWindowDimensions, AccessibilityInfo, Linking,
 } from 'react-native';
 // SafeAreaView MUST come from react-native-safe-area-context, not react-native:
 // RN's built-in SafeAreaView is a no-op on Android, so with edge-to-edge enforced
 // (targetSdk 35+) content renders under the status bar and gesture bar.
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { useFonts } from 'expo-font';
+import { FONT_ASSETS, TYPE } from './src/utils/typography';
+import { Alert, registerDisplayGuard, allowSystemDisplay } from './src/utils/fieldAlert';
+import { FieldModalHost, useFieldModalVisibility } from './src/components/FieldModal';
+import { FieldAlertHost } from './src/components/FieldAlertHost';
+import { useFieldNavigation } from './src/hooks/useFieldNavigation';
+import { ActiveNavigationBar } from './src/components/ActiveNavigationBar';
+import { useTacticalBrightness } from './src/hooks/useTacticalBrightness';
+import { TacticalBrightnessControls, TacticalBlackout } from './src/components/TacticalBrightnessControls';
+import { TacticalDisplaySwitch } from './src/components/TacticalDisplaySwitch';
 import { useTranslation } from './src/hooks/useTranslation';
 
 import { useLocation }  from './src/hooks/useLocation';
@@ -29,7 +39,7 @@ import { useStoreReview } from './src/hooks/useStoreReview';
 import { useShakeToSpeak } from './src/hooks/useShakeToSpeak';
 import { useGridCrossing } from './src/hooks/useGridCrossing';
 import { useExternalGPS, useGPSSource } from './src/hooks/useExternalGPS';
-import { ThemeProvider, useColors } from './src/utils/ThemeContext';
+import { ThemeProvider, useColors, DisplaySafetyProvider } from './src/utils/ThemeContext';
 
 import { MGRSDisplay }    from './src/components/MGRSDisplay';
 import { WayfinderArrow } from './src/components/WayfinderArrow';
@@ -129,13 +139,13 @@ function App() {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
 
-  const { location: internalLocation, error, isLoading, retry, compassHeading } = useLocation();
+  const { location: internalLocation, error, isLoading, retry, compassHeading, compassReference } = useLocation();
   const externalGPS = useExternalGPS();
   // Lift external GPS to app scope so the connected receiver overrides phone
   // GPS everywhere (grid, map, tools, mesh, reports). Falls back to internal
   // GPS when no receiver is connected.
   const { location, source: gpsSource, deviceName: gpsDeviceName } = useGPSSource(internalLocation, externalGPS);
-  const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing, gridScale, setGridScale } = useSettings();
+  const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, tacticalMode, setTacticalMode, loaded: settingsLoaded, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing, gridScale, setGridScale } = useSettings();
   const { isPro: iapIsPro, isPurchasing, product, products, selectedTier, setSelectedTier, trialEligible, purchase, restore } = useIAP();
 
   // Trial state from referral system — treated as Pro for feature gating.
@@ -199,7 +209,7 @@ function App() {
     return () => { try { sub?.remove?.(); } catch {} };
   }, []);
 
-  const themeData = useTheme(theme || 'red');
+  const themeData = useTheme(theme);
   const { checkAndPromptReview, promptReviewOnPositiveMoment, openStoreReview } = useStoreReview();
   const [showTeamRoster, setShowTeamRoster] = useState(false);
   const mesh = useMeshtastic();
@@ -213,9 +223,11 @@ function App() {
   // double-fire (and double-count sessions) when isPro flipped after IAP load.
   const isProRef = useRef(isPro);
   isProRef.current = isPro;
+  const tacticalRef = useRef(tacticalMode);
+  tacticalRef.current = tacticalMode;
   useEffect(() => {
     const timer = setTimeout(() => {
-      checkAndPromptReview({ isPro: isProRef.current });
+      if (!tacticalRef.current) checkAndPromptReview({ isPro: isProRef.current });
       trackSession();
     }, 2500);
     return () => clearTimeout(timer);
@@ -231,7 +243,8 @@ function App() {
   }, [location?.lat, location?.lon, location?.altitude, mesh]);
 
   const [tab, setTab]               = useState('grid');
-  const [waypoint, setWaypoint]     = useState(null);
+  const fieldNavigation = useFieldNavigation();
+  const { waypoint, setWaypoint } = fieldNavigation;
   const [showModal, setShowModal]   = useState(false);
   const [proGateVisible, setProGateVisible] = useState(false);
   const [proGateFeature, setProGateFeature] = useState('');
@@ -275,8 +288,8 @@ function App() {
     if (!wasProRef.current && isPro && proGateVisible) {
       setProGateVisible(false);
       notifySuccess();
-      trackEvent('purchase_success');
-      try { Alert.alert(t('iap.purchasedTitle'), t('iap.purchasedBody')); } catch {}
+      // useIAP owns purchase accounting and restore feedback. An entitlement
+      // transition can also be a restore or referral; it is not another sale.
     }
     wasProRef.current = isPro;
   }, [isPro, proGateVisible]);
@@ -294,7 +307,7 @@ function App() {
   // Mark Position — one-tap save of current GPS fix as active nav target
   const [markToast, setMarkToast] = useState(null);
   const handleMarkPosition = useCallback(() => {
-    if (!location?.lat || !location?.lon) {
+    if (!Number.isFinite(location?.lat) || !Number.isFinite(location?.lon)) {
       try { Alert.alert(t('alerts.noGpsFixTitle'), t('alerts.noGpsFixBody')); } catch {}
       return;
     }
@@ -311,7 +324,7 @@ function App() {
       // Positive moment: user successfully marked a position. Gated inside the hook
       // (MIN_POSITIVE_MOMENTS=3, POSITIVE_COOLDOWN_DAYS=90) so this fires at most once
       // every 90 days and only after the user has done it ≥3 times.
-      promptReviewOnPositiveMoment();
+      if (!tacticalRef.current) promptReviewOnPositiveMoment();
     };
     if (waypoint) {
       try {
@@ -397,7 +410,7 @@ function App() {
       onCopyGrid={copyGrid} copyToast={copyToast}
       coordFormat={coordFormat} altDisplay={altDisplay}
       compassHeading={compassHeading}
-      onRateApp={openStoreReview}
+      onRateApp={async () => { if (await allowSystemDisplay()) openStoreReview(); }}
       onEnterHud={onEnterHud}
       onShowSupport={() => setShowSupport(true)}
       gridScale={gridScale}
@@ -413,7 +426,7 @@ function App() {
       onCopyGrid={copyGrid} copyToast={copyToast}
       coordFormat={coordFormat} altDisplay={altDisplay}
       compassHeading={compassHeading}
-      onRateApp={openStoreReview}
+      onRateApp={async () => { if (await allowSystemDisplay()) openStoreReview(); }}
       onEnterHud={onEnterHud}
       onShowSupport={() => setShowSupport(true)}
       gridScale={gridScale}
@@ -426,8 +439,12 @@ function App() {
     safeTab = tab;
   }
 
+  // Restore the display preference before painting text, so Tactical users do
+  // not see a bright Standard frame while local storage is loading.
+  if (!settingsLoaded) return <View style={{ flex: 1, backgroundColor: '#000000' }} />;
+
   return (
-    <ThemeProvider colors={themeData.colors}>
+    <ThemeProvider colors={themeData.colors} tacticalMode={tacticalMode} onExitTactical={() => setTacticalMode(false)}>
       <AppContent
         safeTab={safeTab}
         setTab={setTab}
@@ -444,6 +461,9 @@ function App() {
         showProGate={showProGate}
         theme={theme}
         setTheme={setTheme}
+        tacticalMode={tacticalMode}
+        setTacticalMode={setTacticalMode}
+        settingsLoaded={settingsLoaded}
         setWaypoint={setWaypoint}
         showModal={showModal}
         setShowModal={setShowModal}
@@ -460,9 +480,11 @@ function App() {
         setSelectedTier={setSelectedTier}
         statusBarStyle={statusBarStyle}
         waypoint={waypoint}
+        fieldNavigation={fieldNavigation}
         coordFormat={coordFormat}
         setCoordFormat={setCoordFormat}
         compassHeading={compassHeading}
+        compassReference={compassReference}
         shakeToSpeak={shakeToSpeak}
         setShakeToSpeak={setShakeToSpeak}
         gridCrossing={gridCrossing}
@@ -496,12 +518,12 @@ function AppContent({
   safeTab, setTab, TABS, isPro, isLandscape,
   gridContent, location, declination, paceCount,
   setDeclination, setPaceCount, mgrsFormatted, showProGate,
-  theme, setTheme, setWaypoint,
+  theme, setTheme, tacticalMode, setTacticalMode, settingsLoaded, setWaypoint,
   showModal, setShowModal, proGateVisible, setProGateVisible,
   proGateFeature, product, products, isPurchasing, purchase, restore,
   selectedTier, setSelectedTier, trialEligible,
-  statusBarStyle, waypoint, coordFormat, setCoordFormat,
-  compassHeading,
+  statusBarStyle, waypoint, fieldNavigation, coordFormat, setCoordFormat,
+  compassHeading, compassReference,
   shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing,
   gridScale, setGridScale,
   hudMode, setHudMode, bearing, arrowAngle, distance,
@@ -510,6 +532,14 @@ function AppContent({
   gpsSource, gpsDeviceName,
 }) {
   const colors = useColors();
+  const { t } = useTranslation();
+  const display = useTacticalBrightness(tacticalMode);
+  const storeAction = useRef(false);
+  const fieldModalVisible = useFieldModalVisibility();
+  useEffect(() => registerDisplayGuard({ tacticalMode, exit: async () => {
+    setTacticalMode(false);
+    await display.restore().catch(() => {});
+  } }), [tacticalMode, setTacticalMode, display.restore]);
 
   // Smooth tab transition — quick fade on content swap
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -523,11 +553,29 @@ function AppContent({
   }, [safeTab, fadeAnim]);
 
   return (
+    <DisplaySafetyProvider value={{ tacticalMode, onExitTactical: () => setTacticalMode(false), brightnessReady: display.ready, active: display.active }}>
     <View style={staticStyles.root}>
-    <SafeAreaView style={[staticStyles.root, { backgroundColor: colors.bg }]}>
+    <View style={staticStyles.root} accessibilityElementsHidden={tacticalMode && fieldModalVisible} importantForAccessibility={tacticalMode && fieldModalVisible ? 'no-hide-descendants' : 'auto'}>
+    <SafeAreaView style={[staticStyles.root, { backgroundColor: colors.bg }]} accessibilityElementsHidden={tacticalMode && fieldModalVisible} importantForAccessibility={tacticalMode && fieldModalVisible ? 'no-hide-descendants' : 'auto'}>
       {/* backgroundColor is deprecated and ignored under edge-to-edge (Android 15+);
           the SafeAreaView background supplies the status-bar backdrop instead. */}
-      <StatusBar barStyle={statusBarStyle} translucent hidden={isLandscape || hudMode} />
+      <StatusBar barStyle={statusBarStyle} translucent hidden={isLandscape || hudMode || tacticalMode} />
+
+      <TacticalDisplaySwitch
+        theme={theme}
+        value={tacticalMode}
+        onChange={setTacticalMode}
+        disabled={!settingsLoaded}
+      />
+
+      {tacticalMode && <>
+        <TacticalBrightnessControls display={display} />
+        <Text style={{ ...TYPE.label, fontSize: 11, color: colors.text2, textAlign: 'center', paddingHorizontal: 12 }}>{display.error ? t('nightDisplay.brightnessError') : t('nightDisplay.recovery')}</Text>
+      </>}
+
+      <ActiveNavigationBar waypoint={waypoint} route={fieldNavigation.route} bearing={bearing} distance={distance}
+        saveError={fieldNavigation.saveError} onOpenNavigation={() => setTab('grid')}
+        onConfirmPoint={fieldNavigation.confirmPoint} onStopRoute={fieldNavigation.stopRoute} onReview={() => setTab('lists')} />
 
       {/* Screen content with fade transition */}
       <Animated.View style={[staticStyles.screenContent, { opacity: fadeAnim }]}>
@@ -536,6 +584,9 @@ function AppContent({
         {safeTab === 'map' && (
           <MapScreen
             location={location}
+            tacticalMode={tacticalMode}
+            activeRoute={fieldNavigation.route}
+            onExitTactical={() => setTacticalMode(false)}
             isPro={isPro}
             trialEligible={trialEligible}
             onShowProGate={showProGate}
@@ -556,6 +607,7 @@ function AppContent({
             setDeclination={setDeclination}
             setPaceCount={setPaceCount}
             compassHeading={compassHeading}
+            compassReference={compassReference}
             isPro={isPro}
             trialEligible={trialEligible}
             onShowProGate={showProGate}
@@ -575,6 +627,12 @@ function AppContent({
           <WaypointListsScreen
             location={location}
             onSelectWaypoint={(wp) => { setWaypoint(wp); setTab('grid'); }}
+            onStartRoute={(list, mode) => { fieldNavigation.startRoute(list, mode); setTab('grid'); }}
+            activeRoute={fieldNavigation.route}
+            navigationHistory={fieldNavigation.history}
+            onClearNavigationHistory={fieldNavigation.clearHistory}
+            onResumeNavigation={() => setTab('grid')}
+            gpsSource={gpsSource} gpsDeviceName={gpsDeviceName} mesh={mesh}
           />
         )}
 
@@ -610,7 +668,7 @@ function AppContent({
             meshPositions={mesh.meshPositions}
             autoShare={mesh.autoShare}
             scanError={mesh.scanError}
-            onScan={mesh.scan}
+            onScan={async () => { if (await allowSystemDisplay()) mesh.scan(); }}
             onConnect={mesh.connect}
             onDisconnect={mesh.disconnect}
             onToggleAutoShare={mesh.toggleAutoShare}
@@ -642,14 +700,14 @@ function AppContent({
             accessibilityState={{ selected: safeTab === t?.id }}
             accessibilityLabel={`${t?.label || ''} tab${locked ? '. Pro feature, locked' : ''}`}
           >
-            {safeTab === t?.id && <View style={[staticStyles.tabIndicatorTop, { backgroundColor: colors.text }]} />}
+            {safeTab === t?.id && <View style={[staticStyles.tabIndicatorTop, { backgroundColor: colors.accent }]} />}
             <Text
               maxFontSizeMultiplier={1.2}
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.7}
-              style={[staticStyles.tabLabel, TABS.length > 4 && staticStyles.tabLabelCompact, { color: colors.border }, safeTab === t?.id && { color: colors.text }]}>
-              {t?.label || ''}{locked ? <Text style={[staticStyles.tabLockMark, { color: colors.border }]}>{'ᴾᴿᴼ'}</Text> : null}
+              style={[staticStyles.tabLabel, TABS.length > 4 && staticStyles.tabLabelCompact, { color: colors.text3 }, safeTab === t?.id && { color: colors.text }]}>
+              {t?.label || ''}{locked ? <Text style={[staticStyles.tabLockMark, { color: colors.text3 }]}>{'ᴾᴿᴼ'}</Text> : null}
             </Text>
           </TouchableOpacity>
           );
@@ -673,8 +731,8 @@ function AppContent({
         products={products}
         trialEligible={trialEligible}
         isPurchasing={isPurchasing}
-        onPurchase={(tier) => { trackEvent(`purchase_tap:${tier || 'unknown'}`); purchase(tier); }}
-        onRestore={restore}
+        onPurchase={async (tier) => { if (storeAction.current) return; storeAction.current = true; try { if (!(await allowSystemDisplay())) return; trackEvent(`purchase_tap:${tier || 'unknown'}`); await purchase(tier); } finally { storeAction.current = false; } }}
+        onRestore={async () => { if (storeAction.current) return; storeAction.current = true; try { if (await allowSystemDisplay()) await restore(); } finally { storeAction.current = false; } }}
         selectedTier={selectedTier}
         onSelectTier={setSelectedTier}
       />
@@ -698,15 +756,17 @@ function AppContent({
       />
 
       <WhatsNewModal
-        currentVersion="4.0.3"
+        currentVersion="4.0.5"
         showTrialCta={!isPro}
         onStartTrial={() => showProGate('Red Grid Pro')}
       />
 
+      <FieldAlertHost />
     </SafeAreaView>
+    </View>
 
     {/* HUD Mode — full-screen simplified display (Pro), rendered above SafeAreaView for true full-screen */}
-    {hudMode && (
+    {hudMode && !fieldModalVisible && (
       <HUDOverlay
         mgrsFormatted={mgrsFormatted}
         bearing={bearing}
@@ -717,7 +777,11 @@ function AppContent({
         onExit={() => { stopSpeaking(); tapMedium(); setHudMode(false); }}
       />
     )}
+    {tacticalMode && (!display.active || !display.ready) && <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, { backgroundColor: '#000000' }]} />}
+    <TacticalBlackout visible={tacticalMode && display.blackout} onRestore={() => display.setBlackout(false)} />
+    <FieldModalHost />
     </View>
+    </DisplaySafetyProvider>
   );
 }
 
@@ -726,10 +790,17 @@ export default function AppWithErrorBoundary() {
   return (
     <SafeAreaProvider>
       <AppErrorBoundary>
-        <App />
+        <FontReadyApp />
       </AppErrorBoundary>
     </SafeAreaProvider>
   );
+}
+
+function FontReadyApp() {
+  const [fontsLoaded, fontError] = useFonts(FONT_ASSETS);
+  // Local assets load before the first screen. A font failure must never block navigation.
+  if (!fontsLoaded && !fontError) return <View style={{ flex: 1, backgroundColor: '#000000' }} />;
+  return <App />;
 }
 
 function UpsellScreen({ onUpgrade }) {
@@ -751,7 +822,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
   const colors = useColors();
   const { t } = useTranslation();
   return (
-    <View style={staticStyles.portraitRoot}>
+    <ScrollView style={staticStyles.root} contentContainerStyle={staticStyles.portraitRoot}>
       <View style={staticStyles.header}>
         <Text style={[staticStyles.appTitle, { color: colors.text }]} suppressHighlighting={true} maxFontSizeMultiplier={1.2}>RED GRID MGRS</Text>
         <View style={staticStyles.headerRight}>
@@ -772,9 +843,9 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
       <Div />
       <View style={staticStyles.markRow}>
         <TouchableOpacity
-          style={[staticStyles.markBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]}
+          style={[staticStyles.markBtn, { borderColor: colors.accent, backgroundColor: colors.bg }]}
           onPress={onMarkPosition}
-          disabled={!location?.lat}
+          disabled={!Number.isFinite(location?.lat) || !Number.isFinite(location?.lon)}
           accessibilityRole="button"
           accessibilityLabel="Mark current position as waypoint"
         >
@@ -785,7 +856,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
       {!waypoint ? (
         <View style={staticStyles.noWpBlock}>
           <Crosshair size={50} />
-          <Text style={[staticStyles.noWpText, { color: colors.border }]}>{t('grid.noWaypoint')}</Text>
+          <Text style={[staticStyles.noWpText, { color: colors.text3 }]}>{t('grid.noWaypoint')}</Text>
           <TouchableOpacity style={[staticStyles.addBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel={t('grid.addWaypoint')}>
             <Text style={[staticStyles.addBtnText, { color: colors.text }]}>{t('grid.addWaypoint')}</Text>
           </TouchableOpacity>
@@ -805,7 +876,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
           </View>
           <View style={staticStyles.wpBtns}>
             <TouchableOpacity style={[staticStyles.editBtn, { borderColor: colors.border }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel={t('grid.edit')}><Text style={[staticStyles.editBtnText, { color: colors.text2 }]}>{t('grid.edit')}</Text></TouchableOpacity>
-            <TouchableOpacity style={[staticStyles.clearBtn, { borderColor: colors.border, backgroundColor: colors.border2 }]} onPress={onClearWaypoint} accessibilityRole="button" accessibilityLabel={t('grid.clear')}><Text style={[staticStyles.clearBtnText, { color: colors.text2 }]}>{t('grid.clear')}</Text></TouchableOpacity>
+            <TouchableOpacity style={[staticStyles.clearBtn, { borderColor: colors.border, backgroundColor: colors.border2 }]} onPress={onClearWaypoint} accessibilityRole="button" accessibilityLabel={t('grid.clear')}><Text style={[staticStyles.clearBtnText, { color: colors.text }]}>{t('grid.clear')}</Text></TouchableOpacity>
           </View>
         </View>
       )}
@@ -817,7 +888,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
             accessibilityRole="button"
             accessibilityLabel={isPro ? t('grid.speakGrid') : 'Voice readout. Pro feature, locked.'}
           >
-            <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.border }]}>{t('grid.speakGrid')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
+            <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.text3 }]}>{t('grid.speakGrid')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
           </TouchableOpacity>
         )}
         <View style={staticStyles.footerRow}>
@@ -831,9 +902,9 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
             <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>★ {t('grid.rateApp')}</Text>
           </TouchableOpacity>
         </View>
-        <Text style={[staticStyles.footerText, { color: colors.text4 }]} maxFontSizeMultiplier={1.3}>{t('grid.footer')}</Text>
+        <Text style={[staticStyles.footerText, { color: colors.text3 }]} maxFontSizeMultiplier={1.3}>{t('grid.footer')}</Text>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -843,7 +914,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
   const { t } = useTranslation();
   return (
     <View style={staticStyles.landscapeRoot}>
-      <View style={staticStyles.lsLeft}>
+      <ScrollView style={staticStyles.root} contentContainerStyle={staticStyles.lsLeft}>
         <View style={staticStyles.lsHeader}>
           <Text style={[staticStyles.lsTitle, { color: colors.text }]} suppressHighlighting={true}>RED GRID MGRS</Text>
           <View style={staticStyles.headerRight}>
@@ -866,13 +937,13 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
             {distance !== null && <Text style={[staticStyles.lsWpDist, { color: colors.text }]}>{formatDistance(distance)}</Text>}
           </View>
         ) : (
-          <Text style={[staticStyles.noWpText, { color: colors.border }]}>{t('grid.noWaypoint')}</Text>
+          <Text style={[staticStyles.noWpText, { color: colors.text3 }]}>{t('grid.noWaypoint')}</Text>
         )}
         <View style={staticStyles.lsBtnWrap}>
           <TouchableOpacity
-            style={[staticStyles.lsMarkBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]}
+            style={[staticStyles.lsMarkBtn, { borderColor: colors.accent, backgroundColor: colors.bg }]}
             onPress={onMarkPosition}
-            disabled={!location?.lat}
+            disabled={!Number.isFinite(location?.lat) || !Number.isFinite(location?.lon)}
             accessibilityRole="button"
             accessibilityLabel="Mark current position as waypoint"
           >
@@ -885,7 +956,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
             </TouchableOpacity>
             {waypoint && (
               <TouchableOpacity style={[staticStyles.lsBtn, { borderColor: colors.border, backgroundColor: 'transparent' }]} onPress={onClearWaypoint} accessibilityRole="button" accessibilityLabel={t('grid.clear')}>
-                <Text style={[staticStyles.lsBtnText, { color: colors.border }]}>{t('grid.clear')}</Text>
+                <Text style={[staticStyles.lsBtnText, { color: colors.text3 }]}>{t('grid.clear')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -896,7 +967,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
               accessibilityRole="button"
               accessibilityLabel={isPro ? t('grid.speakGrid') : 'Voice readout. Pro feature, locked.'}
             >
-              <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.border }]}>{t('grid.speakGrid')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
+              <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.text3 }]}>{t('grid.speakGrid')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
             </TouchableOpacity>
           )}
           <View style={staticStyles.footerRow}>
@@ -910,9 +981,9 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
               <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>★ {t('grid.rate')}</Text>
             </TouchableOpacity>
           </View>
-          <Text style={[staticStyles.footerText, { color: colors.text4 }]} maxFontSizeMultiplier={1.3}>{t('grid.footerShort')}</Text>
+          <Text style={[staticStyles.footerText, { color: colors.text3 }]} maxFontSizeMultiplier={1.3}>{t('grid.footerShort')}</Text>
         </View>
-      </View>
+      </ScrollView>
       <View style={[staticStyles.lsVDiv, { backgroundColor: colors.border2 }]} />
       <View style={staticStyles.lsRight}>
         {waypoint && arrowAngle !== null ? (
@@ -942,7 +1013,7 @@ function SignalBadge({ isLoading, location }) {
   return (
     <View style={staticStyles.signal} accessibilityLiveRegion="polite" accessibilityLabel={`GPS status: ${label}`}>
       <View style={[staticStyles.signalDot, { backgroundColor: color }]} />
-      <Text style={[staticStyles.signalText, { color: colors.border }]}>{label}</Text>
+      <Text style={[staticStyles.signalText, { color: colors.text3 }]}>{label}</Text>
     </View>
   );
 }
@@ -1009,7 +1080,7 @@ function HUDOverlay({ mgrsFormatted, bearing, arrowAngle, distance, compassHeadi
           </View>
         )}
       </View>
-      <Text style={[staticStyles.hudExit, { color: colors.text4 }]}>{t('grid.tapToExit')}</Text>
+      <Text style={[staticStyles.hudExit, { color: colors.text3 }]}>{t('grid.tapToExit')}</Text>
     </TouchableOpacity>
   );
 }
@@ -1029,90 +1100,90 @@ const staticStyles = StyleSheet.create({
   // Tab bar
   tabBar: { flexDirection:'row', borderTopWidth:1, alignItems:'center' },
   tabBarLandscape: { paddingBottom: 0 },
-  tabItem: { flex:1, alignItems:'center', paddingVertical:12, paddingHorizontal:2, position:'relative' },
-  tabLabel: { fontSize:10, letterSpacing:3, fontWeight:'700' },
-  tabLabelCompact: { letterSpacing:0.5, fontSize:9 },
-  tabLockMark: { fontSize:7, letterSpacing:0.5 },
+  tabItem: { flex:1, alignItems:'center', minHeight:44, justifyContent:'center', paddingVertical:12, paddingHorizontal:2, position:'relative' },
+  tabLabel: { ...TYPE.label, fontSize:10, letterSpacing:0.8, },
+  tabLabelCompact: { ...TYPE.label, letterSpacing:0.8, fontSize:11 },
+  tabLockMark: { ...TYPE.label, fontSize:7, letterSpacing:0.8 },
   tabIndicatorTop: { position:'absolute', top:0, left:'10%', right:'10%', height:2 },
   screenContent: { flex:1 },
   // Portrait
-  portraitRoot: { flex:1, paddingHorizontal:20, paddingTop:12, paddingBottom:20 },
-  header: { flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingBottom:10 },
+  portraitRoot: { flexGrow:1, paddingHorizontal:20, paddingTop:12, paddingBottom:20 },
+  header: { flexWrap:'wrap', rowGap:8, flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingBottom:10 },
   appTitle: { fontFamily:'monospace', fontSize:16, fontWeight:'700', letterSpacing:4 },
   // Landscape
   landscapeRoot: { flex:1, flexDirection:'row' },
-  lsLeft: { flex:1, paddingHorizontal:16, paddingVertical:8 },
+  lsLeft: { flexGrow:1, paddingHorizontal:16, paddingVertical:8 },
   lsVDiv: { width:1, marginVertical:8 },
   lsRight: { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:8 },
   lsHeader: { flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingBottom:6 },
   lsTitle: { fontFamily:'monospace', fontSize:12, fontWeight:'700', letterSpacing:3 },
   lsWpInfo: { paddingVertical:8, gap:3 },
-  lsWpLabel: { fontFamily:'monospace', fontSize:10, letterSpacing:4, fontWeight:'700' },
-  lsWpGrid: { fontFamily:'monospace', fontSize:12, letterSpacing:2 },
-  lsWpDist: { fontFamily:'monospace', fontSize:22, letterSpacing:3, fontWeight:'700', marginTop:2 },
+  lsWpLabel: { ...TYPE.heading, fontSize:10, letterSpacing:0.8, },
+  lsWpGrid: { ...TYPE.data, fontSize:12, letterSpacing:1.2 },
+  lsWpDist: { ...TYPE.data, fontSize:22, letterSpacing:1.2, marginTop:2 },
   lsBtnWrap: { marginTop:'auto', gap:5 },
   lsBtns: { flexDirection:'row', gap:8 },
   lsBtn: { flex:1, borderWidth:1, paddingVertical:10, alignItems:'center' },
-  lsBtnText: { fontSize:10, letterSpacing:3, fontWeight:'700' },
+  lsBtnText: { ...TYPE.label, fontSize:10, letterSpacing:0.8, },
   lsArrow: { alignItems:'center', gap:8 },
-  lsBearing: { fontFamily:'monospace', fontSize:30, letterSpacing:4, fontWeight:'700' },
+  lsBearing: { ...TYPE.data, fontSize:30, letterSpacing:1.2, },
   lsNoWp: { alignItems:'center', gap:20 },
   // Header right cluster (heading + signal badge)
-  headerRight: { flexDirection:'row', alignItems:'center', gap:10 },
-  headingText: { fontFamily:'monospace', fontSize:10, letterSpacing:2, fontWeight:'600' },
+  headerRight: { flexShrink:1, flexDirection:'row', alignItems:'center', gap:10 },
+  headingText: { ...TYPE.data, fontSize:10, letterSpacing:1.2, },
   // Atoms
   signal: { flexDirection:'row', alignItems:'center', gap:6 },
   signalDot: { width:7, height:7, borderRadius:4 },
-  signalText: { fontSize:9, letterSpacing:3 },
+  signalText: { ...TYPE.label, fontSize:12, letterSpacing:0.8 },
   divider: { height:1, marginVertical:6 },
   errBlock: { paddingVertical:20, alignItems:'center', gap:12 },
-  errText: { fontSize:11, textAlign:'center', letterSpacing:1 },
+  errText: { ...TYPE.body, fontSize:11, textAlign:'center', letterSpacing:0.8 },
   retryBtn: { borderWidth:1, paddingHorizontal:18, paddingVertical:8, minHeight:44 },
-  retryText: { fontSize:11, letterSpacing:3 },
+  retryText: { ...TYPE.label, fontSize:11, letterSpacing:0.8 },
   noWpBlock: { paddingVertical:20, alignItems:'center', gap:16 },
-  noWpText: { fontSize:11, letterSpacing:4 },
+  noWpText: { ...TYPE.body, fontSize:12, letterSpacing:0.8 },
   addBtn: { borderWidth:1, paddingHorizontal:26, paddingVertical:13, minHeight:44 },
-  addBtnText: { fontSize:12, letterSpacing:3, fontWeight:'700' },
+  addBtnText: { ...TYPE.heading, fontSize:15, letterSpacing:0.8, },
   markRow: { alignItems:'center', paddingVertical:4, gap:6 },
-  markBtn: { borderWidth:2, paddingHorizontal:34, paddingVertical:14, minHeight:48, minWidth:220, alignItems:'center' },
-  markBtnText: { fontSize:13, letterSpacing:3, fontWeight:'800' },
-  markToast: { fontSize:10, letterSpacing:2, fontWeight:'700', marginTop:2 },
-  lsMarkBtn: { borderWidth:2, paddingVertical:11, alignItems:'center', marginBottom:6 },
-  lsMarkBtnText: { fontSize:12, letterSpacing:3, fontWeight:'800' },
+  markBtn: { borderWidth:1, paddingHorizontal:34, paddingVertical:14, minHeight:48, minWidth:220, alignItems:'center' },
+  markBtnText: { ...TYPE.heading, fontSize:15, letterSpacing:0.8, },
+  markToast: { ...TYPE.label, fontSize:10, letterSpacing:0.8, marginTop:2 },
+  lsMarkBtn: { borderWidth:1, paddingVertical:11, alignItems:'center', marginBottom:6 },
+  lsMarkBtnText: { ...TYPE.heading, fontSize:15, letterSpacing:0.8, },
   wpBlock: { alignItems:'center', paddingVertical:10, gap:12 },
   arrowWrap: { alignItems:'center', gap:6 },
-  bearingText: { fontFamily:'monospace', fontSize:26, letterSpacing:4, fontWeight:'700' },
+  bearingText: { ...TYPE.data, fontSize:26, letterSpacing:1.2, },
   wpInfo: { alignItems:'center', gap:4 },
-  wpLabel: { fontFamily:'monospace', fontSize:12, letterSpacing:4, fontWeight:'700' },
-  wpGrid: { fontFamily:'monospace', fontSize:14, letterSpacing:3 },
-  wpDist: { fontFamily:'monospace', fontSize:22, letterSpacing:4, fontWeight:'700', marginTop:2 },
+  wpLabel: { ...TYPE.heading, fontSize:12, letterSpacing:0.8, },
+  wpGrid: { ...TYPE.data, fontSize:14, letterSpacing:1.2 },
+  wpDist: { ...TYPE.data, fontSize:22, letterSpacing:1.2, marginTop:2 },
   wpBtns: { flexDirection:'row', gap:10 },
   editBtn: { borderWidth:1, paddingHorizontal:22, paddingVertical:9, minHeight:44 },
-  editBtnText: { fontSize:11, letterSpacing:3 },
+  editBtnText: { ...TYPE.label, fontSize:11, letterSpacing:0.8 },
   clearBtn: { borderWidth:1, paddingHorizontal:22, paddingVertical:9, minHeight:44 },
-  clearBtnText: { fontSize:11, letterSpacing:3 },
+  clearBtnText: { ...TYPE.label, fontSize:11, letterSpacing:0.8 },
   footer: { marginTop:'auto', paddingTop:16, alignItems:'center' },
-  footerText: { fontSize:10, letterSpacing:2 },
-  copyToast: { fontSize:9, letterSpacing:2, textAlign:'center', marginTop:4, opacity:0.8 },
+  footerText: { ...TYPE.body, fontSize:12, letterSpacing:0.8 },
+  copyToast: { ...TYPE.body, fontSize:9, letterSpacing:0.8, textAlign:'center', marginTop:4, opacity:0.8 },
   voiceBtn: { borderWidth:1, paddingHorizontal:18, paddingVertical:10, minHeight:44, alignItems:'center', marginBottom:8 },
   voiceBtnLocked: { opacity: 0.6 },
-  voiceBtnText: { fontSize:10, letterSpacing:3, fontWeight:'700' },
-  rateLink: { fontSize:10, letterSpacing:2, paddingVertical:6 },
-  footerRow: { flexDirection:'row', justifyContent:'center', gap:20, marginBottom:2 },
+  voiceBtnText: { ...TYPE.label, fontSize:12, letterSpacing:0.8, },
+  rateLink: { ...TYPE.label, fontSize:12, letterSpacing:0.8, paddingVertical:6 },
+  footerRow: { flexWrap:'wrap', flexDirection:'row', justifyContent:'center', gap:20, marginBottom:2 },
   // Upsell
   upsellRoot: { flex:1, alignItems:'center', justifyContent:'center', gap:16, padding:40 },
-  upsellTitle: { fontFamily:'monospace', fontSize:24, fontWeight:'700', letterSpacing:6 },
-  upsellSub: { fontSize:11, letterSpacing:2 },
+  upsellTitle: { ...TYPE.heading, fontSize:24, letterSpacing:0.8 },
+  upsellSub: { ...TYPE.body, fontSize:12, letterSpacing:0.8 },
   upsellBtn: { borderWidth:1, paddingHorizontal:32, paddingVertical:14 },
-  upsellBtnText: { fontSize:12, fontWeight:'700', letterSpacing:4 },
+  upsellBtnText: { ...TYPE.label, fontSize:12, letterSpacing:0.8 },
   // HUD overlay
   hudRoot: { ...StyleSheet.absoluteFillObject, backgroundColor:'#000000', zIndex:100, justifyContent:'center', alignItems:'center', padding:24 },
   hudContent: { flex:1, justifyContent:'center', alignItems:'center', width:'100%' },
-  hudHeading: { fontFamily:'monospace', fontSize:14, letterSpacing:4, fontWeight:'600', marginBottom:12 },
-  hudMgrs: { fontFamily:'monospace', fontSize:48, fontWeight:'700', letterSpacing:6, textAlign:'center', marginBottom:20 },
+  hudHeading: { ...TYPE.data, fontSize:14, letterSpacing:1.2, marginBottom:12 },
+  hudMgrs: { ...TYPE.data, fontSize:48, letterSpacing:1.2, textAlign:'center', marginBottom:20 },
   hudWpSection: { alignItems:'center', gap:4, marginTop:20 },
-  hudBearing: { fontFamily:'monospace', fontSize:24, fontWeight:'700', letterSpacing:4, marginTop:16 },
-  hudDist: { fontFamily:'monospace', fontSize:18, letterSpacing:3, fontWeight:'700', marginTop:6 },
-  hudWpLabel: { fontFamily:'monospace', fontSize:11, letterSpacing:4, marginTop:8, opacity:0.7 },
-  hudExit: { fontSize:10, letterSpacing:4, paddingBottom:44, opacity:0.4 },
+  hudBearing: { ...TYPE.data, fontSize:24, letterSpacing:1.2, marginTop:16 },
+  hudDist: { ...TYPE.data, fontSize:18, letterSpacing:1.2, marginTop:6 },
+  hudWpLabel: { ...TYPE.label, fontSize:11, letterSpacing:0.8, marginTop:8, opacity:0.7 },
+  hudExit: { ...TYPE.label, fontSize:10, letterSpacing:0.8, paddingBottom:44, opacity:0.4 },
 });

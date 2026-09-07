@@ -4,9 +4,11 @@
  * Tracks last seen version in AsyncStorage under `rg_whatsnew_seen_version`.
  */
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Modal } from './FieldModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '../utils/ThemeContext';
+import { TYPE } from '../utils/typography';
 import { useTranslation } from '../hooks/useTranslation';
 import { tapLight } from '../utils/haptics';
 
@@ -275,15 +277,19 @@ export function WhatsNewModal({ currentVersion, showTrialCta, onStartTrial }) {
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.85)', padding: 22 },
   box: { width: '100%', maxWidth: 460, maxHeight: '88%', borderWidth: 1, padding: 22, alignItems: 'stretch' },
-  badge: { alignSelf: 'center', fontFamily: 'monospace', fontSize: 10, letterSpacing: 2, fontWeight: '800', paddingHorizontal: 10, paddingVertical: 3, marginBottom: 10 },
-  title: { fontFamily: 'monospace', fontSize: 18, letterSpacing: 4, fontWeight: '800', textAlign: 'center', marginBottom: 18 },
+  badge: {
+    ...TYPE.data, alignSelf: 'center', fontSize: 11, letterSpacing: 0.5, paddingHorizontal: 10, paddingVertical: 3, marginBottom: 10 },
+  title: { ...TYPE.heading, fontSize: 20, letterSpacing: 1.2, textAlign: 'center', marginBottom: 18 },
   list: { flexGrow: 0, marginBottom: 16 },
   row: { flexDirection: 'row', gap: 14, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth },
   icon: { fontFamily: 'monospace', fontSize: 22, width: 26, textAlign: 'center', marginTop: 2 },
-  rowTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 2, fontWeight: '800', marginBottom: 4 },
-  rowBody: { fontFamily: 'monospace', fontSize: 11, lineHeight: 15 },
+  rowTitle: {
+    ...TYPE.heading, fontSize: 14, letterSpacing: 0.8, marginBottom: 4 },
+  rowBody: { ...TYPE.body, letterSpacing: 0.3, fontSize: 14, lineHeight: 20 },
   ctaBtn: { paddingVertical: 14, alignItems: 'center', marginBottom: 8, minHeight: 44 },
-  ctaText: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '800' },
+  ctaText: {
+    ...TYPE.heading, fontSize: 15, letterSpacing: 1 },
   dismiss: { borderWidth: 2, paddingVertical: 14, alignItems: 'center' },
-  dismissText: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '800' },
+  dismissText: {
+    ...TYPE.heading, fontSize: 15, letterSpacing: 1 },
 });

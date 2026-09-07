@@ -19,17 +19,10 @@
  * `downloadTilesForRegion` which is already user-initiated (tap "Download").
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  TextInput,
-  Alert,
-  Platform,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { Modal } from '../components/FieldModal';
+import { TextInput } from '../components/FieldInput';
+import { Alert } from '../utils/fieldAlert';
 
 import { useColors } from '../utils/ThemeContext';
 import { useTranslation } from '../hooks/useTranslation';
@@ -41,6 +34,8 @@ import {
   downloadTilesForRegion,
 } from '../utils/tileManager';
 import { tapLight, tapMedium, notifySuccess } from '../utils/haptics';
+import { TYPE } from '../utils/typography';
+import { navigationReadiness, locationPermissionReadiness } from '../utils/fieldReadiness';
 
 let LocationModule = null;
 let ImagePickerModule = null;
@@ -77,6 +72,8 @@ export function PreflightScreen({
   mapStyle,
   isPro,
   onShowProGate,
+  preparedRoute,
+  onStartNavigation,
 }) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -100,6 +97,7 @@ export function PreflightScreen({
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [permissionHealth, setPermissionHealth] = useState({ status: 'idle', value: '' });
   const [deviceHealth, setDeviceHealth] = useState({ status: 'idle', value: '' });
+  const [readinessMode, setReadinessMode] = useState('solo');
 
   // Refresh tile coverage whenever the modal opens or the viewport shifts.
   useEffect(() => {
@@ -188,19 +186,23 @@ export function PreflightScreen({
     return { status, value: t('preflight.tiles.missingZooms', { zooms: missing.join(', ') }) };
   }, [tileCoverageByZoom, t]);
 
-  const overallStatus = useMemo(() => {
-    const statuses = [
-      gpsStatus.status,
-      meshStatus.status,
-      tilesStatus.status,
-      missingZoomStatus.status,
-      permissionHealth.status,
-      deviceHealth.status,
-    ];
-    if (statuses.includes('fail')) return 'NOT_READY';
-    if (statuses.includes('warn')) return 'CAUTION';
-    return 'READY';
-  }, [gpsStatus.status, tilesStatus.status, meshStatus.status, missingZoomStatus.status, permissionHealth.status, deviceHealth.status]);
+  const overallStatus = navigationReadiness({
+    gps: gpsStatus.status,
+    permissions: permissionHealth.status,
+    device: deviceHealth.status,
+    mesh: meshStatus.status,
+    mode: readinessMode,
+    mapStatuses: mapRegion ? [tilesStatus.status, missingZoomStatus.status] : [],
+  });
+
+  const beginNavigation = () => {
+    const start = () => onStartNavigation?.(readinessMode);
+    if (overallStatus === 'READY') { start(); return; }
+    Alert.alert(t('fieldNav.reviewChecksTitle'), t('fieldNav.reviewChecksBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('fieldNav.continue'), onPress: start },
+    ]);
+  };
 
   // ── Save AO flow ─────────────────────────────────────────────────────────
   const beginSaveAO = useCallback(() => {
@@ -289,17 +291,17 @@ export function PreflightScreen({
           <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel={t('common.close')} style={styles.closeBtn}>
             <Text style={[styles.closeBtnText, { color: colors.text2 }]}>✕</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.accent }]}>{t('preflight.title')}</Text>
+          <Text style={[styles.headerTitle, { color: colors.accentText }]}>{t('preflight.title')}</Text>
           <View style={styles.closeBtn} />
         </View>
 
         {/* Overall summary */}
         <View style={[styles.summary, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-          <Text style={[styles.summaryLabel, { color: colors.text3 }]}>{t('preflight.summary.label')}</Text>
+          <Text style={[styles.summaryLabel, { color: colors.text3 }]}>{t('fieldNav.readinessLabel')}</Text>
           <Text
             style={[
               styles.summaryStatus,
-              { color: overallStatus === 'READY' ? colors.accent : overallStatus === 'CAUTION' ? (colors.warn || '#d99a3a') : (colors.danger || '#cc4444') },
+              { color: overallStatus === 'READY' ? colors.accentText : overallStatus === 'CAUTION' ? (colors.warn || '#d99a3a') : (colors.danger || '#cc4444') },
             ]}
           >
             {t(`preflight.summary.${overallStatus}`)}
@@ -310,6 +312,23 @@ export function PreflightScreen({
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
+          {preparedRoute && (
+            <View style={[styles.preparedRoute, { borderBottomColor: colors.border2 }]}>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>{preparedRoute.name}</Text>
+              <Text style={[styles.modeHint, { color: colors.text3 }]}>{t('fieldNav.preparedPoints', { count: preparedRoute.waypoints.length })}</Text>
+              <Text style={[styles.modeHint, { color: colors.text2 }]}>{preparedRoute.waypoints.map((point, index) => `${index + 1}. ${point.label || point.name || `WP ${index + 1}`}`).join(' → ')}</Text>
+            </View>
+          )}
+          <View style={styles.modeRow} accessibilityRole="radiogroup">
+            {['solo', 'team'].map(mode => (
+              <TouchableOpacity key={mode} style={[styles.modeButton, { borderColor: readinessMode === mode ? colors.accentText : colors.border2, backgroundColor: colors.card }]}
+                onPress={() => setReadinessMode(mode)} accessibilityRole="radio" accessibilityState={{ selected: readinessMode === mode }}>
+                <Text style={[styles.headerTitle, { color: readinessMode === mode ? colors.accentText : colors.text3 }]}>{t(`fieldNav.${mode}`)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Text style={[styles.modeHint, { color: colors.text3 }]}>{t(readinessMode === 'solo' ? 'fieldNav.soloHint' : 'fieldNav.teamHint')}</Text>
+          {!mapRegion && <Text style={[styles.modeHint, { color: colors.text3 }]}>{t('fieldNav.mapsNotChecked')}</Text>}
           {/* GPS row */}
           <SectionHeader colors={colors} label={t('preflight.section.gps')} />
           <PreflightStatusRow
@@ -322,8 +341,8 @@ export function PreflightScreen({
           <SectionHeader colors={colors} label={t('preflight.section.mesh')} />
           <PreflightStatusRow
             label={t('preflight.mesh.label')}
-            value={meshStatus.value}
-            status={meshStatus.status}
+            value={readinessMode === 'solo' && mesh?.connectionState !== 'connected' ? t('fieldNav.radioOptional') : meshStatus.value}
+            status={readinessMode === 'solo' ? 'idle' : meshStatus.status}
           />
 
           {/* Tile coverage */}
@@ -370,7 +389,14 @@ export function PreflightScreen({
             status={deviceHealth.status}
           />
 
-          {/* Saved AOs */}
+          {preparedRoute && onStartNavigation && (
+            <TouchableOpacity style={[styles.startNavigation, { backgroundColor: colors.card, borderColor: colors.accentText }]} onPress={beginNavigation} accessibilityRole="button">
+              <Text style={[styles.headerTitle, { color: colors.accentText }]}>{t('fieldNav.start')}</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Saved AO controls belong to a map viewport, not a list-only check. */}
+          {mapRegion && <>
           <View style={styles.aoHeader}>
             <SectionHeader colors={colors} label={t('preflight.section.aos')} />
             <Text style={[styles.aoCount, { color: colors.text3 }]}>
@@ -408,8 +434,9 @@ export function PreflightScreen({
             accessibilityRole="button"
             accessibilityLabel={t('preflight.aos.saveCurrent')}
           >
-            <Text style={[styles.saveAOText, { color: colors.accent }]}>{t('preflight.aos.saveCurrent')}</Text>
+            <Text style={[styles.saveAOText, { color: colors.accentText }]}>{t('preflight.aos.saveCurrent')}</Text>
           </TouchableOpacity>
+          </>}
 
           {/* Privacy footnote — reinforces the policy + future paywall copy */}
           <Text style={[styles.footnote, { color: colors.text3 }]}>{t('preflight.footnote')}</Text>
@@ -419,7 +446,7 @@ export function PreflightScreen({
         {namePromptVisible && (
           <View style={[styles.promptScrim]}>
             <View style={[styles.promptCard, { backgroundColor: colors.card, borderColor: colors.accent }]}>
-              <Text style={[styles.promptTitle, { color: colors.accent }]}>{t('preflight.aos.namePromptTitle')}</Text>
+              <Text style={[styles.promptTitle, { color: colors.accentText }]}>{t('preflight.aos.namePromptTitle')}</Text>
               <Text style={[styles.promptHint, { color: colors.text3 }]}>{t('preflight.aos.namePromptHint')}</Text>
               <TextInput
                 style={[styles.promptInput, { color: colors.text, borderColor: colors.border2 }]}
@@ -444,7 +471,7 @@ export function PreflightScreen({
                   onPress={confirmSaveAO}
                   accessibilityRole="button"
                 >
-                  <Text style={[styles.promptBtnText, { color: colors.accent }]}>{t('common.save')}</Text>
+                  <Text style={[styles.promptBtnText, { color: colors.accentText }]}>{t('common.save')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -484,7 +511,7 @@ function AOPackageRow({ pkg, colors, t, onRefresh, onDelete, busy }) {
           accessibilityRole="button"
           accessibilityLabel={`${t('preflight.aos.refresh')} ${pkg.name}`}
         >
-          <Text style={[styles.aoBtnText, { color: colors.accent }]}>{t('preflight.aos.refresh')}</Text>
+          <Text style={[styles.aoBtnText, { color: colors.accentText }]}>{t('preflight.aos.refresh')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.aoBtn, { borderColor: colors.border }]}
@@ -545,12 +572,8 @@ async function buildPermissionHealth(t) {
   const camera = await readPermission(ImagePickerModule, 'getCameraPermissionsAsync');
   const photos = await readPermission(MediaLibraryModule, 'getPermissionsAsync');
 
-  let status = 'ok';
-  if (location === 'denied' || location === 'unavailable') status = 'fail';
-  else if (location !== 'granted') status = 'warn';
-
-  if (camera !== 'granted') status = worstStatus(status, 'warn');
-  if (photos !== 'granted') status = worstStatus(status, 'warn');
+  // Camera and photo access support optional tools, not navigation readiness.
+  const status = locationPermissionReadiness(location);
 
   return {
     status,
@@ -599,12 +622,11 @@ async function buildDeviceHealth(t) {
 
   const network = await readNetworkState();
   if (!network) {
-    status = worstStatus(status, 'warn');
     parts.push(t('preflight.device.networkUnavailable'));
   } else {
     const networkPart = await formatNetworkPart(t, network);
     parts.push(networkPart.value);
-    status = worstStatus(status, networkPart.status);
+    // A data link is informational: solo land navigation works without one.
   }
 
   return { status, value: parts.join(' · ') };
@@ -735,6 +757,11 @@ function timeAgo(iso) {
 }
 
 const styles = StyleSheet.create({
+  preparedRoute: { padding: 14, gap: 6, borderBottomWidth: 1 },
+  modeRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 14, paddingTop: 16, paddingBottom: 8 },
+  modeButton: { flex: 1, minHeight: 44, borderWidth: 1, alignItems: 'center', justifyContent: 'center', padding: 8 },
+  modeHint: { ...TYPE.body, fontSize: 14, paddingHorizontal: 14, paddingBottom: 6 },
+  startNavigation: { margin: 14, minHeight: 48, borderWidth: 1, alignItems: 'center', justifyContent: 'center', padding: 10 },
   root: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -748,10 +775,9 @@ const styles = StyleSheet.create({
   closeBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   closeBtnText: { fontSize: 22, fontWeight: '700' },
   headerTitle: {
-    fontFamily: 'monospace',
+    ...TYPE.heading,
     fontSize: 14,
-    letterSpacing: 4,
-    fontWeight: '800',
+    letterSpacing: 1.2,
   },
   summary: {
     alignItems: 'center',
@@ -759,26 +785,23 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   summaryLabel: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    letterSpacing: 4,
-    fontWeight: '700',
+    ...TYPE.label,
+    fontSize: 11,
+    letterSpacing: 1.2,
     marginBottom: 4,
   },
   summaryStatus: {
-    fontFamily: 'monospace',
+    ...TYPE.heading,
     fontSize: 28,
-    letterSpacing: 6,
-    fontWeight: '800',
+    letterSpacing: 1.2,
   },
   scrollContent: {
     paddingBottom: 80,
   },
   sectionHeader: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    letterSpacing: 3,
-    fontWeight: '700',
+    ...TYPE.heading,
+    fontSize: 14,
+    letterSpacing: 1.2,
     paddingHorizontal: 14,
     paddingTop: 16,
     paddingBottom: 6,
@@ -786,9 +809,9 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   estimateLine: {
-    fontFamily: 'monospace',
-    fontSize: 11,
-    letterSpacing: 0.5,
+    ...TYPE.body,
+    fontSize: 12,
+    letterSpacing: 0.3,
     paddingHorizontal: 14,
     paddingTop: 4,
     paddingBottom: 6,
@@ -800,13 +823,13 @@ const styles = StyleSheet.create({
     paddingRight: 14,
   },
   aoCount: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    letterSpacing: 1.5,
+    ...TYPE.data,
+    fontSize: 11,
+    letterSpacing: 0.6,
     paddingTop: 16,
   },
   empty: {
-    fontFamily: 'monospace',
+    ...TYPE.body,
     fontSize: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -821,16 +844,15 @@ const styles = StyleSheet.create({
   },
   textCol: { flex: 1, paddingRight: 10 },
   aoName: {
-    fontFamily: 'monospace',
+    ...TYPE.heading,
     fontSize: 14,
     letterSpacing: 1,
-    fontWeight: '700',
     marginBottom: 2,
   },
   aoDetail: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    letterSpacing: 0.5,
+    ...TYPE.body,
+    fontSize: 12,
+    letterSpacing: 0.3,
   },
   aoActions: { flexDirection: 'row', gap: 6 },
   aoBtn: {
@@ -840,10 +862,9 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   aoBtnText: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    letterSpacing: 1.5,
-    fontWeight: '700',
+    ...TYPE.label,
+    fontSize: 11,
+    letterSpacing: 1.2,
   },
   saveAOBtn: {
     marginHorizontal: 14,
@@ -854,19 +875,18 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   saveAOText: {
-    fontFamily: 'monospace',
+    ...TYPE.label,
     fontSize: 12,
-    letterSpacing: 3,
-    fontWeight: '800',
+    letterSpacing: 1.2,
   },
   footnote: {
-    fontFamily: 'monospace',
-    fontSize: 9,
-    letterSpacing: 0.5,
+    ...TYPE.body,
+    fontSize: 12,
+    letterSpacing: 0.3,
     paddingHorizontal: 14,
     paddingTop: 18,
     paddingBottom: 12,
-    lineHeight: 14,
+    lineHeight: 17,
   },
 
   // Inline name prompt
@@ -886,25 +906,24 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   promptTitle: {
-    fontFamily: 'monospace',
-    fontSize: 12,
-    letterSpacing: 3,
-    fontWeight: '800',
+    ...TYPE.heading,
+    fontSize: 14,
+    letterSpacing: 1.2,
     marginBottom: 6,
   },
   promptHint: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    letterSpacing: 1,
+    ...TYPE.body,
+    fontSize: 12,
+    letterSpacing: 0.3,
     marginBottom: 12,
   },
   promptInput: {
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 10,
-    fontFamily: 'monospace',
+    ...TYPE.body,
     fontSize: 14,
-    letterSpacing: 1,
+    letterSpacing: 0.3,
     marginBottom: 14,
   },
   promptBtnRow: { flexDirection: 'row', gap: 10 },
@@ -915,9 +934,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   promptBtnText: {
-    fontFamily: 'monospace',
+    ...TYPE.label,
     fontSize: 11,
-    letterSpacing: 3,
-    fontWeight: '700',
+    letterSpacing: 1.2,
   },
 });

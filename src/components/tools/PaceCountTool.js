@@ -4,6 +4,7 @@ import { pacesToDistance, distanceToPaces } from '../../utils/tactical';
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
 import { useTranslation } from '../../hooks/useTranslation';
+import { TYPE } from '../../utils/typography';
 
 export function PaceCountTool({ paceCount, setPaceCount }) {
   const colors = useColors();
@@ -26,13 +27,13 @@ export function PaceCountTool({ paceCount, setPaceCount }) {
   return (
     <View>
       {/* Calibration */}
-      <Text style={[styles.sectionLabel, { color: colors.border }]}>{t('toolLabels.calibration')}</Text>
+      <Text style={[styles.sectionLabel, { color: colors.text3 }]}>{t('toolLabels.calibration')}</Text>
       <View style={styles.calibRow}>
         <View style={{ flex: 1 }}>
           <ToolInput label="" value={calibInput} onChangeText={setCalibInput} placeholder="62" keyboardType="numeric" />
         </View>
         <TouchableOpacity style={[styles.saveBtn, { borderColor: colors.border }]} onPress={saveCalib}>
-          <Text style={[styles.saveBtnText, { color: colors.border }]}>{t('toolLabels.save')}</Text>
+          <Text style={[styles.saveBtnText, { color: colors.text3 }]}>{t('toolLabels.save')}</Text>
         </TouchableOpacity>
       </View>
       <ToolHint text={`${t('toolLabels.saved')}: ${paceCount} paces/100m  ·  ${t('toolLabels.typical')}`} />
@@ -42,10 +43,10 @@ export function PaceCountTool({ paceCount, setPaceCount }) {
       {/* Mode toggle */}
       <View style={styles.modeRow}>
         <TouchableOpacity style={[styles.modeBtn, { borderColor: colors.border2 }, mode==='p2d' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setMode('p2d')}>
-          <Text style={[styles.modeBtnText, { color: colors.border2 }, mode==='p2d' && { color: colors.text }]}>{t('toolLabels.pacesToDist')}</Text>
+          <Text style={[styles.modeBtnText, { color: colors.text3 }, mode==='p2d' && { color: colors.text }]}>{t('toolLabels.pacesToDist')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.modeBtn, { borderColor: colors.border2 }, mode==='d2p' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setMode('d2p')}>
-          <Text style={[styles.modeBtnText, { color: colors.border2 }, mode==='d2p' && { color: colors.text }]}>{t('toolLabels.distToPaces')}</Text>
+          <Text style={[styles.modeBtnText, { color: colors.text3 }, mode==='d2p' && { color: colors.text }]}>{t('toolLabels.distToPaces')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -69,11 +70,11 @@ export function PaceCountTool({ paceCount, setPaceCount }) {
 }
 
 const styles = StyleSheet.create({
-  sectionLabel: { fontFamily:'monospace', fontSize:9, letterSpacing:3, marginBottom:6 },
+  sectionLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, marginBottom:6 },
   calibRow: { flexDirection:'row', gap:8, alignItems:'flex-end' },
   saveBtn: { borderWidth:1, paddingHorizontal:14, paddingVertical:10, marginBottom:10 },
-  saveBtnText: { fontFamily:'monospace', fontSize:10, letterSpacing:2 },
+  saveBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   modeRow: { flexDirection:'row', gap:8, marginBottom:12 },
   modeBtn: { flex:1, borderWidth:1, paddingVertical:9, alignItems:'center' },
-  modeBtnText: { fontFamily:'monospace', fontSize:9, letterSpacing:2 },
+  modeBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 });

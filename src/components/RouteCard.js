@@ -5,12 +5,13 @@
  * shareable image (or text fallback). Pure-local: no network, no storage.
  */
 import React, { useRef, useCallback, useMemo, useState } from 'react';
-import {
-  View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Modal } from './FieldModal';
+import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
 import { buildDTG, buildRouteSummary, buildRouteCardText } from '../utils/routeCard';
 import { formatDistance } from '../utils/mgrs';
 import { useColors } from '../utils/ThemeContext';
+import { TYPE } from '../utils/typography';
 import { useTranslation } from '../hooks/useTranslation';
 import { notifySuccess, notifyWarning, tapHeavy } from '../utils/haptics';
 
@@ -35,7 +36,7 @@ export function RouteCard({ visible, list, onClose }) {
   }, []);
 
   const shareCard = useCallback(async () => {
-    if (busy) return;
+    if (busy || !(await allowSystemDisplay())) return;
     setBusy(true);
     try {
       const uri = await captureCard();
@@ -56,7 +57,7 @@ export function RouteCard({ visible, list, onClose }) {
   }, [busy, captureCard, list, legs, totalDistance, dtg, t]);
 
   const saveCard = useCallback(async () => {
-    if (busy) return;
+    if (busy || !(await allowSystemDisplay())) return;
     setBusy(true);
     try {
       if (!MediaLibrary) { Alert.alert(t('routeCard.title'), t('routeCard.saveUnavailable')); return; }
@@ -89,15 +90,15 @@ export function RouteCard({ visible, list, onClose }) {
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
                 <Text style={[styles.summaryVal, { color: colors.text }]}>{legs.length}</Text>
-                <Text style={[styles.summaryLbl, { color: colors.text4 }]}>{t('routeCard.legs')}</Text>
+                <Text style={[styles.summaryLbl, { color: colors.text3 }]}>{t('routeCard.legs')}</Text>
               </View>
               <View style={styles.summaryItem}>
                 <Text style={[styles.summaryVal, { color: colors.text }]}>{formatDistance(totalDistance)}</Text>
-                <Text style={[styles.summaryLbl, { color: colors.text4 }]}>{t('routeCard.total')}</Text>
+                <Text style={[styles.summaryLbl, { color: colors.text3 }]}>{t('routeCard.total')}</Text>
               </View>
               <View style={styles.summaryItem}>
                 <Text style={[styles.summaryValSm, { color: colors.text2 }]}>{dtg}</Text>
-                <Text style={[styles.summaryLbl, { color: colors.text4 }]}>{t('routeCard.dtg')}</Text>
+                <Text style={[styles.summaryLbl, { color: colors.text3 }]}>{t('routeCard.dtg')}</Text>
               </View>
             </View>
 
@@ -110,7 +111,7 @@ export function RouteCard({ visible, list, onClose }) {
                 <Text style={[styles.legName, { color: colors.text }]}>{first.label}</Text>
                 <Text style={[styles.legMgrs, { color: colors.text2 }]}>{first.mgrs}</Text>
               </View>
-              <Text style={[styles.legBrg, { color: colors.text4 }]}>—</Text>
+              <Text style={[styles.legBrg, { color: colors.text3 }]}>—</Text>
             </View>
 
             {/* Legs */}
@@ -123,25 +124,25 @@ export function RouteCard({ visible, list, onClose }) {
                 </View>
                 <View style={styles.legBrgCol}>
                   <Text style={[styles.legBrg, { color: colors.text }]}>{String(Math.round(leg.bearing)).padStart(3, '0')}°</Text>
-                  <Text style={[styles.legDist, { color: colors.text4 }]}>{leg.distanceFormatted}</Text>
+                  <Text style={[styles.legDist, { color: colors.text3 }]}>{leg.distanceFormatted}</Text>
                 </View>
               </View>
             ))}
 
             <View style={[styles.divider, { backgroundColor: colors.border2, marginTop: 12 }]} />
-            <Text style={[styles.footer, { color: colors.text4 }]}>{t('routeCard.footer')}</Text>
+            <Text style={[styles.footer, { color: colors.text3 }]}>{t('routeCard.footer')}</Text>
           </View>
 
           {/* Actions (not captured) */}
           <View style={styles.actions}>
             <TouchableOpacity style={[styles.actBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={shareCard} disabled={busy} accessibilityRole="button" accessibilityLabel={t('routeCard.share')}>
-              <Text style={[styles.actBtnText, { color: colors.text2 }]}>{busy ? '···' : t('routeCard.share')}</Text>
+              <Text style={[styles.actBtnText, { color: colors.text }]}>{busy ? '···' : t('routeCard.share')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actBtn, { borderColor: colors.border }]} onPress={saveCard} disabled={busy} accessibilityRole="button" accessibilityLabel={t('routeCard.save')}>
-              <Text style={[styles.actBtnText, { color: colors.border }]}>{t('routeCard.save')}</Text>
+              <Text style={[styles.actBtnText, { color: colors.text3 }]}>{t('routeCard.save')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.closeBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel={t('routeCard.close')}>
-              <Text style={[styles.closeBtnText, { color: colors.border }]}>{t('routeCard.close')}</Text>
+              <Text style={[styles.closeBtnText, { color: colors.text3 }]}>{t('routeCard.close')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -156,26 +157,26 @@ const styles = StyleSheet.create({
   card: { borderWidth: 1, padding: 18 },
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   brand: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, fontWeight: '700' },
-  cardKicker: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 3 },
-  listName: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', letterSpacing: 4, marginTop: 10 },
+  cardKicker: { ...TYPE.label, fontSize: 11, letterSpacing: 0.8 },
+  listName: { ...TYPE.heading, fontSize: 21, letterSpacing: 1, marginTop: 10 },
   divider: { height: StyleSheet.hairlineWidth, marginVertical: 12 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
   summaryItem: { alignItems: 'center', flex: 1 },
-  summaryVal: { fontFamily: 'monospace', fontSize: 20, fontWeight: '700', letterSpacing: 1 },
-  summaryValSm: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', letterSpacing: 1 },
-  summaryLbl: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2, marginTop: 3 },
+  summaryVal: { ...TYPE.data, fontSize: 18, letterSpacing: 0.5 },
+  summaryValSm: { ...TYPE.data, fontSize: 11, letterSpacing: 0.3 },
+  summaryLbl: { ...TYPE.label, fontSize: 11, letterSpacing: 0.8, marginTop: 3 },
   legRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9 },
-  legNum: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 1, width: 44, fontWeight: '700' },
+  legNum: { ...TYPE.data, fontSize: 11, letterSpacing: 0.3, width: 44 },
   legBody: { flex: 1, gap: 2 },
-  legName: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', letterSpacing: 2 },
-  legMgrs: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 1.5 },
+  legName: { ...TYPE.heading, fontSize: 14, letterSpacing: 0.5 },
+  legMgrs: { ...TYPE.data, fontSize: 11, letterSpacing: 0.3 },
   legBrgCol: { alignItems: 'flex-end', gap: 2 },
-  legBrg: { fontFamily: 'monospace', fontSize: 13, fontWeight: '700', letterSpacing: 1 },
-  legDist: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 1 },
-  footer: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2, textAlign: 'center' },
+  legBrg: { ...TYPE.data, fontSize: 13, letterSpacing: 0.5 },
+  legDist: { ...TYPE.data, fontSize: 11, letterSpacing: 0.3 },
+  footer: { ...TYPE.body, fontSize: 12, lineHeight: 17, letterSpacing: 0.3, textAlign: 'center' },
   actions: { marginTop: 16, gap: 10 },
   actBtn: { borderWidth: 1, paddingVertical: 14, alignItems: 'center', minHeight: 48, justifyContent: 'center' },
-  actBtnText: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '700' },
+  actBtnText: { ...TYPE.heading, fontSize: 14, letterSpacing: 1 },
   closeBtn: { paddingVertical: 12, alignItems: 'center', minHeight: 44, justifyContent: 'center' },
-  closeBtnText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2 },
+  closeBtnText: { ...TYPE.label, fontSize: 13, letterSpacing: 0.8 },
 });

@@ -1,7 +1,7 @@
 /**
- * tileManager.js — Offline OSM tile download and cache manager.
- * Downloads OpenStreetMap tiles for a region at specified zoom levels,
- * stores them locally using expo-file-system for offline map usage.
+ * tileManager.js — Local raster tile cache and map coverage helpers.
+ * Public basemap services remain available for interactive viewing. Bulk
+ * prefetch requires explicit provider permission and is disabled here.
  *
  * NO tracking, NO analytics. Tiles stored locally only.
  */
@@ -13,9 +13,52 @@ const TILE_DIR = FileSystem?.documentDirectory
   ? `${FileSystem.documentDirectory}map_tiles/`
   : null;
 
-// Single source of truth for the tile endpoints — MapScreen imports these
-// rather than re-declaring them, so the downloaded cache and the live map can
-// never drift onto different servers.
+export const TILE_BACKUP_DIR = FileSystem?.documentDirectory
+  ? `${FileSystem.documentDirectory}map_tiles_previous/`
+  : null;
+let tileCacheMutation = false;
+let recoveryPromise = null;
+
+export function beginTileCacheMutation() {
+  if (tileCacheMutation) return false;
+  tileCacheMutation = true;
+  return true;
+}
+export function endTileCacheMutation() { tileCacheMutation = false; }
+
+/** Recover an interrupted directory promotion without discarding the old map. */
+export function recoverOfflineTileCache() {
+  // Preflight checks multiple zoom levels concurrently. Every reader must wait
+  // for the same interrupted promotion, not report missing tiles mid-recovery.
+  if (recoveryPromise) return recoveryPromise;
+  if (!FileSystem || !TILE_DIR || !beginTileCacheMutation()) return Promise.resolve(false);
+  recoveryPromise = (async () => {
+    const previous = await FileSystem.getInfoAsync(TILE_BACKUP_DIR);
+    if (!previous.exists) return true;
+    const current = await FileSystem.getInfoAsync(TILE_DIR);
+    if (!current.exists) {
+      await FileSystem.moveAsync({ from: TILE_BACKUP_DIR, to: TILE_DIR });
+    } else {
+      await FileSystem.deleteAsync(TILE_BACKUP_DIR, { idempotent: true });
+    }
+    return true;
+  })().finally(() => {
+    recoveryPromise = null;
+    endTileCacheMutation();
+  });
+  return recoveryPromise;
+}
+
+export async function getOfflineMapMetadata() {
+  if (!FileSystem || !TILE_DIR) return null;
+  await recoverOfflineTileCache();
+  try {
+    return JSON.parse(await FileSystem.readAsStringAsync(`${TILE_DIR}metadata.json`));
+  } catch { return null; }
+}
+
+// Shared endpoints for interactive map viewing. Imported map packages carry
+// their own provider attribution in local metadata.
 export const OSM_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 export const DARK_TILE_URL = 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png';
 export const TOPO_TILE_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
@@ -48,20 +91,6 @@ function tileUrl(z, x, y, style = 'standard') {
 }
 
 /**
- * Ensure the directory structure exists for a tile.
- */
-async function ensureTileDir(z, x) {
-  if (!FileSystem || !TILE_DIR) return;
-  const dir = `${TILE_DIR}${z}/${x}/`;
-  try {
-    const info = await FileSystem.getInfoAsync(dir);
-    if (!info.exists) {
-      await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
-    }
-  } catch {}
-}
-
-/**
  * Check if a specific tile exists locally.
  */
 async function tileExists(z, x, y) {
@@ -71,25 +100,6 @@ async function tileExists(z, x, y) {
     if (!path) return false;
     const info = await FileSystem.getInfoAsync(path);
     return info.exists;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Download a single tile to local storage.
- * @returns {boolean} true if downloaded successfully
- */
-async function downloadTile(z, x, y, style = 'standard') {
-  if (!FileSystem || !TILE_DIR) return false;
-  try {
-    await ensureTileDir(z, x);
-    const path = tilePath(z, x, y);
-    const url = tileUrl(z, x, y, style);
-    if (!path) return false;
-
-    const result = await FileSystem.downloadAsync(url, path);
-    return result?.status === 200;
   } catch {
     return false;
   }
@@ -140,65 +150,33 @@ function countTilesForRegion(region, zoom) {
 
 // Enumeration safety caps. Above CHECK_TILE_CAP a coverage check would mean
 // that many serial filesystem stats — callers get { tooLarge: true } instead
-// and should tell the user to zoom in. The download cap is a library-level
-// backstop behind the callers' own MAX_TILES UI limits.
+// and should tell the user to zoom in.
 export const CHECK_TILE_CAP = 20000;
-const DOWNLOAD_TILE_CAP = 30000;
+
 
 /**
- * Download all tiles for a region at specified zoom levels.
- * @param {object} region - { latitude, longitude, latitudeDelta, longitudeDelta }
- * @param {number[]} zoomLevels - Array of zoom levels to download (e.g. [10, 12, 14])
- * @param {function} onProgress - Optional callback: (downloaded, total) => void
- * @param {object} options - { style: 'standard'|'dark'|'topo' } - tile style to download
- * @returns {{ downloaded: number, failed: number, skipped: number, total: number }}
+ * Existing public providers are not an approved offline map supply.
+ * OSM explicitly prohibits prefetch; permission for the other configured
+ * endpoints has not been established. Unknown styles must fail closed too.
  */
-export async function downloadTilesForRegion(region, zoomLevels = [10, 12, 14], onProgress, options = {}) {
-  if (!FileSystem || !TILE_DIR) {
-    return { downloaded: 0, failed: 0, skipped: 0, total: 0 };
-  }
+export function getOfflineDownloadPolicy(style = 'standard') {
+  return {
+    allowed: false,
+    code: 'OFFLINE_PROVIDER_NOT_PERMITTED',
+    reason: style === 'standard'
+      ? 'OpenStreetMap public tiles do not permit offline downloads. Import a permitted offline map instead.'
+      : 'Offline download permission is not established for this map provider. Import a permitted offline map instead.',
+  };
+}
 
+/** Retained API for existing callers; never downloads or deletes cached maps. */
+export async function downloadTilesForRegion(region, zoomLevels, onProgress, options = {}) {
   const style = options.style || (options.dark ? 'dark' : 'standard');
-
-  // Backstop: refuse pathological regions before materializing tile lists.
-  let estimatedCount = 0;
-  for (const zoom of zoomLevels) estimatedCount += countTilesForRegion(region, zoom);
-  if (estimatedCount > DOWNLOAD_TILE_CAP) {
-    return { downloaded: 0, failed: 0, skipped: 0, total: estimatedCount, tooLarge: true };
-  }
-
-  let allTiles = [];
-  for (const zoom of zoomLevels) {
-    allTiles = allTiles.concat(getTilesForRegion(region, zoom));
-  }
-
-  const total = allTiles.length;
-  let downloaded = 0;
-  let failed = 0;
-  let skipped = 0;
-
-  // Download in batches of 5 to avoid overwhelming the network
-  const BATCH_SIZE = 5;
-  for (let i = 0; i < allTiles.length; i += BATCH_SIZE) {
-    const batch = allTiles.slice(i, i + BATCH_SIZE);
-    await Promise.all(
-      batch.map(async ({ z, x, y }) => {
-        const exists = await tileExists(z, x, y);
-        if (exists) {
-          skipped++;
-          return;
-        }
-        const ok = await downloadTile(z, x, y, style);
-        if (ok) downloaded++;
-        else failed++;
-      })
-    );
-    if (onProgress) {
-      onProgress(downloaded + skipped, total);
-    }
-  }
-
-  return { downloaded, failed, skipped, total };
+  const policy = getOfflineDownloadPolicy(style);
+  return {
+    downloaded: 0, failed: 0, skipped: 0, total: 0,
+    blocked: true, code: policy.code, reason: policy.reason,
+  };
 }
 
 /**
@@ -208,6 +186,7 @@ export async function downloadTilesForRegion(region, zoomLevels = [10, 12, 14], 
  * @returns {{ cached: number, missing: number, total: number }}
  */
 export async function checkTilesForRegion(region, zoomLevels = [10, 12, 14]) {
+  await recoverOfflineTileCache();
   if (!FileSystem || !TILE_DIR) {
     return { cached: 0, missing: 0, total: 0 };
   }
@@ -241,6 +220,7 @@ export async function checkTilesForRegion(region, zoomLevels = [10, 12, 14]) {
  * Useful for tile overlay with offline fallback.
  */
 export async function getTileUri(z, x, y) {
+  await recoverOfflineTileCache();
   if (await tileExists(z, x, y)) {
     return tilePath(z, x, y);
   }
@@ -252,8 +232,9 @@ export async function getTileUri(z, x, y) {
  * @returns {boolean} true if cleared successfully
  */
 export async function clearTileCache() {
-  if (!FileSystem || !TILE_DIR) return false;
+  if (!FileSystem || !TILE_DIR || !beginTileCacheMutation()) return false;
   try {
+    await FileSystem.deleteAsync(TILE_BACKUP_DIR, { idempotent: true });
     const info = await FileSystem.getInfoAsync(TILE_DIR);
     if (info.exists) {
       await FileSystem.deleteAsync(TILE_DIR, { idempotent: true });
@@ -261,6 +242,8 @@ export async function clearTileCache() {
     return true;
   } catch {
     return false;
+  } finally {
+    endTileCacheMutation();
   }
 }
 

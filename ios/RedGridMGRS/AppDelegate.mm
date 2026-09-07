@@ -9,7 +9,15 @@
 #import <React/RCTLinkingManager.h>
 #import <ReactAppDependencyProvider/RCTAppDependencyProvider.h>
 
+@interface RedGridFieldViewController : UIViewController
+@end
+@implementation RedGridFieldViewController
+- (BOOL)prefersHomeIndicatorAutoHidden { return YES; }
+@end
+
 @implementation ExpoReactNativeFactoryDelegate (RedGridBundleURL)
+
+- (UIViewController *)createRootViewController { return [RedGridFieldViewController new]; }
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
 {

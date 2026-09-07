@@ -1,5 +1,7 @@
+import { allowSystemDisplay } from '../../utils/fieldAlert';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { Modal } from '../FieldModal';
 import { ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -7,6 +9,7 @@ import {
   sosSchedule, groundToAirSchedule, scheduleDurationMs, estimateDutyCycle, DEFAULT_DIT_MS,
 } from '../../utils/signalling';
 import { tapHeavy } from '../../utils/haptics';
+import { TYPE } from '../../utils/typography';
 
 /** Gap between repeats of the SOS prosign, so the pattern reads as deliberate. */
 const SOS_LOOP_GAP_MS = 7 * DEFAULT_DIT_MS;
@@ -75,7 +78,7 @@ export function SignalTool() {
   // Never leave a timer alive if the tool unmounts mid-signal.
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
-  const start = () => { tapHeavy(); stepRef.current = 0; setRunning(true); };
+  const start = async () => { if (!(await allowSystemDisplay())) return; tapHeavy(); stepRef.current = 0; setRunning(true); };
 
   return (
     <View>
@@ -130,9 +133,9 @@ export function SignalTool() {
 const styles = StyleSheet.create({
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 4 },
   modeBtn: { flex: 1, borderWidth: 1, paddingVertical: 10, alignItems: 'center' },
-  modeText: { fontSize: 10, letterSpacing: 2, fontWeight: '700' },
+  modeText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   startBtn: { borderWidth: 1, paddingVertical: 14, alignItems: 'center', marginTop: 12 },
-  startText: { fontSize: 12, letterSpacing: 4, fontWeight: '700' },
+  startText: { ...TYPE.label, fontSize: 12, letterSpacing: 1.2 },
   strobe: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 48 },
-  stopHint: { fontSize: 11, letterSpacing: 3, opacity: 0.7 },
+  stopHint: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, opacity: 0.7 },
 });

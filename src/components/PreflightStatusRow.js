@@ -13,6 +13,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useColors } from '../utils/ThemeContext';
+import { TYPE } from '../utils/typography';
 
 /**
  * @param {object} props
@@ -50,7 +51,7 @@ export function PreflightStatusRow({ label, value, status = 'idle', actionLabel,
               accessibilityRole="button"
               accessibilityLabel={`${actionLabel} for ${label}`}
             >
-              <Text style={[styles.actionText, { color: colors.accent }]}>{actionLabel}</Text>
+              <Text style={[styles.actionText, { color: colors.accentText }]}>{actionLabel}</Text>
             </TouchableOpacity>
           ) : (
             <View style={[styles.actionBtn, styles.staticAction, { borderColor: colors.border }]}>
@@ -79,7 +80,7 @@ function chipColors(colors, status) {
 
   switch (status) {
     case 'ok':
-      return { bg: 'transparent', border: colors.accent, fg: colors.accent };
+      return { bg: 'transparent', border: colors.accent, fg: colors.accentText };
     case 'warn':
       return { bg: 'transparent', border: amber, fg: amber };
     case 'fail':
@@ -101,17 +102,16 @@ const styles = StyleSheet.create({
   textCol: { flex: 1, paddingRight: 10 },
   rightCol: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   label: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    letterSpacing: 2,
-    fontWeight: '700',
+    ...TYPE.label,
+    fontSize: 12,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
     marginBottom: 2,
   },
   value: {
-    fontFamily: 'monospace',
+    ...TYPE.data,
     fontSize: 13,
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   chip: {
     paddingHorizontal: 8,
@@ -122,10 +122,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chipText: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    letterSpacing: 1.5,
-    fontWeight: '700',
+    ...TYPE.label,
+    fontSize: 11,
+    letterSpacing: 0.8,
   },
   actionBtn: {
     paddingHorizontal: 8,
@@ -137,9 +136,8 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   actionText: {
-    fontFamily: 'monospace',
-    fontSize: 10,
-    letterSpacing: 1.5,
-    fontWeight: '700',
+    ...TYPE.heading,
+    fontSize: 12,
+    letterSpacing: 0.8,
   },
 });

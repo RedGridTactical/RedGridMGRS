@@ -3,7 +3,7 @@
   "nonRenewingSubscriptions" : [],
   "products" : [
     {
-      "displayPrice" : "149.99",
+      "displayPrice" : "49.99",
       "familyShareable" : false,
       "internalID" : "100001",
       "localizations" : [
@@ -57,14 +57,10 @@
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "200002",
-          "introductoryOffer" : {
-            "internalID" : "300001",
-            "paymentMode" : "free",
-            "subscriptionPeriod" : "P1W"
-          },
+          "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "Annual Pro subscription with a 7-day free trial",
+              "description" : "Legacy annual Pro subscription for restore testing",
               "displayName" : "Pro Annual",
               "locale" : "en_US"
             }

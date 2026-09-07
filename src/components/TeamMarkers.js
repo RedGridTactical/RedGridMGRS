@@ -77,7 +77,7 @@ const TeamMarker = React.memo(function TeamMarker({ peer, origin, colors, now, o
             peer.sos && styles.dotSos,
           ]}
         />
-        <Text style={[styles.label, { color: peer.sos ? SOS_RED : colors.text }]} numberOfLines={1}>
+        <Text style={[styles.label, { color: peer.sos ? SOS_RED : colors.text, backgroundColor: colors.card }]} numberOfLines={1}>
           {peer.name}
         </Text>
       </View>
@@ -123,5 +123,6 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: 'monospace', fontSize: 9, letterSpacing: 1,
     marginTop: 2, fontWeight: '700', maxWidth: 90, textAlign: 'center',
+    paddingHorizontal: 4, paddingVertical: 2, borderRadius: 2,
   },
 });

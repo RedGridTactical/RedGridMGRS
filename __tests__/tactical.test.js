@@ -7,6 +7,7 @@
 const {
   backAzimuth,
   deadReckoning,
+  compassToGridHeading,
   resection,
   pacesToDistance,
   distanceToPaces,
@@ -18,6 +19,7 @@ const {
   lunarBearing,
 } = require('../src/utils/tactical');
 const { geodesicDistance } = require('../src/utils/geodesy');
+const { parseMGRSToLatLon } = require('../src/utils/mgrs');
 
 describe('tactical.js - Tactical Land Navigation', () => {
 
@@ -150,6 +152,50 @@ describe('tactical.js - Tactical Land Navigation', () => {
       // any error in the DR leg. Five orders of magnitude inside the 1 m the
       // app prints.
       expect(geodesicDistance(45, -117, result.lat, result.lon)).toBeCloseTo(8000, 5);
+    });
+
+    test('A 300m grid-east leg preserves northing at the reported Simulator position', () => {
+      const start = parseMGRSToLatLon('10SEG5226682219');
+      const result = deadReckoning(start.lat, start.lon, 90, 300, 'grid');
+      expect(result.mgrsFormatted).toBe('10S EG 52566 82219');
+      expect(geodesicDistance(start.lat, start.lon, result.lat, result.lon)).toBeCloseTo(300, 5);
+    });
+
+    test.each([
+      ['south high latitude', '33CWQ1970925194', '33CWQ2000925194'],
+      ['south middle latitude', '33EWQ4562831836', '33EWQ4592831836'],
+      ['north low latitude', '33QWB8407628683', '33QWB8437628683'],
+      ['north high latitude', '33XWF1970974806', '33XWF2000974806'],
+    ])('Grid-east leg handles convergence at %s', (_label, from, expected) => {
+      const start = parseMGRSToLatLon(from);
+      expect(deadReckoning(start.lat, start.lon, 90, 300, 'grid').mgrs).toBe(expected);
+    });
+
+    test('Unknown north reference is rejected instead of silently treated as true', () => {
+      expect(deadReckoning(40, -74, 90, 300, 'magnetic')).toBeNull();
+    });
+  });
+
+  describe('compassToGridHeading', () => {
+    test('True compass heading becomes grid heading east of the central meridian', () => {
+      // At 45 N, 2 degrees east of the CM, convergence is about +1.4145°.
+      expect(compassToGridHeading(90, 'true', 45, -115)).toBeCloseTo(88.5855, 3);
+    });
+
+    test('True compass heading becomes grid heading west of the central meridian', () => {
+      expect(compassToGridHeading(90, 'true', 45, -119)).toBeCloseTo(91.4145, 3);
+    });
+
+    test('Magnetic and unlabelled fallback headings cannot fill a grid input', () => {
+      expect(compassToGridHeading(90, 'magnetic', 45, -115)).toBeNull();
+      expect(compassToGridHeading(90, undefined, 45, -115)).toBeNull();
+    });
+
+    test('Autofill requires a finite heading and position, while zero coordinates remain valid', () => {
+      expect(compassToGridHeading(null, 'true', 45, -115)).toBeNull();
+      expect(compassToGridHeading(90, 'true', undefined, -115)).toBeNull();
+      expect(compassToGridHeading(90, 'true', 45, NaN)).toBeNull();
+      expect(compassToGridHeading(90, 'true', 0, 0)).toBe(90);
     });
   });
 

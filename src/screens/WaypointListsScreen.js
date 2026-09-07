@@ -5,9 +5,11 @@
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, TextInput,
-  ScrollView, Alert,
+  View, Text, StyleSheet, TouchableOpacity,
+  ScrollView,
 } from 'react-native';
+import { TextInput } from '../components/FieldInput';
+import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
 import { loadWaypointLists, saveWaypointLists } from '../utils/storage';
 import { toMGRS, formatMGRS, parseMGRSToLatLon } from '../utils/mgrs';
 import { exportAsGPX, exportAsKML } from '../utils/gpxExport';
@@ -16,6 +18,10 @@ import { useColors } from '../utils/ThemeContext';
 import { notifyWarning, notifySuccess, tapLight } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
 import { RouteCard } from '../components/RouteCard';
+import { PreflightScreen } from './PreflightScreen';
+import { calculateRoute } from '../utils/routePlanner';
+import { formatDistance } from '../utils/mgrs';
+import { TYPE } from '../utils/typography';
 
 let Clipboard; try { Clipboard = require('expo-clipboard'); } catch {}
 let FileSystem; try { FileSystem = require('expo-file-system'); } catch {}
@@ -24,7 +30,10 @@ let DocumentPicker; try { DocumentPicker = require('expo-document-picker'); } ca
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
-export function WaypointListsScreen({ location, onSelectWaypoint }) {
+export function WaypointListsScreen({
+  location, onSelectWaypoint, onStartRoute, activeRoute, navigationHistory = [],
+  onClearNavigationHistory, onResumeNavigation, gpsSource, gpsDeviceName, mesh,
+}) {
   const colors = useColors();
   const { t } = useTranslation();
   const [lists,       setLists]       = useState([]);
@@ -40,6 +49,8 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
   const [copiedWpId,   setCopiedWpId]   = useState(null);
   const copiedTimer = useRef(null);
   const [routeCardVisible, setRouteCardVisible] = useState(false);
+  const [preparedRoute, setPreparedRoute] = useState(null);
+  const [reviewRoute, setReviewRoute] = useState(null);
 
   useEffect(() => {
     loadWaypointLists().then(setLists).catch(() => {});
@@ -165,6 +176,7 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
 
   // ── Export list as GPX or KML ──
   const exportList = async (format) => {
+    if (!(await allowSystemDisplay())) return;
     if (!currentList || currentList.waypoints.length === 0) {
       Alert.alert(t('waypoints.noWp'), t('waypoints.noWpMsg'));
       return;
@@ -210,6 +222,7 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
 
   // ── Import waypoints from GPX/KML file ──
   const importFile = async () => {
+    if (!(await allowSystemDisplay())) return;
     if (!currentList) return;
     try {
       if (!DocumentPicker || !FileSystem) {
@@ -271,12 +284,38 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
 
   const currentList = lists.find(l => l.id === activeList);
 
+  const prepareRoute = () => {
+    // Keep the prepared order stable if the underlying saved list later changes.
+    const prepare = () => setPreparedRoute({ ...currentList, waypoints: currentList.waypoints.map(point => ({ ...point })) });
+    if (!activeRoute) { prepare(); return; }
+    Alert.alert(t('fieldNav.replaceTitle'), t('fieldNav.replaceBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('fieldNav.prepare'), onPress: prepare },
+    ]);
+  };
+
+  const selectWaypoint = wp => {
+    if (!activeRoute) { onSelectWaypoint?.(wp); return; }
+    Alert.alert(t('fieldNav.replaceTitle'), t('fieldNav.replaceBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('waypoints.nav'), onPress: () => onSelectWaypoint?.(wp) },
+    ]);
+  };
+
   return (
     <ScrollView style={[styles.root, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>{t('waypoints.title')}</Text>
         <Text style={[styles.proTag, { color: colors.text2 }]}>{t('waypoints.pro')}</Text>
       </View>
+
+      <Text style={[styles.flowHint, { color: colors.text3 }]}>{t('fieldNav.flow')}</Text>
+      {activeRoute && (
+        <TouchableOpacity style={[styles.routeAction, { borderColor: colors.accentText, backgroundColor: colors.card }]} onPress={onResumeNavigation} accessibilityRole="button">
+          <Text style={[styles.routeActionTitle, { color: colors.accentText }]}>{t('fieldNav.resume')}</Text>
+          <Text style={[styles.flowHint, { color: colors.text2 }]}>{t('fieldNav.pointOf', { current: activeRoute.index + 1, total: activeRoute.waypoints.length, name: activeRoute.name })}</Text>
+        </TouchableOpacity>
+      )}
 
       {/* List selector */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.listTabs}>
@@ -291,15 +330,15 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
             accessibilityLabel={`${l.name}, ${l.waypoints.length} of 20 waypoints`}
             accessibilityHint="Long press to delete list"
           >
-            <Text style={[styles.listTabText, { color: colors.border }, activeList === l.id && { color: colors.text }]}>
+            <Text style={[styles.listTabText, { color: colors.text3 }, activeList === l.id && { color: colors.text }]}>
               {l.name}
             </Text>
-            <Text style={[styles.listTabCount, { color: colors.text4 }]}>{l.waypoints.length}/20</Text>
+            <Text style={[styles.listTabCount, { color: colors.text3 }]}>{l.waypoints.length}/20</Text>
           </TouchableOpacity>
         ))}
         {lists.length < 10 && (
           <TouchableOpacity style={[styles.addListBtn, { borderColor: colors.border2 }]} onPress={() => setAddingList(true)} accessibilityRole="button" accessibilityLabel="Create new waypoint list">
-            <Text style={[styles.addListBtnText, { color: colors.border }]}>{t('waypoints.newList')}</Text>
+            <Text style={[styles.addListBtnText, { color: colors.text3 }]}>{t('waypoints.newList')}</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
@@ -312,7 +351,7 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
             value={newListName}
             onChangeText={setNewListName}
             placeholder="LIST NAME"
-            placeholderTextColor={colors.text4}
+            placeholderTextColor={colors.text3}
             autoCapitalize="characters"
             autoFocus
             onSubmitEditing={createList}
@@ -322,7 +361,7 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
             <Text style={[styles.newListSaveText, { color: colors.text2 }]}>{t('waypoints.create')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.newListCancel} onPress={() => setAddingList(false)} accessibilityRole="button" accessibilityLabel="Cancel creating list">
-            <Text style={[styles.newListCancelText, { color: colors.border }]}>✕</Text>
+            <Text style={[styles.newListCancelText, { color: colors.text3 }]}>✕</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -331,13 +370,13 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
       {currentList ? (
         <View style={styles.wpSection}>
           <View style={styles.wpHeader}>
-            <Text style={[styles.wpHeaderText, { color: colors.border }]}>{currentList.name} — {currentList.waypoints.length} {t('waypoints.waypoints')}</Text>
+            <Text style={[styles.wpHeaderText, { color: colors.text3 }]}>{currentList.name} — {currentList.waypoints.length} {t('waypoints.waypoints')}</Text>
             <View style={styles.wpHeaderBtns}>
               <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.border }]} onPress={importFile} accessibilityRole="button" accessibilityLabel={t('waypoints.importLabel')}>
-                <Text style={[styles.addWpBtnText, { color: colors.border }]}>{t('waypoints.import')}</Text>
+                <Text style={[styles.addWpBtnText, { color: colors.text3 }]}>{t('waypoints.import')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.border }]} onPress={showExportMenu} accessibilityRole="button" accessibilityLabel="Export waypoint list">
-                <Text style={[styles.addWpBtnText, { color: colors.border }]}>{t('waypoints.export')}</Text>
+                <Text style={[styles.addWpBtnText, { color: colors.text3 }]}>{t('waypoints.export')}</Text>
               </TouchableOpacity>
               {currentList.waypoints.length >= 2 && (
                 <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.text2 }]} onPress={() => setRouteCardVisible(true)} accessibilityRole="button" accessibilityLabel={t('routeCard.openLabel')}>
@@ -349,11 +388,18 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
               </TouchableOpacity>
               {location && (
                 <TouchableOpacity style={[styles.addWpBtn, styles.addPosBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={() => addCurrentPosition(currentList.id)} accessibilityRole="button" accessibilityLabel="Add current GPS position as waypoint">
-                  <Text style={[styles.addWpBtnText, { color: colors.text2 }]}>{t('waypoints.markPos')}</Text>
+                  <Text style={[styles.addWpBtnText, { color: colors.text }]}>{t('waypoints.markPos')}</Text>
                 </TouchableOpacity>
               )}
             </View>
           </View>
+
+          {currentList.waypoints.length > 0 && onStartRoute && (
+            <TouchableOpacity style={[styles.routeAction, { borderColor: colors.accentText, backgroundColor: colors.card }]} onPress={prepareRoute} accessibilityRole="button">
+              <Text style={[styles.routeActionTitle, { color: colors.accentText }]}>{t('fieldNav.prepare')}</Text>
+              <Text style={[styles.flowHint, { color: colors.text3 }]}>{t('fieldNav.listOrder')}</Text>
+            </TouchableOpacity>
+          )}
 
           {/* Manual MGRS grid entry */}
           {enteringGrid && (
@@ -363,7 +409,7 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
                 value={gridInput}
                 onChangeText={t => { setGridInput(t); setGridError(''); }}
                 placeholder="18S UJ 12345 67890"
-                placeholderTextColor={colors.text4}
+                placeholderTextColor={colors.text3}
                 autoCapitalize="characters"
                 autoCorrect={false}
                 autoFocus
@@ -375,7 +421,7 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
                 value={gridLabel}
                 onChangeText={setGridLabel}
                 placeholder="LABEL (OPTIONAL)"
-                placeholderTextColor={colors.text4}
+                placeholderTextColor={colors.text3}
                 autoCapitalize="characters"
                 maxLength={16}
                 accessibilityLabel="Waypoint label"
@@ -386,14 +432,14 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
                   <Text style={[styles.gridSaveBtnText, { color: colors.text2 }]}>{t('waypoints.add')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.gridCancelBtn} onPress={() => { setEnteringGrid(false); setGridInput(''); setGridLabel(''); setGridError(''); }} accessibilityRole="button" accessibilityLabel="Cancel grid entry">
-                  <Text style={[styles.gridCancelBtnText, { color: colors.border }]}>{t('waypoints.cancel')}</Text>
+                  <Text style={[styles.gridCancelBtnText, { color: colors.text3 }]}>{t('waypoints.cancel')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           )}
 
           {currentList.waypoints.length === 0 && (
-            <Text style={[styles.emptyText, { color: colors.text4 }]}>{t('waypoints.noWaypoints')}</Text>
+            <Text style={[styles.emptyText, { color: colors.text3 }]}>{t('waypoints.noWaypoints')}</Text>
           )}
 
           {currentList.waypoints.map((wp, i) => (
@@ -417,7 +463,7 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
                       <Text style={[styles.wpEditSaveText, { color: colors.text2 }]}>{t('waypoints.save')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.wpEditCancel} onPress={cancelEditWaypoint} accessibilityRole="button" accessibilityLabel={t('waypoints.cancel')}>
-                      <Text style={[styles.wpEditCancelText, { color: colors.border }]}>{t('waypoints.cancel')}</Text>
+                      <Text style={[styles.wpEditCancelText, { color: colors.text3 }]}>{t('waypoints.cancel')}</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -435,7 +481,7 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
                     <View style={styles.wpMgrsRow}>
                       <Text style={[styles.wpMgrs, { color: colors.text2 }]}>{wp.mgrs}</Text>
                       <TouchableOpacity style={[styles.wpCopyBtn, { borderColor: colors.border2 }]} onPress={() => copyWaypointMgrs(wp)} accessibilityRole="button" accessibilityLabel={`Copy ${wp.label} MGRS`}>
-                        <Text style={[styles.wpCopyBtnText, { color: copiedWpId === wp.id ? colors.text2 : colors.border }]}>
+                        <Text style={[styles.wpCopyBtnText, { color: copiedWpId === wp.id ? colors.text2 : colors.text3 }]}>
                           {copiedWpId === wp.id ? t('waypoints.copied') : t('waypoints.copy')}
                         </Text>
                       </TouchableOpacity>
@@ -443,13 +489,13 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
                   </View>
                   <View style={styles.wpBtns}>
                     <TouchableOpacity style={[styles.wpNav, { borderColor: colors.border2 }]} onPress={() => startEditWaypoint(wp)} accessibilityRole="button" accessibilityLabel={`Edit ${wp.label} coordinate`}>
-                      <Text style={[styles.wpNavText, { color: colors.border }]}>{t('waypoints.edit')}</Text>
+                      <Text style={[styles.wpNavText, { color: colors.text3 }]}>{t('waypoints.edit')}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.wpNav, { borderColor: colors.text2 }]} onPress={() => onSelectWaypoint?.(wp)} accessibilityRole="button" accessibilityLabel={`Navigate to ${wp.label}`}>
+                    <TouchableOpacity style={[styles.wpNav, { borderColor: colors.text2 }]} onPress={() => selectWaypoint(wp)} accessibilityRole="button" accessibilityLabel={`Navigate to ${wp.label}`}>
                       <Text style={[styles.wpNavText, { color: colors.text2 }]}>{t('waypoints.nav')}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.wpDel} onPress={() => deleteWaypoint(currentList.id, wp.id)} accessibilityRole="button" accessibilityLabel={`Delete ${wp.label}`}>
-                      <Text style={[styles.wpDelText, { color: colors.border }]}>✕</Text>
+                      <Text style={[styles.wpDelText, { color: colors.text3 }]}>✕</Text>
                     </TouchableOpacity>
                   </View>
                 </>
@@ -459,7 +505,7 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
         </View>
       ) : (
         <View style={styles.noList}>
-          <Text style={[styles.noListText, { color: colors.text4 }]}>
+          <Text style={[styles.noListText, { color: colors.text3 }]}>
             {lists.length === 0
               ? t('waypoints.createListPrompt')
               : t('waypoints.selectList')}
@@ -467,75 +513,116 @@ export function WaypointListsScreen({ location, onSelectWaypoint }) {
         </View>
       )}
 
-      <Text style={[styles.hint, { color: colors.text4 }]}>{t('waypoints.hint')}</Text>
+      <Text style={[styles.hint, { color: colors.text3 }]}>{t('waypoints.hint')}</Text>
+
+      {navigationHistory.length > 0 && (
+        <View style={styles.history}>
+          <Text style={[styles.routeActionTitle, { color: colors.text }]}>{t('fieldNav.recentRoutes')}</Text>
+          <Text style={[styles.flowHint, { color: colors.text3 }]}>{t('fieldNav.reviewHint')}</Text>
+          {navigationHistory.map(record => {
+            const plannedDistance = calculateRoute(record.waypoints).totalDistance;
+            return (
+              <TouchableOpacity key={record.id} style={[styles.historyRow, { borderColor: colors.border2, backgroundColor: colors.card }]} onPress={() => setReviewRoute(record)} accessibilityRole="button">
+                <Text style={[styles.routeActionTitle, { color: colors.text }]}>{record.name}</Text>
+                <Text style={[styles.flowHint, { color: colors.text2 }]}>{t(`fieldNav.${record.status}`)} · {t('fieldNav.confirmedCount', { count: record.confirmed.length, total: record.waypoints.length })}</Text>
+                <Text style={[styles.flowHint, { color: colors.text3 }]}>{new Date(record.endedAt).toLocaleString()} · {t('fieldNav.plannedDistance', { distance: formatDistance(plannedDistance) })}</Text>
+              </TouchableOpacity>
+            );
+          })}
+          {onClearNavigationHistory && (
+            <TouchableOpacity style={styles.clearHistory} onPress={() => Alert.alert(t('fieldNav.clearHistory'), t('fieldNav.clearHistoryBody'), [
+              { text: t('common.cancel'), style: 'cancel' },
+              { text: t('fieldNav.clearHistory'), style: 'destructive', onPress: onClearNavigationHistory },
+            ])} accessibilityRole="button">
+              <Text style={[styles.flowHint, { color: colors.text3 }]}>{t('fieldNav.clearHistory')}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       <RouteCard visible={routeCardVisible} list={currentList} onClose={() => setRouteCardVisible(false)} />
+      <RouteCard visible={!!reviewRoute} list={reviewRoute} onClose={() => setReviewRoute(null)} />
+      <PreflightScreen visible={!!preparedRoute} onClose={() => setPreparedRoute(null)}
+        location={location} gpsSource={gpsSource} gpsDeviceName={gpsDeviceName} mesh={mesh}
+        isPro preparedRoute={preparedRoute}
+        onStartNavigation={mode => {
+          const routeToStart = preparedRoute;
+          setPreparedRoute(null);
+          onStartRoute?.(routeToStart, mode);
+        }}
+      />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  flowHint: { ...TYPE.body, fontSize: 14, lineHeight: 19 },
+  routeAction: { borderWidth: 1, padding: 12, marginVertical: 12, gap: 5, minHeight: 48 },
+  routeActionTitle: { ...TYPE.heading, fontSize: 15, letterSpacing: 0.7 },
+  history: { marginTop: 18, gap: 8 },
+  historyRow: { borderWidth: 1, padding: 12, gap: 5 },
+  clearHistory: { minHeight: 44, justifyContent: 'center', alignItems: 'flex-end' },
   root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  title: { fontFamily: 'monospace', fontSize: 16, fontWeight: '700', letterSpacing: 4 },
-  proTag: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2 },
+  title: { ...TYPE.heading, fontSize: 20, letterSpacing: 1.2 },
+  proTag: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
   listTabs: { flexGrow: 0, marginBottom: 12 },
   listTab: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8, marginRight: 6, alignItems: 'center' },
-  listTabText: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2, fontWeight: '700' },
-  listTabCount: { fontFamily: 'monospace', fontSize: 7, letterSpacing: 1, marginTop: 2 },
+  listTabText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
+  listTabCount: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6, marginTop: 2 },
   addListBtn: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8, borderStyle: 'dashed' },
-  addListBtnText: { fontSize: 9, letterSpacing: 2 },
+  addListBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
   newListRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  newListInput: { flex: 1, borderWidth: 1, fontFamily: 'monospace', fontSize: 12, paddingHorizontal: 10, paddingVertical: 8 },
+  newListInput: { flex: 1, borderWidth: 1, ...TYPE.body, fontSize: 12, paddingHorizontal: 10, paddingVertical: 8 },
   newListSave: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8 },
-  newListSaveText: { fontSize: 10 },
+  newListSaveText: { ...TYPE.label, fontSize: 11 },
   newListCancel: { paddingHorizontal: 12, paddingVertical: 8 },
   newListCancelText: { fontSize: 14 },
 
   wpSection: { gap: 8 },
   wpHeader: { marginBottom: 6, gap: 8 },
-  wpHeaderText: { fontSize: 9, letterSpacing: 2 },
+  wpHeaderText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   addWpBtn: { borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
-  addWpBtnText: { fontSize: 9, letterSpacing: 2 },
+  addWpBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   addPosBtn: { borderWidth: 1 },
-  emptyText: { fontSize: 9, textAlign: 'center', paddingVertical: 20, lineHeight: 16 },
+  emptyText: { ...TYPE.body, fontSize: 12, textAlign: 'center', paddingVertical: 20, lineHeight: 17 },
 
   wpRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, padding: 10 },
   wpInfo: { flex: 1, gap: 3 },
-  wpLabel: { fontFamily: 'monospace', fontSize: 11, fontWeight: '700', letterSpacing: 3, paddingVertical: 0 },
-  wpMgrs: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2 },
+  wpLabel: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2, paddingVertical: 0 },
+  wpMgrs: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6 },
   wpMgrsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   wpCopyBtn: { borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2 },
-  wpCopyBtnText: { fontFamily: 'monospace', fontSize: 7, letterSpacing: 1 },
+  wpCopyBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1 },
   wpBtns: { flexDirection: 'row', gap: 6 },
   wpNav: { borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
-  wpNavText: { fontSize: 9, letterSpacing: 2 },
+  wpNavText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   wpDel: { paddingHorizontal: 8, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
   wpDelText: { fontSize: 12 },
   wpEditContainer: { flex: 1, gap: 6 },
-  wpEditInput: { borderWidth: 1, fontFamily: 'monospace', fontSize: 14, letterSpacing: 3, paddingHorizontal: 10, paddingVertical: 6 },
+  wpEditInput: { borderWidth: 1, ...TYPE.data, fontSize: 14, letterSpacing: 0.6, paddingHorizontal: 10, paddingVertical: 6 },
   wpEditBtns: { flexDirection: 'row', gap: 8 },
   wpEditSave: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
-  wpEditSaveText: { fontSize: 10, letterSpacing: 2, fontWeight: '700' },
+  wpEditSaveText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   wpEditCancel: { paddingHorizontal: 12, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
-  wpEditCancelText: { fontSize: 10, letterSpacing: 2 },
+  wpEditCancelText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
   wpHeaderBtns: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
 
   gridEntryBox: { borderWidth: 1, padding: 10, gap: 8, marginBottom: 8 },
-  gridEntryInput: { borderWidth: 1, fontFamily: 'monospace', fontSize: 16, letterSpacing: 4, paddingHorizontal: 10, paddingVertical: 8 },
-  gridLabelInput: { borderWidth: 1, fontFamily: 'monospace', fontSize: 11, letterSpacing: 2, paddingHorizontal: 10, paddingVertical: 6 },
-  gridError: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2, textAlign: 'center' },
+  gridEntryInput: { borderWidth: 1, ...TYPE.data, fontSize: 16, letterSpacing: 0.6, paddingHorizontal: 10, paddingVertical: 8 },
+  gridLabelInput: { borderWidth: 1, ...TYPE.body, fontSize: 12, letterSpacing: 0.3, paddingHorizontal: 10, paddingVertical: 6 },
+  gridError: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, textAlign: 'center' },
   gridEntryBtns: { flexDirection: 'row', gap: 8 },
   gridSaveBtn: { flex: 1, borderWidth: 1, paddingVertical: 8, alignItems: 'center', minHeight: 44, justifyContent: 'center' },
-  gridSaveBtnText: { fontSize: 10, letterSpacing: 3, fontWeight: '700' },
+  gridSaveBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   gridCancelBtn: { paddingHorizontal: 12, paddingVertical: 8, minHeight: 44, justifyContent: 'center' },
-  gridCancelBtnText: { fontSize: 10, letterSpacing: 2 },
+  gridCancelBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
   noList: { paddingVertical: 30, alignItems: 'center' },
-  noListText: { fontSize: 9, textAlign: 'center', letterSpacing: 2, lineHeight: 16 },
-  hint: { marginTop: 20, fontSize: 10, letterSpacing: 1, textAlign: 'center' },
+  noListText: { ...TYPE.label, fontSize: 11, textAlign: 'center', letterSpacing: 1.2, lineHeight: 16 },
+  hint: { ...TYPE.body, marginTop: 20, fontSize: 12, letterSpacing: 0.3, textAlign: 'center' },
 });

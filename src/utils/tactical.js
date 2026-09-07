@@ -4,7 +4,7 @@
  */
 
 import { toMGRS, formatMGRS } from './mgrs';
-import { geodesicDestination } from './geodesy';
+import { geodesicDestination, gridToTrue, trueToGrid } from './geodesy';
 
 const DEG = Math.PI / 180;
 const RAD = 180 / Math.PI;
@@ -20,20 +20,32 @@ export function backAzimuth(bearing) {
 // ─── DEAD RECKONING ──────────────────────────────────────────────────────────
 /**
  * From a known MGRS position, compute new position after traveling
- * `distanceM` meters on `headingDeg` (true/grid north).
+ * `distanceM` ground meters on `headingDeg`. Headings default to true north;
+ * callers accepting a grid azimuth must explicitly pass 'grid'.
  * Returns { lat, lon, mgrs, mgrsFormatted }
  */
-export function deadReckoning(startLat, startLon, headingDeg, distanceM) {
+export function deadReckoning(startLat, startLon, headingDeg, distanceM, headingReference = 'true') {
   if (!isFinite(distanceM) || distanceM < 0) return null;
+  if (headingReference !== 'true' && headingReference !== 'grid') return null;
+  const trueHeading = headingReference === 'grid'
+    ? gridToTrue(headingDeg, startLat, startLon)
+    : headingDeg;
+  if (trueHeading == null) return null;
   // Ellipsoidal (Vincenty direct), not spherical: DR error lands as displaced
   // POSITION, and this function's output is printed to 1 m of MGRS.
   // geodesicDestination falls back to the sphere if the iteration fails.
-  const dest = geodesicDestination(startLat, startLon, headingDeg, distanceM);
+  const dest = geodesicDestination(startLat, startLon, trueHeading, distanceM);
   if (!dest) return null;
 
   const { lat, lon } = dest;
   const mgrs = toMGRS(lat, lon, 5);
   return { lat, lon, mgrs, mgrsFormatted: formatMGRS(mgrs) };
+}
+
+/** A magnetic fallback cannot fill a grid azimuth without known declination. */
+export function compassToGridHeading(headingDeg, headingReference, lat, lon) {
+  if (headingReference !== 'true') return null;
+  return trueToGrid(headingDeg, lat, lon);
 }
 
 // ─── RESECTION ───────────────────────────────────────────────────────────────

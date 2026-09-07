@@ -1,16 +1,10 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { Modal } from './FieldModal';
+import { TextInput } from './FieldInput';
 import { parseMGRSToLatLon } from '../utils/mgrs';
 import { useColors } from '../utils/ThemeContext';
+import { TYPE } from '../utils/typography';
 import { notifySuccess, notifyWarning } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -44,14 +38,14 @@ export function WaypointModal({ visible, onClose, onSetWaypoint, currentLocation
         <View style={[styles.sheet, { backgroundColor: colors.bg, borderTopColor: colors.border }]} accessibilityViewIsModal={true}>
           <Text style={[styles.title, { color: colors.text }]}>{t('waypointModal.title')}</Text>
           <View style={[styles.divider, { backgroundColor: colors.border2 }]} />
-          <Text style={[styles.fieldLabel, { color: colors.border }]}>{t('waypointModal.labelOptional')}</Text>
-          <TextInput style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }]} value={label} onChangeText={setLabel} placeholder="OBJ ALPHA" placeholderTextColor={colors.text4} autoCapitalize="characters" maxLength={16} accessibilityLabel={t('waypointModal.labelOptional')} accessibilityHint="Optional name for this waypoint" />
-          <Text style={[styles.fieldLabel, { color: colors.border }]}>{t('waypointModal.mgrsCoordinate')}</Text>
-          <TextInput style={[styles.input, styles.mgrsInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }]} value={mgrsInput} onChangeText={(v) => { setMGRSInput(v); setError(''); }} placeholder="18S UJ 12345 67890" placeholderTextColor={colors.text4} autoCapitalize="characters" autoCorrect={false} maxLength={20} accessibilityLabel={t('waypointModal.mgrsCoordinate')} accessibilityHint="Enter full MGRS grid coordinate" />
+          <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{t('waypointModal.labelOptional')}</Text>
+          <TextInput style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }]} value={label} onChangeText={setLabel} placeholder="OBJ ALPHA" placeholderTextColor={colors.text3} autoCapitalize="characters" maxLength={16} accessibilityLabel={t('waypointModal.labelOptional')} accessibilityHint="Optional name for this waypoint" />
+          <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{t('waypointModal.mgrsCoordinate')}</Text>
+          <TextInput style={[styles.input, styles.mgrsInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }]} value={mgrsInput} onChangeText={(v) => { setMGRSInput(v); setError(''); }} placeholder="18S UJ 12345 67890" placeholderTextColor={colors.text3} autoCapitalize="characters" autoCorrect={false} maxLength={20} accessibilityLabel={t('waypointModal.mgrsCoordinate')} accessibilityHint="Enter full MGRS grid coordinate" />
           {error ? <Text style={[styles.error, { color: colors.text }]} accessibilityRole="alert" accessibilityLiveRegion="assertive">{error}</Text> : null}
           <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.border, borderColor: colors.text2 }]} onPress={handleSubmit} accessibilityRole="button" accessibilityLabel={t('waypointModal.setWaypoint')}><Text style={[styles.primaryBtnText, { color: colors.text }]}>{t('waypointModal.setWaypoint')}</Text></TouchableOpacity>
-          <TouchableOpacity style={[styles.secondaryBtn, { borderColor: colors.border2 }]} onPress={handleMark} accessibilityRole="button" accessibilityLabel={t('waypointModal.markCurrentPosition')}><Text style={[styles.secondaryBtnText, { color: colors.border }]}>{t('waypointModal.markCurrentPosition')}</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.cancelBtn} onPress={() => { reset(); onClose(); }} accessibilityRole="button" accessibilityLabel={t('waypointModal.cancel')}><Text style={[styles.cancelBtnText, { color: colors.text4 }]}>{t('waypointModal.cancel')}</Text></TouchableOpacity>
+          <TouchableOpacity style={[styles.secondaryBtn, { borderColor: colors.border2 }]} onPress={handleMark} accessibilityRole="button" accessibilityLabel={t('waypointModal.markCurrentPosition')}><Text style={[styles.secondaryBtnText, { color: colors.text3 }]}>{t('waypointModal.markCurrentPosition')}</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.cancelBtn} onPress={() => { reset(); onClose(); }} accessibilityRole="button" accessibilityLabel={t('waypointModal.cancel')}><Text style={[styles.cancelBtnText, { color: colors.text3 }]}>{t('waypointModal.cancel')}</Text></TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -61,16 +55,22 @@ export function WaypointModal({ visible, onClose, onSetWaypoint, currentLocation
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.85)' },
   sheet: { borderTopWidth: 1, padding: 24, paddingBottom: 40, gap: 8 },
-  title: { fontFamily: 'monospace', fontSize: 14, letterSpacing: 5, fontWeight: '700', textAlign: 'center', marginBottom: 4 },
+  title: {
+    ...TYPE.heading, fontSize: 18, letterSpacing: 1.2, textAlign: 'center', marginBottom: 4 },
   divider: { height: 1, marginBottom: 8 },
-  fieldLabel: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 4, marginTop: 4 },
-  input: { borderWidth: 1, fontFamily: 'monospace', fontSize: 14, letterSpacing: 2, paddingHorizontal: 12, paddingVertical: 10 },
-  mgrsInput: { fontSize: 18, letterSpacing: 4 },
-  error: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 2, textAlign: 'center' },
+  fieldLabel: {
+    ...TYPE.label, fontSize: 12, letterSpacing: 0.8, marginTop: 4 },
+  input: { ...TYPE.body, borderWidth: 1, fontSize: 16, letterSpacing: 0.5, paddingHorizontal: 12, paddingVertical: 10 },
+  mgrsInput: {
+    ...TYPE.data, fontSize: 17, letterSpacing: 0.5 },
+  error: { ...TYPE.body, fontSize: 13, letterSpacing: 0.3, textAlign: 'center' },
   primaryBtn: { borderWidth: 1, paddingVertical: 14, alignItems: 'center', marginTop: 8 },
-  primaryBtnText: { fontFamily: 'monospace', fontSize: 14, letterSpacing: 4, fontWeight: '700' },
+  primaryBtnText: {
+    ...TYPE.heading, fontSize: 15, letterSpacing: 1 },
   secondaryBtn: { borderWidth: 1, paddingVertical: 12, alignItems: 'center' },
-  secondaryBtnText: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3 },
+  secondaryBtnText: {
+    ...TYPE.label, fontSize: 14, letterSpacing: 0.8 },
   cancelBtn: { paddingVertical: 12, alignItems: 'center' },
-  cancelBtnText: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 3 },
+  cancelBtnText: {
+    ...TYPE.label, fontSize: 13, letterSpacing: 0.8 },
 });

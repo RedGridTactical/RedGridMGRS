@@ -1,9 +1,10 @@
 /**
  * ThemeScreen — Pro settings. Display themes + Pro feature toggles.
- * Free users see the selector but are gated to the red theme.
+ * Standard and Tactical display modes are also available in the global switch.
  */
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
+import { TYPE } from '../utils/typography';
 import { THEMES } from '../hooks/useTheme';
 import { useColors } from '../utils/ThemeContext';
 import { tapLight } from '../utils/haptics';
@@ -33,8 +34,8 @@ export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate,
               }}
               activeOpacity={0.8}
             >
-              <View style={[styles.swatch, { backgroundColor: theme.colors.bg, borderColor: theme.colors.text }]}>
-                <Text style={[styles.swatchText, { color: theme.colors.text }]}>MGRS</Text>
+              <View style={[styles.swatch, { backgroundColor: currentTheme === 'red' ? colors.bg : theme.colors.bg, borderColor: currentTheme === 'red' ? colors.text : theme.colors.text }]}>
+                <Text style={[styles.swatchText, { color: currentTheme === 'red' ? colors.text : theme.colors.text }]}>MGRS</Text>
               </View>
               <View style={styles.info}>
                 <View style={styles.labelRow}>
@@ -211,7 +212,7 @@ function ToggleRow({ label, sub, value, onToggle }) {
       accessibilityLabel={`${label}. ${sub}`}
     >
       <View style={[styles.toggleIndicator, { borderColor: colors.border }, value && { backgroundColor: colors.text, borderColor: colors.text }]}>
-        <Text style={[styles.toggleText, { color: value ? colors.bg : colors.border }]}>{value ? t('theme.on') : t('theme.off')}</Text>
+        <Text style={[styles.toggleText, { color: value ? colors.bg : colors.text3 }]}>{value ? t('theme.on') : t('theme.off')}</Text>
       </View>
       <View style={styles.info}>
         <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
@@ -224,8 +225,8 @@ function ToggleRow({ label, sub, value, onToggle }) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
-  title: { fontFamily: 'monospace', fontSize: 16, fontWeight: '700', letterSpacing: 4, marginBottom: 4 },
-  sub: { fontSize: 9, letterSpacing: 1, marginBottom: 20 },
+  title: { ...TYPE.heading,  fontSize: 16, letterSpacing: 0.8, marginBottom: 4 },
+  sub: { ...TYPE.body,  fontSize: 12, letterSpacing: 0.8, marginBottom: 20 },
   divider: { height: 1, marginVertical: 20 },
   card: {
     flexDirection: 'row', alignItems: 'center', padding: 14, marginBottom: 10,
@@ -236,34 +237,34 @@ const styles = StyleSheet.create({
     width: 60, height: 44, borderWidth: 1,
     alignItems: 'center', justifyContent: 'center', marginRight: 14,
   },
-  swatchText: { fontFamily: 'monospace', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
+  swatchText: { ...TYPE.data,  fontSize: 10, letterSpacing: 0.8 },
   info: { flex: 1 },
-  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  label: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', letterSpacing: 2 },
-  proBadge: {
-    fontFamily: 'monospace', fontSize: 8,
-    paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 2,
+  labelRow: { flexWrap: 'wrap', flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  label: { ...TYPE.heading,  fontSize: 12, letterSpacing: 0.8 },
+  proBadge: { ...TYPE.label,
+    fontSize: 10,
+    paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 0.8,
   },
-  activeBadge: {
-    fontFamily: 'monospace', fontSize: 8,
-    borderWidth: 1, paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 2,
+  activeBadge: { ...TYPE.label,
+    fontSize: 10,
+    borderWidth: 1, paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 0.8,
   },
-  themeSub: { fontSize: 9, letterSpacing: 0.5 },
+  themeSub: { ...TYPE.body,  fontSize: 12, letterSpacing: 0.8 },
   toggleIndicator: {
     width: 48, height: 28, borderWidth: 1, borderRadius: 2,
     alignItems: 'center', justifyContent: 'center', marginRight: 14,
   },
-  toggleText: { fontFamily: 'monospace', fontSize: 9, fontWeight: '700', letterSpacing: 2 },
+  toggleText: { ...TYPE.label,  fontSize: 12, letterSpacing: 0.8 },
   scaleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20 },
   scaleBtn: {
     width: 40, height: 40, borderWidth: 1, borderRadius: 2,
     alignItems: 'center', justifyContent: 'center',
   },
-  scaleBtnText: { fontFamily: 'monospace', fontSize: 20, fontWeight: '700' },
-  scaleValue: { fontFamily: 'monospace', fontSize: 16, fontWeight: '700', letterSpacing: 2, minWidth: 50, textAlign: 'center' },
+  scaleBtnText: { ...TYPE.label,  fontSize: 20, },
+  scaleValue: { ...TYPE.data,  fontSize: 16, letterSpacing: 0.8, minWidth: 50, textAlign: 'center' },
   gpsIndicator: {
     width: 48, height: 28, borderRadius: 2,
     alignItems: 'center', justifyContent: 'center', marginRight: 14,
   },
-  gpsIndicatorText: { fontFamily: 'monospace', fontSize: 9, fontWeight: '700', letterSpacing: 2 },
+  gpsIndicatorText: { ...TYPE.label,  fontSize: 12, letterSpacing: 0.8 },
 });

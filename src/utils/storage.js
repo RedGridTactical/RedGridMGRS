@@ -6,7 +6,8 @@
  *   rg_pace_count     — pace count calibration (int)
  *   rg_pro_unlocked   — Pro purchase cache (bool string)
  *   rg_waypoint_lists — saved waypoint lists (JSON, Pro only)
- *   rg_theme          — display theme (string, Pro only)
+ *   rg_theme          — legacy display theme (read during migration)
+ *   rg_display_preferences — preferred palette + Tactical display (atomic JSON)
  *   rg_coord_format   — coordinate format (string, Pro only)
  *
  * NO location data, NO PII, NO tracking ever stored.
@@ -26,6 +27,7 @@ const KEYS = {
   PRO_UNLOCKED:    'rg_pro_unlocked',
   WAYPOINT_LISTS:  'rg_waypoint_lists',
   THEME:           'rg_theme',
+  DISPLAY_PREFERENCES: 'rg_display_preferences',
   COORD_FORMAT:    'rg_coord_format',
   SHAKE_TO_SPEAK:  'rg_shake_to_speak',
   GRID_CROSSING:   'rg_grid_crossing',
@@ -49,80 +51,108 @@ function withTimeout(promise, ms, message) {
 }
 
 // ─── SETTINGS ────────────────────────────────────────────────────────────────
-/**
- * Load all settings with safe defaults.
- * Returns defaults if AsyncStorage is unavailable or corrupted.
- */
-export async function loadSettings() {
-  try {
-    if (!AsyncStorage || !AsyncStorage.multiGet) {
-      return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true, gridScale: 1.0 };
+export const DEFAULT_DISPLAY_PREFERENCES = Object.freeze({
+  theme: 'standard',
+  tacticalMode: false,
+});
+const PREFERRED_THEMES = ['standard', 'green', 'white', 'blue'];
+
+/** The red palette is an overlay; the last non-red palette stays available. */
+export function normalizeDisplayPreferences(value, legacyTheme) {
+  if (value && PREFERRED_THEMES.includes(value.theme) && typeof value.tacticalMode === 'boolean') {
+    return { theme: value.theme, tacticalMode: value.tacticalMode };
+  }
+  if (legacyTheme === 'red') return { theme: 'standard', tacticalMode: true };
+  if (PREFERRED_THEMES.includes(legacyTheme)) return { theme: legacyTheme, tacticalMode: false };
+  return { ...DEFAULT_DISPLAY_PREFERENCES };
+}
+
+export function effectiveDisplayTheme(preferences) {
+  return preferences.tacticalMode ? 'red' : preferences.theme;
+}
+
+export function updateDisplayPreferences(current, change) {
+  if (Object.prototype.hasOwnProperty.call(change, 'theme')) {
+    if (change.theme === 'red') return { ...current, tacticalMode: true };
+    if (PREFERRED_THEMES.includes(change.theme)) return { theme: change.theme, tacticalMode: false };
+    return current;
+  }
+  if (typeof change.tacticalMode === 'boolean') return { ...current, tacticalMode: change.tacticalMode };
+  return current;
+}
+
+// Keep native writes ordered even when rapid toggles arrive before a write ends.
+// Timeout affects the caller only: it must not let a later write overtake a
+// still-pending native operation.
+let displayWriteQueue = Promise.resolve();
+let displayWriteRevision = 0;
+
+export function saveDisplayPreferences(value) {
+  if (!value || !PREFERRED_THEMES.includes(value.theme) || typeof value.tacticalMode !== 'boolean') {
+    return Promise.resolve();
+  }
+  const json = JSON.stringify({ theme: value.theme, tacticalMode: value.tacticalMode });
+  displayWriteRevision += 1;
+  displayWriteQueue = displayWriteQueue.then(async () => {
+    if (AsyncStorage && AsyncStorage.setItem) {
+      await AsyncStorage.setItem(KEYS.DISPLAY_PREFERENCES, json);
     }
+  }).catch(() => {});
+  return withTimeout(displayWriteQueue, 5000, 'Display save timeout').catch(() => {});
+}
+
+function defaultSettings() {
+  return {
+    declination: 0, paceCount: 62, theme: 'standard',
+    displayPreferences: { ...DEFAULT_DISPLAY_PREFERENCES }, tacticalMode: false,
+    coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true, gridScale: 1.0,
+  };
+}
+
+/** Load settings and migrate a valid legacy theme without replacing a new selection. */
+export async function loadSettings() {
+  const revisionAtLoad = displayWriteRevision;
+  try {
+    if (!AsyncStorage || !AsyncStorage.multiGet) return defaultSettings();
+    // A remount can read while the preceding screen's native write is pending.
+    // Let that write settle before consulting the legacy key.
+    await withTimeout(displayWriteQueue, 5000, 'Display load timeout');
 
     const items = await withTimeout(
       AsyncStorage.multiGet([
         KEYS.DECLINATION, KEYS.PACE_COUNT, KEYS.THEME, KEYS.COORD_FORMAT,
-        KEYS.SHAKE_TO_SPEAK, KEYS.GRID_CROSSING, KEYS.GRID_SCALE,
+        KEYS.SHAKE_TO_SPEAK, KEYS.GRID_CROSSING, KEYS.GRID_SCALE, KEYS.DISPLAY_PREFERENCES,
       ]),
       5000,
       'Storage timeout'
     );
+    if (!Array.isArray(items)) return defaultSettings();
+    const stored = Object.fromEntries(items.filter(item => Array.isArray(item) && item.length === 2));
+    const settings = defaultSettings();
+    const declination = parseFloat(stored[KEYS.DECLINATION]);
+    const paceCount = parseInt(stored[KEYS.PACE_COUNT], 10);
+    const gridScale = parseFloat(stored[KEYS.GRID_SCALE]);
+    if (Number.isFinite(declination)) settings.declination = declination;
+    if (Number.isFinite(paceCount)) settings.paceCount = paceCount;
+    if (Number.isFinite(gridScale) && gridScale >= 0.7 && gridScale <= 1.5) settings.gridScale = gridScale;
+    if (stored[KEYS.COORD_FORMAT]) settings.coordFormat = String(stored[KEYS.COORD_FORMAT]);
+    if (stored[KEYS.SHAKE_TO_SPEAK] != null) settings.shakeToSpeak = stored[KEYS.SHAKE_TO_SPEAK] !== 'false';
+    if (stored[KEYS.GRID_CROSSING] != null) settings.gridCrossing = stored[KEYS.GRID_CROSSING] !== 'false';
 
-    if (!items || !Array.isArray(items)) {
-      return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true, gridScale: 1.0 };
+    let parsed;
+    try { parsed = JSON.parse(stored[KEYS.DISPLAY_PREFERENCES]); } catch {}
+    const displayPreferences = normalizeDisplayPreferences(parsed, stored[KEYS.THEME]);
+    settings.displayPreferences = displayPreferences;
+    settings.tacticalMode = displayPreferences.tacticalMode;
+    settings.theme = effectiveDisplayTheme(displayPreferences);
+
+    // A user choice made during this read wins over the historical migration.
+    if (!stored[KEYS.DISPLAY_PREFERENCES] && stored[KEYS.THEME] && revisionAtLoad === displayWriteRevision) {
+      saveDisplayPreferences(displayPreferences);
     }
-
-    const dec = items[0];
-    const pace = items[1];
-    const theme = items[2];
-    const coord = items[3];
-
-    let declination = 0;
-    let paceCount = 62;
-    let themeValue = 'red';
-    let coordFormat = 'mgrs';
-    let shakeToSpeak = true;
-    let gridCrossing = true;
-    let gridScale = 1.0;
-
-    if (dec && Array.isArray(dec) && dec[1] !== null) {
-      const parsed = parseFloat(dec[1]);
-      if (!isNaN(parsed)) declination = parsed;
-    }
-
-    if (pace && Array.isArray(pace) && pace[1] !== null) {
-      const parsed = parseInt(pace[1], 10);
-      if (!isNaN(parsed)) paceCount = parsed;
-    }
-
-    if (theme && Array.isArray(theme) && theme[1]) {
-      themeValue = String(theme[1]);
-    }
-
-    if (coord && Array.isArray(coord) && coord[1]) {
-      coordFormat = String(coord[1]);
-    }
-
-    const shake = items[4];
-    if (shake && Array.isArray(shake) && shake[1] !== null) {
-      shakeToSpeak = shake[1] !== 'false';
-    }
-
-    const crossing = items[5];
-    if (crossing && Array.isArray(crossing) && crossing[1] !== null) {
-      gridCrossing = crossing[1] !== 'false';
-    }
-
-    const scale = items[6];
-    if (scale && Array.isArray(scale) && scale[1] !== null) {
-      const parsed = parseFloat(scale[1]);
-      if (!isNaN(parsed) && parsed >= 0.7 && parsed <= 1.5) gridScale = parsed;
-    }
-
-    return { declination, paceCount, theme: themeValue, coordFormat, shakeToSpeak, gridCrossing, gridScale };
+    return settings;
   } catch (err) {
-    // AsyncStorage unavailable, corrupted, permission denied, timeout, or parse error
-    return { declination: 0, paceCount: 62, theme: 'red', coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true, gridScale: 1.0 };
+    return defaultSettings();
   }
 }
 

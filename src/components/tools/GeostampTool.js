@@ -13,14 +13,13 @@
  *   - Never throws — graceful degradation throughout
  */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  View, Text, StyleSheet, TouchableOpacity, Image,
-  Alert, ActivityIndicator, Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
+import { Alert } from '../../utils/fieldAlert';
 import { useColors } from '../../utils/ThemeContext';
 import { tapMedium, tapHeavy, notifySuccess, notifyWarning } from '../../utils/haptics';
 import { toMGRS, formatMGRS } from '../../utils/mgrs';
 import { useTranslation } from '../../hooks/useTranslation';
+import { TYPE } from '../../utils/typography';
 
 // ─── Defensive module loading ────────────────────────────────────────────────
 let ImagePicker = null;
@@ -235,7 +234,7 @@ export function GeostampTool({ location }) {
           >
             <Text style={[styles.sourceBtnText, { color: colors.text2 }]}>{'\ud83d\uddbc'}  {t('toolLabels.fromLibrary')}</Text>
           </TouchableOpacity>
-          <Text style={[styles.hint, { color: colors.text4 }]}>
+          <Text style={[styles.hint, { color: colors.text3 }]}>
             {t('toolLabels.currentGrid')}: {mgrsNow || '\u2014'}
           </Text>
         </View>
@@ -281,12 +280,12 @@ export function GeostampTool({ location }) {
                   accessibilityRole="button"
                   accessibilityLabel={t('toolLabels.discard')}
                 >
-                  <Text style={[styles.clearBtnText, { color: colors.border }]}>{t('toolLabels.discard')}</Text>
+                  <Text style={[styles.clearBtnText, { color: colors.text3 }]}>{t('toolLabels.discard')}</Text>
                 </TouchableOpacity>
               </>
             )}
           </View>
-          <Text style={[styles.hint, { color: colors.text4 }]}>
+          <Text style={[styles.hint, { color: colors.text3 }]}>
             {t('toolLabels.photoOnDevice')}
           </Text>
         </View>
@@ -302,7 +301,7 @@ const styles = StyleSheet.create({
   sourceBtn: {
     borderWidth: 1, paddingVertical: 14, alignItems: 'center', minHeight: 44,
   },
-  sourceBtnText: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '700' },
+  sourceBtnText: { ...TYPE.label, fontSize: 12, letterSpacing: 1.2 },
   // Preview
   previewContainer: { alignItems: 'center', gap: 12 },
   composite: { overflow: 'hidden', position: 'relative' },
@@ -314,23 +313,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 6,
   },
   stampGrid: {
-    fontFamily: 'monospace', fontWeight: '700', letterSpacing: 2, color: '#FFFFFF',
+    ...TYPE.data, letterSpacing: 0.6, color: '#FFFFFF',
   },
   stampDTG: {
-    fontFamily: 'monospace', letterSpacing: 1, color: '#CCCCCC', marginTop: 1,
+    ...TYPE.data, letterSpacing: 0.6, color: '#CCCCCC', marginTop: 1,
   },
   // Actions
   actionRow: { flexDirection: 'row', gap: 10, width: '100%' },
   saveBtn: {
     flex: 2, borderWidth: 1, paddingVertical: 12, alignItems: 'center', minHeight: 44,
   },
-  saveBtnText: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 3, fontWeight: '700' },
+  saveBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   clearBtn: {
     flex: 1, borderWidth: 1, paddingVertical: 12, alignItems: 'center', minHeight: 44,
   },
-  clearBtnText: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 3 },
+  clearBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   // Hints
-  hint: { fontSize: 8, letterSpacing: 1, textAlign: 'center', marginTop: 4, lineHeight: 14 },
+  hint: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, textAlign: 'center', marginTop: 4, lineHeight: 17 },
   unavailable: { paddingVertical: 16, alignItems: 'center' },
-  unavailableText: { fontSize: 10, letterSpacing: 1, textAlign: 'center', lineHeight: 16 },
+  unavailableText: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, textAlign: 'center', lineHeight: 17 },
 });

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { TextInput } from '../FieldInput';
 import { backAzimuth, applyDeclination } from '../../utils/tactical';
 import { ToolInput, ToolResult, ToolRow } from './ToolShared';
 import { useTranslation } from '../../hooks/useTranslation';

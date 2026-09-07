@@ -7,6 +7,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { formatPosition } from '../utils/mgrs';
 import { useColors } from '../utils/ThemeContext';
 import { useTranslation } from '../hooks/useTranslation';
+import { TYPE } from '../utils/typography';
 
 const FORMATS = [
   { id: 'mgrs',      labelKey: 'coords.mgrs',      subKey: 'coords.mgrsSub' },
@@ -49,7 +50,7 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
             activeOpacity={0.7}
           >
             <View style={styles.cardTop}>
-              <View>
+              <View style={styles.cardText}>
                 <Text style={[styles.cardTitle, { color: colors.text }]}>{t(f.labelKey)}</Text>
                 <Text style={[styles.cardSub, { color: colors.text3 }]}>{t(f.subKey)}</Text>
               </View>
@@ -60,7 +61,7 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
 
             {positions && isActive && (
               <View style={[styles.preview, { borderTopColor: colors.border2 }]}>
-                <Text style={[styles.previewLabel, { color: colors.border }]}>{t('coords.yourPosition')}</Text>
+                <Text style={[styles.previewLabel, { color: colors.text3 }]}>{t('coords.yourPosition')}</Text>
                 <Text style={[styles.previewValue, { color: colors.text }]}>{positions[f.id]}</Text>
               </View>
             )}
@@ -69,7 +70,7 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
       })}
 
       {!location && (
-        <Text style={[styles.noFix, { color: colors.text4 }]}>{t('gps.noFixFormatPreview')}</Text>
+        <Text style={[styles.noFix, { color: colors.text3 }]}>{t('gps.noFixFormatPreview')}</Text>
       )}
     </ScrollView>
   );
@@ -78,15 +79,16 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
-  hint: { fontSize: 8, letterSpacing: 2, marginBottom: 12 },
+  hint: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, marginBottom: 12 },
   card: { borderWidth: 1, marginBottom: 8, padding: 14 },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardTitle: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', letterSpacing: 3, marginBottom: 3 },
-  cardSub: { fontSize: 9, letterSpacing: 1 },
+  cardText: { flex: 1, paddingRight: 10 },
+  cardTitle: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2, marginBottom: 3 },
+  cardSub: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3 },
   radio: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 8, height: 8, borderRadius: 4 },
   preview: { marginTop: 10, borderTopWidth: 1, paddingTop: 10 },
-  previewLabel: { fontSize: 8, letterSpacing: 2, marginBottom: 4 },
-  previewValue: { fontFamily: 'monospace', fontSize: 14, fontWeight: '700', letterSpacing: 2, lineHeight: 22 },
-  noFix: { fontSize: 9, textAlign: 'center', marginTop: 20, letterSpacing: 2 },
+  previewLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, marginBottom: 4 },
+  previewValue: { ...TYPE.data, fontSize: 14, letterSpacing: 0.6, lineHeight: 22 },
+  noFix: { ...TYPE.body, fontSize: 12, textAlign: 'center', marginTop: 20, letterSpacing: 0.3 },
 });

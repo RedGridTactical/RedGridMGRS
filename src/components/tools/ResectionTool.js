@@ -5,6 +5,7 @@ import { parseMGRSToLatLon } from '../../utils/mgrs';
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
 import { useTranslation } from '../../hooks/useTranslation';
+import { TYPE } from '../../utils/typography';
 
 export function ResectionTool() {
   const colors = useColors();
@@ -30,11 +31,11 @@ export function ResectionTool() {
     <View>
       <ToolHint text={t('toolLabels.resectionHint')} />
       <ToolDivider />
-      <Text style={[styles.ptLabel, { color: colors.border }]}>{t('toolLabels.point1')}</Text>
+      <Text style={[styles.ptLabel, { color: colors.text3 }]}>{t('toolLabels.point1')}</Text>
       <ToolInput label={t('toolLabels.knownPoint1')} value={pt1MGRS} onChangeText={setPt1MGRS} placeholder="18S UJ 12345 67890" />
       <ToolInput label={t('toolLabels.bearingToPt1')} value={bearing1} onChangeText={setBearing1} placeholder="0 – 360" keyboardType="numeric" />
       <ToolDivider />
-      <Text style={[styles.ptLabel, { color: colors.border }]}>{t('toolLabels.point2')}</Text>
+      <Text style={[styles.ptLabel, { color: colors.text3 }]}>{t('toolLabels.point2')}</Text>
       <ToolInput label={t('toolLabels.knownPoint2')} value={pt2MGRS} onChangeText={setPt2MGRS} placeholder="18S UJ 98765 43210" />
       <ToolInput label={t('toolLabels.bearingToPt2')} value={bearing2} onChangeText={setBearing2} placeholder="0 – 360" keyboardType="numeric" />
 
@@ -51,6 +52,6 @@ export function ResectionTool() {
 }
 
 const styles = StyleSheet.create({
-  ptLabel: { fontFamily:'monospace', fontSize:9, letterSpacing:4, marginBottom:6, marginTop:4 },
+  ptLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, marginBottom:6, marginTop:4 },
   results: { marginTop:12, gap:8 },
 });

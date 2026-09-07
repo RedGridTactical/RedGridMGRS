@@ -1,6 +1,6 @@
 /**
  * useSettings — Loads and persists user settings (HARDENED).
- * Adds theme support on top of declination + pace count.
+ * Stores the preferred palette independently from Tactical display.
  *
  * CRITICAL HARDENING:
  *   - loadSettings errors are caught and don't crash startup
@@ -9,12 +9,21 @@
  *   - Callbacks validate input before persisting
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { loadSettings, saveDeclination, savePaceCount, saveTheme, saveCoordFormat, saveShakeToSpeak, saveGridCrossing, saveGridScale } from '../utils/storage';
+import {
+  loadSettings, saveDeclination, savePaceCount, saveCoordFormat,
+  saveShakeToSpeak, saveGridCrossing, saveGridScale,
+  saveDisplayPreferences, DEFAULT_DISPLAY_PREFERENCES,
+  effectiveDisplayTheme, updateDisplayPreferences,
+} from '../utils/storage';
 
 export function useSettings() {
   const [declination, setDeclinationState] = useState(0);
   const [paceCount, setPaceCountState]     = useState(62);
-  const [theme, setThemeState]             = useState('red');
+  const [displayPreferences, setDisplayPreferences] = useState(DEFAULT_DISPLAY_PREFERENCES);
+  const displayRef = useRef(DEFAULT_DISPLAY_PREFERENCES);
+  const displayChanged = useRef(false);
+  const theme = effectiveDisplayTheme(displayPreferences);
+  const tacticalMode = displayPreferences.tacticalMode;
   const [coordFormat, setCoordFormatState] = useState('mgrs');
   const [shakeToSpeak, setShakeToSpeakState] = useState(true);
   const [gridCrossing, setGridCrossingState] = useState(true);
@@ -36,7 +45,11 @@ export function useSettings() {
         if (!cancelled && mounted.current && settings) {
           setDeclinationState(settings.declination ?? 0);
           setPaceCountState(settings.paceCount ?? 62);
-          setThemeState(settings.theme ?? 'red');
+          if (!displayChanged.current) {
+            const initialDisplay = settings.displayPreferences ?? DEFAULT_DISPLAY_PREFERENCES;
+            displayRef.current = initialDisplay;
+            setDisplayPreferences(initialDisplay);
+          }
           setCoordFormatState(settings.coordFormat ?? 'mgrs');
           setShakeToSpeakState(settings.shakeToSpeak ?? true);
           setGridCrossingState(settings.gridCrossing ?? true);
@@ -73,13 +86,22 @@ export function useSettings() {
     } catch (err) {}
   }, []);
 
-  const setTheme = useCallback((val) => {
-    try {
-      const themeStr = String(val ?? 'red');
-      setThemeState(themeStr);
-      saveTheme(themeStr).catch(() => {});
-    } catch (err) {}
+  const changeDisplay = useCallback((change) => {
+    const next = updateDisplayPreferences(displayRef.current, change);
+    if (next === displayRef.current) return;
+    displayChanged.current = true;
+    displayRef.current = next;
+    setDisplayPreferences(next);
+    saveDisplayPreferences(next).catch(() => {});
   }, []);
+
+  const setTheme = useCallback((themeId) => {
+    changeDisplay({ theme: themeId });
+  }, [changeDisplay]);
+
+  const setTacticalMode = useCallback((enabled) => {
+    changeDisplay({ tacticalMode: enabled });
+  }, [changeDisplay]);
 
   const setCoordFormat = useCallback((val) => {
     try {
@@ -118,6 +140,7 @@ export function useSettings() {
     declination, setDeclination,
     paceCount, setPaceCount,
     theme, setTheme,
+    tacticalMode, setTacticalMode,
     coordFormat, setCoordFormat,
     shakeToSpeak, setShakeToSpeak,
     gridCrossing, setGridCrossing,

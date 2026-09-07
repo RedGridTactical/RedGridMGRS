@@ -13,6 +13,7 @@ import { TeamMessageBar } from '../components/TeamMessageBar';
 import { TeamKeyPanel } from '../components/TeamKeyPanel';
 import { CONNECTION_STATES } from '../utils/meshtastic';
 import { toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
+import { TYPE } from '../utils/typography';
 
 function timeSince(ts) {
   if (!ts) return '--';
@@ -90,7 +91,7 @@ export function MeshScreen({
         <Text style={[styles.title, { color: colors.text }]}>{t('mesh.title')}</Text>
         <View style={styles.statusRow}>
           <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-          <Text style={[styles.statusText, { color: colors.border }]}>{statusLabel}</Text>
+          <Text style={[styles.statusText, { color: colors.text3 }]}>{statusLabel}</Text>
         </View>
       </View>
 
@@ -125,7 +126,7 @@ export function MeshScreen({
               accessibilityState={{ checked: autoShare }}
               accessibilityLabel={t('mesh.autoShare')}
             >
-              <Text style={[styles.toggleText, { color: autoShare ? colors.text : colors.border }]}>
+              <Text style={[styles.toggleText, { color: autoShare ? colors.text : colors.text3 }]}>
                 {autoShare ? t('mesh.on') : t('mesh.off')}
               </Text>
             </TouchableOpacity>
@@ -214,7 +215,7 @@ export function MeshScreen({
           )}
 
           {nearbyDevices.length === 0 && !isScanning && (
-            <Text style={[styles.hint, { color: colors.text4 }]}>{t('mesh.scanHint')}</Text>
+            <Text style={[styles.hint, { color: colors.text3 }]}>{t('mesh.scanHint')}</Text>
           )}
         </View>
       )}
@@ -229,7 +230,7 @@ export function MeshScreen({
                 <Text style={[styles.nodeId, { color: colors.text2 }]}>
                   {t('mesh.node')} {pos.nodeId ? `#${pos.nodeId.toString(16).toUpperCase()}` : `#${idx + 1}`}
                 </Text>
-                <Text style={[styles.nodeTime, { color: colors.text4 }]}>{timeSince(pos.timestamp)} {t('mesh.ago')}</Text>
+                <Text style={[styles.nodeTime, { color: colors.text3 }]}>{timeSince(pos.timestamp)} {t('mesh.ago')}</Text>
               </View>
               {pos.mgrs && (
                 <Text style={[styles.nodeMgrs, { color: colors.text }]}>{pos.mgrs}</Text>
@@ -252,7 +253,7 @@ export function MeshScreen({
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.text4 }]}>{t('mesh.footer')}</Text>
+        <Text style={[styles.footerText, { color: colors.text3 }]}>{t('mesh.footer')}</Text>
       </View>
     </ScrollView>
   );
@@ -261,46 +262,46 @@ export function MeshScreen({
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingTop: 4 },
-  title: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', letterSpacing: 5 },
+  header: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingTop: 4 },
+  title: { ...TYPE.heading, fontSize: 22, letterSpacing: 1.2 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   statusDot: { width: 7, height: 7, borderRadius: 4 },
-  statusText: { fontSize: 9, letterSpacing: 3 },
+  statusText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
   card: { borderWidth: 1, marginBottom: 8, padding: 14 },
-  cardTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '700' },
-  cardSub: { fontSize: 9, letterSpacing: 2, marginTop: 2 },
+  cardTitle: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2 },
+  cardSub: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, marginTop: 2 },
 
   btn: { borderWidth: 1, paddingHorizontal: 18, paddingVertical: 9, alignItems: 'center', marginTop: 10, minHeight: 44 },
-  btnText: { fontSize: 10, letterSpacing: 3, fontWeight: '700' },
+  btnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
   toggleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   toggleBtn: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 7, minHeight: 36, justifyContent: 'center' },
-  toggleText: { fontSize: 10, letterSpacing: 3, fontWeight: '700' },
+  toggleText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
   scanBtn: { borderWidth: 1, paddingVertical: 13, alignItems: 'center', minHeight: 44 },
-  scanBtnText: { fontSize: 12, letterSpacing: 3, fontWeight: '700' },
+  scanBtnText: { ...TYPE.label, fontSize: 12, letterSpacing: 1.2 },
 
-  errorText: { fontSize: 10, letterSpacing: 1, marginTop: 8, textAlign: 'center' },
-  hint: { fontSize: 10, letterSpacing: 2, marginTop: 12, textAlign: 'center' },
+  errorText: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, marginTop: 8, textAlign: 'center' },
+  hint: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, marginTop: 12, textAlign: 'center' },
 
   deviceList: { marginTop: 12, gap: 6 },
   deviceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, padding: 12 },
-  deviceName: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 2, fontWeight: '700' },
-  deviceRssi: { fontSize: 9, letterSpacing: 1, marginTop: 2 },
-  connectLabel: { fontSize: 10, letterSpacing: 3, fontWeight: '700' },
+  deviceName: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2 },
+  deviceRssi: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6, marginTop: 2 },
+  connectLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
-  sectionLabel: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 4, fontWeight: '700', marginBottom: 8 },
+  sectionLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, marginBottom: 8 },
   section: { marginTop: 8 },
 
   nodeCard: { borderWidth: 1, marginBottom: 6, padding: 12 },
   nodeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  nodeId: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2, fontWeight: '700' },
-  nodeTime: { fontSize: 9, letterSpacing: 1 },
-  nodeMgrs: { fontFamily: 'monospace', fontSize: 14, letterSpacing: 3, fontWeight: '700', marginBottom: 4 },
-  nodeMetrics: { flexDirection: 'row', gap: 12 },
-  nodeMetric: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2 },
+  nodeId: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6 },
+  nodeTime: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6 },
+  nodeMgrs: { ...TYPE.data, fontSize: 14, letterSpacing: 0.6, marginBottom: 4 },
+  nodeMetrics: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  nodeMetric: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6 },
 
   footer: { paddingTop: 24, alignItems: 'center' },
-  footerText: { fontSize: 10, letterSpacing: 2 },
+  footerText: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3 },
 });

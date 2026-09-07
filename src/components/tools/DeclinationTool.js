@@ -5,6 +5,7 @@ import { gridConvergence, gmAngle, magneticToGrid, gridToMagnetic, pointScaleFac
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
 import { useTranslation } from '../../hooks/useTranslation';
+import { TYPE } from '../../utils/typography';
 
 /**
  * Magnetic / grid / true bearing conversion.
@@ -62,13 +63,13 @@ export function DeclinationTool({ declination, setDeclination, location }) {
 
   return (
     <View>
-      <Text style={[styles.sectionLabel, { color: colors.border }]}>{t('toolLabels.localDeclination')}</Text>
+      <Text style={[styles.sectionLabel, { color: colors.text3 }]}>{t('toolLabels.localDeclination')}</Text>
       <View style={styles.calibRow}>
         <View style={{ flex: 1 }}>
           <ToolInput label="" value={decInput} onChangeText={setDecInput} placeholder="+5 or -12" keyboardType="numbers-and-punctuation" />
         </View>
         <TouchableOpacity style={[styles.saveBtn, { borderColor: colors.border }]} onPress={saveDec}>
-          <Text style={[styles.saveBtnText, { color: colors.border }]}>{t('toolLabels.save')}</Text>
+          <Text style={[styles.saveBtnText, { color: colors.text3 }]}>{t('toolLabels.save')}</Text>
         </TouchableOpacity>
       </View>
       <ToolHint text={`${t('toolLabels.saved')}: ${declination > 0 ? '+' : ''}${declination}° (${dir})  ·  + = EAST, - = WEST`} />
@@ -95,14 +96,14 @@ export function DeclinationTool({ declination, setDeclination, location }) {
       )}
 
       <ToolDivider />
-      <Text style={[styles.sectionLabel, { color: colors.border }]}>{t('toolLabels.bearingConverter')}</Text>
+      <Text style={[styles.sectionLabel, { color: colors.text3 }]}>{t('toolLabels.bearingConverter')}</Text>
 
       <View style={styles.modeRow}>
         <TouchableOpacity style={[styles.modeBtn, { borderColor: colors.border2 }, mode==='mag2grid' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setMode('mag2grid')}>
-          <Text style={[styles.modeBtnText, { color: colors.border2 }, mode==='mag2grid' && { color: colors.text }]}>{t('toolLabels.magToGrid')}</Text>
+          <Text style={[styles.modeBtnText, { color: colors.text3 }, mode==='mag2grid' && { color: colors.text }]}>{t('toolLabels.magToGrid')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.modeBtn, { borderColor: colors.border2 }, mode==='grid2mag' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setMode('grid2mag')}>
-          <Text style={[styles.modeBtnText, { color: colors.border2 }, mode==='grid2mag' && { color: colors.text }]}>{t('toolLabels.gridToMag')}</Text>
+          <Text style={[styles.modeBtnText, { color: colors.text3 }, mode==='grid2mag' && { color: colors.text }]}>{t('toolLabels.gridToMag')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -130,11 +131,11 @@ export function DeclinationTool({ declination, setDeclination, location }) {
 }
 
 const styles = StyleSheet.create({
-  sectionLabel: { fontFamily:'monospace', fontSize:9, letterSpacing:3, marginBottom:6 },
+  sectionLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, marginBottom:6 },
   calibRow: { flexDirection:'row', gap:8, alignItems:'flex-end' },
   saveBtn: { borderWidth:1, paddingHorizontal:14, paddingVertical:10, marginBottom:10 },
-  saveBtnText: { fontFamily:'monospace', fontSize:10, letterSpacing:2 },
+  saveBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   modeRow: { flexDirection:'row', gap:8, marginBottom:12 },
   modeBtn: { flex:1, borderWidth:1, paddingVertical:9, alignItems:'center' },
-  modeBtnText: { fontFamily:'monospace', fontSize:9, letterSpacing:2 },
+  modeBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 });

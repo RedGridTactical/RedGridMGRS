@@ -33,6 +33,8 @@ import { GeostampTool }      from '../components/tools/GeostampTool';
 import { ElevationTool }     from '../components/tools/ElevationTool';
 import { BarometerTool }     from '../components/tools/BarometerTool';
 import { SignalTool }        from '../components/tools/SignalTool';
+import { TacticalSurfaceGuard } from '../components/TacticalSurfaceGuard';
+import { TYPE } from '../utils/typography';
 
 const TOOLS = [
   { id: 'backaz',   labelKey: 'tools.backAzimuth',    subKey: 'tools.backAzimuthSub',         Component: BackAzimuthTool   },
@@ -51,7 +53,7 @@ const TOOLS = [
   { id: 'baro',     labelKey: 'tools.barometer',       subKey: 'tools.barometerSub',           Component: BarometerTool, pro: true },
 ];
 
-export function ToolsScreen({ location, declination, paceCount, setDeclination, setPaceCount, compassHeading, isPro, trialEligible, onShowProGate }) {
+export function ToolsScreen({ location, declination, paceCount, setDeclination, setPaceCount, compassHeading, compassReference, isPro, trialEligible, onShowProGate }) {
   const colors = useColors();
   const { t } = useTranslation();
   const [openTool, setOpenTool] = useState(null);
@@ -74,6 +76,7 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
         const sub = t(subKey);
         const isOpen = openTool === id;
         const isLocked = pro && !isPro;
+        const Surface = id === 'geostamp' ? TacticalSurfaceGuard : React.Fragment;
         return (
           <View key={id} style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }, isOpen && { borderColor: colors.text2 }, isLocked && styles.cardLocked]}>
             <TouchableOpacity
@@ -88,27 +91,28 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
               accessibilityLabel={`${label}, ${sub}${isLocked ? '. Pro feature, locked.' : ''}`}
               accessibilityHint={isLocked ? 'Double tap to view upgrade options' : (isOpen ? 'Double tap to collapse' : 'Double tap to expand')}
             >
-              <View>
+              <View style={styles.cardText}>
                 <View style={styles.labelRow}>
                   <Text style={[styles.cardTitle, { color: colors.text }]}>{label}</Text>
                   {isLocked && <Text style={[styles.proBadge, { color: colors.bg, backgroundColor: colors.text }]}>{trialEligible ? t('proGate.tryFreeBadge') : 'PRO'}</Text>}
                 </View>
                 <Text style={[styles.cardSub, { color: colors.text3 }]}>{sub}</Text>
               </View>
-              <Text style={[styles.chevron, { color: colors.border }, isOpen && { color: colors.text, transform: [{ rotate: '90deg' }] }]} importantForAccessibility="no" accessibilityElementsHidden={true}>▶</Text>
+              <Text style={[styles.chevron, { color: colors.text3 }, isOpen && { color: colors.text, transform: [{ rotate: '90deg' }] }]} importantForAccessibility="no" accessibilityElementsHidden={true}>▶</Text>
             </TouchableOpacity>
 
             {isOpen && (
               <View style={styles.cardBody}>
                 <View style={[styles.cardDivider, { backgroundColor: colors.border2 }]} />
-                <Component
+                <Surface><Component
                   location={location}
                   declination={declination}
                   paceCount={paceCount}
                   setDeclination={setDeclination}
                   setPaceCount={setPaceCount}
                   compassHeading={compassHeading}
-                />
+                  compassReference={compassReference}
+                /></Surface>
               </View>
             )}
           </View>
@@ -116,7 +120,7 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
       })}
 
       <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.text4 }]}>{t('tools.footer')}</Text>
+        <Text style={[styles.footerText, { color: colors.text3 }]}>{t('tools.footer')}</Text>
       </View>
     </ScrollView>
   );
@@ -125,9 +129,9 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingTop: 4 },
-  title: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', letterSpacing: 5 },
-  subtitle: { fontSize: 8, letterSpacing: 3 },
+  header: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingTop: 4 },
+  title: { ...TYPE.heading, fontSize: 22, letterSpacing: 1.2 },
+  subtitle: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3 },
 
   card: {
     borderWidth: 1,
@@ -141,15 +145,16 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   cardLocked: { opacity: 0.7 },
-  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
-  proBadge: { fontFamily: 'monospace', fontSize: 8, paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 2 },
-  cardTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '700' },
-  cardSub:   { fontSize: 9,  letterSpacing: 2 },
+  cardText: { flex: 1, paddingRight: 10 },
+  labelRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 2 },
+  proBadge: { ...TYPE.label, fontSize: 11, paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 1.2 },
+  cardTitle: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2 },
+  cardSub:   { ...TYPE.body, fontSize: 12,  letterSpacing: 0.3 },
   chevron:   { fontFamily: 'monospace', fontSize: 10, transform: [{ rotate: '0deg' }] },
 
   cardBody: { paddingHorizontal: 14, paddingBottom: 16 },
   cardDivider: { height: 1, marginBottom: 14 },
 
   footer: { paddingTop: 24, alignItems: 'center' },
-  footerText: { fontSize: 10, letterSpacing: 2 },
+  footerText: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3 },
 });

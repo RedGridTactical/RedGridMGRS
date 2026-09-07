@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Modal } from './FieldModal';
 import { useColors } from '../utils/ThemeContext';
+import { TYPE } from '../utils/typography';
 import { useTranslation } from '../hooks/useTranslation';
 import { PEER_STATUS, TEAM_ROLES } from '../utils/teamAwareness';
 import { calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
@@ -32,10 +34,10 @@ function formatAge(ms) {
 
 function statusColor(status, colors) {
   switch (status) {
-    case PEER_STATUS.LIVE: return colors.accent;
+    case PEER_STATUS.LIVE: return colors.accentText;
     case PEER_STATUS.STALE: return colors.text2;
     case PEER_STATUS.GHOST: return colors.text3;
-    default: return colors.text4;
+    default: return colors.text3;
   }
 }
 
@@ -78,7 +80,7 @@ const PeerRow = React.memo(function PeerRow({ peer, origin, colors, onPress }) {
       </View>
       <View style={styles.rowMeta}>
         <Text style={[styles.status, { color: tone }]}>{peer.status.toUpperCase()}</Text>
-        <Text style={[styles.age, { color: colors.text4 }]}>{formatAge(peer.ageMs)}</Text>
+        <Text style={[styles.age, { color: colors.text3 }]}>{formatAge(peer.ageMs)}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -149,8 +151,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1,
   },
-  title: { fontFamily: 'monospace', fontSize: 13, letterSpacing: 4, fontWeight: '700' },
-  count: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 2 },
+  title: {
+    ...TYPE.heading, fontSize: 17, letterSpacing: 1.2 },
+  count: { ...TYPE.data, fontSize: 13, letterSpacing: 0.5 },
   list: { flexGrow: 0 },
   listContent: { paddingVertical: 4 },
   row: {
@@ -160,19 +163,24 @@ const styles = StyleSheet.create({
   },
   rowMain: { flex: 1, paddingRight: 12 },
   nameLine: { flexDirection: 'row', alignItems: 'center' },
-  sosTag: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', letterSpacing: 2 },
-  name: { fontFamily: 'monospace', fontSize: 14, fontWeight: '700', letterSpacing: 1, flexShrink: 1 },
-  role: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2 },
-  rel: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 1, marginTop: 3 },
+  sosTag: {
+    ...TYPE.heading, fontSize: 13, letterSpacing: 0.8 },
+  name: { ...TYPE.heading, fontSize: 16, letterSpacing: 0.5, flexShrink: 1 },
+  role: {
+    ...TYPE.label, fontSize: 12, letterSpacing: 0.8 },
+  rel: { ...TYPE.data, fontSize: 12, letterSpacing: 0.5, marginTop: 3 },
   rowMeta: { alignItems: 'flex-end' },
-  status: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2, fontWeight: '700' },
-  age: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 1, marginTop: 3 },
+  status: {
+    ...TYPE.label, fontSize: 11, letterSpacing: 0.8 },
+  age: { ...TYPE.data, fontSize: 11, letterSpacing: 0.5, marginTop: 3 },
   empty: { padding: 32, alignItems: 'center', gap: 10 },
-  emptyTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '700' },
-  emptyBody: { fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  emptyTitle: {
+    ...TYPE.heading, fontSize: 16, letterSpacing: 1 },
+  emptyBody: { ...TYPE.body, letterSpacing: 0.3, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   closeBtn: {
     marginHorizontal: 16, marginTop: 10, borderWidth: 1,
     paddingVertical: 13, alignItems: 'center', minHeight: 44, justifyContent: 'center',
   },
-  closeText: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 3, fontWeight: '700' },
+  closeText: {
+    ...TYPE.heading, fontSize: 14, letterSpacing: 1 },
 });

@@ -1,13 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { deadReckoning } from '../../utils/tactical';
+import { deadReckoning, compassToGridHeading } from '../../utils/tactical';
 import { toMGRS, formatMGRS } from '../../utils/mgrs';
 import { useColors } from '../../utils/ThemeContext';
 import { tapLight } from '../../utils/haptics';
 import { ToolInput, ToolResult, ToolRow, ToolHint } from './ToolShared';
 import { useTranslation } from '../../hooks/useTranslation';
+import { TYPE } from '../../utils/typography';
 
-export function DeadReckoningTool({ location, compassHeading }) {
+export function DeadReckoningTool({ location, compassHeading, compassReference }) {
   const colors = useColors();
   const { t } = useTranslation();
   const [heading, setHeading]     = useState('');
@@ -18,19 +19,20 @@ export function DeadReckoningTool({ location, compassHeading }) {
   const startLon = location?.lon;
   const liveMGRS = location ? formatMGRS(toMGRS(startLat, startLon, 5)) : null;
 
-  const hasCompass = compassHeading !== null && compassHeading !== undefined;
+  const compassGridHeading = compassToGridHeading(compassHeading, compassReference, startLat, startLon);
+  const hasCompass = compassGridHeading !== null;
   const setFromCompass = () => {
     if (!hasCompass) return;
     tapLight();
-    setHeading(Math.round(compassHeading).toString());
+    setHeading((Math.round(compassGridHeading) % 360).toString());
   };
 
   const result = useMemo(() => {
     const h = parseFloat(heading);
     const d = parseFloat(distance);
     if (isNaN(h) || isNaN(d) || d <= 0 || h < 0 || h > 360) return null;
-    if (!startLat || !startLon) return null;
-    return deadReckoning(startLat, startLon, h, d);
+    if (!Number.isFinite(startLat) || !Number.isFinite(startLon)) return null;
+    return deadReckoning(startLat, startLon, h, d, 'grid');
   }, [startLat, startLon, heading, distance]);
 
   return (
@@ -47,14 +49,19 @@ export function DeadReckoningTool({ location, compassHeading }) {
           disabled={!hasCompass}
           activeOpacity={0.7}
           accessibilityRole="button"
-          accessibilityLabel={hasCompass ? `Use current compass heading ${Math.round(compassHeading)} degrees` : 'Compass unavailable'}
+          accessibilityState={{ disabled: !hasCompass }}
+          accessibilityLabel={hasCompass
+            ? t('toolLabels.useCompassGrid', { heading: Math.round(compassGridHeading) % 360 })
+            : t('toolLabels.compassGridUnavailable')}
         >
-          <Text style={[styles.compassBtnLabel, { color: hasCompass ? colors.border : colors.text4 }]}>{t('toolLabels.compass')}</Text>
-          <Text style={[styles.compassBtnValue, { color: hasCompass ? colors.text : colors.text4 }]}>
-            {hasCompass ? `${Math.round(compassHeading)}°` : '---'}
+          <Text style={[styles.compassBtnLabel, { color: colors.text3 }]}>{t('toolLabels.compassGrid')}</Text>
+          <Text style={[styles.compassBtnValue, { color: hasCompass ? colors.text : colors.text3 }]}>
+            {hasCompass ? `${Math.round(compassGridHeading) % 360}°` : '---'}
           </Text>
         </TouchableOpacity>
       </View>
+
+      {!hasCompass && <ToolHint text={t('toolLabels.compassGridUnavailable')} />}
 
       <ToolInput label={t('toolLabels.distanceMetres')} value={distance} onChangeText={setDistance} placeholder="e.g. 850" keyboardType="numeric" />
 
@@ -79,6 +86,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     minHeight: 44, marginBottom: 10,
   },
-  compassBtnLabel: { fontSize: 7, letterSpacing: 2 },
-  compassBtnValue: { fontFamily: 'monospace', fontSize: 14, letterSpacing: 2, fontWeight: '700' },
+  compassBtnLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
+  compassBtnValue: { ...TYPE.data, fontSize: 14, letterSpacing: 0.6 },
 });

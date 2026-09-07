@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { TYPE } from '../utils/typography';
 import { useColors } from '../utils/ThemeContext';
 
 /**
@@ -70,7 +71,7 @@ export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, alt
           <Text style={[styles.gzdCompact, { color: colors.text2, fontSize: 16 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{gzd}</Text>
           <Text style={[styles.squareCompact, { color: colors.text, fontSize: 26 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{sq}</Text>
         </View>
-        <Text style={[styles.eastingCompact, { color: colors.text, fontSize: 22 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{en}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} style={[styles.eastingCompact, { color: colors.text, fontSize: 22 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{en}</Text>
         <View style={styles.meta}>
           {accuracy != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>±{accuracy}m</Text>}
           {altitude  != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>ALT {altitude}m</Text>}
@@ -85,7 +86,7 @@ export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, alt
       <View style={styles.coordBlock}>
         <Text style={[styles.gzd, { color: colors.text2, fontSize: 22 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{gzd}</Text>
         <Text style={[styles.square, { color: colors.text, fontSize: 36 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{sq}</Text>
-        <Text style={[styles.easting, { color: colors.text, fontSize: 32 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{en}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} style={[styles.easting, { color: colors.text, fontSize: 32 * s }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>{en}</Text>
       </View>
       <View style={styles.meta}>
         {accuracy != null && <Text style={[styles.metaText, { color: colors.text2 }]} importantForAccessibility="no" maxFontSizeMultiplier={1.0}>±{accuracy}m</Text>}
@@ -97,26 +98,26 @@ export const MGRSDisplay = React.memo(function MGRSDisplay({ mgrs, accuracy, alt
 
 const styles = StyleSheet.create({
   // ── Portrait ──
-  container: { alignItems: 'center', paddingVertical: 16 },
-  label: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 6, marginBottom: 8 },
-  coordBlock: { alignItems: 'center', gap: 2 },
-  gzd:     { fontFamily: 'monospace', fontSize: 22, letterSpacing: 3, fontWeight: '600' },
-  square:  { fontFamily: 'monospace', fontSize: 36, letterSpacing: 6, fontWeight: '700' },
-  easting: { fontFamily: 'monospace', fontSize: 32, letterSpacing: 8, fontWeight: '600' },
+  container: { width: '100%', alignItems: 'center', paddingVertical: 16 },
+  label: { ...TYPE.label, fontSize: 12, letterSpacing: 1.2, marginBottom: 8 },
+  coordBlock: { width: '100%', alignItems: 'center', gap: 2 },
+  gzd: { ...TYPE.data, fontSize: 22, letterSpacing: 1.2, },
+  square: { ...TYPE.data, fontSize: 36, letterSpacing: 1.2, },
+  easting: { ...TYPE.data, fontSize: 32, letterSpacing: 1.2, },
 
   // ── Alt format (non-MGRS) ──
-  altValue: { fontFamily: 'monospace', fontSize: 26, letterSpacing: 4, fontWeight: '700', textAlign: 'center', lineHeight: 36 },
-  altValueCompact: { fontFamily: 'monospace', fontSize: 18, letterSpacing: 3, fontWeight: '700', lineHeight: 26 },
+  altValue: { ...TYPE.data, fontSize: 26, letterSpacing: 1.2, textAlign: 'center', lineHeight: 36 },
+  altValueCompact: { ...TYPE.data, fontSize: 18, letterSpacing: 1.2, lineHeight: 26 },
 
   // ── Compact / Landscape ──
   containerCompact: { paddingVertical: 8 },
-  labelCompact: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 5, marginBottom: 4 },
+  labelCompact: { ...TYPE.label, fontSize: 12, letterSpacing: 1.2, marginBottom: 4 },
   compactRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
-  gzdCompact:    { fontFamily: 'monospace', fontSize: 16, letterSpacing: 2, fontWeight: '600' },
-  squareCompact: { fontFamily: 'monospace', fontSize: 26, letterSpacing: 4, fontWeight: '700' },
-  eastingCompact:{ fontFamily: 'monospace', fontSize: 22, letterSpacing: 5, fontWeight: '600', marginTop: 2 },
+  gzdCompact: { ...TYPE.data, fontSize: 16, letterSpacing: 1.2, },
+  squareCompact: { ...TYPE.data, fontSize: 26, letterSpacing: 1.2, },
+  eastingCompact: { ...TYPE.data, fontSize: 22, letterSpacing: 1.2, marginTop: 2 },
 
   // ── Shared ──
-  meta: { flexDirection: 'row', gap: 16, marginTop: 6, opacity: 0.7 },
-  metaText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2 },
+  meta: { flexDirection: 'row', gap: 16, marginTop: 12, flexWrap: 'wrap', justifyContent: 'center' },
+  metaText: { ...TYPE.data, fontSize: 12, letterSpacing: 1.2 },
 });

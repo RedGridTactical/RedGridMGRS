@@ -409,8 +409,8 @@ describe('dead reckoning runs on the ellipsoid', () => {
   const tacSrc = fs.readFileSync(path.join(__dirname, '..', 'src/utils/tactical.js'), 'utf8');
 
   it('tactical.js keeps no sphere radius of its own for DR', () => {
-    expect(tacSrc).toMatch(/import \{ geodesicDestination \} from '\.\/geodesy'/);
-    expect(tacSrc).toMatch(/geodesicDestination\(startLat, startLon, headingDeg, distanceM\)/);
+    expect(tacSrc).toMatch(/import \{[^}]*\bgeodesicDestination\b[^}]*\} from '\.\/geodesy'/);
+    expect(tacSrc).toMatch(/geodesicDestination\(startLat, startLon, trueHeading, distanceM\)/);
     expect(tacSrc).not.toMatch(/6371000/);
   });
 });

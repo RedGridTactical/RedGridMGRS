@@ -4,6 +4,7 @@ import { timeToTravel, formatMinutes } from '../../utils/tactical';
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
 import { useTranslation } from '../../hooks/useTranslation';
+import { TYPE } from '../../utils/typography';
 
 const PRESETS = [
   { labelKey: 'toolLabels.openTerrain', kmh: 4.0 },
@@ -34,7 +35,7 @@ export function TDSTool({ location }) {
     <View>
       <ToolInput label={t('toolLabels.distanceMetres')} value={distance} onChangeText={setDistance} placeholder="e.g. 1500" keyboardType="numeric" />
 
-      <Text style={[styles.presetsLabel, { color: colors.border }]}>{t('toolLabels.speedPresets')}</Text>
+      <Text style={[styles.presetsLabel, { color: colors.text3 }]}>{t('toolLabels.speedPresets')}</Text>
       <View style={styles.presets}>
         {PRESETS.map(p => (
           <TouchableOpacity
@@ -42,8 +43,8 @@ export function TDSTool({ location }) {
             style={[styles.preset, { borderColor: colors.border2 }, speed === String(p.kmh) && { borderColor: colors.text2, backgroundColor: colors.text5 }]}
             onPress={() => setSpeed(String(p.kmh))}
           >
-            <Text style={[styles.presetLabel, { color: colors.border2 }, speed === String(p.kmh) && { color: colors.text2 }]}>{t(p.labelKey)}</Text>
-            <Text style={[styles.presetVal, { color: colors.border2 }, speed === String(p.kmh) && { color: colors.text }]}>{p.kmh}km/h</Text>
+            <Text style={[styles.presetLabel, { color: colors.text3 }, speed === String(p.kmh) && { color: colors.text2 }]}>{t(p.labelKey)}</Text>
+            <Text style={[styles.presetVal, { color: colors.text3 }, speed === String(p.kmh) && { color: colors.text }]}>{p.kmh}km/h</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -63,10 +64,10 @@ export function TDSTool({ location }) {
 }
 
 const styles = StyleSheet.create({
-  presetsLabel: { fontFamily:'monospace', fontSize:9, letterSpacing:3, marginBottom:8 },
+  presetsLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, marginBottom:8 },
   presets: { flexDirection:'row', flexWrap:'wrap', gap:6, marginBottom:12 },
   preset: { flex:1, minWidth:'45%', borderWidth:1, padding:8 },
-  presetLabel: { fontFamily:'monospace', fontSize:8, letterSpacing:2 },
-  presetVal: { fontFamily:'monospace', fontSize:10, letterSpacing:2, fontWeight:'700', marginTop:2 },
+  presetLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
+  presetVal: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6, marginTop:2 },
   results: { marginTop:12, gap:8 },
 });

@@ -14,10 +14,11 @@
  * whatever the operator chooses; this component opens nothing itself.
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import {
-  View, Text, StyleSheet, TouchableOpacity, TextInput, Share, Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Share } from 'react-native';
+import { TextInput } from './FieldInput';
+import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
 import { useColors } from '../utils/ThemeContext';
+import { TYPE } from '../utils/typography';
 import { useTranslation } from '../hooks/useTranslation';
 import { tapLight, tapMedium } from '../utils/haptics';
 import { useTeamKey } from '../hooks/useTeamAwareness';
@@ -75,7 +76,8 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
     }
   }, [pairingPayload]);
 
-  const onShare = useCallback(() => {
+  const onShare = useCallback(async () => {
+    if (!(await allowSystemDisplay())) return;
     tapLight();
     if (!pairingPayload) return;
     Share.share({ message: pairingPayload }).catch(() => {});
@@ -199,7 +201,7 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
       {/* Pairing code */}
       {hasTeamKey && showCode && !!pairingPayload && (
         <View style={[styles.codeBox, { borderColor: colors.border }]}>
-          <Text style={[styles.codeHint, { color: colors.text4 }]}>
+          <Text style={[styles.codeHint, { color: colors.text3 }]}>
             {t('mesh.pairing.codeHint', 'Read this to your team, or share it. Anyone with this code can read your team traffic.')}
           </Text>
           <Text
@@ -237,7 +239,7 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
       {/* Join form */}
       {!hasTeamKey && showJoin && (
         <View style={[styles.codeBox, { borderColor: colors.border }]}>
-          <Text style={[styles.codeHint, { color: colors.text4 }]}>
+          <Text style={[styles.codeHint, { color: colors.text3 }]}>
             {t('mesh.pairing.joinHint', 'Enter the pairing code from your team lead.')}
           </Text>
           <TextInput
@@ -245,7 +247,7 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
             value={joinText}
             onChangeText={(v) => { setJoinText(v); setJoinError(false); }}
             placeholder={t('mesh.pairing.joinPlaceholder', 'redgrid://team?...')}
-            placeholderTextColor={colors.text4}
+            placeholderTextColor={colors.text3}
             autoCapitalize="none"
             autoCorrect={false}
             multiline
@@ -276,22 +278,27 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
 const styles = StyleSheet.create({
   card: { borderWidth: 1, marginBottom: 8, padding: 14 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '700' },
-  state: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, fontWeight: '700' },
-  cardSub: { fontSize: 9, letterSpacing: 2, marginTop: 4, lineHeight: 14 },
-  fingerprint: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 3, marginTop: 8 },
-  warn: { fontSize: 10, letterSpacing: 1, marginTop: 8, lineHeight: 14 },
+  cardTitle: {
+    ...TYPE.heading, fontSize: 15, letterSpacing: 1 },
+  state: { ...TYPE.label, fontSize: 12, letterSpacing: 0.8 },
+  cardSub: {
+    ...TYPE.body, fontSize: 13, letterSpacing: 0.3, marginTop: 4, lineHeight: 18 },
+  fingerprint: { ...TYPE.data, fontSize: 12, letterSpacing: 0.5, marginTop: 8 },
+  warn: {
+    ...TYPE.body, fontSize: 13, letterSpacing: 0.3, marginTop: 8, lineHeight: 18 },
   actions: { flexDirection: 'row', gap: 8, marginTop: 10 },
   btn: {
     flex: 1, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 10,
     alignItems: 'center', justifyContent: 'center', minHeight: 44,
   },
-  btnText: { fontSize: 10, letterSpacing: 2, fontWeight: '700', textAlign: 'center' },
+  btnText: {
+    ...TYPE.heading, fontSize: 12, letterSpacing: 0.8, textAlign: 'center' },
   codeBox: { borderWidth: 1, padding: 12, marginTop: 10 },
-  codeHint: { fontSize: 9, letterSpacing: 1, lineHeight: 14, marginBottom: 8 },
-  code: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 1, lineHeight: 20 },
+  codeHint: {
+    ...TYPE.body, fontSize: 13, letterSpacing: 0.3, lineHeight: 18, marginBottom: 8 },
+  code: { ...TYPE.data, fontSize: 12, letterSpacing: 0.5, lineHeight: 20 },
   input: {
-    borderWidth: 1, padding: 10, minHeight: 66, fontFamily: 'monospace',
-    fontSize: 12, textAlignVertical: 'top',
+    ...TYPE.data, letterSpacing: 0.3,
+    borderWidth: 1, padding: 10, minHeight: 66, fontSize: 13, textAlignVertical: 'top',
   },
 });

@@ -285,12 +285,12 @@ describe('tileManager.js - Offline Tile Cache', () => {
       expect(getLocalTilePathTemplate()).toBeNull();
     });
 
-    test('downloadTilesForRegion returns zeros without FileSystem', async () => {
+    test('downloadTilesForRegion returns a policy block without FileSystem', async () => {
       const result = await downloadTilesForRegion(
         { latitude: 38.89, longitude: -77.04, latitudeDelta: 0.05, longitudeDelta: 0.05 },
         [10, 12, 14]
       );
-      expect(result).toEqual({ downloaded: 0, failed: 0, skipped: 0, total: 0 });
+      expect(result).toMatchObject({ downloaded: 0, failed: 0, skipped: 0, total: 0, blocked: true, code: 'OFFLINE_PROVIDER_NOT_PERMITTED' });
     });
 
     test('checkTilesForRegion returns zeros without FileSystem', async () => {

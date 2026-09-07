@@ -3,11 +3,10 @@
  * Shows feature list, tier selector, and purchase/restore buttons.
  */
 import React from 'react';
-import {
-  View, Text, StyleSheet, Modal, TouchableOpacity,
-  ActivityIndicator, ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import { Modal } from './FieldModal';
 import { useColors } from '../utils/ThemeContext';
+import { TYPE } from '../utils/typography';
 import { tapMedium, tapLight } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
 import { detectFreeTrial } from '../utils/iapOffers';
@@ -178,11 +177,11 @@ export function ProGate({
 
           {/* Close */}
           <TouchableOpacity style={styles.closeBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel={t('proGate.notNow')}>
-            <Text style={[styles.closeText, { color: colors.text4 }]}>{t('proGate.notNow')}</Text>
+            <Text style={[styles.closeText, { color: colors.text3 }]}>{t('proGate.notNow')}</Text>
           </TouchableOpacity>
 
           {/* Legal */}
-          <Text style={[styles.legal, { color: colors.text4 }]}>
+          <Text style={[styles.legal, { color: colors.text3 }]}>
             {t(activeTier === 'monthly' ? 'proGate.legal' : 'proGate.legalOneTime')}
           </Text>
 
@@ -203,12 +202,14 @@ const styles = StyleSheet.create({
   modal: {
     width: '100%',
     maxWidth: 380,
+    maxHeight: '100%',
     borderWidth: 1,
     padding: 24,
   },
   header: { alignItems: 'center', marginBottom: 20 },
   badge: {
-    fontFamily: 'monospace', fontSize: 10, letterSpacing: 6,
+    ...TYPE.label,
+    fontSize: 11, letterSpacing: 1.2,
     paddingHorizontal: 10, paddingVertical: 3,
     marginBottom: 10,
   },
@@ -217,10 +218,11 @@ const styles = StyleSheet.create({
     letterSpacing: 6, marginBottom: 6,
   },
   subtitle: {
-    fontSize: 10,
-    textAlign: 'center', letterSpacing: 1,
+    ...TYPE.body,
+    fontSize: 13,
+    textAlign: 'center', letterSpacing: 0.3,
   },
-  features: { maxHeight: 160, marginBottom: 12 },
+  features: { maxHeight: 160, flexShrink: 1, marginBottom: 12 },
   featureRow: {
     flexDirection: 'row', alignItems: 'flex-start',
     paddingVertical: 8, borderBottomWidth: 1,
@@ -228,10 +230,11 @@ const styles = StyleSheet.create({
   featureIcon: { fontSize: 18, marginRight: 12, marginTop: 2 },
   featureText: { flex: 1 },
   featureLabel: {
-    fontSize: 11, fontWeight: '700',
-    letterSpacing: 1, marginBottom: 2,
+    ...TYPE.heading,
+    fontSize: 14, letterSpacing: 0.5, marginBottom: 2,
   },
-  featureSub: { fontSize: 9, letterSpacing: 0.5 },
+  featureSub: {
+    ...TYPE.body, fontSize: 12, letterSpacing: 0.3 },
   divider: { height: 1, marginVertical: 12 },
   // Tier selector
   tierRow: {
@@ -246,34 +249,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tierBadge: {
-    fontSize: 7, fontWeight: '700', letterSpacing: 2,
+    ...TYPE.heading,
+    fontSize: 10, letterSpacing: 0.8,
     paddingHorizontal: 6, paddingVertical: 2,
     marginBottom: 6,
   },
   tierPrice: {
-    fontFamily: 'monospace', fontSize: 16, fontWeight: '700',
-    letterSpacing: 1, marginBottom: 2,
+    ...TYPE.data,
+    fontSize: 16, letterSpacing: 0.5, marginBottom: 2,
   },
   tierPeriod: {
-    fontSize: 8, letterSpacing: 1,
+    ...TYPE.label,
+    fontSize: 11, letterSpacing: 0.5,
   },
   purchaseBtn: {
     paddingVertical: 14, alignItems: 'center', marginBottom: 10, minHeight: 44,
   },
   purchaseBtnText: {
-    fontSize: 12, fontWeight: '700',
-    letterSpacing: 4,
+    ...TYPE.heading,
+    fontSize: 15, letterSpacing: 1,
   },
   trialSub: {
-    fontSize: 9, letterSpacing: 1, textAlign: 'center',
+    ...TYPE.body,
+    fontSize: 12, letterSpacing: 0.3, textAlign: 'center',
     marginTop: -2, marginBottom: 8,
   },
   restoreBtn: { paddingVertical: 10, alignItems: 'center', marginBottom: 4, minHeight: 44 },
-  restoreText: { fontSize: 9, letterSpacing: 2 },
+  restoreText: {
+    ...TYPE.label, fontSize: 12, letterSpacing: 0.8 },
   closeBtn: { paddingVertical: 8, alignItems: 'center', marginBottom: 12, minHeight: 44 },
-  closeText: { fontSize: 9, letterSpacing: 3 },
-  legal: {
-    fontSize: 7,
-    textAlign: 'center', letterSpacing: 0.5, lineHeight: 12,
+  closeText: {
+    ...TYPE.label, fontSize: 12, letterSpacing: 0.8 },
+  legal: { ...TYPE.body,
+    fontSize: 11,
+    textAlign: 'center', letterSpacing: 0.3, lineHeight: 15,
   },
 });

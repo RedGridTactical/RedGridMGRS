@@ -4,6 +4,7 @@ import { solarBearing, lunarBearing } from '../../utils/tactical';
 import { ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
 import { useTranslation } from '../../hooks/useTranslation';
+import { TYPE } from '../../utils/typography';
 
 export function SolarTool({ location }) {
   const colors = useColors();
@@ -50,10 +51,10 @@ export function SolarTool({ location }) {
     <View>
       <View style={styles.toggle}>
         <TouchableOpacity style={[styles.toggleBtn, { borderColor: colors.border2 }, body==='sun' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setBody('sun')}>
-          <Text style={[styles.toggleText, { color: colors.border2 }, body==='sun' && { color: colors.text }]}>☀ {t('toolLabels.sun')}</Text>
+          <Text style={[styles.toggleText, { color: colors.text3 }, body==='sun' && { color: colors.text }]}>☀ {t('toolLabels.sun')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.toggleBtn, { borderColor: colors.border2 }, body==='moon' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setBody('moon')}>
-          <Text style={[styles.toggleText, { color: colors.border2 }, body==='moon' && { color: colors.text }]}>☽ {t('toolLabels.moon')}</Text>
+          <Text style={[styles.toggleText, { color: colors.text3 }, body==='moon' && { color: colors.text }]}>☽ {t('toolLabels.moon')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -79,6 +80,6 @@ export function SolarTool({ location }) {
 const styles = StyleSheet.create({
   toggle: { flexDirection:'row', gap:8, marginBottom:12 },
   toggleBtn: { flex:1, borderWidth:1, paddingVertical:9, alignItems:'center' },
-  toggleText: { fontFamily:'monospace', fontSize:10, letterSpacing:3 },
+  toggleText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   results: { marginTop:12, gap:8 },
 });

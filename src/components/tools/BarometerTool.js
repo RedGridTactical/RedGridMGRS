@@ -5,6 +5,7 @@ import { useColors } from '../../utils/ThemeContext';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useBarometer } from '../../hooks/useBarometer';
 import { TENDENCY, STORM_RISK, MIN_TREND_WINDOW_MS } from '../../utils/barometer';
+import { TYPE } from '../../utils/typography';
 
 const TENDENCY_KEY = {
   [TENDENCY.RISING_RAPIDLY]: 'baro.risingRapidly',
@@ -70,7 +71,7 @@ export function BarometerTool({ location }) {
 
       <ToolDivider />
       <View style={styles.footRow}>
-        <Text style={[styles.samples, { color: colors.text4 }]}>
+        <Text style={[styles.samples, { color: colors.text3 }]}>
           {t('baro.samples', { count: readings.length })}
         </Text>
         <TouchableOpacity
@@ -78,7 +79,7 @@ export function BarometerTool({ location }) {
           accessibilityRole="button"
           accessibilityLabel={t('baro.reset')}
         >
-          <Text style={[styles.resetBtn, { color: colors.border }]}>{t('baro.reset')}</Text>
+          <Text style={[styles.resetBtn, { color: colors.text3 }]}>{t('baro.reset')}</Text>
         </TouchableOpacity>
       </View>
       <ToolHint text={t('baro.disclaimer')} />
@@ -88,9 +89,9 @@ export function BarometerTool({ location }) {
 
 const styles = StyleSheet.create({
   riskRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
-  riskLabel: { fontSize: 10, letterSpacing: 2 },
-  riskValue: { fontFamily: 'monospace', fontSize: 14, fontWeight: '700', letterSpacing: 2 },
+  riskLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
+  riskValue: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2 },
   footRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4 },
-  samples: { fontSize: 9, letterSpacing: 1 },
-  resetBtn: { fontSize: 10, letterSpacing: 2, paddingVertical: 6, paddingHorizontal: 4 },
+  samples: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3 },
+  resetBtn: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, paddingVertical: 6, paddingHorizontal: 4 },
 });

@@ -27,24 +27,22 @@ export function useLocation() {
   const [permissionStatus, setPermissionStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [compassHeading, setCompassHeading] = useState(null);
+  const [compassReference, setCompassReference] = useState(null);
   const mounted = useRef(true);
   const prevCoords = useRef(null);
   // Live watcher subscriptions — held in refs so a RETRY press replaces the
   // existing watchers instead of stacking a new pair on every call.
   const posSubRef = useRef(null);
   const headingSubRef = useRef(null);
+  const requestInFlight = useRef(false);
+  const requestGeneration = useRef(0);
+  const permissionRequest = useRef(null);
 
   const clearSubs = useCallback(() => {
     try { posSubRef.current?.remove?.(); } catch {}
     try { headingSubRef.current?.remove?.(); } catch {}
     posSubRef.current = null;
     headingSubRef.current = null;
-  }, []);
-
-  // Track cleanup to prevent state updates on unmounted component
-  useEffect(() => {
-    mounted.current = true;
-    return () => { mounted.current = false; };
   }, []);
 
   // Only update state if position changed by more than ~0.1m to prevent cascade re-renders
@@ -63,37 +61,46 @@ export function useLocation() {
   }, []);
 
   const requestAndWatch = useCallback(async () => {
-    if (!mounted.current) return;
+    if (!mounted.current || requestInFlight.current) return;
+    requestInFlight.current = true;
+    const generation = ++requestGeneration.current;
+    const isCurrent = () => mounted.current && requestGeneration.current === generation;
 
     // Remove any watchers from a previous call (mount or earlier RETRY) so
     // subscriptions never stack.
     clearSubs();
+    setCompassReference(null);
 
     try {
       if (!Location || !Location.requestForegroundPermissionsAsync) {
-        if (mounted.current) {
+        if (isCurrent()) {
           setError('Location module unavailable');
           setIsLoading(false);
         }
         return;
       }
 
-      if (mounted.current) {
+      if (isCurrent()) {
         setIsLoading(true);
         setError(null);
       }
 
       let permStatus;
       try {
-        const result = await Promise.race([
-          Location.requestForegroundPermissionsAsync(),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Permission request timeout')), 10000)
-          )
-        ]);
+        // The OS permission prompt is a user decision, not a GPS operation.
+        // Keep waiting while they read it; retry and effect replays share the
+        // same pending prompt instead of creating a second native request.
+        if (!permissionRequest.current) {
+          const pending = Promise.resolve().then(() => Location.requestForegroundPermissionsAsync());
+          permissionRequest.current = pending;
+          pending.finally(() => {
+            if (permissionRequest.current === pending) permissionRequest.current = null;
+          }).catch(() => {});
+        }
+        const result = await permissionRequest.current;
         permStatus = result?.status;
       } catch (permErr) {
-        if (mounted.current) {
+        if (isCurrent()) {
           setPermissionStatus('denied');
           setError('Permission request failed. Grant location access in device settings.');
           setIsLoading(false);
@@ -101,12 +108,12 @@ export function useLocation() {
         return;
       }
 
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
 
       setPermissionStatus(permStatus);
 
       if (permStatus !== 'granted') {
-        if (mounted.current) {
+        if (isCurrent()) {
           setError('Location permission denied. Grant location access in device settings.');
           setIsLoading(false);
         }
@@ -115,24 +122,29 @@ export function useLocation() {
 
       // Get an immediate fix with timeout
       let initial;
+      let positionTimeout;
       try {
         initial = await Promise.race([
           Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.BestForNavigation,
+            // GPS must work without opting into Android network location.
+            mayShowUserSettingsDialog: false,
           }),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Position timeout')), 15000)
-          )
+          new Promise((_, reject) => {
+            positionTimeout = setTimeout(() => reject(new Error('Position timeout')), 15000);
+          })
         ]);
       } catch (posErr) {
-        if (mounted.current) {
+        if (isCurrent()) {
           setError(`GPS Error: ${posErr?.message || 'Could not get position'}`);
           setIsLoading(false);
         }
         return;
+      } finally {
+        clearTimeout(positionTimeout);
       }
 
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
 
       if (initial?.coords) {
         updateLocationIfChanged({
@@ -145,20 +157,21 @@ export function useLocation() {
         });
       }
 
-      if (mounted.current) {
+      if (isCurrent()) {
         setIsLoading(false);
       }
 
       // Watch for updates — high accuracy, no background, no storage
       try {
-        posSubRef.current = await Location.watchPositionAsync(
+        const positionSubscription = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.BestForNavigation,
+            mayShowUserSettingsDialog: false,
             timeInterval: 1000,
             distanceInterval: 1,
           },
           (pos) => {
-            if (mounted.current && pos?.coords) {
+            if (isCurrent() && pos?.coords) {
               updateLocationIfChanged({
                 lat: pos.coords.latitude,
                 lon: pos.coords.longitude,
@@ -170,67 +183,64 @@ export function useLocation() {
             }
           }
         );
+        if (!isCurrent()) {
+          try { positionSubscription?.remove?.(); } catch {}
+          return;
+        }
+        posSubRef.current = positionSubscription;
       } catch (watchErr) {
-        if (mounted.current) {
+        if (isCurrent()) {
           setError(`Watch Error: ${watchErr?.message || 'Could not watch position'}`);
         }
       }
 
+      if (!isCurrent()) return;
       // Compass heading from magnetometer — updates as phone rotates, even when stationary
       try {
         if (Location.watchHeadingAsync) {
-          headingSubRef.current = await Location.watchHeadingAsync((data) => {
-            if (mounted.current) {
-              const h = data?.trueHeading >= 0 ? data.trueHeading : data?.magHeading;
-              if (h !== undefined && h >= 0) {
+          const headingSubscription = await Location.watchHeadingAsync((data) => {
+            if (isCurrent()) {
+              const hasTrueHeading = Number.isFinite(data?.trueHeading) && data.trueHeading >= 0;
+              const h = hasTrueHeading ? data.trueHeading : data?.magHeading;
+              if (Number.isFinite(h) && h >= 0) {
                 setCompassHeading(h);
+                setCompassReference(hasTrueHeading ? 'true' : 'magnetic');
+              } else {
+                setCompassReference(null);
               }
             }
           });
+          if (!isCurrent()) {
+            try { headingSubscription?.remove?.(); } catch {}
+            return;
+          }
+          headingSubRef.current = headingSubscription;
         }
       } catch {
         // Magnetometer unavailable — compassHeading stays null, arrow falls back to absolute bearing
       }
 
-      return clearSubs;
     } catch (err) {
-      if (mounted.current) {
+      if (isCurrent()) {
         setError(`GPS Error: ${err?.message || 'Unknown error'}`);
         setIsLoading(false);
       }
+    } finally {
+      if (requestGeneration.current === generation) requestInFlight.current = false;
     }
   }, [updateLocationIfChanged, clearSubs]);
 
   useEffect(() => {
-    let cleanup;
-    let cancelled = false;
-
-    const startWatch = async () => {
-      try {
-        const fn = await requestAndWatch();
-        if (!cancelled && fn) {
-          cleanup = fn;
-        }
-      } catch (e) {
-        // Ensure no unhandled rejection
-        if (!cancelled && mounted.current) {
-          setError('Failed to initialize location');
-          setIsLoading(false);
-        }
-      }
-    };
-
-    startWatch();
+    mounted.current = true;
+    requestAndWatch();
 
     return () => {
-      cancelled = true;
-      if (cleanup) {
-        try {
-          cleanup();
-        } catch {}
-      }
+      mounted.current = false;
+      requestGeneration.current += 1;
+      requestInFlight.current = false;
+      clearSubs();
     };
-  }, [requestAndWatch]);
+  }, [requestAndWatch, clearSubs]);
 
-  return { location, error, permissionStatus, isLoading, retry: requestAndWatch, compassHeading };
+  return { location, error, permissionStatus, isLoading, retry: requestAndWatch, compassHeading, compassReference };
 }

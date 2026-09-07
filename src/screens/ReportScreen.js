@@ -4,10 +4,9 @@
  * Pro: ICS 201 (Incident Command), ANGUS (Artillery), Custom template
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, Alert, LayoutAnimation, UIManager, Platform, AccessibilityInfo,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, UIManager, Platform, AccessibilityInfo } from 'react-native';
+import { TextInput } from '../components/FieldInput';
+import { Alert } from '../utils/fieldAlert';
 // Lazy-load expo-clipboard to prevent crash if native module is unavailable
 let ExpoClipboard = null;
 try {
@@ -18,6 +17,7 @@ try {
 import { useColors } from '../utils/ThemeContext';
 import { tapMedium, notifySuccess, notifyWarning } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
+import { TYPE } from '../utils/typography';
 
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
@@ -194,14 +194,14 @@ function ReportCard({ report, mgrs, isPro, trialEligible, onShowProGate }) {
         accessibilityLabel={`${t(report.labelKey)} report. ${t(report.subKey)}${isLocked ? '. Pro feature, locked.' : ''}`}
         accessibilityHint={isLocked ? 'Double tap to view upgrade options' : (open ? 'Double tap to collapse' : 'Double tap to expand')}
       >
-        <View>
+        <View style={styles.cardText}>
           <View style={styles.labelRow}>
             <Text style={[styles.cardTitle, { color: colors.text }]}>{t(report.labelKey)}</Text>
             {isLocked && <Text style={[styles.proBadge, { color: colors.bg, backgroundColor: colors.text }]} importantForAccessibility="no">{trialEligible ? t('proGate.tryFreeBadge') : 'PRO'}</Text>}
           </View>
           <Text style={[styles.cardSub, { color: colors.text3 }]}>{t(report.subKey)}</Text>
         </View>
-        <Text style={[styles.chevron, { color: colors.border }, open && { transform: [{ rotate: '90deg' }] }]} importantForAccessibility="no">▶</Text>
+        <Text style={[styles.chevron, { color: colors.text3 }, open && { transform: [{ rotate: '90deg' }] }]} importantForAccessibility="no">▶</Text>
       </TouchableOpacity>
 
       {open && (
@@ -210,11 +210,11 @@ function ReportCard({ report, mgrs, isPro, trialEligible, onShowProGate }) {
             const isAuto = !!f.autoFill;
             return (
               <View key={f.key} style={styles.fieldBlock}>
-                <Text style={[styles.fieldLabel, { color: colors.border }]}>{f.label}</Text>
+                <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{f.label}</Text>
                 <TextInput
                   style={[styles.fieldInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }, isAuto && { borderColor: colors.text2 }]}
                   placeholder={f.placeholder}
-                  placeholderTextColor={colors.border}
+                  placeholderTextColor={colors.text3}
                   value={vals[f.key]}
                   onChangeText={t => { dirtyRef.current[f.key] = true; setVals(v => ({ ...v, [f.key]: t })); }}
                   multiline={f.key === 'situation' || f.key === 'objectives'}
@@ -228,7 +228,7 @@ function ReportCard({ report, mgrs, isPro, trialEligible, onShowProGate }) {
               <Text style={[styles.copyBtnText, { color: colors.text }]}>{t('reports.copyReport')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.clearBtn, { borderColor: colors.border }]} onPress={clear} accessibilityRole="button" accessibilityLabel={t('reports.clear')}>
-              <Text style={[styles.clearBtnText, { color: colors.border }]}>{t('reports.clear')}</Text>
+              <Text style={[styles.clearBtnText, { color: colors.text3 }]}>{t('reports.clear')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -264,7 +264,7 @@ export function ReportScreen({ mgrs, isPro, trialEligible, onShowProGate }) {
         />
       ))}
 
-      <Text style={[styles.footer, { color: colors.text4 }]}>{t('reports.footer')}</Text>
+      <Text style={[styles.footer, { color: colors.text3 }]}>{t('reports.footer')}</Text>
     </ScrollView>
   );
 }
@@ -272,37 +272,38 @@ export function ReportScreen({ mgrs, isPro, trialEligible, onShowProGate }) {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  title: { fontFamily: 'monospace', fontSize: 18, fontWeight: '700', letterSpacing: 4 },
-  subtitle: { fontSize: 8, letterSpacing: 2 },
+  header: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  title: { ...TYPE.heading, fontSize: 22, letterSpacing: 1.2 },
+  subtitle: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3 },
   autoBanner: {
     borderWidth: 1,
     paddingHorizontal: 12, paddingVertical: 7, marginBottom: 12,
   },
-  autoText: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 1 },
+  autoText: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3 },
   card: { marginBottom: 10, borderWidth: 1 },
   cardLocked: { opacity: 0.7 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 14 },
-  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  cardTitle: { fontFamily: 'monospace', fontSize: 12, fontWeight: '700', letterSpacing: 2 },
+  cardText: { flex: 1, paddingRight: 10 },
+  labelRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 4 },
+  cardTitle: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2 },
   proBadge: {
-    fontFamily: 'monospace', fontSize: 8,
-    paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 2,
+    ...TYPE.label, fontSize: 11,
+    paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 1.2,
   },
-  cardSub: { fontSize: 9, letterSpacing: 1 },
+  cardSub: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3 },
   chevron: { fontFamily: 'monospace', fontSize: 10 },
   cardBody: { paddingHorizontal: 14, paddingBottom: 14, borderTopWidth: 1 },
   fieldBlock: { marginTop: 10 },
-  fieldLabel: { fontFamily: 'monospace', fontSize: 8, letterSpacing: 2, marginBottom: 4 },
+  fieldLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, marginBottom: 4 },
   fieldInput: {
     borderWidth: 1,
-    fontFamily: 'monospace', fontSize: 13,
+    ...TYPE.body, fontSize: 13,
     paddingHorizontal: 10, paddingVertical: 8,
   },
   reportBtns: { flexDirection: 'row', gap: 8, marginTop: 14 },
   copyBtn: { flex: 2, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
-  copyBtnText: { fontSize: 10, fontWeight: '700', letterSpacing: 3 },
+  copyBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   clearBtn: { flex: 1, borderWidth: 1, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
-  clearBtnText: { fontSize: 10, letterSpacing: 3 },
-  footer: { fontSize: 10, textAlign: 'center', marginTop: 20, letterSpacing: 1 },
+  clearBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
+  footer: { ...TYPE.body, fontSize: 12, textAlign: 'center', marginTop: 20, letterSpacing: 0.3 },
 });

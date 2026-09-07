@@ -15,7 +15,8 @@
  *     base plan in subscriptionOfferDetails[].
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
+import { Alert } from '../utils/fieldAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   detectFreeTrial, hasPriorSubscription, getAndroidTrialOfferToken, entitlingSku,

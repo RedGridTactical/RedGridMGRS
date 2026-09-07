@@ -4,21 +4,23 @@
  * Opened via info button on grid footer.
  */
 import React, { useEffect, useState, useCallback } from 'react';
-import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Modal, Share, Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Share } from 'react-native';
+import { Modal } from '../components/FieldModal';
+import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
 import { useColors } from '../utils/ThemeContext';
+import { TYPE } from '../utils/typography';
 import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
 import { hasSharedTrial, mintShareLink, getTrialStatus } from '../utils/referral';
 
-const APP_VERSION = '4.0.3';
+const APP_VERSION = '4.0.5';
 const SUPPORT_EMAIL = 'support@redgridtactical.com';
 const GITHUB_URL = 'https://github.com/RedGridTactical/RedGridMGRS';
 const PRIVACY_URL = 'https://redgridtactical.github.io/RedGridMGRS/privacy.html';
 const SUPPORT_URL = 'https://redgridtactical.github.io/RedGridMGRS/support.html';
 
-function openLink(url) {
+async function openLink(url) {
+  if (!(await allowSystemDisplay())) return;
   Linking.openURL(url).catch(() => {});
 }
 
@@ -51,6 +53,7 @@ export function SupportScreen({ visible, onClose }) {
   }, [visible]);
 
   const handleShareTrial = useCallback(async () => {
+    if (!(await allowSystemDisplay())) return;
     tapMedium();
     const result = await mintShareLink();
     if (!result.ok) {
@@ -158,7 +161,7 @@ export function SupportScreen({ visible, onClose }) {
               accessibilityRole="button"
               accessibilityLabel={alreadyShared ? 'Already shared' : 'Share free trial with a friend'}
             >
-              <Text style={[styles.shareBtnText, { color: alreadyShared ? colors.border : colors.text }]}>
+              <Text style={[styles.shareBtnText, { color: alreadyShared ? colors.text3 : colors.text }]}>
                 {alreadyShared ? '✓ ALREADY SHARED' : '⤴ SHARE TRIAL'}
               </Text>
             </TouchableOpacity>
@@ -191,9 +194,9 @@ export function SupportScreen({ visible, onClose }) {
 
           {/* Version Info */}
           <View style={[styles.versionBlock, { borderTopColor: colors.border2 }]}>
-            <Text style={[styles.versionText, { color: colors.text4 }]}>Red Grid MGRS v{APP_VERSION}</Text>
-            <Text style={[styles.versionText, { color: colors.text4 }]}>{t('support.license')}</Text>
-            <Text style={[styles.versionText, { color: colors.text4 }]}>{t('support.copyright')}</Text>
+            <Text style={[styles.versionText, { color: colors.text3 }]}>Red Grid MGRS v{APP_VERSION}</Text>
+            <Text style={[styles.versionText, { color: colors.text3 }]}>{t('support.license')}</Text>
+            <Text style={[styles.versionText, { color: colors.text3 }]}>{t('support.copyright')}</Text>
           </View>
 
         </ScrollView>
@@ -215,30 +218,30 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 1.5,
+    ...TYPE.heading,
+    fontSize: 18,
+    letterSpacing: 1.2,
   },
   closeBtn: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 1,
+    ...TYPE.label,
+    fontSize: 14,
+    letterSpacing: 0.8,
   },
   content: {
     padding: 16,
     paddingBottom: 40,
   },
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.5,
+    ...TYPE.heading,
+    fontSize: 15,
+    letterSpacing: 1,
     marginBottom: 10,
   },
   linkCard: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 2,
     padding: 14,
     marginBottom: 8,
   },
@@ -252,11 +255,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   linkTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    ...TYPE.heading, letterSpacing: 0.3,
+    fontSize: 16,
   },
   linkSub: {
-    fontSize: 12,
+    ...TYPE.body, letterSpacing: 0.3,
+    fontSize: 14,
     marginTop: 2,
   },
   faqItem: {
@@ -264,13 +268,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   faqQ: {
-    fontSize: 14,
-    fontWeight: '600',
+    ...TYPE.heading, letterSpacing: 0.3,
+    fontSize: 16,
     marginBottom: 4,
   },
   faqA: {
-    fontSize: 13,
-    lineHeight: 19,
+    ...TYPE.body, letterSpacing: 0.3,
+    fontSize: 15,
+    lineHeight: 22,
   },
   versionBlock: {
     borderTopWidth: 1,
@@ -279,7 +284,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   versionText: {
-    fontSize: 12,
+    ...TYPE.body, letterSpacing: 0.3,
+    fontSize: 13,
     marginBottom: 2,
   },
   shareCard: {
@@ -287,9 +293,12 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 10,
   },
-  shareTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '800' },
-  shareBody: { fontFamily: 'monospace', fontSize: 11, lineHeight: 16 },
-  shareStatus: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2, fontWeight: '700', marginTop: 2 },
+  shareTitle: {
+    ...TYPE.heading, fontSize: 16, letterSpacing: 1 },
+  shareBody: { ...TYPE.body, letterSpacing: 0.3, fontSize: 14, lineHeight: 20 },
+  shareStatus: {
+    ...TYPE.label, fontSize: 13, letterSpacing: 0.5, marginTop: 2 },
   shareBtn: { borderWidth: 2, paddingVertical: 14, alignItems: 'center', marginTop: 6 },
-  shareBtnText: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 3, fontWeight: '800' },
+  shareBtnText: {
+    ...TYPE.heading, fontSize: 14, letterSpacing: 1 },
 });

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Red Grid MGRS",
     "slug": "redgrid-tactical",
-    "version": "4.0.4",
+    "version": "4.0.5",
     "scheme": "redgrid",
     "orientation": "default",
     "userInterfaceStyle": "dark",
@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.redgrid.redgridtactical",
-      "versionCode": 32,
+      "versionCode": 33,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive_foreground.png",
         "backgroundColor": "#000000"
@@ -29,10 +29,10 @@
     },
     "ios": {
       "bundleIdentifier": "com.redgrid.redgridtactical",
-      "buildNumber": "77",
+      "buildNumber": "78",
       "infoPlist": {
         "CFBundleDisplayName": "Red Grid MGRS",
-        "NSLocationWhenInUseUsageDescription": "Red Grid MGRS uses your location to display your current grid coordinates. No location data is stored or transmitted.",
+        "NSLocationWhenInUseUsageDescription": "Red Grid MGRS uses your location for grid coordinates and navigation. You can save waypoints on your device and choose to share or send your position over a connected radio.",
         "NSBluetoothAlwaysUsageDescription": "Red Grid MGRS uses Bluetooth to connect to Meshtastic radios for off-grid mesh networking. No data is transmitted over the internet.",
         "NSBluetoothPeripheralUsageDescription": "Red Grid MGRS uses Bluetooth to connect to Meshtastic radios for off-grid mesh networking. No data is transmitted over the internet.",
         "SKAdNetworkItems": [],
@@ -48,7 +48,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Red Grid MGRS uses your location to display your current grid coordinates. No data is stored or transmitted."
+          "locationWhenInUsePermission": "Red Grid MGRS uses your location for grid coordinates and navigation. You can save waypoints on your device and choose to share or send your position over a connected radio."
         }
       ],
       "expo-iap",
@@ -88,7 +88,8 @@
           ],
           "bluetoothAlwaysPermission": "Red Grid MGRS uses Bluetooth to connect to Meshtastic radios for off-grid mesh networking. No data is transmitted over the internet."
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "extra": {
       "eas": {

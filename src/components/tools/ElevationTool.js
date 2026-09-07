@@ -3,7 +3,8 @@
  * All computation local. No network. No storage.
  */
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TextInput } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { TextInput } from '../FieldInput';
 import { ToolResult, ToolRow, ToolHint, ToolInput } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -11,6 +12,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 // as the run it is measured over. geodesicDistance falls back to haversine
 // internally if Vincenty fails to converge.
 import { geodesicDistance } from '../../utils/geodesy';
+import { TYPE } from '../../utils/typography';
 
 const M_TO_FT = 3.28084;
 
@@ -68,7 +70,7 @@ export function ElevationTool({ location }) {
 
       {/* Slope calculator inputs */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.border }]}>{t('toolLabels.slopeToWaypoint') || 'SLOPE TO WAYPOINT'}</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text3 }]}>{t('toolLabels.slopeToWaypoint') || 'SLOPE TO WAYPOINT'}</Text>
         <ToolInput
           label="WAYPOINT LAT"
           value={wpLat}
@@ -111,7 +113,7 @@ export function ElevationTool({ location }) {
 
 const styles = StyleSheet.create({
   results: { marginTop: 12, gap: 8 },
-  noFix: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, marginVertical: 8 },
+  noFix: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, marginVertical: 8 },
   section: { marginTop: 16 },
-  sectionTitle: { fontSize: 9, letterSpacing: 3, marginBottom: 8 },
+  sectionTitle: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2, marginBottom: 8 },
 });

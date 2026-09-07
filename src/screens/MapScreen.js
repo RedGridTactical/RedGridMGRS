@@ -3,7 +3,7 @@
  * Uses react-native-maps with OpenStreetMap tiles.
  *
  * Features:
- * - Dark/tactical tile server for low-vis environments
+ * - Standard live tiles and imported local offline tiles
  * - User location as pulsing dot
  * - Saved waypoints as markers
  * - Long-press to add waypoint
@@ -13,10 +13,10 @@
  * Privacy: no tracking, no analytics. Location is ephemeral.
  */
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import {
-  View, Text, StyleSheet, TouchableOpacity, Alert, Animated, Platform,
-  Modal, TextInput, ScrollView,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Platform, ScrollView } from 'react-native';
+import { Modal } from '../components/FieldModal';
+import { TextInput } from '../components/FieldInput';
+import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '../utils/ThemeContext';
 import { useTranslation } from '../hooks/useTranslation';
@@ -28,10 +28,13 @@ import { RouteOverlay } from '../components/RouteOverlay';
 import { TeamMarkers } from '../components/TeamMarkers';
 import { calculateRoute, estimateTime, formatTime, optimizeRoute } from '../utils/routePlanner';
 import {
-  downloadTilesForRegion, checkTilesForRegion, clearTileCache, getLocalTilePathTemplate,
-  estimateTilesForRegion, OSM_TILE_URL, DARK_TILE_URL, TOPO_TILE_URL,
+  checkTilesForRegion, clearTileCache, getLocalTilePathTemplate, recoverOfflineTileCache, getOfflineMapMetadata,
+  OSM_TILE_URL, DARK_TILE_URL, TOPO_TILE_URL,
 } from '../utils/tileManager';
+import { importRasterMBTiles } from '../utils/offlineMaps';
+import * as DocumentPicker from 'expo-document-picker';
 import { PreflightScreen } from './PreflightScreen';
+import { TYPE } from '../utils/typography';
 
 // Free-tier persistent-waypoint cap. Free users get 1 saved waypoint; Pro is
 // unlimited. Captured here so the contract stays in one place.
@@ -86,10 +89,9 @@ function timeSince(ts) {
 // URLs come from tileManager so the offline cache and the live map agree.
 const MAP_STYLES = ['standard', 'dark', 'topo'];
 const MAP_STYLE_KEY = 'rg_map_style';
-const FIRST_VISIT_PROMPT_KEY = 'rg_map_first_visit_prompted_v1';
 
 export function MapScreen({
-  location,
+  location, tacticalMode = false, onExitTactical, activeRoute,
   isPro,
   trialEligible,
   onShowProGate,
@@ -111,6 +113,19 @@ export function MapScreen({
   const [downloading, setDownloading] = useState(false);
   const [dlProgress, setDlProgress] = useState(0);
   const [cachedCount, setCachedCount] = useState(0);
+  const [offlineMetadata, setOfflineMetadata] = useState(null);
+  const [tileRevision, setTileRevision] = useState(0);
+  const importCancelled = useRef(false);
+  useEffect(() => {
+    importCancelled.current = false;
+    recoverOfflineTileCache().then(getOfflineMapMetadata).then(metadata => {
+      if (importCancelled.current || !metadata) return;
+      setOfflineMetadata(metadata);
+      setCachedCount(metadata.tileCount || 0);
+      setOfflineMode(true);
+    }).catch(() => {});
+    return () => { importCancelled.current = true; };
+  }, []);
   const [offlineMode, setOfflineMode] = useState(false);
   const downloadingRef = useRef(false);
   const cacheCheckTimer = useRef(null);
@@ -138,34 +153,6 @@ export function MapScreen({
   useEffect(() => {
     AsyncStorage.getItem(MAP_STYLE_KEY).then(v => { if (v && MAP_STYLES.includes(v)) setMapStyle(v); }).catch(() => {});
   }, []);
-
-  // First-visit offline tile prompt: show once ever on first map visit.
-  // Pro users get a download modal, free users get a Pro upgrade banner.
-  const [firstVisitModalVisible, setFirstVisitModalVisible] = useState(false);
-  const [firstVisitBannerVisible, setFirstVisitBannerVisible] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const seen = await AsyncStorage.getItem(FIRST_VISIT_PROMPT_KEY);
-        if (cancelled) return;
-        if (seen === 'true') return;
-        // Wait until we have a location fix — otherwise prompt is useless
-        if (!location?.lat) return;
-        // Delay so the map gets a chance to draw first
-        setTimeout(() => {
-          if (cancelled) return;
-          if (isPro) {
-            setFirstVisitModalVisible(true);
-          } else {
-            setFirstVisitBannerVisible(true);
-          }
-        }, 1500);
-        await AsyncStorage.setItem(FIRST_VISIT_PROMPT_KEY, 'true').catch(() => {});
-      } catch {}
-    })();
-    return () => { cancelled = true; };
-  }, [location?.lat, isPro]);
 
   // Waypoint creation menu state
   const [wpMenuVisible, setWpMenuVisible] = useState(false);
@@ -215,6 +202,8 @@ export function MapScreen({
     longitudeDelta: 0.05,
   }), [location?.lat, location?.lon]);
 
+  const coverageZooms = useMemo(() => offlineMetadata ? Array.from({ length: offlineMetadata.maxZoom - offlineMetadata.minZoom + 1 }, (_, index) => offlineMetadata.minZoom + index) : [10, 12, 14, 16], [offlineMetadata]);
+
   // Check cached tile count when region changes (debounced 800ms)
   useEffect(() => {
     const region = mapRegion || initialRegion;
@@ -222,77 +211,48 @@ export function MapScreen({
     let cancelled = false;
     if (cacheCheckTimer.current) clearTimeout(cacheCheckTimer.current);
     cacheCheckTimer.current = setTimeout(() => {
-      checkTilesForRegion(region, [10, 12, 14, 16]).then((result) => {
+      checkTilesForRegion(region, coverageZooms).then((result) => {
         if (!cancelled) setCachedCount(result.cached);
       }).catch(() => {});
     }, 800);
     return () => { cancelled = true; clearTimeout(cacheCheckTimer.current); };
-  }, [mapRegion, initialRegion]);
+  }, [mapRegion, initialRegion, coverageZooms]);
 
-  // Refresh cached tile count for current region
-  const refreshCacheCount = useCallback(async (region) => {
-    try {
-      const result = await checkTilesForRegion(region, [10, 12, 14, 16]);
-      setCachedCount(result.cached);
-    } catch {}
-  }, []);
-
-  // Download tiles for current view
-  const handleDownloadTiles = useCallback(() => {
+  // Import a user-selected, locally licensed map; no public-provider prefetch.
+  const handleImportMap = useCallback(() => {
     if (downloadingRef.current) return;
     if (!isPro) { onShowProGate('Offline Maps'); return; }
-    const region = mapRegion || initialRegion;
-    if (!region) return;
-
-    // Estimate tile count before confirming — arithmetic, never enumerates
-    // (a zoomed-out viewport at z16 can be millions of tiles).
-    const totalTiles = estimateTilesForRegion(region, [10, 12, 14, 16]).totalTiles;
-
-    const MAX_TILES = 5000;
-    if (totalTiles > MAX_TILES) {
-      Alert.alert(
-        t('map.downloadTiles'),
-        t('alerts.tooManyTiles', { count: totalTiles })
-      );
-      return;
-    }
-
-    Alert.alert(
-      t('map.downloadTiles'),
-      t('alerts.confirmDownloadTiles', { count: totalTiles }),
-      [
-        { text: t('waypoints.cancel'), style: 'cancel' },
-        {
-          text: t('map.downloadTiles'),
-          onPress: async () => {
-            downloadingRef.current = true;
-            setDownloading(true);
-            setDlProgress(0);
-            try {
-              const result = await downloadTilesForRegion(
-                region,
-                [10, 12, 14, 16],
-                (done, total) => setDlProgress(total > 0 ? done / total : 0),
-                { style: mapStyle }
-              );
-              notifySuccess();
-              await refreshCacheCount(region);
-              Alert.alert(
-                t('map.downloadComplete'),
-                `${result.downloaded} new, ${result.skipped} cached, ${result.failed} failed`
-              );
-            } catch {
-              notifyError();
-              Alert.alert(t('map.downloadFailed'));
-            } finally {
-              downloadingRef.current = false;
-              setDownloading(false);
-            }
-          },
-        },
-      ]
-    );
-  }, [isPro, onShowProGate, mapRegion, initialRegion, t, refreshCacheCount, mapStyle]);
+    Alert.alert(t('nightDisplay.importMap'), t('nightDisplay.importDescription', { defaultValue: 'Choose a local raster MBTiles map you have permission to use. This version accepts 256-pixel PNG tiles, up to 5,000 tiles and 256 MB. A valid import replaces the current saved map.' }), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('nightDisplay.importMap'), onPress: async () => {
+        if (!(await allowSystemDisplay())) return;
+        try {
+          const selected = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
+          if (selected.canceled || !selected.assets?.[0]?.uri || importCancelled.current) return;
+          downloadingRef.current = true;
+          setDownloading(true); setDlProgress(0);
+          const result = await importRasterMBTiles(selected.assets[0].uri, {
+            shouldCancel: () => importCancelled.current,
+            onProgress: (done, total) => { if (!importCancelled.current) setDlProgress(total ? done / total : 0); },
+          });
+          if (importCancelled.current) return;
+          setOfflineMetadata(result.metadata);
+          setCachedCount(result.total); setOfflineMode(true); setTileRevision(value => value + 1);
+          const [west, south, east, north] = result.metadata.bounds;
+          const region = { latitude: (south + north) / 2, longitude: (west + east) / 2,
+            latitudeDelta: Math.max(0.002, (north - south) * 1.1), longitudeDelta: Math.max(0.002, (east - west) * 1.1) };
+          setMapRegion(region); mapRef.current?.animateToRegion(region, 300);
+          notifySuccess();
+          Alert.alert(t('nightDisplay.importMap'), `${result.metadata.name} · ${result.total} tiles`);
+        } catch (error) {
+          if (!importCancelled.current && error.code !== 'IMPORT_CANCELLED') Alert.alert(t('nightDisplay.importMap'), error.message || t('nightDisplay.providerBody'));
+        } finally {
+          downloadingRef.current = false;
+          if (!importCancelled.current) setDownloading(false);
+        }
+      } },
+    ]);
+  }, [isPro, onShowProGate, t]);
 
   // Clear tile cache
   const handleClearCache = useCallback(() => {
@@ -305,8 +265,11 @@ export function MapScreen({
           text: t('map.clearCache'),
           style: 'destructive',
           onPress: async () => {
-            await clearTileCache();
+            const cleared = await clearTileCache();
+            if (!cleared) { Alert.alert(t('nightDisplay.importMap'), t('nightDisplay.mapBusy')); return; }
             setCachedCount(0);
+            setOfflineMetadata(null);
+            setTileRevision(value => value + 1);
             setOfflineMode(false);
             tapLight();
           },
@@ -571,6 +534,14 @@ export function MapScreen({
   const remoteTileUrl = mapStyle === 'dark' ? DARK_TILE_URL : mapStyle === 'topo' ? TOPO_TILE_URL : OSM_TILE_URL;
   const mapStyleLabel = mapStyle === 'dark' ? 'DRK' : mapStyle === 'topo' ? 'TOPO' : 'STD';
 
+  if (tacticalMode) {
+    return <View style={[styles.fallback, { backgroundColor: '#000000', padding: 24 }]}>
+      <Text style={{ ...TYPE.heading, fontSize: 22, color: colors.text, marginBottom: 20 }}>{t('nightDisplay.mapTitle')}</Text>
+      <Text style={{ ...TYPE.body, fontSize: 17, lineHeight: 25, color: colors.text2 }}>{t('nightDisplay.mapBody')}</Text>
+      <TouchableOpacity style={{ borderWidth: 1, borderColor: colors.border, padding: 18, marginTop: 24 }} onPress={onExitTactical} accessibilityRole="button"><Text style={{ ...TYPE.heading, color: colors.text }}>{t('nightDisplay.exit')}</Text></TouchableOpacity>
+    </View>;
+  }
+
   if (!MapView) {
     // Graceful fallback if react-native-maps unavailable
     return (
@@ -590,7 +561,11 @@ export function MapScreen({
         initialRegion={initialRegion}
         onRegionChangeComplete={onRegionChange}
         onLongPress={onLongPress}
-        mapType="none"
+        mapType={Platform.OS === 'ios' ? 'standard' : 'none'}
+        showsPointsOfInterest={false}
+        showsBuildings={false}
+        minZoomLevel={offlineMode && offlineMetadata ? offlineMetadata.minZoom : undefined}
+        maxZoomLevel={offlineMode && offlineMetadata ? offlineMetadata.maxZoom : undefined}
         showsUserLocation={false}
         showsCompass={false}
         showsScale={false}
@@ -600,6 +575,7 @@ export function MapScreen({
         {/* Tile overlay — LocalTile for offline, UrlTile for online */}
         {offlineMode && localTilePath ? (
           <LocalTile
+            key={`offline-${tileRevision}`}
             pathTemplate={localTilePath}
             tileSize={256}
           />
@@ -611,6 +587,8 @@ export function MapScreen({
             tileSize={256}
           />
         )}
+
+        {!routeMode && activeRoute?.waypoints?.length > 1 && <RouteOverlay waypoints={activeRoute.waypoints} colors={colors} />}
 
         {/* MGRS grid overlay */}
         <MGRSGridOverlay region={mapRegion || initialRegion} />
@@ -748,17 +726,22 @@ export function MapScreen({
               accessibilityRole="button"
               accessibilityLabel={`Delete ${selectedMarker.label || 'waypoint'}`}
             >
-              <Text style={[styles.markerCardBtnText, { color: colors.border }]}>{t('map.delete')}</Text>
+              <Text style={[styles.markerCardBtnText, { color: colors.text3 }]}>{t('map.delete')}</Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
 
+      {offlineMode && offlineMetadata && <View pointerEvents="none" style={{ position: 'absolute', top: 58, left: 12, right: 70, backgroundColor: colors.card, padding: 7 }}>
+        <Text style={{ ...TYPE.label, color: colors.text, fontSize: 12 }} numberOfLines={2}>{offlineMetadata.name} · Z{offlineMetadata.minZoom}–{offlineMetadata.maxZoom}</Text>
+        {!!offlineMetadata.attribution && <Text style={{ ...TYPE.body, color: colors.text2, fontSize: 10 }}>{offlineMetadata.attribution.replace(/<[^>]*>/g, '')}</Text>}
+      </View>}
+
       {/* Download progress overlay */}
       {downloading && (
         <View style={[styles.progressOverlay, { backgroundColor: colors.bg + 'CC' }]}>
-          <Text style={[styles.progressText, { color: colors.accent }]}>
-            {t('map.downloading')} {Math.round(dlProgress * 100)}%
+          <Text style={[styles.progressText, { color: colors.accentText }]}>
+            {t('nightDisplay.importMap')} {Math.round(dlProgress * 100)}%
           </Text>
           <View style={[styles.progressBarBg, { backgroundColor: colors.border2 }]}>
             <View style={[styles.progressBarFill, { backgroundColor: colors.accent, width: `${Math.round(dlProgress * 100)}%` }]} />
@@ -781,7 +764,7 @@ export function MapScreen({
             accessibilityLabel="Toggle offline map mode"
             accessibilityState={{ checked: offlineMode }}
           >
-            <Text style={[styles.mapBtnIcon, { color: offlineMode ? colors.bg : colors.accent }]}>
+            <Text style={[styles.mapBtnIcon, { color: offlineMode ? colors.actionText : colors.accentText }]}>
               {offlineMode ? '⚡' : '☁'}
             </Text>
           </TouchableOpacity>
@@ -790,14 +773,14 @@ export function MapScreen({
         {/* Download tiles button */}
         <TouchableOpacity
           style={[styles.mapBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-          onPress={handleDownloadTiles}
+          onPress={handleImportMap}
           onLongPress={handleClearCache}
           disabled={downloading}
           accessibilityRole="button"
-          accessibilityLabel="Download map tiles for offline use"
+          accessibilityLabel={t('nightDisplay.importMap')}
           accessibilityHint="Long press to clear cached tiles"
         >
-          <Text style={[styles.mapBtnIcon, { color: colors.accent, opacity: downloading ? 0.4 : 1 }]}>⬇</Text>
+          <Text style={[styles.mapBtnIcon, { color: colors.accentText, opacity: downloading ? 0.4 : 1 }]}>⬇</Text>
         </TouchableOpacity>
 
         {/* Map style toggle */}
@@ -807,7 +790,7 @@ export function MapScreen({
           accessibilityRole="button"
           accessibilityLabel={`Map style: ${mapStyleLabel}. Tap to cycle.`}
         >
-          <Text style={[styles.mapBtnLabel, { color: colors.accent }]}>{mapStyleLabel}</Text>
+          <Text style={[styles.mapBtnLabel, { color: colors.accentText }]}>{mapStyleLabel}</Text>
         </TouchableOpacity>
 
         {/* Route-planning toggle (Pro). Lit accent when active. */}
@@ -821,7 +804,7 @@ export function MapScreen({
           accessibilityLabel={routeMode ? 'Exit route planning mode' : 'Start route planning mode (Pro)'}
           accessibilityState={{ selected: routeMode }}
         >
-          <Text style={[styles.mapBtnLabel, { color: routeMode ? colors.bg : colors.accent }]}>RT</Text>
+          <Text style={[styles.mapBtnLabel, { color: routeMode ? colors.actionText : colors.accentText }]}>RT</Text>
         </TouchableOpacity>
 
         {/* Mission Preflight (v3.4). Opens the readiness panel as a modal.
@@ -832,7 +815,7 @@ export function MapScreen({
           accessibilityRole="button"
           accessibilityLabel="Open Mission Preflight"
         >
-          <Text style={[styles.mapBtnLabel, { color: colors.accent }]}>PFL</Text>
+          <Text style={[styles.mapBtnLabel, { color: colors.accentText }]}>PFL</Text>
         </TouchableOpacity>
 
         {/* Center on user button */}
@@ -843,7 +826,7 @@ export function MapScreen({
             accessibilityRole="button"
             accessibilityLabel="Center on current location"
           >
-            <Text style={[styles.mapBtnIcon, { color: colors.accent }]}>◎</Text>
+            <Text style={[styles.mapBtnIcon, { color: colors.accentText }]}>◎</Text>
           </TouchableOpacity>
         )}
 
@@ -864,7 +847,7 @@ export function MapScreen({
           accessibilityRole="button"
           accessibilityLabel="Zoom in"
         >
-          <Text style={[styles.mapBtnIcon, { color: colors.accent }]}>＋</Text>
+          <Text style={[styles.mapBtnIcon, { color: colors.accentText }]}>＋</Text>
         </TouchableOpacity>
 
         {/* Zoom out */}
@@ -884,7 +867,7 @@ export function MapScreen({
           accessibilityRole="button"
           accessibilityLabel="Zoom out"
         >
-          <Text style={[styles.mapBtnIcon, { color: colors.accent }]}>ー</Text>
+          <Text style={[styles.mapBtnIcon, { color: colors.accentText }]}>ー</Text>
         </TouchableOpacity>
       </View>
 
@@ -894,7 +877,7 @@ export function MapScreen({
       {routeMode && (
         <View style={[styles.routePanel, { backgroundColor: colors.card, borderColor: colors.accent, borderTopColor: colors.accent }]}>
           <View style={styles.routePanelHeader}>
-            <Text style={[styles.routePanelTitle, { color: colors.accent }]}>{t('map.route')}</Text>
+            <Text style={[styles.routePanelTitle, { color: colors.accentText }]}>{t('map.route')}</Text>
             <Text style={[styles.routePanelHint, { color: colors.text3 }]} numberOfLines={1}>
               {routeWaypoints.length === 0
                 ? t('map.routeHintEmpty')
@@ -914,7 +897,7 @@ export function MapScreen({
               accessibilityRole="button"
               accessibilityLabel="Optimize route order from current location"
             >
-              <Text style={[styles.routePanelBtnText, { color: routeWaypoints.length >= 2 ? colors.text2 : colors.border }]}>{t('map.optimize')}</Text>
+              <Text style={[styles.routePanelBtnText, { color: routeWaypoints.length >= 2 ? colors.text2 : colors.text3 }]}>{t('map.optimize')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.routePanelBtn, {
@@ -926,7 +909,7 @@ export function MapScreen({
               accessibilityRole="button"
               accessibilityLabel="Clear all waypoints from route"
             >
-              <Text style={[styles.routePanelBtnText, { color: colors.border }]}>{t('map.clear')}</Text>
+              <Text style={[styles.routePanelBtnText, { color: colors.text3 }]}>{t('map.clear')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.routePanelBtn, { borderColor: colors.text2 }]}
@@ -947,7 +930,7 @@ export function MapScreen({
           {centerMGRS || '\u2014'}
         </Text>
         {cachedCount > 0 && (
-          <Text style={[styles.cacheIndicator, { color: offlineMode ? colors.accent : colors.text3 }]}>
+          <Text style={[styles.cacheIndicator, { color: offlineMode ? colors.accentText : colors.text3 }]}>
             {offlineMode ? '⚡ OFFLINE' : `● ${cachedCount}`}
           </Text>
         )}
@@ -961,7 +944,7 @@ export function MapScreen({
             <Text style={[styles.wpMenuTitle, { color: colors.text }]}>
               {t('map.addWaypoint')}
             </Text>
-            <Text style={[styles.wpMenuMGRS, { color: colors.accent }]}>
+            <Text style={[styles.wpMenuMGRS, { color: colors.accentText }]}>
               {pendingWaypoint?.mgrs || ''}
             </Text>
 
@@ -973,7 +956,7 @@ export function MapScreen({
               onChangeText={setWpLabel}
               maxLength={24}
               autoCapitalize="characters"
-              placeholderTextColor={colors.text4}
+              placeholderTextColor={colors.text3}
               placeholder={t('map.waypointNamePlaceholder')}
             />
 
@@ -989,13 +972,13 @@ export function MapScreen({
                   }]}
                   onPress={() => setWpSelectedList(list.id)}
                 >
-                  <Text style={[styles.wpMenuListText, { color: wpSelectedList === list.id ? colors.accent : colors.text2 }]}>
+                  <Text style={[styles.wpMenuListText, { color: wpSelectedList === list.id ? colors.text : colors.text2 }]}>
                     {list.name}
                   </Text>
                 </TouchableOpacity>
               ))}
               {wpLists.length === 0 && (
-                <Text style={[styles.wpMenuHint, { color: colors.text4 }]}>{t('map.newListNote')}</Text>
+                <Text style={[styles.wpMenuHint, { color: colors.text3 }]}>{t('map.newListNote')}</Text>
               )}
             </ScrollView>
 
@@ -1005,7 +988,7 @@ export function MapScreen({
                 style={[styles.wpMenuBtn, { borderColor: colors.accent, backgroundColor: colors.border2 }]}
                 onPress={saveWaypointFromMenu}
               >
-                <Text style={[styles.wpMenuBtnText, { color: colors.accent }]}>{t('common.save')}</Text>
+                <Text style={[styles.wpMenuBtnText, { color: colors.text }]}>{t('common.save')}</Text>
               </TouchableOpacity>
 
               {onSetWaypoint && (
@@ -1030,57 +1013,7 @@ export function MapScreen({
                 style={[styles.wpMenuBtn, { borderColor: colors.border }]}
                 onPress={() => { setWpMenuVisible(false); setPendingWaypoint(null); }}
               >
-                <Text style={[styles.wpMenuBtnText, { color: colors.border }]}>{t('common.cancel')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* First-visit free-tier upgrade banner */}
-      {firstVisitBannerVisible && (
-        <View style={[styles.firstVisitBanner, { backgroundColor: colors.card, borderColor: colors.text2 }]}>
-          <View style={{ flex:1 }}>
-            <Text style={[styles.firstVisitTitle, { color: colors.text }]}>{t('map.offlineMapsReady')}</Text>
-            <Text style={[styles.firstVisitBody, { color: colors.text3 }]}>{t('map.firstVisitBody')}</Text>
-          </View>
-          <View style={{ gap:6 }}>
-            <TouchableOpacity
-              style={[styles.firstVisitPrimary, { borderColor: colors.text, backgroundColor: colors.border2 }]}
-              onPress={() => { setFirstVisitBannerVisible(false); onShowProGate && onShowProGate('Offline Maps'); }}
-            >
-              <Text style={[styles.firstVisitPrimaryText, { color: colors.text }]}>{trialEligible ? t('map.startFreeTrial') : t('map.upgrade')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.firstVisitSecondary, { borderColor: colors.border }]}
-              onPress={() => setFirstVisitBannerVisible(false)}
-            >
-              <Text style={[styles.firstVisitSecondaryText, { color: colors.border }]}>{t('map.dismiss')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
-      {/* First-visit Pro-tier download modal */}
-      <Modal visible={firstVisitModalVisible} transparent animationType="fade" onRequestClose={() => setFirstVisitModalVisible(false)}>
-        <View style={styles.wpMenuOverlay}>
-          <View style={[styles.wpMenuBox, { backgroundColor: colors.card, borderColor: colors.text2 }]}>
-            <Text style={[styles.wpMenuTitle, { color: colors.text }]}>{t('map.readyForField')}</Text>
-            <Text style={[styles.firstVisitBody, { color: colors.text3, marginBottom:16 }]}>
-              {t('map.firstVisitModalBody')}
-            </Text>
-            <View style={styles.wpMenuActions}>
-              <TouchableOpacity
-                style={[styles.wpMenuBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]}
-                onPress={() => { setFirstVisitModalVisible(false); setTimeout(() => handleDownloadTiles(), 250); }}
-              >
-                <Text style={[styles.wpMenuBtnText, { color: colors.text }]}>{t('map.download')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.wpMenuBtn, { borderColor: colors.border }]}
-                onPress={() => setFirstVisitModalVisible(false)}
-              >
-                <Text style={[styles.wpMenuBtnText, { color: colors.border }]}>{t('map.later')}</Text>
+                <Text style={[styles.wpMenuBtnText, { color: colors.text3 }]}>{t('common.cancel')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1111,7 +1044,7 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   map: { flex: 1 },
   fallback: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },
-  fallbackText: { fontSize: 12, letterSpacing: 2, textAlign: 'center' },
+  fallbackText: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, textAlign: 'center' },
 
   // Pulsing location dot
   pulsingContainer: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
@@ -1133,14 +1066,14 @@ const styles = StyleSheet.create({
     }),
   },
   markerCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  markerCardLabel: { flex: 1, fontFamily: 'monospace', fontSize: 13, fontWeight: '700', letterSpacing: 3 },
+  markerCardLabel: { flex: 1, ...TYPE.heading, fontSize: 14, letterSpacing: 1.2 },
   markerCardClose: { paddingHorizontal: 8, paddingVertical: 4, minWidth: 32, minHeight: 32, justifyContent: 'center', alignItems: 'center' },
   markerCardCloseText: { fontSize: 14, fontWeight: '700' },
-  markerCardMgrs: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 2 },
-  markerCardBrg: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2 },
+  markerCardMgrs: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6 },
+  markerCardBrg: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6 },
   markerCardBtnRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
   markerCardBtn: { flex: 1, borderWidth: 1, paddingVertical: 8, alignItems: 'center', minHeight: 44, justifyContent: 'center' },
-  markerCardBtnText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, fontWeight: '700' },
+  markerCardBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
   // Right-side button stack
   rightButtons: {
@@ -1162,7 +1095,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 16, paddingTop: 50,
     alignItems: 'center',
   },
-  progressText: { fontSize: 11, letterSpacing: 3, fontWeight: '700', marginBottom: 8 },
+  progressText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, marginBottom: 8 },
   progressBarBg: { width: '100%', height: 4, borderRadius: 2 },
   progressBarFill: { height: 4, borderRadius: 2 },
 
@@ -1172,39 +1105,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 10, borderTopWidth: 1,
     flexDirection: 'row', alignItems: 'center', gap: 10,
   },
-  bottomLabel: { fontSize: 9, letterSpacing: 3, fontWeight: '700' },
-  bottomMGRS: { fontFamily: 'monospace', fontSize: 14, letterSpacing: 2, fontWeight: '700', flex: 1 },
-  cacheIndicator: { fontSize: 9, letterSpacing: 2, fontWeight: '600' },
+  bottomLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
+  bottomMGRS: { ...TYPE.data, fontSize: 14, letterSpacing: 0.6, flex: 1 },
+  cacheIndicator: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
   // Map style button label
-  mapBtnLabel: { fontSize: 8, fontWeight: '800', letterSpacing: 1 },
+  mapBtnLabel: { ...TYPE.label, fontSize: 10, letterSpacing: 1 },
 
   // Waypoint creation menu
   wpMenuOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 24 },
   wpMenuCard: { width: '100%', maxWidth: 340, borderWidth: 1, padding: 16, gap: 8 },
-  wpMenuTitle: { fontFamily: 'monospace', fontSize: 12, letterSpacing: 4, fontWeight: '700' },
-  wpMenuMGRS: { fontFamily: 'monospace', fontSize: 16, letterSpacing: 3, fontWeight: '700', marginBottom: 4 },
-  wpMenuLabel: { fontSize: 9, letterSpacing: 3, fontWeight: '700', marginTop: 4 },
-  wpMenuInput: { borderWidth: 1, fontFamily: 'monospace', fontSize: 13, letterSpacing: 2, paddingHorizontal: 10, paddingVertical: 8 },
+  wpMenuTitle: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2 },
+  wpMenuMGRS: { ...TYPE.data, fontSize: 16, letterSpacing: 0.6, marginBottom: 4 },
+  wpMenuLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, marginTop: 4 },
+  wpMenuInput: { borderWidth: 1, ...TYPE.body, fontSize: 13, letterSpacing: 0.3, paddingHorizontal: 10, paddingVertical: 8 },
   wpMenuListScroll: { maxHeight: 40, marginVertical: 4 },
   wpMenuListBtn: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6 },
-  wpMenuListText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2, fontWeight: '700' },
-  wpMenuHint: { fontSize: 10, letterSpacing: 1, alignSelf: 'center' },
+  wpMenuListText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
+  wpMenuHint: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, alignSelf: 'center' },
   wpMenuActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   wpMenuBtn: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10, minHeight: 44, justifyContent: 'center', alignItems: 'center' },
-  wpMenuBtnText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, fontWeight: '700' },
-  firstVisitBanner: { position: 'absolute', left: 12, right: 12, bottom: 24, flexDirection: 'row', gap: 12, borderWidth: 1, padding: 12 },
-  firstVisitTitle: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 3, fontWeight: '800', marginBottom: 4 },
-  firstVisitBody: { fontFamily: 'monospace', fontSize: 10, lineHeight: 14 },
-  firstVisitPrimary: { borderWidth: 2, paddingHorizontal: 16, paddingVertical: 10, minHeight: 44, minWidth: 100, alignItems: 'center', justifyContent: 'center' },
-  firstVisitPrimaryText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, fontWeight: '700' },
-  firstVisitSecondary: { borderWidth: 1, paddingHorizontal: 16, paddingVertical: 8, minHeight: 36, minWidth: 100, alignItems: 'center', justifyContent: 'center' },
-  firstVisitSecondaryText: { fontFamily: 'monospace', fontSize: 9, letterSpacing: 2, fontWeight: '600' },
+  wpMenuBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
   // Mesh node markers
   meshMarker: { alignItems: 'center', justifyContent: 'center' },
   meshMarkerDot: { width: 14, height: 14, borderRadius: 7, borderWidth: 2 },
-  meshMarkerLabel: { fontFamily: 'monospace', fontSize: 8, fontWeight: '700', letterSpacing: 1, marginTop: 2, textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
+  meshMarkerLabel: { ...TYPE.label, fontSize: 10, letterSpacing: 1, marginTop: 2, textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 },
 
   // Route planning panel — sits above the bottom MGRS bar when route mode is on
   routePanel: {
@@ -1218,12 +1144,12 @@ const styles = StyleSheet.create({
     }),
   },
   routePanelHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  routePanelTitle: { fontFamily: 'monospace', fontSize: 11, letterSpacing: 4, fontWeight: '800' },
-  routePanelHint: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 1, flex: 1 },
+  routePanelTitle: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2 },
+  routePanelHint: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, flex: 1 },
   routePanelBtnRow: { flexDirection: 'row', gap: 8 },
   routePanelBtn: {
     flex: 1, borderWidth: 1, paddingVertical: 9,
     alignItems: 'center', justifyContent: 'center', minHeight: 38,
   },
-  routePanelBtnText: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 3, fontWeight: '700' },
+  routePanelBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 });

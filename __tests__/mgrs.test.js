@@ -353,6 +353,44 @@ describe('mgrs.js - MGRS Coordinate Conversion', () => {
       expect(result.lat).toBeCloseTo(38.89, 1);
     });
 
+    test('Saving an edited one-metre grid preserves the entered coordinate', () => {
+      const entered = '10S EG 52566 82219';
+      const parsed = parseMGRSToLatLon(entered);
+      expect(parsed).not.toBeNull();
+      expect(formatMGRS(toMGRS(parsed.lat, parsed.lon, 5))).toBe(entered);
+    });
+
+    test('Repeated waypoint edit/save cycles do not accumulate coordinate drift', () => {
+      const entered = '10S EG 52566 82219';
+      let saved = entered;
+      for (let edit = 0; edit < 20; edit += 1) {
+        const parsed = parseMGRSToLatLon(saved);
+        expect(parsed).not.toBeNull();
+        saved = formatMGRS(toMGRS(parsed.lat, parsed.lon, 5));
+        expect(saved).toBe(entered);
+      }
+    });
+
+    // Fixed grid references span low, middle and high latitudes in both
+    // hemispheres. An inverse error must not move a one-metre grid cell.
+    test.each([
+      ['southern high latitude', '33CWQ1970925194'],
+      ['southern upper middle latitude', '33EWQ4562831836'],
+      ['southern middle latitude', '33HWS6902955175'],
+      ['southern low latitude', '33KWU8407671317'],
+      ['south of the equator', '33MWU8900261824'],
+      ['north of the equator', '33NWB8900238176'],
+      ['northern low latitude', '33QWB8407628683'],
+      ['northern middle latitude', '33SWD6902944825'],
+      ['northern upper middle latitude', '33VWF4562868164'],
+      ['northern high latitude', '33XWF1970974806'],
+      ['western hemisphere', '18SUJ2348005997'],
+    ])('One-metre grid is stable at %s', (_label, grid) => {
+      const parsed = parseMGRSToLatLon(grid);
+      expect(parsed).not.toBeNull();
+      expect(toMGRS(parsed.lat, parsed.lon, 5)).toBe(grid);
+    });
+
     test('Odd digit count should return null (invalid split)', () => {
       const result = parseMGRSToLatLon('18SUJ12345');
       expect(result).toBeNull();

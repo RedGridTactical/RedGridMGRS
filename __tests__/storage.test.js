@@ -43,7 +43,7 @@ describe('storage.js - Persistent Storage Wrapper', () => {
       const result = await loadSettings();
       expect(result.declination).toBe(0);
       expect(result.paceCount).toBe(62);
-      expect(result.theme).toBe('red');
+      expect(result.theme).toBe('standard');
     });
 
     test('Loads saved declination correctly', async () => {
@@ -98,7 +98,7 @@ describe('storage.js - Persistent Storage Wrapper', () => {
       const result = await loadSettings();
       expect(result.declination).toBe(0);
       expect(result.paceCount).toBe(62);
-      expect(result.theme).toBe('red');
+      expect(result.theme).toBe('standard');
     });
 
     test('Returns defaults on parse error', async () => {
@@ -107,7 +107,7 @@ describe('storage.js - Persistent Storage Wrapper', () => {
       const result = await loadSettings();
       expect(result.declination).toBe(0);
       expect(result.paceCount).toBe(62);
-      expect(result.theme).toBe('red');
+      expect(result.theme).toBe('standard');
     });
 
     test('Returns defaults on timeout', async () => {
@@ -118,7 +118,7 @@ describe('storage.js - Persistent Storage Wrapper', () => {
       const result = await loadSettings();
       expect(result.declination).toBe(0);
       expect(result.paceCount).toBe(62);
-      expect(result.theme).toBe('red');
+      expect(result.theme).toBe('standard');
     });
 
     test('Handles invalid data types gracefully', async () => {
@@ -131,7 +131,7 @@ describe('storage.js - Persistent Storage Wrapper', () => {
       const result = await loadSettings();
       expect(result.declination).toBe(0);
       expect(result.paceCount).toBe(62);
-      expect(result.theme).toBe('red');
+      expect(result.theme).toBe('standard');
     });
   });
 

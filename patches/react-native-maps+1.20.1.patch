@@ -1,0 +1,62 @@
+diff --git a/node_modules/react-native-maps/ios/AirMaps/AIRMap.m b/node_modules/react-native-maps/ios/AirMaps/AIRMap.m
+index 07a4638..2511868 100644
+--- a/node_modules/react-native-maps/ios/AirMaps/AIRMap.m
++++ b/node_modules/react-native-maps/ios/AirMaps/AIRMap.m
+@@ -125,7 +125,6 @@ - (void)insertReactSubview:(id<RCTComponent>)subview atIndex:(NSInteger)atIndex
+         [self addOverlay:(id<MKOverlay>)subview];
+     } else if ([subview isKindOfClass:[AIRMapLocalTile class]]) {
+         ((AIRMapLocalTile *)subview).map = self;
+-        [self addOverlay:(id<MKOverlay>)subview];
+     } else if ([subview isKindOfClass:[AIRMapOverlay class]]) {
+         ((AIRMapOverlay *)subview).map = self;
+         [self addOverlay:(id<MKOverlay>)subview];
+@@ -157,7 +156,7 @@ - (void)removeReactSubview:(id<RCTComponent>)subview {
+     } else if ([subview isKindOfClass:[AIRMapWMSTile class]]) {
+         [self removeOverlay:(id <MKOverlay>) subview];
+     } else if ([subview isKindOfClass:[AIRMapLocalTile class]]) {
+-        [self removeOverlay:(id <MKOverlay>) subview];
++        ((AIRMapLocalTile *)subview).map = nil;
+     } else if ([subview isKindOfClass:[AIRMapOverlay class]]) {
+         [self removeOverlay:(id <MKOverlay>) subview];
+     } else {
+diff --git a/node_modules/react-native-maps/ios/AirMaps/AIRMapLocalTile.m b/node_modules/react-native-maps/ios/AirMaps/AIRMapLocalTile.m
+index 17e3882..1495cbe 100644
+--- a/node_modules/react-native-maps/ios/AirMaps/AIRMapLocalTile.m
++++ b/node_modules/react-native-maps/ios/AirMaps/AIRMapLocalTile.m
+@@ -15,6 +15,14 @@ @implementation AIRMapLocalTile {
+     BOOL _tileSizeSet;
+ }
+ 
++- (void)setMap:(AIRMap *)map
++{
++    if (_map == map) return;
++    if (_map && self.tileOverlay) [_map removeOverlay:self.tileOverlay];
++    _map = map;
++    [self update];
++}
++
+ 
+ - (void)setPathTemplate:(NSString *)pathTemplate{
+     _pathTemplate = pathTemplate;
+@@ -33,6 +41,8 @@ - (void)setTileSize:(CGFloat)tileSize{
+ - (void) createTileOverlayAndRendererIfPossible
+ {
+     if (!_pathTemplateSet || !_tileSizeSet) return;
++    // Remove the previous native overlay before replacing its renderer.
++    if (_map && self.tileOverlay) [_map removeOverlay:self.tileOverlay];
+     self.tileOverlay = [[AIRMapLocalTileOverlay alloc] initWithURLTemplate:self.pathTemplate];
+     self.tileOverlay.canReplaceMapContent = YES;
+     self.tileOverlay.tileSize = CGSizeMake(_tileSize, _tileSize);
+@@ -44,8 +54,10 @@ - (void) update
+     if (!_renderer) return;
+     
+     if (_map == nil) return;
+-    [_map removeOverlay:self];
+-    [_map addOverlay:self level:MKOverlayLevelAboveLabels];
++    // MapKit only suppresses the basemap for a registered MKTileOverlay.
++    // Registering this React wrapper leaves Apple map content enabled.
++    [_map removeOverlay:self.tileOverlay];
++    [_map addOverlay:self.tileOverlay level:MKOverlayLevelAboveLabels];
+ }
+ 
+ #pragma mark MKOverlay implementation

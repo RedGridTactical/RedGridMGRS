@@ -240,7 +240,14 @@ export function parseMGRSToLatLon(mgrs) {
     const M = fullNorthing / k0;
     const mu = M / (a * (1 - e2 / 4 - (3 * e2 ** 2) / 64 - (5 * e2 ** 3) / 256));
     const e1 = (1 - Math.sqrt(1 - e2)) / (1 + Math.sqrt(1 - e2));
-    const phi1 = mu + (3 * e1) / 2 * Math.sin(2 * mu) + (27 * e1 ** 2) / 16 * Math.sin(4 * mu) + (151 * e1 ** 3) / 96 * Math.sin(6 * mu);
+    // Footpoint latitude, Snyder (USGS PP 1395), equation 3-26.
+    // The sin(4 * mu) coefficient is 21/16; 27/16 shifts parsed grids by
+    // several metres and accumulates that error whenever a waypoint is saved.
+    const phi1 = mu
+      + (3 * e1 / 2 - 27 * e1 ** 3 / 32) * Math.sin(2 * mu)
+      + (21 * e1 ** 2 / 16 - 55 * e1 ** 4 / 32) * Math.sin(4 * mu)
+      + (151 * e1 ** 3 / 96) * Math.sin(6 * mu)
+      + (1097 * e1 ** 4 / 512) * Math.sin(8 * mu);
     const N1 = a / Math.sqrt(1 - e2 * Math.sin(phi1) ** 2);
     const T1 = Math.tan(phi1) ** 2, C1 = ep2 * Math.cos(phi1) ** 2;
     const R1 = (a * (1 - e2)) / (1 - e2 * Math.sin(phi1) ** 2) ** 1.5;
