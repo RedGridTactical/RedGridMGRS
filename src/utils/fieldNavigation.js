@@ -1,6 +1,6 @@
 /** Local navigation state. Route snapshots never follow later edits to a list. */
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { toMGRS, formatMGRS } from './mgrs';
+import { readLocalRecord, writeLocalRecord, fieldDataError } from './durableStorage';
+import { normalizeWaypoint, normalizePlan, validFieldPosition } from './waypoints';
 
 export const FIELD_NAVIGATION_KEY = 'rg_field_navigation_v1';
 const HISTORY_LIMIT = 10;
@@ -10,19 +10,9 @@ export function emptyNavigation() {
   return { version: 1, waypoint: null, route: null, history: [] };
 }
 
-export function validPosition(point) {
-  return Number.isFinite(point?.lat) && Number.isFinite(point?.lon)
-    && point.lat >= -80 && point.lat <= 84 && point.lon >= -180 && point.lon <= 180;
-}
-
+export const validPosition = validFieldPosition;
 function snapshotPoint(point, index = 0) {
-  if (!validPosition(point)) return null;
-  return {
-    id: String(point.id || `point-${index}`),
-    lat: point.lat, lon: point.lon,
-    label: String(point.label || point.name || `WP ${index + 1}`).slice(0, 80),
-    mgrs: formatMGRS(toMGRS(point.lat, point.lon, 5)),
-  };
+  return point == null ? null : normalizeWaypoint(point, index);
 }
 
 function validRoute(route) {
@@ -37,7 +27,8 @@ function validRoute(route) {
 function snapshotRoute(route) {
   return {
     id: String(route.id || `${route.startedAt}-route`), listId: String(route.listId || ''),
-    name: String(route.name || 'ROUTE').slice(0, 80),
+    name: String(route.name || 'ROUTE').slice(0, 80), ...normalizePlan(route),
+    reviewNotes: String(route.reviewNotes || '').slice(0, 500),
     waypoints: route.waypoints.map(snapshotPoint), index: route.index, startedAt: route.startedAt,
     confirmed: route.confirmed.map(point => ({ index: point.index, confirmedAt: point.confirmedAt })),
     mode: route.mode === 'team' ? 'team' : 'solo',
@@ -50,7 +41,7 @@ export function normalizeNavigation(value) {
   return {
     version: 1,
     // The route index owns its destination, including after a interrupted save.
-    waypoint: route ? snapshotPoint(route.waypoints[route.index], route.index) : snapshotPoint(value.waypoint),
+    waypoint: route ? snapshotPoint(route.waypoints[route.index], route.index) : validPosition(value.waypoint) ? snapshotPoint(value.waypoint) : null,
     route,
     history: Array.isArray(value.history) ? value.history.filter(item =>
       validRoute(item) && ['completed', 'stopped'].includes(item.status) && Number.isFinite(item.endedAt)
@@ -80,7 +71,7 @@ export function transitionNavigation(state, action) {
       const waypoints = list.waypoints.map(snapshotPoint);
       const route = {
         id: `${now}-${++routeSequence}`,
-        listId: String(list.id || ''), name: String(list.name || 'ROUTE').slice(0, 80),
+        listId: String(list.id || ''), name: String(list.name || 'ROUTE').slice(0, 80), ...normalizePlan(list), reviewNotes: '',
         waypoints, index: 0, startedAt: now, confirmed: [], mode: action.mode === 'team' ? 'team' : 'solo',
       };
       return { ...previous, route, waypoint: waypoints[0] };
@@ -97,32 +88,31 @@ export function transitionNavigation(state, action) {
     case 'stop':
       if (action.routeId && action.routeId !== state.route?.id) return state;
       return stopCurrent(state, now);
+    case 'reviewNotes': {
+      if (!state.history.some(item => item.id === action.routeId)) return state;
+      return { ...state, history: state.history.map(item => item.id === action.routeId
+        ? { ...item, reviewNotes: String(action.notes || '').slice(0, 500) } : item) };
+    }
     case 'clearHistory': return { ...state, history: [] };
     default: return state;
   }
 }
 
-// One ordered queue prevents a slow first save from overwriting later progress.
-let writeQueue = Promise.resolve();
-
-function storageTimeout(promise) {
-  let timer;
-  const timeout = new Promise((_, reject) => {
-    timer = setTimeout(() => reject(new Error('Navigation storage timeout')), 5000);
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+/** Refuse malformed records instead of silently overwriting them with empty state. */
+export function validateNavigation(value) {
+  if (value?.version !== 1 || !Array.isArray(value.history) || value.history.length > HISTORY_LIMIT
+    || (value.waypoint != null && !validPosition(value.waypoint))
+    || (value.route != null && (!validRoute(value.route) || value.route.confirmed.length !== value.route.index))
+    || value.history.some(item => !validRoute(item) || !['completed', 'stopped'].includes(item.status)
+      || !Number.isFinite(item.endedAt)
+      || item.confirmed.length !== (item.status === 'completed' ? item.waypoints.length : item.index))) {
+    throw fieldDataError('INVALID_NAVIGATION', 'Saved navigation needs recovery; original data preserved');
+  }
+  return normalizeNavigation(value);
 }
-
 export function saveNavigation(state) {
-  const json = JSON.stringify(state);
-  const result = writeQueue.then(() => AsyncStorage.setItem(FIELD_NAVIGATION_KEY, json));
-  writeQueue = result.catch(() => {});
-  return storageTimeout(result);
+  return writeLocalRecord(FIELD_NAVIGATION_KEY, state, validateNavigation, emptyNavigation);
 }
-
-export async function loadNavigation() {
-  await storageTimeout(writeQueue);
-  const raw = await storageTimeout(AsyncStorage.getItem(FIELD_NAVIGATION_KEY));
-  if (!raw) return emptyNavigation();
-  try { return normalizeNavigation(JSON.parse(raw)); } catch { return emptyNavigation(); }
+export function loadNavigation() {
+  return readLocalRecord(FIELD_NAVIGATION_KEY, validateNavigation, emptyNavigation);
 }

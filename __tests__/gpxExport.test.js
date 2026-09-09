@@ -154,3 +154,40 @@ describe('gpxExport.js - GPX/KML Export', () => {
     });
   });
 });
+
+describe('named plan export', () => {
+  test('GPX uses ordered route points without duplicates or a recorded track', () => {
+    const points = [{ ...sampleWaypoints[1], note: 'Gate <closed> & wet', source: 'map' }, sampleWaypoints[0]];
+    const xml = exportAsGPX(points, 'TRAIL', { notes: 'Use path', paceMinPerKm: 15, plannedStartAt: 1800000000000 });
+    expect(xml).toContain('<rte>'); expect((xml.match(/<rtept /g) || [])).toHaveLength(2);
+    expect(xml).not.toContain('<wpt'); expect(xml).not.toContain('<trk');
+    expect(xml.indexOf('<name>BRAVO')).toBeLessThan(xml.indexOf('<name>ALPHA'));
+    expect(xml).toContain('<rg:note>Gate &lt;closed&gt; &amp; wet</rg:note>');
+    expect(xml).toContain('<rg:paceMinPerKm>15</rg:paceMinPerKm>');
+  });
+  test('KML carries the same saved plan and point note metadata', () => {
+    const xml = exportAsKML([{ ...sampleWaypoints[0], note: 'Bridge', recordedAt: 1800000000000 }], 'TRAIL', { notes: 'Dry weather', paceMinPerKm: 12 });
+    expect(xml).toContain('<Data name="rg_notes"><value>Dry weather</value></Data>');
+    expect(xml).toContain('<Data name="rg_note"><value>Bridge</value></Data>');
+    expect(xml).toContain('<Data name="rg_recordedAt"><value>1800000000000</value></Data>');
+  });
+  test('explicit invalid coordinates cannot fall back to an unrelated valid grid', () => {
+    for (const lat of [Infinity, NaN, 85, '38.9']) expect(exportAsGPX([{ ...sampleWaypoints[0], lat }])).not.toContain('<wpt');
+  });
+});
+
+test('GPX and KML preserve the same ordered plan, notes and DR origin through actual import preview', () => {
+  const { previewWaypointImport } = require('../src/utils/gpxImport');
+  const plan = { name: 'TRAIL PLAN', notes: 'Use bridge & path', paceMinPerKm: 13, plannedStartAt: 1800000000000 };
+  const provenance = { kind: 'dead-reckoning', origin: { lat: 38.9, lon: -77, source: 'manual', pinnedAt: 1800000000000, label: 'ORIGIN', mgrs: '18S UJ 26565 07581', observedAt: null, accuracy: null }, gridBearing: 90, distanceMeters: 850, calculatedAt: 1800000001000 };
+  const points = [{ ...sampleWaypoints[1], label: 'ESTIMATE', note: 'Inspect bridge', source: 'estimated', recordedAt: provenance.calculatedAt, provenance }, sampleWaypoints[0]];
+  for (const format of ['gpx', 'kml']) {
+    const xml = (format === 'gpx' ? exportAsGPX : exportAsKML)(points, plan.name, plan);
+    const preview = previewWaypointImport(xml, { format });
+    expect(preview.counts.accepted).toBe(2);
+    expect(preview.points.map(point => point.label)).toEqual(['ESTIMATE', 'ALPHA']);
+    expect(preview.plan).toMatchObject(plan);
+    expect(preview.points[0]).toMatchObject({ source: 'import', note: 'Inspect bridge', provenance });
+    expect(preview.points[0].accuracyM).toBeNull();
+  }
+});

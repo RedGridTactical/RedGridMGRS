@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import { useSessionDraft } from '../../hooks/useSessionDraft';
+import { parseToolNumber } from '../../utils/toolWorkflow';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { resection, applyDeclination, isBearing } from '../../utils/tactical';
 import { parseMGRSToLatLon } from '../../utils/mgrs';
@@ -10,20 +12,21 @@ import { TYPE } from '../../utils/typography';
 export function ResectionTool() {
   const colors = useColors();
   const { t } = useTranslation();
-  const [pt1MGRS, setPt1MGRS]   = useState('');
-  const [bearing1, setBearing1] = useState('');
-  const [pt2MGRS, setPt2MGRS]   = useState('');
-  const [bearing2, setBearing2] = useState('');
-  const [reference, setReference] = useState('true');
-  const [declinationInput, setDeclinationInput] = useState('');
+  const [pt1MGRS, setPt1MGRS]   = useSessionDraft('tool:resect:pt1MGRS', '');
+  const [bearing1, setBearing1] = useSessionDraft('tool:resect:bearing1', '');
+  const [pt2MGRS, setPt2MGRS]   = useSessionDraft('tool:resect:pt2MGRS', '');
+  const [bearing2, setBearing2] = useSessionDraft('tool:resect:bearing2', '');
+  const [reference, setReference] = useSessionDraft('tool:resect:reference', 'true');
+  const [declinationInput, setDeclinationInput] = useSessionDraft('tool:resect:declinationInput', '');
 
   const result = useMemo(() => {
     try {
-      let b1 = bearing1.trim() ? Number(bearing1) : NaN;
-      let b2 = bearing2.trim() ? Number(bearing2) : NaN;
-      if (!isBearing(b1) || !isBearing(b2)) return null;
+      let b1 = parseToolNumber(bearing1, { min: 0, max: 360 });
+      let b2 = parseToolNumber(bearing2, { min: 0, max: 360 });
+      if (b1 === null || b2 === null || !isBearing(b1) || !isBearing(b2)) return null;
       if (reference === 'magnetic') {
-        const declination = declinationInput.trim() ? Number(declinationInput) : NaN;
+        const declination = parseToolNumber(declinationInput, { min: -180, max: 180 });
+        if (declination === null) return null;
         b1 = applyDeclination(b1, declination);
         b2 = applyDeclination(b2, declination);
         if (b1 === null || b2 === null) return null;

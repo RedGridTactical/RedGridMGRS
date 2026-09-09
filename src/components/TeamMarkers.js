@@ -16,6 +16,7 @@ import { Marker } from 'react-native-maps';
 import { PEER_STATUS, projectGhostPosition } from '../utils/teamAwareness';
 import { formatMGRS, toMGRS, calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
 import { formatBearing } from '../utils/tactical';
+import { TYPE } from '../utils/typography';
 
 const SOS_RED = '#ff3b30';
 
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
   dotProjected: { borderStyle: 'dashed', backgroundColor: 'transparent' },
   dotSos: { width: 20, height: 20, borderRadius: 10, borderWidth: 3 },
   label: {
-    fontFamily: 'monospace', fontSize: 9, letterSpacing: 1,
+    ...TYPE.data, fontSize: 9, letterSpacing: 1,
     marginTop: 2, fontWeight: '700', maxWidth: 90, textAlign: 'center',
     paddingHorizontal: 4, paddingVertical: 2, borderRadius: 2,
   },

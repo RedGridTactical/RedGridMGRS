@@ -1,19 +1,15 @@
 /**
  * ReportScreen — Radio-ready report templates.
  * Free: SALUTE, 9-Line MEDEVAC, SPOT
- * Pro: ICS 201 (Incident Command), ANGUS (Artillery), Custom template
+ * Draft fields remain in process-session memory until explicitly cleared.
  */
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, UIManager, Platform, AccessibilityInfo } from 'react-native';
 import { TextInput } from '../components/FieldInput';
 import { Alert } from '../utils/fieldAlert';
-// Lazy-load expo-clipboard to prevent crash if native module is unavailable
-let ExpoClipboard = null;
-try {
-  ExpoClipboard = require('expo-clipboard');
-} catch (e) {
-  // expo-clipboard not available — copy will fall back to alert-only
-}
+import { copyTextToClipboard } from '../utils/clipboard';
+import { useSessionDraft } from '../hooks/useSessionDraft';
+import { createDeviceAnnotation, formatWorkflowUTC } from '../utils/toolWorkflow';
 import { useColors } from '../utils/ThemeContext';
 import { tapMedium, notifySuccess, notifyWarning } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
@@ -103,8 +99,8 @@ const REPORTS = [
   { id: 'angus',    label: 'ANGUS / CFF',     labelKey: 'reports.angusCff',  subKey: 'reports.angusCffSub',  fields: ANGUS_FIELDS,    pro: true  },
 ];
 
-function getNowDTG() {
-  const n = new Date();
+function getNowDTG(timestamp = Date.now()) {
+  const n = new Date(timestamp);
   const dd = String(n.getUTCDate()).padStart(2,'0');
   const hh = String(n.getUTCHours()).padStart(2,'0');
   const mm = String(n.getUTCMinutes()).padStart(2,'0');
@@ -118,47 +114,35 @@ function buildReport(reportId, fields, values) {
   return [header, ...lines].join('\n');
 }
 
-function ReportCard({ report, mgrs, isPro, trialEligible, onShowProGate }) {
+function ReportCard({ report, mgrs, location, isPro, trialEligible, onShowProGate }) {
   const colors = useColors();
   const { t } = useTranslation();
-  const initVals = useCallback(() => {
-    const v = {};
-    report.fields.forEach(f => {
-      v[f.key] = f.autoFill === 'grid' ? (mgrs || '') : f.autoFill === 'datetime' ? getNowDTG() : '';
-    });
-    return v;
-  }, [report, mgrs]);
-
-  const [open, setOpen]   = useState(false);
-  const [vals, setVals]   = useState(initVals);
+  const [open, setOpen] = useSessionDraft(`report:${report.id}:open`, false);
+  const [draft, setDraft] = useSessionDraft(`report:${report.id}:draft`, { values: {}, sources: {} });
+  const vals = draft.values;
   const isLocked = report.pro && !isPro;
-  // Per-field "user has typed here" flags. A grid field the user has edited
-  // must NEVER be overwritten by the live-position autofill — on templates
-  // like SALUTE/CFF the grid field holds an OBSERVED/TARGET location, and the
-  // GPS jitters every second, which used to clobber typed grids silently.
-  const dirtyRef = useRef({});
-
-  // Keep auto-fill fields updated when GPS position changes — but only the
-  // fields the user has never touched.
-  useEffect(() => {
-    setVals(prev => {
-      const updated = { ...prev };
-      let changed = false;
-      report.fields.forEach(f => {
-        if (f.autoFill === 'grid' && !dirtyRef.current[f.key]) {
-          const newVal = mgrs || '';
-          if (updated[f.key] !== newVal) { updated[f.key] = newVal; changed = true; }
-        }
-      });
-      return changed ? updated : prev;
-    });
-  }, [mgrs, report.fields]);
+  const copyBusy = useRef(false);
+  const [copying, setCopying] = useState(false);
+  const sourceLabel = source => source?.kind === 'device'
+    ? t('workflow.sourceDevice', { time: formatWorkflowUTC(source.fixTimestamp) })
+    : source?.kind === 'time' ? t('workflow.sourceTime', { time: formatWorkflowUTC(source.timestamp) })
+    : t('workflow.manualValue');
+  const insertReference = field => {
+    const now = Date.now();
+    if (field.autoFill === 'grid') {
+      const annotation = createDeviceAnnotation(location, now);
+      if (!annotation) { Alert.alert(t('gps.noGpsFix'), t('workflow.annotationNoFix')); return; }
+      setDraft(previous => ({ values: { ...previous.values, [field.key]: annotation.grid }, sources: { ...previous.sources, [field.key]: { kind: 'device', ...annotation } } }));
+    } else {
+      setDraft(previous => ({ values: { ...previous.values, [field.key]: getNowDTG(now) }, sources: { ...previous.sources, [field.key]: { kind: 'time', timestamp: now } } }));
+    }
+  };
 
   const handleOpen = () => {
     if (isLocked) {
       tapMedium();
       // Show ProGate modal directly — matches ThemeScreen pattern
-      onShowProGate(report.label);
+      onShowProGate(report.label, 'reports');
       return;
     }
     tapMedium();
@@ -166,20 +150,26 @@ function ReportCard({ report, mgrs, isPro, trialEligible, onShowProGate }) {
     setOpen(o => !o);
   };
 
-  const copy = () => {
-    const text = buildReport(report.id, report.fields, vals);
-    if (ExpoClipboard && typeof ExpoClipboard.setStringAsync === 'function') {
-      ExpoClipboard.setStringAsync(text).catch(() => {});
-    }
-    notifySuccess();
-    AccessibilityInfo.announceForAccessibility(t('reports.reportCopied'));
-    Alert.alert(t('reports.copied'), t('reports.copiedMsg'));
+  const copy = async () => {
+    if (copyBusy.current) return;
+    copyBusy.current = true; setCopying(true);
+    const references = report.fields.filter(f => draft.sources[f.key]).map(f => `${f.label} — ${sourceLabel(draft.sources[f.key])}`);
+    const text = [buildReport(report.id, report.fields, vals), ...references].join('\n');
+    try {
+      await copyTextToClipboard(text);
+      notifySuccess();
+      AccessibilityInfo.announceForAccessibility(t('reports.reportCopied'));
+      Alert.alert(t('reports.copied'), t('reports.copiedMsg'));
+    } catch {
+      AccessibilityInfo.announceForAccessibility(t('workflow.copyFailed'));
+      Alert.alert(t('workflow.copyFailed'));
+    } finally { copyBusy.current = false; setCopying(false); }
   };
 
   const clear = () => {
     Alert.alert(t('reports.clearReport'), t('reports.clearReportMsg'), [
       { text: t('reports.cancel'), style: 'cancel' },
-      { text: t('reports.clear'), style: 'destructive', onPress: () => { notifyWarning(); dirtyRef.current = {}; setVals(initVals()); } },
+      { text: t('reports.clear'), style: 'destructive', onPress: () => { notifyWarning(); setDraft({ values: {}, sources: {} }); } },
     ]);
   };
 
@@ -204,27 +194,34 @@ function ReportCard({ report, mgrs, isPro, trialEligible, onShowProGate }) {
         <Text style={[styles.chevron, { color: colors.text3 }, open && { transform: [{ rotate: '90deg' }] }]} importantForAccessibility="no">▶</Text>
       </TouchableOpacity>
 
-      {open && (
+      {open && !isLocked && (
         <View style={[styles.cardBody, { borderTopColor: colors.border2 }]}>
           {report.fields.map(f => {
-            const isAuto = !!f.autoFill;
+            const hasReference = !!draft.sources[f.key];
             return (
               <View key={f.key} style={styles.fieldBlock}>
                 <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{f.label}</Text>
                 <TextInput
-                  style={[styles.fieldInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }, isAuto && { borderColor: colors.text2 }]}
+                  style={[styles.fieldInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }, hasReference && { borderColor: colors.text2 }]}
                   placeholder={f.placeholder}
                   placeholderTextColor={colors.text3}
-                  value={vals[f.key]}
-                  onChangeText={t => { dirtyRef.current[f.key] = true; setVals(v => ({ ...v, [f.key]: t })); }}
+                  value={vals[f.key] || ''}
+                  onChangeText={value => setDraft(previous => ({ values: { ...previous.values, [f.key]: value }, sources: { ...previous.sources, [f.key]: null } }))}
+                  maxLength={2000}
                   multiline={f.key === 'situation' || f.key === 'objectives'}
                   accessibilityLabel={f.label}
                 />
+                {f.autoFill && <>
+                  <Text style={[styles.referenceHint, { color: colors.text3 }]}>{sourceLabel(draft.sources[f.key])}</Text>
+                  <TouchableOpacity onPress={() => insertReference(f)} disabled={f.autoFill === 'grid' && !location} accessibilityRole="button" accessibilityState={{ disabled: f.autoFill === 'grid' && !location }} style={styles.referenceButton}>
+                    <Text style={[styles.referenceHint, { color: colors.text2 }]}>{t(f.autoFill === 'grid' ? 'workflow.insertDevicePosition' : 'workflow.insertCurrentTime')}</Text>
+                  </TouchableOpacity>
+                </>}
               </View>
             );
           })}
           <View style={styles.reportBtns}>
-            <TouchableOpacity style={[styles.copyBtn, { backgroundColor: colors.border }]} onPress={copy} accessibilityRole="button" accessibilityLabel={t('reports.copyReport')}>
+            <TouchableOpacity style={[styles.copyBtn, { backgroundColor: colors.border }]} onPress={copy} disabled={copying} accessibilityState={{ disabled: copying }} accessibilityRole="button" accessibilityLabel={t('reports.copyReport')}>
               <Text style={[styles.copyBtnText, { color: colors.text }]}>{t('reports.copyReport')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.clearBtn, { borderColor: colors.border }]} onPress={clear} accessibilityRole="button" accessibilityLabel={t('reports.clear')}>
@@ -237,7 +234,7 @@ function ReportCard({ report, mgrs, isPro, trialEligible, onShowProGate }) {
   );
 }
 
-export function ReportScreen({ mgrs, isPro, trialEligible, onShowProGate }) {
+export function ReportScreen({ mgrs, location, isPro, trialEligible, onShowProGate }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -249,27 +246,31 @@ export function ReportScreen({ mgrs, isPro, trialEligible, onShowProGate }) {
 
       {mgrs && (
         <View style={[styles.autoBanner, { borderColor: colors.border, backgroundColor: colors.text5 }]}>
-          <Text style={[styles.autoText, { color: colors.text2 }]}>{t('reports.autoFilling')}: {mgrs}</Text>
+          <Text style={[styles.autoText, { color: colors.text2 }]}>{t('workflow.deviceReference')}: {mgrs}</Text>
         </View>
       )}
 
+      <Text style={[styles.referenceHint, { color: colors.text3, marginBottom: 12 }]}>{t('workflow.reportSubjectHint')}</Text>
       {REPORTS.map(r => (
         <ReportCard
           key={r.id}
           report={r}
           mgrs={mgrs}
+          location={location}
           isPro={isPro}
           trialEligible={trialEligible}
           onShowProGate={onShowProGate}
         />
       ))}
 
-      <Text style={[styles.footer, { color: colors.text3 }]}>{t('reports.footer')}</Text>
+      <Text style={[styles.footer, { color: colors.text3 }]}>{t('workflow.sessionHint')}</Text>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  referenceHint: { ...TYPE.body, fontSize: 13, lineHeight: 18 },
+  referenceButton: { minHeight: 44, justifyContent: 'center', paddingVertical: 8 },
   root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
   header: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
@@ -291,7 +292,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 1.2,
   },
   cardSub: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3 },
-  chevron: { fontFamily: 'monospace', fontSize: 10 },
+  chevron: { ...TYPE.data, fontSize: 10 },
   cardBody: { paddingHorizontal: 14, paddingBottom: 14, borderTopWidth: 1 },
   fieldBlock: { marginTop: 10 },
   fieldLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, marginBottom: 4 },

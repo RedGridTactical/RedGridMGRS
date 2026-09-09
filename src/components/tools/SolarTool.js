@@ -1,3 +1,5 @@
+import { useSessionDraft } from '../../hooks/useSessionDraft';
+import { validToolPoint } from '../../utils/toolWorkflow';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { solarBearing, lunarBearing, formatBearing } from '../../utils/tactical';
@@ -10,7 +12,7 @@ export function SolarTool({ location }) {
   const colors = useColors();
   const { t } = useTranslation();
   const [now, setNow] = useState(new Date());
-  const [body, setBody] = useState('sun');
+  const [body, setBody] = useSessionDraft('tool:solar:body', 'sun');
 
   // Refresh every minute
   useEffect(() => {
@@ -18,7 +20,7 @@ export function SolarTool({ location }) {
     return () => clearInterval(id);
   }, []);
 
-  if (!location || typeof location.lat !== 'number' || typeof location.lon !== 'number') {
+  if (!validToolPoint(location)) {
     return <ToolHint text={t('gps.noFixSolar')} />;
   }
 

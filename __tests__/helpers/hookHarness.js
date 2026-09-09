@@ -20,6 +20,11 @@ module.exports = function createHookHarness() {
       if (!equal(slots[i]?.deps, deps)) slots[i] = { deps, callback };
       return slots[i].callback;
     },
+    useMemo(factory, deps) {
+      const i = cursor++;
+      if (!equal(slots[i]?.deps, deps)) slots[i] = { deps, value: factory() };
+      return slots[i].value;
+    },
     useEffect(effect, deps) {
       const i = cursor++;
       const previous = slots[i];

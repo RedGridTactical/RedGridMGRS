@@ -937,5 +937,6 @@ export function useIAP() {
     restore,
     lastPurchaseError,
     clearPurchaseError,
+    refreshProducts: fetchProductDetails,
   };
 }

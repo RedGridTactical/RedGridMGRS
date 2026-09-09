@@ -8,6 +8,7 @@
  * (AsyncStorage) and never transmitted or uploaded — consistent with the
  * zero-network guarantee. Nothing in this hook touches the network.
  */
+import { AppState } from 'react-native';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -40,6 +41,14 @@ import {
 const NAMES_KEY = 'rg_team_names_v1';
 const ROLES_KEY = 'rg_team_roles_v1';
 const TEAM_KEY_KEY = 'rg_team_key_v1';
+let keyQueue = Promise.resolve();
+let keyRevision = 0;
+function changeTeamKey(write) {
+  ++keyRevision;
+  const result = keyQueue.catch(() => {}).then(write);
+  keyQueue = result;
+  return result;
+}
 
 // The roster is time-dependent (peers decay as they go unheard), so re-derive
 // on a slow tick rather than only when a packet lands. 15s is well under the
@@ -81,10 +90,11 @@ export function useTeamKey() {
 
   // Restore a persisted key on first mount.
   useEffect(() => {
+    const revision = keyRevision;
     (async () => {
       try {
         const raw = await AsyncStorage.getItem(TEAM_KEY_KEY);
-        if (raw && !getActiveTeamKey()) {
+        if (raw && revision === keyRevision && !getActiveTeamKey()) {
           const saved = JSON.parse(raw);
           const bytes = base64UrlToBytes(saved?.k || '');
           if (bytes.length === KEY_BYTES) setActiveTeamKey(bytes, saved?.s || null);
@@ -106,7 +116,7 @@ export function useTeamKey() {
         TEAM_KEY_KEY,
         JSON.stringify({ k: bytesToBase64Url(key), s: sessionId || null })
       );
-    } catch {}
+    } catch (error) { throw error; }
   }, []);
 
   /** Start a team: fresh random key + a session id to label it. */
@@ -114,10 +124,12 @@ export function useTeamKey() {
     try {
       const key = generateSessionKey();
       const sessionId = `T${Date.now().toString(36).toUpperCase()}`;
-      if (!setActiveTeamKey(key, sessionId)) return false;
-      resetSealedCounters();
-      await persist(key, sessionId);
-      return true;
+      return await changeTeamKey(async () => {
+        await persist(key, sessionId);
+        if (!setActiveTeamKey(key, sessionId)) return false;
+        resetSealedCounters();
+        return true;
+      });
     } catch {
       return false;
     }
@@ -128,10 +140,12 @@ export function useTeamKey() {
     try {
       const parsed = parsePairingPayload(payloadString);
       if (!parsed) return false;
-      if (!setActiveTeamKey(parsed.key, parsed.sessionId)) return false;
-      resetSealedCounters();
-      await persist(parsed.key, parsed.sessionId);
-      return true;
+      return await changeTeamKey(async () => {
+        await persist(parsed.key, parsed.sessionId);
+        if (!setActiveTeamKey(parsed.key, parsed.sessionId)) return false;
+        resetSealedCounters();
+        return true;
+      });
     } catch {
       return false;
     }
@@ -139,10 +153,13 @@ export function useTeamKey() {
 
   /** Leave the team: wipe the key here and on disk. Sends revert to plaintext. */
   const leaveTeam = useCallback(async () => {
-    clearActiveTeamKey();
-    resetSealedCounters();
-    await persist(null);
-    return true;
+    try {
+      return await changeTeamKey(async () => {
+        await persist(null);
+        clearActiveTeamKey(); resetSealedCounters();
+        return true;
+      });
+    } catch { return false; }
   }, [persist]);
 
   const pairingPayload = useMemo(
@@ -174,6 +191,9 @@ export function useTeamAwareness(meshPositions) {
   const [sos, setSos] = useState({});
   const [tick, setTick] = useState(0);
   const [lastInbound, setLastInbound] = useState(null);
+  const [messageDraft, setMessageDraft] = useState('');
+  const [lastSend, setLastSend] = useState(null);
+  const sendBusy = useRef(false);
   const [peerEncrypted, setPeerEncrypted] = useState({});
   const [sealedUndecryptable, setSealedUndecryptable] = useState(0);
   const seqRef = useRef(0);
@@ -272,12 +292,19 @@ export function useTeamAwareness(meshPositions) {
     setSos(prev => reduceSosState(prev, packet, Date.now()));
   }, []);
 
-  /** Send a tactical message. Returns false if the radio refused it. */
+  /** Native radio acceptance only; delivery is not acknowledged by this protocol. */
   const sendMessage = useCallback(async ({ type, text }) => {
+    if (sendBusy.current || AppState.currentState !== 'active') return false;
     seqRef.current = (seqRef.current + 1) & 0xffff;
     const pkt = encodeMessagePacket({ type, text, seq: seqRef.current });
     if (!pkt) return false;
-    return sendTeamPacket(pkt);
+    sendBusy.current = true;
+    setLastSend({ status: 'writing', at: Date.now() });
+    let ok = false;
+    try { ok = await sendTeamPacket(pkt) === true; } catch {}
+    finally { sendBusy.current = false; }
+    if (mounted.current) setLastSend({ status: ok ? 'radioAccepted' : 'failed', at: Date.now() });
+    return ok;
   }, []);
 
   /** Broadcast (or cancel) an SOS beacon at the given position. */
@@ -305,6 +332,7 @@ export function useTeamAwareness(meshPositions) {
     sendMessage,
     sendSos,
     lastInbound,
+    messageDraft, setMessageDraft, lastSend,
     dismissInbound: () => setLastInbound(null),
     peerEncrypted,
     sealedUndecryptable,

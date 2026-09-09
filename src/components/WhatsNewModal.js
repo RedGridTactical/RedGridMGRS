@@ -22,10 +22,10 @@ const LOCALIZED_VERSION = '4.0.6';
 // Features to showcase for a given version. Keep terse — this is a glance screen.
 const FEATURES_BY_VERSION = {
   '4.0.6': [
-    { icon: '◉', title: 'NAVIGATION REFERENCES', body: 'Corrected resection calculations and clearer true, magnetic and grid bearings.' },
-    { icon: '◆', title: 'FRESH POSITION DATA', body: 'Position age and receiver fallback are explicit. Stale fixes no longer drive navigation.' },
-    { icon: '✓', title: 'OFFLINE READINESS', body: 'Preflight checks imported map coverage and zoom levels, with clear import guidance.' },
-    { icon: '⤴', title: 'PRO RECOVERY', body: 'More resilient purchase restoration and paid-access checks when the store is unavailable.' },
+    {"icon":"◉","title":"SAVED ROUTE PLANS","body":"Name and save map routes, reorder points, add notes and review route cards before navigating."},
+    {"icon":"◆","title":"SESSION DRAFTS","body":"Keep report and calculator drafts across tabs. Insert report references deliberately and copy with confirmed feedback."},
+    {"icon":"✓","title":"PINNED FIELD REFERENCES","body":"Choose a dead-reckoning origin and save estimated points. Pin photo annotations with clear fix time and export size."},
+    {"icon":"⤴","title":"READINESS & RECOVERY","body":"Clearer bearings, fresh-position checks, imported-map readiness, purchase recovery, confirmed saves and display controls."},
   ],
   '4.0.4': [
     {
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   title: { ...TYPE.heading, fontSize: 20, letterSpacing: 1.2, textAlign: 'center', marginBottom: 18 },
   list: { flexGrow: 0, marginBottom: 16 },
   row: { flexDirection: 'row', gap: 14, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth },
-  icon: { fontFamily: 'monospace', fontSize: 22, width: 26, textAlign: 'center', marginTop: 2 },
+  icon: { ...TYPE.data, fontSize: 22, width: 26, textAlign: 'center', marginTop: 2 },
   rowTitle: {
     ...TYPE.heading, fontSize: 14, letterSpacing: 0.8, marginBottom: 4 },
   rowBody: { ...TYPE.body, letterSpacing: 0.3, fontSize: 14, lineHeight: 20 },

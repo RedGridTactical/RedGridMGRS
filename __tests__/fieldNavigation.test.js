@@ -90,7 +90,8 @@ test('route progress survives storage and restores the destination from the save
 
 test('corrupted and version-mismatched saved state cannot create a destination', async () => {
   AsyncStorage.getItem.mockResolvedValue('{broken');
-  expect(await loadNavigation()).toEqual(emptyNavigation());
+  await expect(loadNavigation()).rejects.toMatchObject({ code: 'STORAGE_CORRUPT' });
+  expect(AsyncStorage.setItem).not.toHaveBeenCalled();
   expect(normalizeNavigation({ ...start(), version: 9 })).toEqual(emptyNavigation());
   expect(normalizeNavigation({ version: 1, waypoint: { lat: 999, lon: 0 } }).waypoint).toBeNull();
 });
@@ -102,7 +103,7 @@ test('a delayed write never overtakes a later confirmation', async () => {
   const first = saveNavigation(initial);
   const next = confirm(initial, 2000);
   const second = saveNavigation(next);
-  await Promise.resolve();
+  await new Promise(resolve => setImmediate(resolve));
   expect(AsyncStorage.setItem).toHaveBeenCalledTimes(1);
   finishWrite();
   await Promise.all([first, second]);

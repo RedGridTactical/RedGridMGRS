@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import { useSessionDraft } from '../../hooks/useSessionDraft';
+import { parseToolNumber } from '../../utils/toolWorkflow';
+import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { backAzimuth, applyDeclination, formatBearing, isBearing, compassToGridHeading } from '../../utils/tactical';
 import { ToolInput, ToolResult, ToolRow, ToolHint } from './ToolShared';
@@ -6,10 +8,10 @@ import { useTranslation } from '../../hooks/useTranslation';
 
 export function BackAzimuthTool({ declination, location }) {
   const { t } = useTranslation();
-  const [bearing, setBearing] = useState('');
+  const [bearing, setBearing] = useSessionDraft('tool:backaz:bearing', '');
 
-  const b = bearing.trim() ? Number(bearing) : NaN;
-  const valid = isBearing(b);
+  const b = parseToolNumber(bearing, { min: 0, max: 360 });
+  const valid = b !== null && isBearing(b);
   const back = valid ? backAzimuth(b) : null;
   const backCorrected = valid ? applyDeclination(back, declination) : null;
   const gridBack = compassToGridHeading(backCorrected, 'true', location?.lat, location?.lon);
@@ -18,6 +20,7 @@ export function BackAzimuthTool({ declination, location }) {
     <View>
       <ToolInput label={t('toolLabels.magneticBearing')} value={bearing} onChangeText={setBearing} placeholder="0 – 360" keyboardType="numeric" />
 
+      {!!bearing && !valid && <ToolHint text={t('workflow.headingRange')} />}
       {back !== null && (
         <View style={styles.results}>
           <ToolResult label={t('toolLabels.backAzimuthResult')} value={formatBearing(back, 'magnetic')} primary />

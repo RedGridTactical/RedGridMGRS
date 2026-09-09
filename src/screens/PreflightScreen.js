@@ -59,7 +59,7 @@ export function PreflightScreen({
     aoPackages,
     addAOPackage,
     deleteAOPackage,
-    canSaveMore,
+    canSaveMore, loadError, saveError, isSaving, isLoading, loaded, retryLoad, retrySave,
   } = useAOPackages();
 
   // ── Inline name prompt state for the "Save current AO" flow ──────────────
@@ -170,34 +170,44 @@ export function PreflightScreen({
 
   // ── Save AO flow ─────────────────────────────────────────────────────────
   const beginSaveAO = useCallback(() => {
+    if (!loaded || isSaving || loadError || saveError) return;
     if (!mapRegion) {
       Alert.alert(t('preflight.errors.title'), t('preflight.errors.noViewport'));
       return;
     }
     if (!canSaveMore(isPro)) {
-      onShowProGate && onShowProGate(t('preflight.aos.proFeatureName'));
+      onShowProGate && onShowProGate(t('preflight.aos.proFeatureName'), 'offline');
       return;
     }
     setPendingName('');
     setNamePromptVisible(true);
-  }, [mapRegion, canSaveMore, isPro, onShowProGate, t]);
+  }, [mapRegion, canSaveMore, isPro, onShowProGate, t, loaded, isSaving, loadError, saveError]);
 
   const confirmSaveAO = useCallback(async () => {
+    if (isSaving || loadError || saveError) return;
     const name = (pendingName || '').trim();
     if (!name || !mapRegion) {
       setNamePromptVisible(false);
       return;
     }
-    setNamePromptVisible(false);
     tapMedium();
-    const pkg = await addAOPackage({
-      name,
-      mapStyle,
-      region: mapRegion,
-      zoomLevels: mapCoverage.zoomLevels,
-    });
-    if (pkg) notifySuccess();
-  }, [pendingName, mapRegion, mapStyle, mapCoverage.zoomLevels, addAOPackage]);
+    try {
+      const pkg = await addAOPackage({ name, mapStyle, region: mapRegion, zoomLevels: mapCoverage.zoomLevels });
+      if (!pkg) throw new Error('INVALID_AREA');
+      setNamePromptVisible(false); setPendingName(''); notifySuccess();
+    } catch { Alert.alert(t('workflow.saveFailed')); }
+  }, [pendingName, mapRegion, mapStyle, mapCoverage.zoomLevels, addAOPackage, isSaving, loadError, saveError, t]);
+
+  const retryPackages = async () => {
+    try {
+      if (loadError) await retryLoad();
+      else { await retrySave(); setNamePromptVisible(false); setPendingName(''); notifySuccess(); }
+    } catch { Alert.alert(t(loadError ? 'workflow.loadFailed' : 'workflow.saveFailed')); }
+  };
+  const removePackage = async id => {
+    try { await deleteAOPackage(id); }
+    catch { Alert.alert(t('workflow.saveFailed')); }
+  };
 
   // Recheck saved bounds against the currently imported map. This never
   // downloads tiles or changes a saved area's refresh timestamp.
@@ -333,7 +343,13 @@ export function PreflightScreen({
             </Text>
           </View>
 
-          {aoPackages.length === 0 && (
+          {(loadError || saveError) && <View>
+            <Text style={[styles.empty, { color: colors.text2 }]} accessibilityLiveRegion="polite">{t(loadError ? 'workflow.loadFailed' : 'workflow.saveFailed')}</Text>
+            <TouchableOpacity onPress={retryPackages} disabled={isSaving || isLoading} accessibilityRole="button" style={styles.saveAOBtn}>
+              <Text style={[styles.saveAOText, { color: colors.text2 }]}>{t('workflow.retry')}</Text>
+            </TouchableOpacity>
+          </View>}
+          {loaded && !loadError && aoPackages.length === 0 && (
             <Text style={[styles.empty, { color: colors.text3 }]}>{t('preflight.aos.empty')}</Text>
           )}
 
@@ -345,14 +361,15 @@ export function PreflightScreen({
               t={t}
               onCheck={() => checkSavedArea(pkg)}
               coverage={areaCoverage[pkg.id]}
-              onDelete={() => deleteAOPackage(pkg.id)}
-              busy={!!checkingArea}
+              onDelete={() => removePackage(pkg.id)}
+              busy={!!checkingArea || isSaving || !!loadError || !!saveError}
             />
           ))}
 
           <TouchableOpacity
             style={[styles.saveAOBtn, { borderColor: colors.accent }]}
             onPress={beginSaveAO}
+            disabled={!loaded || isSaving || !!loadError || !!saveError}
             accessibilityRole="button"
             accessibilityLabel={t('preflight.aos.saveCurrent')}
           >
@@ -390,10 +407,11 @@ export function PreflightScreen({
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.promptBtn, { borderColor: colors.accent }]}
-                  onPress={confirmSaveAO}
+                  onPress={saveError ? retryPackages : confirmSaveAO}
+                  disabled={isSaving || !!loadError}
                   accessibilityRole="button"
                 >
-                  <Text style={[styles.promptBtnText, { color: colors.accentText }]}>{t('common.save')}</Text>
+                  <Text style={[styles.promptBtnText, { color: colors.accentText }]}>{t(saveError ? 'workflow.retry' : 'common.save')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -431,6 +449,7 @@ function AOPackageRow({ pkg, colors, t, onCheck, onDelete, busy, coverage }) {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.aoBtn, { borderColor: colors.border }]}
+          disabled={busy}
           onPress={() => {
             Alert.alert(
               t('preflight.aos.deleteTitle'),

@@ -1,3 +1,4 @@
+import { validToolPoint } from '../../utils/toolWorkflow';
 import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { toMGRS, formatMGRS } from '../../utils/mgrs';
@@ -8,7 +9,7 @@ import { useTranslation } from '../../hooks/useTranslation';
 export function PrecisionTool({ location }) {
   const { t } = useTranslation();
   const grids = useMemo(() => {
-    if (!location) return null;
+    if (!validToolPoint(location, { mgrs: true })) return null;
     return [5,4,3,2,1].map(p => ({
       precision: p,
       label: PRECISION_LABELS[p],
@@ -16,7 +17,7 @@ export function PrecisionTool({ location }) {
     }));
   }, [location]);
 
-  if (!location) return <ToolHint text={t('gps.noFixLiveRequired')} />;
+  if (!grids) return <ToolHint text={t('gps.noFixLiveRequired')} />;
 
   return (
     <View style={styles.results}>

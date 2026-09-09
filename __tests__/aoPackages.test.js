@@ -14,6 +14,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
 }));
 
+const validAO = id => ({ id, name: id, region: { latitude: 0, longitude: 0, latitudeDelta: 1, longitudeDelta: 1 }, zoomLevels: [10] });
 const AsyncStorage = require('@react-native-async-storage/async-storage');
 const {
   loadAOPackages,
@@ -55,54 +56,54 @@ describe('aoPackages — v3.4 Mission Preflight storage', () => {
       expect(result).toEqual([pkg]);
     });
 
-    test('returns [] on corrupted JSON', async () => {
+    test('rejects corrupted JSON', async () => {
       AsyncStorage.getItem.mockResolvedValue('{not-json');
-      const result = await loadAOPackages();
-      expect(result).toEqual([]);
+      await expect(loadAOPackages()).rejects.toThrow();
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
-    test('returns [] if stored payload is not an array', async () => {
+    test('rejects invalid saved shape', async () => {
       AsyncStorage.getItem.mockResolvedValue(JSON.stringify({ id: 'x' }));
-      const result = await loadAOPackages();
-      expect(result).toEqual([]);
+      await expect(loadAOPackages()).rejects.toThrow();
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
-    test('returns [] when AsyncStorage.getItem is missing', async () => {
+    test('rejects unavailable storage', async () => {
       AsyncStorage.getItem = null;
-      const result = await loadAOPackages();
-      expect(result).toEqual([]);
+      await expect(loadAOPackages()).rejects.toThrow();
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
-    test('returns [] when AsyncStorage throws', async () => {
+    test('reports native read failures', async () => {
       AsyncStorage.getItem.mockRejectedValue(new Error('boom'));
-      const result = await loadAOPackages();
-      expect(result).toEqual([]);
+      await expect(loadAOPackages()).rejects.toThrow();
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
   });
 
   // ─── saveAOPackages ───────────────────────────────────────────────────
   describe('saveAOPackages(packages)', () => {
     test('writes a JSON array under the expected key', async () => {
-      const pkgs = [{ id: '1', name: 'A' }, { id: '2', name: 'B' }];
+      const pkgs = [validAO('1'), validAO('2')];
       await saveAOPackages(pkgs);
       expect(AsyncStorage.setItem).toHaveBeenCalledWith('rg_ao_packages_v1', JSON.stringify(pkgs));
     });
 
-    test('silently no-ops when payload is not an array', async () => {
-      await saveAOPackages('not an array');
-      await saveAOPackages(null);
-      await saveAOPackages(undefined);
+    test('rejects when payload is not an array', async () => {
+      await expect(saveAOPackages('not an array')).rejects.toThrow();
+      await expect(saveAOPackages(null)).rejects.toThrow();
+      await expect(saveAOPackages(undefined)).rejects.toThrow();
       expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
-    test('silently no-ops when AsyncStorage.setItem is missing', async () => {
+    test('rejects when AsyncStorage.setItem is missing', async () => {
       AsyncStorage.setItem = null;
-      await expect(saveAOPackages([{ id: '1' }])).resolves.toBeUndefined();
+      await expect(saveAOPackages([validAO('1')])).rejects.toThrow();
     });
 
-    test('does not throw when AsyncStorage rejects', async () => {
+    test('reports native write failure', async () => {
       AsyncStorage.setItem.mockRejectedValue(new Error('disk full'));
-      await expect(saveAOPackages([{ id: '1' }])).resolves.toBeUndefined();
+      await expect(saveAOPackages([validAO('1')])).rejects.toThrow();
     });
   });
 

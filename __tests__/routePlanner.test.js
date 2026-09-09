@@ -192,3 +192,25 @@ describe('routePlanner.js - Route Planning', () => {
     });
   });
 });
+
+describe('saved plan ordering and explicit inputs', () => {
+  const { moveRoutePoint, parseRoutePlanInputs } = require('../src/utils/routePlanner');
+  test('moves one complete point without mutating an active snapshot or dropping its note', () => {
+    const a = Object.freeze({ id: 'a', lat: 1, lon: 2, note: 'Footbridge', source: 'manual' });
+    const b = Object.freeze({ id: 'b', lat: 2, lon: 3 });
+    const saved = Object.freeze([a, b]);
+    const next = moveRoutePoint(saved, 'a', 1);
+    expect(next).toEqual([b, a]); expect(saved).toEqual([a, b]); expect(next[1].note).toBe('Footbridge');
+    expect(moveRoutePoint(saved, 'a', -1)).toBe(saved);
+    expect(moveRoutePoint(saved, 'missing', 1)).toBe(saved);
+  });
+  test('UTC plan time rejects rollover dates; blank pace never invents an estimate', () => {
+    expect(parseRoutePlanInputs({})).toEqual({ paceMinPerKm: null, plannedStartAt: null, notes: '' });
+    expect(parseRoutePlanInputs({ pace: '12.5', plannedStart: '2028-02-29 23:59' }).plannedStartAt).toBe(Date.UTC(2028, 1, 29, 23, 59));
+    for (const plannedStart of ['2027-02-29 12:00', '2026-09-31 12:00', '2026-09-10 24:00', '09/10/26']) expect(() => parseRoutePlanInputs({ plannedStart })).toThrow('invalid-start');
+    for (const pace of ['0', '-1', 'Infinity', '1e2', '121', '12 minutes']) expect(() => parseRoutePlanInputs({ pace })).toThrow('invalid-pace');
+  });
+  test('duration rounding carries sixty minutes into the next hour', () => {
+    expect(formatTime(59.9)).toBe('1hr 0min'); expect(formatTime(119.9)).toBe('2hr 0min');
+  });
+});

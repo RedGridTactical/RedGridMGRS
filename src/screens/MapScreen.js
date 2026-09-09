@@ -23,11 +23,10 @@ import { useTranslation } from '../hooks/useTranslation';
 import { toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
 import { formatBearing } from '../utils/tactical';
 import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptics';
-import { loadWaypointLists, saveWaypointLists } from '../utils/storage';
 import { MGRSGridOverlay } from '../components/MGRSGridOverlay';
 import { RouteOverlay } from '../components/RouteOverlay';
 import { TeamMarkers } from '../components/TeamMarkers';
-import { calculateRoute, estimateTime, formatTime, optimizeRoute } from '../utils/routePlanner';
+import { calculateRoute, optimizeRoute, moveRoutePoint } from '../utils/routePlanner';
 import {
   checkTilesForRegion, clearTileCache, getLocalTilePathTemplate, recoverOfflineTileCache, getOfflineMapMetadata,
   OSM_TILE_URL, DARK_TILE_URL, TOPO_TILE_URL,
@@ -38,8 +37,9 @@ import { PreflightScreen } from './PreflightScreen';
 import { TYPE } from '../utils/typography';
 
 // Free-tier persistent-waypoint cap. Free users get 1 saved waypoint; Pro is
-// unlimited. Captured here so the contract stays in one place.
+// limited to 10 saved lists with 20 points each.
 const FREE_WAYPOINT_LIMIT = 1;
+const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 let MapView = null;
 let Marker = null;
@@ -93,6 +93,9 @@ const MAP_STYLE_KEY = 'rg_map_style';
 
 export function MapScreen({
   location, tacticalMode = false, onExitTactical, activeRoute,
+  savedLists = [], listsLoading = false, listsLoadError = false, listsSaveError = false, listsSaving = false,
+  onRetryListsLoad, onRetryListsSave, onSaveList, onUpdateList, onDeleteList, onOpenSavedRoute,
+  routeDraft, onRouteDraftChange,
   isPro,
   trialEligible,
   onShowProGate,
@@ -109,7 +112,9 @@ export function MapScreen({
   const mapRef = useRef(null);
   const [mapRegion, setMapRegion] = useState(null);
   const [centerMGRS, setCenterMGRS] = useState(null);
-  const [waypoints, setWaypoints] = useState([]);
+  const waypoints = useMemo(() => savedLists.flatMap(list => list.waypoints.map(point => ({ ...point, mapKey: `${list.id}:${point.id}`, listId: list.id, listName: list.name }))), [savedLists]);
+  const mapWriteBusy = useRef(false);
+  const [mapSaveError, setMapSaveError] = useState(false);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [dlProgress, setDlProgress] = useState(0);
@@ -159,41 +164,25 @@ export function MapScreen({
   const [wpMenuVisible, setWpMenuVisible] = useState(false);
   const [pendingWaypoint, setPendingWaypoint] = useState(null); // { lat, lon, mgrs }
   const [wpLabel, setWpLabel] = useState('');
-  const [wpLists, setWpLists] = useState([]);
+  const wpLists = savedLists;
   const [wpSelectedList, setWpSelectedList] = useState(null);
 
   // Route-planning mode (Pro). When enabled, tapping waypoint markers adds/
   // removes them from the route in tap order and a polyline + summary appear.
-  const [routeMode, setRouteMode] = useState(false);
-  const [routeWaypoints, setRouteWaypoints] = useState([]); // ordered [{ id, lat, lon, name }]
+  const [localRouteDraft, setLocalRouteDraft] = useState({ active: false, waypoints: [], name: '' });
+  const draft = routeDraft || localRouteDraft;
+  const updateRouteDraft = onRouteDraftChange || setLocalRouteDraft;
+  const routeMode = !!draft.active;
+  const routeWaypoints = draft.waypoints || [];
+  const setRouteWaypoints = change => updateRouteDraft(previous => ({ ...previous,
+    waypoints: typeof change === 'function' ? change(previous.waypoints || []) : change }));
+  const [routeSaveVisible, setRouteSaveVisible] = useState(false);
+  const [routePickerVisible, setRoutePickerVisible] = useState(false);
+  const [routeSaveError, setRouteSaveError] = useState('');
 
   // v3.4 Mission Preflight modal visibility. Triggered by the PFL button in
   // the right-side stack; closes back to the map untouched.
   const [preflightVisible, setPreflightVisible] = useState(false);
-
-  // Load waypoints from all lists for display on map
-  useEffect(() => {
-    loadWaypointLists()
-      .then((lists) => {
-        const allWps = [];
-        if (Array.isArray(lists)) {
-          for (const list of lists) {
-            if (Array.isArray(list?.waypoints)) {
-              for (const wp of list.waypoints) {
-                if (wp?.lat != null && wp?.lon != null) {
-                  allWps.push({
-                    ...wp,
-                    listName: list.name || 'Unnamed',
-                  });
-                }
-              }
-            }
-          }
-        }
-        setWaypoints(allWps);
-      })
-      .catch(() => {});
-  }, []);
 
   // Initial region — center on user location or default to CONUS center
   const initialRegion = useMemo(() => ({
@@ -304,67 +293,30 @@ export function MapScreen({
     const { latitude, longitude } = e.nativeEvent.coordinate;
     tapMedium();
     const mgrs = formatMGRS(toMGRS(latitude, longitude, 5));
-    setPendingWaypoint({ lat: latitude, lon: longitude, mgrs });
+    setPendingWaypoint({ id: makeId(), newListId: makeId(), lat: latitude, lon: longitude, mgrs });
     setWpLabel(mgrs);
-    // Load available lists for the picker
-    try {
-      const lists = await loadWaypointLists();
-      setWpLists(Array.isArray(lists) ? lists : []);
-      setWpSelectedList(lists && lists.length > 0 ? lists[0].id : null);
-    } catch { setWpLists([]); setWpSelectedList(null); }
-    setWpMenuVisible(true);
-  }, []);
+    setWpSelectedList(savedLists[0]?.id || null);
+    setMapSaveError(false); setWpMenuVisible(true);
+  }, [savedLists]);
 
-  // Save waypoint from the menu. Free users are capped at FREE_WAYPOINT_LIMIT
-  // saved waypoints — once they've saved one, further SAVE actions surface the
-  // Pro paywall. NAV ONLY (no save) remains available to all users.
-  const saveWaypointFromMenu = useCallback(async () => {
-    if (!pendingWaypoint) return;
-
-    // Free-tier cap. Count whatever's already in waypoint lists; Pro gate when over.
+  const saveWaypointFromMenu = async () => {
+    if (!pendingWaypoint || mapWriteBusy.current || listsLoading || listsLoadError) return false;
     if (!isPro && waypoints.length >= FREE_WAYPOINT_LIMIT) {
-      setWpMenuVisible(false);
-      setPendingWaypoint(null);
-      onShowProGate && onShowProGate('Unlimited Waypoints');
-      return;
+      onShowProGate?.('Saved Waypoints', 'routes'); return false;
     }
-
+    const point = { ...pendingWaypoint, label: wpLabel.trim() || pendingWaypoint.mgrs, source: 'map', recordedAt: Date.now() };
+    mapWriteBusy.current = true; setMapSaveError(false);
     try {
-      const lists = await loadWaypointLists();
-      const wp = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-        lat: pendingWaypoint.lat,
-        lon: pendingWaypoint.lon,
-        label: wpLabel || pendingWaypoint.mgrs,
-      };
-      if (!lists || lists.length === 0) {
-        await saveWaypointLists([{ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: 'MAP', waypoints: [wp] }]);
-      } else {
-        const updated = [...lists];
-        const targetIdx = wpSelectedList ? updated.findIndex(l => l.id === wpSelectedList) : 0;
-        const idx = targetIdx >= 0 ? targetIdx : 0;
-        if (!Array.isArray(updated[idx].waypoints)) updated[idx].waypoints = [];
-        updated[idx].waypoints.push(wp);
-        await saveWaypointLists(updated);
+      if (!savedLists.length) await onSaveList({ id: pendingWaypoint.newListId, name: 'MAP', waypoints: [point], createdAt: Date.now() });
+      else {
+        const listId = wpSelectedList || savedLists[0].id;
+        await onUpdateList(listId, list => ({ ...list, waypoints: list.waypoints.some(item => item.id === point.id)
+          ? list.waypoints.map(item => item.id === point.id ? point : item) : [...list.waypoints, point] }));
       }
-      notifySuccess();
-      // Reload map waypoints
-      const refreshed = await loadWaypointLists();
-      const allWps = [];
-      if (Array.isArray(refreshed)) {
-        for (const list of refreshed) {
-          if (Array.isArray(list?.waypoints)) {
-            for (const w of list.waypoints) {
-              if (w?.lat != null && w?.lon != null) allWps.push({ ...w, listName: list.name || 'Unnamed' });
-            }
-          }
-        }
-      }
-      setWaypoints(allWps);
-    } catch {}
-    setWpMenuVisible(false);
-    setPendingWaypoint(null);
-  }, [pendingWaypoint, wpLabel, wpSelectedList, isPro, waypoints.length, onShowProGate]);
+      notifySuccess(); setWpMenuVisible(false); setPendingWaypoint(null); return true;
+    } catch { setMapSaveError(true); return false; }
+    finally { mapWriteBusy.current = false; }
+  };
 
   // Navigate to waypoint (set as active in GRID tab)
   const navigateToWaypoint = useCallback(() => {
@@ -379,32 +331,15 @@ export function MapScreen({
   // Finds the wp across all lists, removes it, persists, and refreshes the
   // map's local waypoint state. Without this, free users had no way to
   // remove waypoints they plotted on the map (the LISTS tab is Pro-gated).
-  const deleteWaypointById = useCallback(async (wpId) => {
-    if (!wpId) return;
+  const deleteWaypointById = async wpId => {
+    if (!wpId || !selectedMarker?.listId || mapWriteBusy.current) return;
+    mapWriteBusy.current = true;
     try {
-      const lists = await loadWaypointLists();
-      if (!Array.isArray(lists)) return;
-      const updated = lists.map(l => ({
-        ...l,
-        waypoints: Array.isArray(l.waypoints) ? l.waypoints.filter(w => w.id !== wpId) : [],
-      }));
-      await saveWaypointLists(updated);
-      // Refresh local waypoint state from the new lists
-      const allWps = [];
-      for (const list of updated) {
-        if (Array.isArray(list?.waypoints)) {
-          for (const w of list.waypoints) {
-            if (w?.lat != null && w?.lon != null) allWps.push({ ...w, listName: list.name || 'Unnamed' });
-          }
-        }
-      }
-      setWaypoints(allWps);
-      setSelectedMarker(null);
-      notifySuccess();
-    } catch {
-      notifyError();
-    }
-  }, []);
+      await onUpdateList(selectedMarker.listId, list => ({ ...list, waypoints: list.waypoints.filter(point => point.id !== wpId) }));
+      setSelectedMarker(null); notifySuccess();
+    } catch { Alert.alert(t('workflow.saveFailed'), t('workflow.retry')); }
+    finally { mapWriteBusy.current = false; }
+  };
 
   // Confirm before destructive delete
   const confirmDeleteSelectedMarker = useCallback(() => {
@@ -442,74 +377,58 @@ export function MapScreen({
     });
   }, []);
 
-  // ── ROUTE PLANNING (Pro) ──
-  // Toggle route-planning mode. Free users are diverted to the paywall.
-  // Tapping the button while active exits the mode and clears the route.
-  const toggleRouteMode = useCallback(() => {
-    if (!isPro) {
-      onShowProGate && onShowProGate('Route Planning');
-      return;
-    }
-    tapMedium();
+  // Route order is retained by App across tab changes until saved or discarded.
+  const beginRouteMode = () => {
+    if (!isPro) { onShowProGate?.('Route Planning', 'routes'); return; }
     setSelectedMarker(null);
-    setRouteMode(prev => {
-      const next = !prev;
-      // Clear the route when leaving the mode so the polyline goes away.
-      if (!next) setRouteWaypoints([]);
-      return next;
-    });
-  }, [isPro, onShowProGate]);
-
-  // Tap a waypoint marker — in route mode, add/remove from the ordered route;
-  // otherwise, open the selected-marker info card.
-  const handleWaypointPress = useCallback((wp) => {
-    if (!routeMode) {
-      setSelectedMarker(wp);
-      return;
+    updateRouteDraft(previous => ({ ...previous, active: true, id: previous?.id || makeId(), waypoints: previous?.waypoints || [], name: previous?.name || '' }));
+  };
+  const finishRouteMode = () => {
+    if (!routeWaypoints.length) { updateRouteDraft({ active: false, waypoints: [], name: '' }); return; }
+    setRouteSaveVisible(true);
+  };
+  const toggleRouteMode = () => routeMode ? finishRouteMode() : beginRouteMode();
+  const handleWaypointPress = wp => {
+    if (!routeMode) { setSelectedMarker(wp); return; }
+    if (!routeWaypoints.some(point => point.originMapKey === wp.mapKey) && routeWaypoints.length >= 20) {
+      Alert.alert(t('waypoints.limitReached'), t('waypoints.maxWaypoints')); return;
     }
     tapLight();
-    setRouteWaypoints(prev => {
-      const idx = prev.findIndex(w => w.id === wp.id);
-      if (idx >= 0) return prev.filter(w => w.id !== wp.id);
-      return [...prev, { id: wp.id, lat: wp.lat, lon: wp.lon, name: wp.label || wp.listName || '' }];
-    });
-  }, [routeMode]);
-
-  // Nearest-neighbor reorder starting from current location (or first waypoint
-  // if no GPS fix). Operator can re-run as they add waypoints.
-  const optimizeRouteOrder = useCallback(() => {
+    setRouteWaypoints(previous => previous.some(point => point.originMapKey === wp.mapKey)
+      ? previous.filter(point => point.originMapKey !== wp.mapKey)
+      : [...previous, { ...wp, id: makeId(), originMapKey: wp.mapKey, label: wp.label || wp.listName || 'WP' }]);
+  };
+  const optimizeRouteOrder = () => {
     if (routeWaypoints.length < 2) return;
-    tapMedium();
-    const start = (location?.lat != null && location?.lon != null)
-      ? { lat: location.lat, lon: location.lon }
-      : routeWaypoints[0];
-    const optimized = optimizeRoute(routeWaypoints, start);
-    setRouteWaypoints(optimized);
-    notifySuccess();
-  }, [routeWaypoints, location]);
-
-  const clearRoute = useCallback(() => {
-    tapLight();
-    setRouteWaypoints([]);
-  }, []);
-
-  const exitRouteMode = useCallback(() => {
-    tapLight();
-    setRouteMode(false);
-    setRouteWaypoints([]);
-  }, []);
-
-  // Summary metrics for the route panel — distance, count, est. travel time
-  // at a default 15 min/km tactical foot pace.
-  const routeSummary = useMemo(() => {
-    if (routeWaypoints.length < 2) return null;
-    const { totalDistance } = calculateRoute(routeWaypoints);
-    const minutes = estimateTime(totalDistance, 15);
-    return {
-      count: routeWaypoints.length,
-      distance: formatDistance(totalDistance),
-      time: formatTime(minutes),
-    };
+    const start = location || routeWaypoints[0];
+    setRouteWaypoints(optimizeRoute(routeWaypoints, start));
+  };
+  const clearRoute = () => Alert.alert(t('workflow.discardRoute'), t('workflow.discardRouteBody'), [
+    { text: t('common.cancel'), style: 'cancel' },
+    { text: t('workflow.discard'), style: 'destructive', onPress: () => setRouteWaypoints([]) },
+  ]);
+  const discardRoute = () => Alert.alert(t('workflow.discardRoute'), t('workflow.discardRouteBody'), [
+    { text: t('common.cancel'), style: 'cancel' },
+    { text: t('workflow.discard'), style: 'destructive', onPress: () => {
+      updateRouteDraft({ active: false, waypoints: [], name: '' }); setRouteSaveVisible(false);
+    } },
+  ]);
+  const savePlannedRoute = async () => {
+    if (mapWriteBusy.current || listsLoading || listsLoadError) return;
+    if (!draft.name?.trim()) { setRouteSaveError(t('workflow.nameRequired')); return; }
+    if (!routeWaypoints.length) return;
+    mapWriteBusy.current = true; setRouteSaveError('');
+    const id = draft.id || makeId();
+    updateRouteDraft(previous => ({ ...previous, id }));
+    try {
+      await onSaveList({ id, name: draft.name.trim().toUpperCase(), waypoints: routeWaypoints.map(point => ({ ...point })), createdAt: Date.now() });
+      updateRouteDraft({ active: false, waypoints: [], name: '' }); setRouteSaveVisible(false);
+      notifySuccess(); onOpenSavedRoute?.(id);
+    } catch { setRouteSaveError(t('workflow.saveFailed')); }
+    finally { mapWriteBusy.current = false; }
+  };
+  const routeSummary = useMemo(() => routeWaypoints.length < 2 ? null : {
+    count: routeWaypoints.length, distance: formatDistance(calculateRoute(routeWaypoints).totalDistance),
   }, [routeWaypoints]);
 
   // Center on user location
@@ -608,14 +527,14 @@ export function MapScreen({
         {/* Waypoint markers — in route mode, tapping toggles inclusion in
             the planned route; otherwise it opens the selected-marker card. */}
         {waypoints.map((wp) => {
-          const routeIdx = routeMode ? routeWaypoints.findIndex(rw => rw.id === wp.id) : -1;
+          const routeIdx = routeMode ? routeWaypoints.findIndex(rw => rw.originMapKey === wp.mapKey) : -1;
           const inRoute = routeIdx >= 0;
           const description = inRoute
             ? `RT ${routeIdx + 1} • ${formatMGRS(toMGRS(wp.lat, wp.lon, 5))}`
             : formatMGRS(toMGRS(wp.lat, wp.lon, 5));
           return (
             <Marker
-              key={wp.id}
+              key={wp.mapKey}
               coordinate={{ latitude: wp.lat, longitude: wp.lon }}
               title={wp.label || 'Waypoint'}
               description={description}
@@ -752,7 +671,7 @@ export function MapScreen({
 
       {/* Right-side buttons — lifted when the route panel is showing so the
           zoom controls stay reachable. */}
-      <View style={[styles.rightButtons, routeMode && { bottom: 165 }]}>
+      <View style={[styles.rightButtons, routeMode && { bottom: 220 }]}>
         {/* Offline mode toggle — only show when tiles are cached */}
         {cachedCount > 0 && (
           <TouchableOpacity
@@ -872,6 +791,10 @@ export function MapScreen({
         </TouchableOpacity>
       </View>
 
+      {(listsLoadError || listsSaveError) && <View style={[styles.storageBanner, { backgroundColor: colors.card, borderColor: colors.text2 }]}>
+        <Text accessibilityRole="alert" style={[styles.wpMenuHint, { color: colors.text }]}>{listsLoadError ? t('workflow.loadFailed') : t('workflow.saveFailed')}</Text>
+        <TouchableOpacity onPress={listsLoadError ? onRetryListsLoad : onRetryListsSave} accessibilityRole="button" style={styles.wpMenuBtn}><Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('workflow.retry')}</Text></TouchableOpacity>
+      </View>}
       {/* Route-planning summary panel — sits above the bottom MGRS bar while
           route mode is active. Shows count, total distance, and est. time, plus
           OPTIMIZE / CLEAR / EXIT controls. */}
@@ -884,9 +807,12 @@ export function MapScreen({
                 ? t('map.routeHintEmpty')
                 : routeWaypoints.length === 1
                   ? t('map.routeHintOne')
-                  : `${routeSummary.count} wps • ${routeSummary.distance} • ${routeSummary.time}`}
+                  : `${routeSummary.count} • ${routeSummary.distance} • °T`}
             </Text>
           </View>
+          <TouchableOpacity style={[styles.wpMenuBtn, { borderColor: colors.text2 }]} onPress={() => setRoutePickerVisible(true)} accessibilityRole="button">
+            <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('workflow.chooseSaved')}</Text>
+          </TouchableOpacity>
           <View style={styles.routePanelBtnRow}>
             <TouchableOpacity
               style={[styles.routePanelBtn, {
@@ -898,7 +824,7 @@ export function MapScreen({
               accessibilityRole="button"
               accessibilityLabel="Optimize route order from current location"
             >
-              <Text style={[styles.routePanelBtnText, { color: routeWaypoints.length >= 2 ? colors.text2 : colors.text3 }]}>{t('map.optimize')}</Text>
+              <Text style={[styles.routePanelBtnText, { color: routeWaypoints.length >= 2 ? colors.text2 : colors.text3 }]}>{t('workflow.nearestOrder')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.routePanelBtn, {
@@ -914,15 +840,53 @@ export function MapScreen({
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.routePanelBtn, { borderColor: colors.text2 }]}
-              onPress={exitRouteMode}
+              onPress={finishRouteMode}
               accessibilityRole="button"
-              accessibilityLabel="Exit route planning mode"
+              accessibilityLabel={t(routeWaypoints.length >= 2 ? 'workflow.saveRoute' : 'map.done')}
             >
               <Text style={[styles.routePanelBtnText, { color: colors.text2 }]}>{t('map.done')}</Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
+
+      <Modal visible={routePickerVisible} transparent animationType="slide" onRequestClose={() => setRoutePickerVisible(false)}>
+        <View style={[styles.routeEditor, { backgroundColor: colors.bg }]}><ScrollView contentContainerStyle={styles.routeEditorContent}>
+          <Text style={[styles.wpMenuTitle, { color: colors.text }]}>{t('workflow.chooseSaved')}</Text>
+          <Text style={[styles.wpMenuHint, { color: colors.text3 }]}>{t('map.routeHintEmpty')}</Text>
+          {!waypoints.length && <Text style={[styles.wpMenuHint, { color: colors.text3 }]}>{t('workflow.noSavedPoints')}</Text>}
+          {waypoints.map(point => {
+            const index = routeWaypoints.findIndex(item => item.originMapKey === point.mapKey);
+            return <TouchableOpacity key={point.mapKey} accessibilityRole="checkbox" accessibilityLabel={`${point.label} · ${point.listName} · ${point.mgrs}`} accessibilityState={{ checked: index >= 0 }} onPress={() => handleWaypointPress(point)} style={[styles.routeEditorPoint, { borderColor: index >= 0 ? colors.text2 : colors.border, minHeight: 48 }]}>
+              <Text style={[styles.wpMenuTitle, { color: colors.text }]}>{index >= 0 ? `✓ ${index + 1}. ` : '○ '}{point.label}</Text>
+              <Text style={[styles.wpMenuHint, { color: colors.text3, alignSelf: 'stretch' }]}>{point.listName} · {point.mgrs}</Text>
+            </TouchableOpacity>;
+          })}
+          <TouchableOpacity style={[styles.wpMenuBtn, { borderColor: colors.text2 }]} accessibilityRole="button" onPress={() => setRoutePickerVisible(false)}><Text style={[styles.wpMenuBtnText, { color: colors.text }]}>{t('map.done')}</Text></TouchableOpacity>
+        </ScrollView></View>
+      </Modal>
+
+      <Modal visible={routeSaveVisible} transparent animationType="slide" onRequestClose={() => setRouteSaveVisible(false)}>
+        <View style={[styles.routeEditor, { backgroundColor: colors.bg }]}>
+          <ScrollView contentContainerStyle={styles.routeEditorContent}>
+            <Text style={[styles.wpMenuTitle, { color: colors.text }]}>{t('workflow.saveRoute')}</Text>
+            <Text style={[styles.wpMenuHint, { color: colors.text3, alignSelf: 'stretch' }]}>{t('workflow.saveRouteHint')}</Text>
+            <TextInput value={draft.name || ''} onChangeText={name => updateRouteDraft(previous => ({ ...previous, name }))} maxLength={80} placeholder={t('workflow.routeName')} placeholderTextColor={colors.text3} accessibilityLabel={t('workflow.routeName')} style={[styles.wpMenuInput, { borderColor: colors.border, color: colors.text, marginVertical: 14 }]} />
+            {routeWaypoints.map((point, index) => <View key={point.id} style={[styles.routeEditorPoint, { borderColor: colors.border }]}>
+              <Text style={[styles.wpMenuMGRS, { color: colors.text }]}>{index + 1}. {point.label || point.name}</Text>
+              <Text style={[styles.wpMenuHint, { color: colors.text3, alignSelf: 'stretch' }]}>{point.mgrs || formatMGRS(toMGRS(point.lat, point.lon, 5))}</Text>
+              <View style={styles.wpMenuActions}>
+                <TouchableOpacity disabled={index === 0 || listsSaving} accessibilityRole="button" accessibilityLabel={t('workflow.moveUpLabel', { name: point.label || point.name })} onPress={() => setRouteWaypoints(points => moveRoutePoint(points, point.id, -1))} style={[styles.wpMenuBtn, { borderColor: colors.border, opacity: index === 0 ? 0.4 : 1 }]}><Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('workflow.moveUp')}</Text></TouchableOpacity>
+                <TouchableOpacity disabled={index === routeWaypoints.length - 1 || listsSaving} accessibilityRole="button" accessibilityLabel={t('workflow.moveDownLabel', { name: point.label || point.name })} onPress={() => setRouteWaypoints(points => moveRoutePoint(points, point.id, 1))} style={[styles.wpMenuBtn, { borderColor: colors.border, opacity: index === routeWaypoints.length - 1 ? 0.4 : 1 }]}><Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('workflow.moveDown')}</Text></TouchableOpacity>
+              </View>
+            </View>)}
+            {!!routeSaveError && <Text accessibilityRole="alert" style={[styles.wpMenuHint, { color: colors.text }]}>{routeSaveError}</Text>}
+            <TouchableOpacity disabled={listsSaving || listsLoading || listsLoadError} onPress={savePlannedRoute} accessibilityRole="button" style={[styles.wpMenuBtn, { borderColor: colors.text2, marginTop: 12 }]}><Text style={[styles.wpMenuBtnText, { color: colors.text }]}>{listsSaving ? t('workflow.saving') : t('workflow.saveAndOpen')}</Text></TouchableOpacity>
+            <TouchableOpacity disabled={listsSaving} onPress={() => setRouteSaveVisible(false)} accessibilityRole="button" style={styles.wpMenuBtn}><Text style={[styles.wpMenuBtnText, { color: colors.text3 }]}>{t('workflow.keepEditing')}</Text></TouchableOpacity>
+            <TouchableOpacity disabled={listsSaving} onPress={discardRoute} accessibilityRole="button" style={styles.wpMenuBtn}><Text style={[styles.wpMenuBtnText, { color: colors.text3 }]}>{t('workflow.discard')}</Text></TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
 
       {/* Bottom bar — center MGRS + cache indicator */}
       <View style={[styles.bottomBar, { backgroundColor: colors.bg, borderTopColor: colors.border2 }]}>
@@ -984,10 +948,12 @@ export function MapScreen({
             </ScrollView>
 
             {/* Action buttons */}
+            {mapSaveError && <Text accessibilityRole="alert" style={[styles.wpMenuHint, { color: colors.text }]}>{t('workflow.saveFailed')}</Text>}
             <View style={styles.wpMenuActions}>
               <TouchableOpacity
                 style={[styles.wpMenuBtn, { borderColor: colors.accent, backgroundColor: colors.border2 }]}
                 onPress={saveWaypointFromMenu}
+                disabled={listsLoading || listsLoadError || listsSaving}
               >
                 <Text style={[styles.wpMenuBtnText, { color: colors.text }]}>{t('common.save')}</Text>
               </TouchableOpacity>
@@ -995,7 +961,8 @@ export function MapScreen({
               {onSetWaypoint && (
                 <TouchableOpacity
                   style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
-                  onPress={() => { saveWaypointFromMenu().then(() => navigateToWaypoint()); }}
+                  onPress={() => { saveWaypointFromMenu().then(saved => { if (saved) navigateToWaypoint(); }); }}
+                  disabled={listsLoading || listsLoadError || listsSaving}
                 >
                   <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('map.saveNav')}</Text>
                 </TouchableOpacity>
@@ -1043,6 +1010,10 @@ export function MapScreen({
 }
 
 const styles = StyleSheet.create({
+  routeEditor: { flex: 1 },
+  routeEditorContent: { padding: 20, paddingTop: 60, paddingBottom: 40, gap: 8 },
+  routeEditorPoint: { borderWidth: 1, padding: 12, marginVertical: 4 },
+  storageBanner: { position: 'absolute', top: 12, left: 12, right: 12, padding: 12, borderWidth: 1 },
   root: { flex: 1 },
   map: { flex: 1 },
   fallback: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 },

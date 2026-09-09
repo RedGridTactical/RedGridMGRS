@@ -1,12 +1,15 @@
 /**
  * ToolsScreen — Twelve tactical tools, each as an expandable card.
- * All computation is local. No network. No location data stored.
+ * All computation is local. No network. Draft inputs remain in process memory until cleared or the process ends.
  */
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager,
 } from 'react-native';
 import { useColors } from '../utils/ThemeContext';
+import { useSessionDraft } from '../hooks/useSessionDraft';
+import { sessionDrafts } from '../utils/sessionDrafts';
+import { Alert } from '../utils/fieldAlert';
 import { tapMedium } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -53,16 +56,21 @@ const TOOLS = [
   { id: 'baro',     labelKey: 'tools.barometer',       subKey: 'tools.barometerSub',           Component: BarometerTool, pro: true },
 ];
 
-export function ToolsScreen({ location, declination, paceCount, setDeclination, setPaceCount, compassHeading, compassReference, isPro, trialEligible, onShowProGate }) {
+export function ToolsScreen({ lastKnownLocation, savedWaypoints = [], onSaveEstimatedPoint, location, declination, paceCount, setDeclination, setPaceCount, compassHeading, compassReference, isPro, trialEligible, onShowProGate }) {
   const colors = useColors();
   const { t } = useTranslation();
-  const [openTool, setOpenTool] = useState(null);
+  const [openTool, setOpenTool] = useSessionDraft('tools:open', null);
+  const [resetVersion, setResetVersion] = useState(0);
+  const clearTool = id => Alert.alert(t('workflow.clearTitle'), t('workflow.clearBody'), [
+    { text: t('reports.cancel'), style: 'cancel' },
+    { text: t('reports.clear'), style: 'destructive', onPress: () => { sessionDrafts.clearPrefix(`tool:${id}:`); setResetVersion(v => v + 1); } },
+  ]);
 
   const toggle = useCallback((id) => {
     tapMedium();
     LayoutAnimation.configureNext(SPRING_ANIM);
     setOpenTool(prev => prev === id ? null : id);
-  }, []);
+  }, [setOpenTool]);
 
   return (
     <ScrollView style={[styles.root, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -82,7 +90,7 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
             <TouchableOpacity
               style={styles.cardHeader}
               onPress={() => {
-                if (isLocked) { tapMedium(); onShowProGate?.(label); return; }
+                if (isLocked) { tapMedium(); onShowProGate?.(label, id === 'geostamp' ? 'photos' : 'tools'); return; }
                 toggle(id);
               }}
               activeOpacity={0.7}
@@ -101,10 +109,14 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
               <Text style={[styles.chevron, { color: colors.text3 }, isOpen && { color: colors.text, transform: [{ rotate: '90deg' }] }]} importantForAccessibility="no" accessibilityElementsHidden={true}>▶</Text>
             </TouchableOpacity>
 
-            {isOpen && (
+            {isOpen && !isLocked && (
               <View style={styles.cardBody}>
                 <View style={[styles.cardDivider, { backgroundColor: colors.border2 }]} />
                 <Surface><Component
+                  key={`${id}:${resetVersion}`}
+                  lastKnownLocation={lastKnownLocation}
+                  savedWaypoints={savedWaypoints}
+                  onSaveEstimatedPoint={onSaveEstimatedPoint}
                   location={location}
                   declination={declination}
                   paceCount={paceCount}
@@ -113,6 +125,9 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
                   compassHeading={compassHeading}
                   compassReference={compassReference}
                 /></Surface>
+                {!['signal', 'baro', 'prec'].includes(id) && <TouchableOpacity onPress={() => clearTool(id)} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center', marginTop: 10 }}>
+                  <Text style={[styles.footerText, { color: colors.text2 }]}>{t('workflow.clearTool')}</Text>
+                </TouchableOpacity>}
               </View>
             )}
           </View>
@@ -120,7 +135,7 @@ export function ToolsScreen({ location, declination, paceCount, setDeclination, 
       })}
 
       <View style={styles.footer}>
-        <Text style={[styles.footerText, { color: colors.text3 }]}>{t('tools.footer')}</Text>
+        <Text style={[styles.footerText, { color: colors.text3 }]}>{t('workflow.sessionHint')}</Text>
       </View>
     </ScrollView>
   );
@@ -150,7 +165,7 @@ const styles = StyleSheet.create({
   proBadge: { ...TYPE.label, fontSize: 11, paddingHorizontal: 5, paddingVertical: 2, letterSpacing: 1.2 },
   cardTitle: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2 },
   cardSub:   { ...TYPE.body, fontSize: 12,  letterSpacing: 0.3 },
-  chevron:   { fontFamily: 'monospace', fontSize: 10, transform: [{ rotate: '0deg' }] },
+  chevron:   { ...TYPE.data, fontSize: 10, transform: [{ rotate: '0deg' }] },
 
   cardBody: { paddingHorizontal: 14, paddingBottom: 16 },
   cardDivider: { height: 1, marginBottom: 14 },

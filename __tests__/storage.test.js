@@ -10,6 +10,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
 }));
 
+const { normalizeWaypointLists } = require('../src/utils/waypoints');
 const AsyncStorage = require('@react-native-async-storage/async-storage');
 const {
   loadSettings,
@@ -160,12 +161,12 @@ describe('storage.js - Persistent Storage Wrapper', () => {
 
     test('Handles AsyncStorage unavailable', async () => {
       AsyncStorage.setItem = null;
-      await expect(saveDeclination(15)).resolves.toBeUndefined();
+      await expect(saveDeclination(15)).rejects.toThrow();
     });
 
-    test('Handles error silently', async () => {
+    test('Reports native write failure', async () => {
       AsyncStorage.setItem.mockRejectedValue(new Error('Save failed'));
-      await expect(saveDeclination(15)).resolves.toBeUndefined();
+      await expect(saveDeclination(15)).rejects.toThrow();
     });
   });
 
@@ -187,9 +188,9 @@ describe('storage.js - Persistent Storage Wrapper', () => {
       expect(AsyncStorage.setItem).toHaveBeenCalledWith('rg_pace_count', '62');
     });
 
-    test('Handles error silently', async () => {
+    test('Reports native write failure', async () => {
       AsyncStorage.setItem.mockRejectedValue(new Error('Save failed'));
-      await expect(savePaceCount(70)).resolves.toBeUndefined();
+      await expect(savePaceCount(70)).rejects.toThrow();
     });
   });
 
@@ -203,12 +204,12 @@ describe('storage.js - Persistent Storage Wrapper', () => {
 
     test('Handles null gracefully', async () => {
       await saveTheme(null);
-      expect(AsyncStorage.setItem).toHaveBeenCalledWith('rg_theme', 'red');
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith('rg_theme', 'standard');
     });
 
-    test('Handles error silently', async () => {
+    test('Reports native write failure', async () => {
       AsyncStorage.setItem.mockRejectedValue(new Error('Save failed'));
-      await expect(saveTheme('green')).resolves.toBeUndefined();
+      await expect(saveTheme('green')).rejects.toThrow();
     });
   });
 
@@ -230,36 +231,36 @@ describe('storage.js - Persistent Storage Wrapper', () => {
       AsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockLists));
 
       const result = await loadWaypointLists();
-      expect(result).toEqual(mockLists);
+      expect(result).toEqual(normalizeWaypointLists(mockLists));
       expect(result.length).toBe(2);
     });
 
-    test('Returns empty array on JSON parse error', async () => {
+    test('Reports corrupted JSON without replacing it', async () => {
       AsyncStorage.getItem.mockResolvedValue('INVALID_JSON');
 
-      const result = await loadWaypointLists();
-      expect(result).toEqual([]);
+      await expect(loadWaypointLists()).rejects.toThrow();
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
-    test('Returns empty array when data is not an array', async () => {
+    test('Reports invalid saved shape', async () => {
       AsyncStorage.getItem.mockResolvedValue(JSON.stringify({ id: 'wl_1' }));
 
-      const result = await loadWaypointLists();
-      expect(result).toEqual([]);
+      await expect(loadWaypointLists()).rejects.toThrow();
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
-    test('Returns empty array on AsyncStorage error', async () => {
+    test('Reports failed storage read', async () => {
       AsyncStorage.getItem.mockRejectedValue(new Error('Load failed'));
 
-      const result = await loadWaypointLists();
-      expect(result).toEqual([]);
+      await expect(loadWaypointLists()).rejects.toThrow();
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
-    test('Returns empty array when AsyncStorage is unavailable', async () => {
+    test('Reports unavailable storage', async () => {
       AsyncStorage.getItem = null;
 
-      const result = await loadWaypointLists();
-      expect(result).toEqual([]);
+      await expect(loadWaypointLists()).rejects.toThrow();
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
   });
 
@@ -272,7 +273,7 @@ describe('storage.js - Persistent Storage Wrapper', () => {
 
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         'rg_waypoint_lists',
-        JSON.stringify(lists)
+        JSON.stringify(normalizeWaypointLists(lists))
       );
     });
 
@@ -282,18 +283,18 @@ describe('storage.js - Persistent Storage Wrapper', () => {
     });
 
     test('Ignores non-array input', async () => {
-      await saveWaypointLists({ id: 'wl_1' });
+      await expect(saveWaypointLists({ id: 'wl_1' })).rejects.toThrow();
       expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
     test('Handles null gracefully', async () => {
-      await saveWaypointLists(null);
+      await expect(saveWaypointLists(null)).rejects.toThrow();
       expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
-    test('Handles error silently', async () => {
+    test('Reports native write failure', async () => {
       AsyncStorage.setItem.mockRejectedValue(new Error('Save failed'));
-      await expect(saveWaypointLists([{ id: 'wl_1', waypoints: [] }])).resolves.toBeUndefined();
+      await expect(saveWaypointLists([{ id: 'wl_1', waypoints: [] }])).rejects.toThrow();
     });
   });
 

@@ -66,3 +66,44 @@ describe('routeCard — text export', () => {
     expect(text).toContain('1 LEG ·');
   });
 });
+
+describe('planning provenance and manual records', () => {
+  const { buildRouteProvenance, formatRouteTime, pointProvenanceText } = require('../src/utils/routeCard');
+  test('estimated duration requires an explicit saved pace, never the generation time', () => {
+    expect(buildRouteProvenance(LIST).plannedMinutes).toBeNull();
+    const plan = { ...LIST, paceMinPerKm: 12, plannedStartAt: Date.UTC(2026, 8, 10, 9) };
+    const summary = buildRouteSummary(plan);
+    expect(buildRouteProvenance(plan).plannedMinutes).toBeCloseTo(summary.totalDistance / 1000 * 12);
+    const text = buildRouteCardText(plan, summary.legs, summary.totalDistance, '091500ZSEP26');
+    expect(text).toContain('GENERATED DTG 091500ZSEP26');
+    expect(text).toContain('PLANNED START (UTC): 2026-09-10 09:00 UTC');
+    expect(text).toContain('bearings use true north');
+  });
+  test('completion text records deliberate times and preserved plan notes without implying a track', () => {
+    const record = { ...LIST, status: 'completed', notes: 'Use signed trail', reviewNotes: 'Bridge closed',
+      waypoints: LIST.waypoints.map((p, i) => ({ ...p, note: i === 1 ? 'Check bridge' : '' })),
+      startedAt: 1800000000000, endedAt: 1800001200000, confirmed: [{ index: 0, confirmedAt: 1800000001000 }, { index: 1, confirmedAt: 1800000600000 }] };
+    const summary = buildRouteSummary(record);
+    const text = buildRouteCardText(record, summary.legs, summary.totalDistance, '010000ZJAN27');
+    expect(text).toContain('MANUAL CONFIRMATION RECORD');
+    expect(text).toContain('They do not prove arrival or record a travelled path');
+    expect(text).toContain('Check bridge'); expect(text).toContain('REVIEW NOTES: Bridge closed');
+    expect(buildRouteProvenance(record).confirmations.map(p => p.label)).toEqual(['CCP 1', 'OBJ WRECK']);
+    expect(text).not.toMatch(/actual distance|travelled distance|average speed/i);
+  });
+  test('unknown historical sources remain unknown and imported accuracy is not presented as a current fix', () => {
+    expect(pointProvenanceText({})).toBe('Source not recorded');
+    expect(pointProvenanceText({ source: 'import', accuracyM: 3 })).not.toContain('±3m');
+    expect(pointProvenanceText({ source: 'gps', accuracyM: 3 })).toContain('FIX ACCURACY: ±3m');
+    expect(formatRouteTime(Infinity)).toBe('—'); expect(formatRouteTime(Number.MAX_VALUE)).toBe('—');
+  });
+});
+
+test('saved and imported DR estimates name their origin and grid input instead of implying GPS', () => {
+  const { pointProvenanceText } = require('../src/utils/routeCard');
+  const provenance = { kind: 'dead-reckoning', origin: { mgrs: '18S UJ 26565 07581', pinnedAt: 1800000000000 }, gridBearing: 90, distanceMeters: 850 };
+  for (const source of ['estimated', 'import']) {
+    const text = pointProvenanceText({ source, provenance });
+    expect(text).toContain('ESTIMATE · not a GPS fix'); expect(text).toContain('18S UJ 26565 07581'); expect(text).toContain('90°G / 850m');
+  }
+});

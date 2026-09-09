@@ -1,8 +1,10 @@
+import { useSessionDraft } from '../../hooks/useSessionDraft';
+import { parseToolNumber, validToolPoint } from '../../utils/toolWorkflow';
 /**
  * ElevationTool — Display GPS altitude and calculate slope/grade to a waypoint.
  * All computation local. No network. No storage.
  */
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { TextInput } from '../FieldInput';
 import { ToolResult, ToolRow, ToolHint, ToolInput } from './ToolShared';
@@ -19,29 +21,30 @@ const M_TO_FT = 3.28084;
 export function ElevationTool({ location }) {
   const colors = useColors();
   const { t } = useTranslation();
-  const [wpLat, setWpLat] = useState('');
-  const [wpLon, setWpLon] = useState('');
-  const [wpAlt, setWpAlt] = useState('');
+  const [wpLat, setWpLat] = useSessionDraft('tool:elev:wpLat', '');
+  const [wpLon, setWpLon] = useSessionDraft('tool:elev:wpLon', '');
+  const [wpAlt, setWpAlt] = useSessionDraft('tool:elev:wpAlt', '');
 
   const altM = location?.altitude;
-  const hasAlt = altM !== null && altM !== undefined;
+  const hasAlt = validToolPoint(location) && Number.isFinite(altM);
 
   // Slope calculation
   const slope = useMemo(() => {
-    const lat2 = parseFloat(wpLat);
-    const lon2 = parseFloat(wpLon);
-    const alt2 = parseFloat(wpAlt);
-    if (!hasAlt || isNaN(lat2) || isNaN(lon2) || isNaN(alt2)) return null;
-    if (!location?.lat || !location?.lon) return null;
+    const lat2 = parseToolNumber(wpLat, { min: -90, max: 90 });
+    const lon2 = parseToolNumber(wpLon, { min: -180, max: 180 });
+    const alt2 = parseToolNumber(wpAlt);
+    if (!hasAlt || lat2 === null || lon2 === null || alt2 === null) return null;
+    if (!validToolPoint(location)) return null;
 
     const horizDist = geodesicDistance(location.lat, location.lon, lat2, lon2);
-    if (horizDist < 1) return null; // too close
+    if (!Number.isFinite(horizDist) || horizDist < 1) return null; // too close
 
     const rise = alt2 - altM;
     const angleRad = Math.atan2(rise, horizDist);
     const angleDeg = angleRad * (180 / Math.PI);
     const gradePercent = (rise / horizDist) * 100;
 
+    if (![rise, angleDeg, gradePercent].every(Number.isFinite)) return null;
     return {
       horizDist: Math.round(horizDist),
       rise: Math.round(rise),
@@ -60,7 +63,7 @@ export function ElevationTool({ location }) {
             value={`${altM}m / ${Math.round(altM * M_TO_FT)}ft`}
             primary
           />
-          <ToolRow label="ACCURACY" value={location?.accuracy ? `\u00b1${location.accuracy}m` : '--'} />
+          <ToolRow label={t('workflow.horizontalAccuracy')} value={Number.isFinite(location?.accuracy) && location.accuracy >= 0 ? `\u00b1${location.accuracy}m` : '--'} />
         </View>
       ) : (
         <Text style={[styles.noFix, { color: colors.text3 }]}>
@@ -72,7 +75,7 @@ export function ElevationTool({ location }) {
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.text3 }]}>{t('toolLabels.slopeToWaypoint') || 'SLOPE TO WAYPOINT'}</Text>
         <ToolInput
-          label="WAYPOINT LAT"
+          label={t('workflow.waypointLatitude')}
           value={wpLat}
           onChangeText={setWpLat}
           placeholder="e.g. 38.8977"
@@ -80,7 +83,7 @@ export function ElevationTool({ location }) {
           autoCapitalize="none"
         />
         <ToolInput
-          label="WAYPOINT LON"
+          label={t('workflow.waypointLongitude')}
           value={wpLon}
           onChangeText={setWpLon}
           placeholder="e.g. -77.0365"
@@ -88,7 +91,7 @@ export function ElevationTool({ location }) {
           autoCapitalize="none"
         />
         <ToolInput
-          label="WAYPOINT ALT (m)"
+          label={t('workflow.waypointAltitude')}
           value={wpAlt}
           onChangeText={setWpAlt}
           placeholder="e.g. 150"
@@ -106,7 +109,8 @@ export function ElevationTool({ location }) {
         </View>
       )}
 
-      <ToolHint text="Altitude from GPS. Enter waypoint coordinates and altitude to calculate slope angle and grade percentage." />
+      {(!!wpLat || !!wpLon || !!wpAlt) && !slope && <ToolHint text={t('workflow.slopeInvalid')} />}
+      <ToolHint text={t('workflow.slopeHint')} />
     </View>
   );
 }

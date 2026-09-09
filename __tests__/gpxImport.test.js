@@ -121,13 +121,13 @@ describe('gpxImport.js - GPX/KML Import', () => {
       const result = parseKML(kml);
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({ name: 'ALPHA', lat: 38.8895, lon: -77.0353, elevation: 15.5 });
-      expect(result[1]).toEqual({ name: 'BRAVO', lat: 40.7128, lon: -74.006 });
+      expect(result[1]).toEqual({ name: 'BRAVO', lat: 40.7128, lon: -74.006, elevation: 0 });
     });
 
-    test('skips elevation of 0', () => {
+    test('preserves elevation of 0', () => {
       const kml = `<kml><Document><Placemark><name>ZERO</name><Point><coordinates>-77.0,38.0,0</coordinates></Point></Placemark></Document></kml>`;
       const result = parseKML(kml);
-      expect(result[0].elevation).toBeUndefined();
+      expect(result[0].elevation).toBe(0);
     });
 
     test('assigns default names when <name> is missing', () => {

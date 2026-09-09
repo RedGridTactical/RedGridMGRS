@@ -13,7 +13,7 @@
  *   - Mounted check on all state updates
  *   - Subscription cleaned up on unmount
  */
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { tapMedium } from '../utils/haptics';
 import { speakMGRS } from '../utils/voice';
 
@@ -28,11 +28,14 @@ const SHAKE_COUNT_NEEDED = 3;   // hits needed within the time window
 const SHAKE_WINDOW_MS = 800;    // time window for counting hits
 const COOLDOWN_MS = 3000;       // min time between shake triggers
 
-export function useShakeToSpeak(mgrsFormatted, enabled) {
+export function useShakeToSpeak(mgrsFormatted, enabled, onSpeak) {
   const shakeTimestamps = useRef([]);
   const lastTrigger = useRef(0);
   const mounted = useRef(true);
   const mgrsRef = useRef(mgrsFormatted);
+  const speakRef = useRef(onSpeak);
+  speakRef.current = onSpeak;
+  mgrsRef.current = mgrsFormatted;
 
   // Keep mgrs ref current without re-subscribing accelerometer
   useEffect(() => { mgrsRef.current = mgrsFormatted; }, [mgrsFormatted]);
@@ -43,6 +46,7 @@ export function useShakeToSpeak(mgrsFormatted, enabled) {
   }, []);
 
   useEffect(() => {
+    shakeTimestamps.current = [];
     if (!Accelerometer || !enabled) return;
 
     let subscription = null;
@@ -51,10 +55,10 @@ export function useShakeToSpeak(mgrsFormatted, enabled) {
       Accelerometer.setUpdateInterval(100);
 
       subscription = Accelerometer.addListener(({ x, y, z }) => {
-        if (!mounted.current) return;
+        if (!mounted.current || !mgrsRef.current) return;
 
         const magnitude = Math.sqrt(x * x + y * y + z * z);
-        if (magnitude < SHAKE_THRESHOLD) return;
+        if (!Number.isFinite(magnitude) || magnitude < SHAKE_THRESHOLD) return;
 
         const now = Date.now();
 
@@ -73,7 +77,8 @@ export function useShakeToSpeak(mgrsFormatted, enabled) {
           lastTrigger.current = now;
           tapMedium();
           if (mgrsRef.current) {
-            speakMGRS(mgrsRef.current);
+            if (speakRef.current) speakRef.current();
+            else speakMGRS(mgrsRef.current);
           }
         }
       });
@@ -82,6 +87,7 @@ export function useShakeToSpeak(mgrsFormatted, enabled) {
     }
 
     return () => {
+      shakeTimestamps.current = [];
       try { subscription?.remove?.(); } catch {}
     };
   }, [enabled]);

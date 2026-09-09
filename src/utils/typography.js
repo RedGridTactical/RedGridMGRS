@@ -22,5 +22,5 @@ export const TYPE = {
   body: { fontFamily: FONTS.regular, fontWeight: '400' },
   label: { fontFamily: FONTS.medium, fontWeight: '400' },
   heading: { fontFamily: FONTS.semibold, fontWeight: '400' },
-  data: { fontFamily: FONTS.mono, fontWeight: '400' },
+  data: { fontFamily: FONTS.mono, fontWeight: '400', writingDirection: 'ltr' },
 };

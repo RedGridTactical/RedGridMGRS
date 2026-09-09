@@ -10,16 +10,18 @@
  *   rg_display_preferences — preferred palette + Tactical display (atomic JSON)
  *   rg_coord_format   — coordinate format (string, Pro only)
  *
- * NO location data, NO PII, NO tracking ever stored.
+ * Saved coordinates and plans stay on this device; no automatic movement tracking.
  *
  * CRITICAL HARDENING:
  *   - All AsyncStorage calls guarded with existence checks
  *   - Explicit error handling with meaningful defaults
  *   - JSON.parse errors caught to prevent crash on corrupted data
- *   - All operations return sensible defaults on failure
+ *   - Field data failures reject without replacing the original record
  *   - No unhandled promise rejections
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { readLocalRecord, writeLocalRecord, fieldDataError } from './durableStorage';
+import { normalizeWaypointLists } from './waypoints';
 
 const KEYS = {
   DECLINATION:     'rg_declination',
@@ -89,23 +91,23 @@ let displayWriteRevision = 0;
 
 export function saveDisplayPreferences(value) {
   if (!value || !PREFERRED_THEMES.includes(value.theme) || typeof value.tacticalMode !== 'boolean') {
-    return Promise.resolve();
+    return Promise.reject(new Error('Invalid display preferences'));
   }
   const json = JSON.stringify({ theme: value.theme, tacticalMode: value.tacticalMode });
   displayWriteRevision += 1;
-  displayWriteQueue = displayWriteQueue.then(async () => {
-    if (AsyncStorage && AsyncStorage.setItem) {
-      await AsyncStorage.setItem(KEYS.DISPLAY_PREFERENCES, json);
-    }
-  }).catch(() => {});
-  return withTimeout(displayWriteQueue, 5000, 'Display save timeout').catch(() => {});
+  const native = displayWriteQueue.then(async () => {
+    if (!AsyncStorage?.setItem) throw new Error('Local storage unavailable');
+    await AsyncStorage.setItem(KEYS.DISPLAY_PREFERENCES, json);
+  });
+  displayWriteQueue = native.catch(() => {});
+  return withTimeout(native, 5000, 'Display save timeout');
 }
 
 function defaultSettings() {
   return {
     declination: 0, paceCount: 62, theme: 'standard',
     displayPreferences: { ...DEFAULT_DISPLAY_PREFERENCES }, tacticalMode: false,
-    coordFormat: 'mgrs', shakeToSpeak: true, gridCrossing: true, gridScale: 1.0,
+    coordFormat: 'mgrs', shakeToSpeak: false, tacticalSound: false, gridCrossing: true, gridScale: 1.0,
   };
 }
 
@@ -121,7 +123,7 @@ export async function loadSettings() {
     const items = await withTimeout(
       AsyncStorage.multiGet([
         KEYS.DECLINATION, KEYS.PACE_COUNT, KEYS.THEME, KEYS.COORD_FORMAT,
-        KEYS.SHAKE_TO_SPEAK, KEYS.GRID_CROSSING, KEYS.GRID_SCALE, KEYS.DISPLAY_PREFERENCES,
+        KEYS.SHAKE_TO_SPEAK, KEYS.TACTICAL_SOUND, KEYS.GRID_CROSSING, KEYS.GRID_SCALE, KEYS.DISPLAY_PREFERENCES,
       ]),
       5000,
       'Storage timeout'
@@ -137,6 +139,7 @@ export async function loadSettings() {
     if (Number.isFinite(gridScale) && gridScale >= 0.7 && gridScale <= 1.5) settings.gridScale = gridScale;
     if (stored[KEYS.COORD_FORMAT]) settings.coordFormat = String(stored[KEYS.COORD_FORMAT]);
     if (stored[KEYS.SHAKE_TO_SPEAK] != null) settings.shakeToSpeak = stored[KEYS.SHAKE_TO_SPEAK] !== 'false';
+    if (stored[KEYS.TACTICAL_SOUND] != null) settings.tacticalSound = stored[KEYS.TACTICAL_SOUND] === 'true';
     if (stored[KEYS.GRID_CROSSING] != null) settings.gridCrossing = stored[KEYS.GRID_CROSSING] !== 'false';
 
     let parsed;
@@ -148,7 +151,7 @@ export async function loadSettings() {
 
     // A user choice made during this read wins over the historical migration.
     if (!stored[KEYS.DISPLAY_PREFERENCES] && stored[KEYS.THEME] && revisionAtLoad === displayWriteRevision) {
-      saveDisplayPreferences(displayPreferences);
+      saveDisplayPreferences(displayPreferences).catch(() => {});
     }
     return settings;
   } catch (err) {
@@ -156,201 +159,54 @@ export async function loadSettings() {
   }
 }
 
-/**
- * Save declination with error swallowing.
- */
-export async function saveDeclination(value) {
-  try {
-    if (!AsyncStorage || !AsyncStorage.setItem) return;
-    const stringValue = String(value ?? '0');
-    await withTimeout(
-      AsyncStorage.setItem(KEYS.DECLINATION, stringValue),
-      5000,
-      'Save timeout'
-    );
-  } catch (err) {
-    // Silent failure — user data stays in memory for this session
-  }
+// Settings use one native queue per key, with failures reported to the settings UI.
+const settingQueues = new Map();
+function saveSetting(key, value) {
+  const native = (settingQueues.get(key) || Promise.resolve()).then(async () => {
+    if (!AsyncStorage?.setItem) throw new Error('Local storage unavailable');
+    await AsyncStorage.setItem(key, String(value));
+  });
+  settingQueues.set(key, native.catch(() => {}));
+  return withTimeout(native, 5000, 'Settings save timeout');
+}
+export const saveDeclination = value => saveSetting(KEYS.DECLINATION, value ?? 0);
+export const savePaceCount = value => saveSetting(KEYS.PACE_COUNT, value ?? 62);
+export const saveTheme = value => saveSetting(KEYS.THEME, value ?? 'standard');
+export const saveCoordFormat = value => saveSetting(KEYS.COORD_FORMAT, value ?? 'mgrs');
+export const saveShakeToSpeak = value => saveSetting(KEYS.SHAKE_TO_SPEAK, Boolean(value));
+export const saveTacticalSound = value => saveSetting(KEYS.TACTICAL_SOUND, Boolean(value));
+export const saveGridCrossing = value => saveSetting(KEYS.GRID_CROSSING, Boolean(value));
+export const saveGridScale = value => saveSetting(KEYS.GRID_SCALE, value ?? 1);
+
+// Field data is local and durable. Read errors are distinct from empty storage.
+export function loadWaypointLists() {
+  return readLocalRecord(KEYS.WAYPOINT_LISTS, normalizeWaypointLists, () => []);
+}
+export function saveWaypointLists(lists) {
+  return writeLocalRecord(KEYS.WAYPOINT_LISTS, lists, normalizeWaypointLists, () => []);
 }
 
-/**
- * Save pace count with error swallowing.
- */
-export async function savePaceCount(value) {
-  try {
-    if (!AsyncStorage || !AsyncStorage.setItem) return;
-    const stringValue = String(value ?? '62');
-    await withTimeout(
-      AsyncStorage.setItem(KEYS.PACE_COUNT, stringValue),
-      5000,
-      'Save timeout'
-    );
-  } catch (err) {
-    // Silent failure — user data stays in memory for this session
-  }
-}
-
-/**
- * Save theme with error swallowing.
- */
-export async function saveTheme(value) {
-  try {
-    if (!AsyncStorage || !AsyncStorage.setItem) return;
-    const stringValue = String(value ?? 'red');
-    await withTimeout(
-      AsyncStorage.setItem(KEYS.THEME, stringValue),
-      5000,
-      'Save timeout'
-    );
-  } catch (err) {
-    // Silent failure — user data stays in memory for this session
-  }
-}
-
-/**
- * Save coordinate format with error swallowing.
- */
-export async function saveCoordFormat(value) {
-  try {
-    if (!AsyncStorage || !AsyncStorage.setItem) return;
-    const stringValue = String(value ?? 'mgrs');
-    await withTimeout(
-      AsyncStorage.setItem(KEYS.COORD_FORMAT, stringValue),
-      5000,
-      'Save timeout'
-    );
-  } catch (err) {
-    // Silent failure — user data stays in memory for this session
-  }
-}
-
-/**
- * Save shake-to-speak toggle with error swallowing.
- */
-export async function saveShakeToSpeak(value) {
-  try {
-    if (!AsyncStorage || !AsyncStorage.setItem) return;
-    await AsyncStorage.setItem(KEYS.SHAKE_TO_SPEAK, String(value));
-  } catch {}
-}
-
-/**
- * Save grid crossing alerts toggle with error swallowing.
- */
-export async function saveGridCrossing(value) {
-  try {
-    if (!AsyncStorage || !AsyncStorage.setItem) return;
-    await AsyncStorage.setItem(KEYS.GRID_CROSSING, String(value));
-  } catch {}
-}
-
-/**
- * Save grid scale multiplier with error swallowing.
- */
-export async function saveGridScale(value) {
-  try {
-    if (!AsyncStorage || !AsyncStorage.setItem) return;
-    await AsyncStorage.setItem(KEYS.GRID_SCALE, String(value ?? '1'));
-  } catch {}
-}
-
-// ─── WAYPOINT LISTS (PRO) ────────────────────────────────────────────────────
-/**
- * Load waypoint lists with corruption protection.
- * Returns empty array if AsyncStorage unavailable or JSON invalid.
- */
-export async function loadWaypointLists() {
-  try {
-    if (!AsyncStorage || !AsyncStorage.getItem) {
-      return [];
+export function normalizeAOPackages(packages) {
+  if (!Array.isArray(packages)) throw fieldDataError('INVALID_AO', 'Invalid saved areas');
+  const ids = new Set();
+  return packages.map(pkg => {
+    const r = pkg?.region;
+    if (!pkg || typeof pkg.id !== 'string' || !pkg.id || ids.has(pkg.id) || !r
+      || !Number.isFinite(r.latitude) || r.latitude < -90 || r.latitude > 90
+      || !Number.isFinite(r.longitude) || r.longitude < -180 || r.longitude > 180
+      || !Number.isFinite(r.latitudeDelta) || r.latitudeDelta <= 0 || r.latitudeDelta > 180
+      || !Number.isFinite(r.longitudeDelta) || r.longitudeDelta <= 0 || r.longitudeDelta > 360
+      || !Array.isArray(pkg.zoomLevels) || !pkg.zoomLevels.length
+      || !pkg.zoomLevels.every(z => Number.isInteger(z) && z >= 0 && z <= 19)) {
+      throw fieldDataError('INVALID_AO', 'Invalid saved area; original data preserved');
     }
-
-    const raw = await withTimeout(
-      AsyncStorage.getItem(KEYS.WAYPOINT_LISTS),
-      5000,
-      'Load timeout'
-    );
-
-    if (!raw) return [];
-
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-
-    return parsed;
-  } catch (err) {
-    // AsyncStorage unavailable, corrupted JSON, timeout, or parse error
-    return [];
-  }
+    ids.add(pkg.id);
+    return { ...pkg, region: { ...r }, zoomLevels: [...pkg.zoomLevels] };
+  });
 }
-
-/**
- * Save waypoint lists with error swallowing.
- */
-export async function saveWaypointLists(lists) {
-  try {
-    if (!AsyncStorage || !AsyncStorage.setItem) return;
-    if (!Array.isArray(lists)) return;
-
-    const json = JSON.stringify(lists);
-    await withTimeout(
-      AsyncStorage.setItem(KEYS.WAYPOINT_LISTS, json),
-      5000,
-      'Save timeout'
-    );
-  } catch (err) {
-    // Silent failure — in-memory data persists for this session
-  }
+export function loadAOPackages() {
+  return readLocalRecord(KEYS.AO_PACKAGES, normalizeAOPackages, () => []);
 }
-
-// ─── AO (Area of Operations) PACKAGES (v3.4 Mission Preflight) ──────────────
-/**
- * AO package shape:
- *   {
- *     id:            string                  // local-only id
- *     name:          string                  // user-supplied label
- *     mapStyle:      'standard'|'dark'|'topo'
- *     region:        { latitude, longitude, latitudeDelta, longitudeDelta }
- *     zoomLevels:    number[]                // e.g. [10, 12, 14, 16]
- *     tileCount:     number                  // total tile count across zooms
- *     estimatedBytes:number                  // best-effort estimate at save time
- *     lastRefreshed: ISO string | null       // null until first download
- *     createdAt:     ISO string
- *   }
- *
- * Storage is local-only, never transmitted, mirrors the privacy posture of the
- * rest of storage.js. Reads/writes go through withTimeout() so a hung
- * AsyncStorage doesn't block the Preflight panel render.
- */
-export async function loadAOPackages() {
-  try {
-    if (!AsyncStorage || !AsyncStorage.getItem) return [];
-    const raw = await withTimeout(
-      AsyncStorage.getItem(KEYS.AO_PACKAGES),
-      5000,
-      'Load timeout'
-    );
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed;
-  } catch (err) {
-    // AsyncStorage unavailable, corrupted JSON, timeout, or parse error
-    return [];
-  }
+export function saveAOPackages(packages) {
+  return writeLocalRecord(KEYS.AO_PACKAGES, packages, normalizeAOPackages, () => []);
 }
-
-export async function saveAOPackages(packages) {
-  try {
-    if (!AsyncStorage || !AsyncStorage.setItem) return;
-    if (!Array.isArray(packages)) return;
-    const json = JSON.stringify(packages);
-    await withTimeout(
-      AsyncStorage.setItem(KEYS.AO_PACKAGES, json),
-      5000,
-      'Save timeout'
-    );
-  } catch (err) {
-    // Silent failure — UI keeps the in-memory list for this session
-  }
-}
-

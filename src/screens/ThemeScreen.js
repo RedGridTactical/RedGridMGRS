@@ -1,5 +1,5 @@
 /**
- * ThemeScreen — Pro settings. Display themes + Pro feature toggles.
+ * ThemeScreen — display and interaction settings. Display themes + Pro feature toggles.
  * Standard and Tactical display modes are also available in the global switch.
  */
 import React from 'react';
@@ -11,16 +11,20 @@ import { tapLight } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
 import { useExternalGPS, ConnectionState } from '../hooks/useExternalGPS';
 
-export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing, gridScale = 1.0, setGridScale }) {
+export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing, gridScale = 1.0, setGridScale, tacticalSound, setTacticalSound, settingsSaveError, onRetrySettingsSave }) {
   const colors = useColors();
   const { t } = useTranslation();
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <Text style={[styles.title, { color: colors.text }]}>{t('theme.displayThemes')}</Text>
-        <Text style={[styles.sub, { color: colors.text3 }]}>{t('theme.chooseScheme')}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('workflow.settings.title')}</Text>
+        <Text style={[styles.sub, { color: colors.text3 }]}>{t('workflow.settings.intro')}</Text>
 
+        {settingsSaveError && <View style={[styles.card, { borderColor: colors.border }]}>
+          <Text style={[styles.themeSub, { color: colors.text, flex: 1 }]} accessibilityRole="alert">{t('workflow.settings.saveFailed')}</Text>
+          <TouchableOpacity onPress={onRetrySettingsSave} style={styles.retry} accessibilityRole="button"><Text style={{ ...TYPE.label, color: colors.text }}>{t('workflow.settings.retry')}</Text></TouchableOpacity>
+        </View>}
         {Object.values(THEMES).map(theme => {
           const isActive  = currentTheme === theme.id;
           const isLocked  = theme.pro && !isPro;
@@ -29,21 +33,24 @@ export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate,
               key={theme.id}
               style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }, isActive && { borderColor: colors.text }, isLocked && styles.cardLocked]}
               onPress={() => {
-                if (isLocked) { onShowProGate('Display Themes'); return; }
+                if (isLocked) { onShowProGate(t('theme.displayThemes'), 'display'); return; }
                 onSelectTheme(theme.id);
               }}
               activeOpacity={0.8}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: isActive, selected: isActive }}
+              accessibilityLabel={`${t(`workflow.settings.${theme.id}Name`)}${isLocked ? ', Pro' : ''}`}
             >
               <View style={[styles.swatch, { backgroundColor: currentTheme === 'red' ? colors.bg : theme.colors.bg, borderColor: currentTheme === 'red' ? colors.text : theme.colors.text }]}>
                 <Text style={[styles.swatchText, { color: currentTheme === 'red' ? colors.text : theme.colors.text }]}>MGRS</Text>
               </View>
               <View style={styles.info}>
                 <View style={styles.labelRow}>
-                  <Text style={[styles.label, { color: colors.text }]}>{theme.label}</Text>
+                  <Text style={[styles.label, { color: colors.text }]}>{t(`workflow.settings.${theme.id}Name`)}</Text>
                   {isLocked && <Text style={[styles.proBadge, { color: colors.bg, backgroundColor: colors.text }]}>PRO</Text>}
                   {isActive  && <Text style={[styles.activeBadge, { color: colors.text, borderColor: colors.text }]}>{t('theme.active')}</Text>}
                 </View>
-                <Text style={[styles.themeSub, { color: colors.text3 }]}>{theme.sub}</Text>
+                <Text style={[styles.themeSub, { color: colors.text3 }]}>{t(`workflow.settings.${theme.id}Sub`)}</Text>
               </View>
             </TouchableOpacity>
           );
@@ -51,21 +58,24 @@ export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate,
 
         {/* ─── PRO FEATURE TOGGLES ──────────────────────────────────── */}
         <View style={[styles.divider, { backgroundColor: colors.border2 }]} />
-        <Text style={[styles.title, { color: colors.text }]}>{t('theme.proFeatures')}</Text>
-        <Text style={[styles.sub, { color: colors.text3 }]}>{t('theme.configureHaptic')}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('workflow.settings.interactions')}</Text>
+        <Text style={[styles.sub, { color: colors.text3 }]}>{t('workflow.settings.interactionsSub')}</Text>
 
         <ToggleRow
           label={t('theme.shakeToSpeak')}
-          sub={t('theme.shakeToSpeakSub')}
-          value={shakeToSpeak}
-          onToggle={() => { tapLight(); setShakeToSpeak(!shakeToSpeak); }}
+          sub={t('workflow.settings.shakeSub')}
+          value={isPro && shakeToSpeak}
+          onToggle={() => { tapLight(); isPro ? setShakeToSpeak(!shakeToSpeak) : onShowProGate(t('theme.shakeToSpeak'), 'tools'); }}
         />
         <ToggleRow
           label={t('theme.gridCrossingAlerts')}
-          sub={t('theme.gridCrossingAlertsSub')}
-          value={gridCrossing}
-          onToggle={() => { tapLight(); setGridCrossing(!gridCrossing); }}
+          sub={t('workflow.settings.crossingSub')}
+          value={isPro && gridCrossing}
+          onToggle={() => { tapLight(); isPro ? setGridCrossing(!gridCrossing) : onShowProGate(t('theme.gridCrossingAlerts'), 'tools'); }}
         />
+
+        <ToggleRow label={t('workflow.settings.tacticalSound')} sub={t('workflow.settings.tacticalSoundSub')}
+          value={isPro && tacticalSound} onToggle={() => isPro ? setTacticalSound(!tacticalSound) : onShowProGate(t('workflow.settings.tacticalSound'), 'tools')} />
 
         {/* ─── GRID DISPLAY SCALE ─────────────────────────────────── */}
         <View style={[styles.divider, { backgroundColor: colors.border2 }]} />
@@ -79,7 +89,7 @@ export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate,
               onPress={() => { tapLight(); if (setGridScale) setGridScale(Math.max(0.7, gridScale - 0.1)); }}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel="Decrease grid scale"
+              accessibilityLabel={t('workflow.settings.decreaseScale')}
             >
               <Text style={[styles.scaleBtnText, { color: colors.text }]}>{'\u2212'}</Text>
             </TouchableOpacity>
@@ -89,7 +99,7 @@ export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate,
               onPress={() => { tapLight(); if (setGridScale) setGridScale(Math.min(1.5, gridScale + 0.1)); }}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel="Increase grid scale"
+              accessibilityLabel={t('workflow.settings.increaseScale')}
             >
               <Text style={[styles.scaleBtnText, { color: colors.text }]}>+</Text>
             </TouchableOpacity>
@@ -97,13 +107,13 @@ export function ThemeScreen({ currentTheme, isPro, onSelectTheme, onShowProGate,
         </View>
 
         {/* ─── GPS SOURCE ───────────────────────────────────────────── */}
-        <GPSSourceSection />
+        <GPSSourceSection isPro={isPro} onShowProGate={onShowProGate} />
       </ScrollView>
     </View>
   );
 }
 
-function GPSSourceSection() {
+function GPSSourceSection({ isPro, onShowProGate }) {
   const colors = useColors();
   const { t } = useTranslation();
   const {
@@ -156,7 +166,7 @@ function GPSSourceSection() {
       ) : (
         <TouchableOpacity
           style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }]}
-          onPress={() => { tapLight(); scan(); }}
+          onPress={() => { tapLight(); isPro ? scan() : onShowProGate(t('settings.gpsSource'), 'receiver'); }}
           activeOpacity={0.8}
           disabled={isScanning || isConnecting}
         >
@@ -174,7 +184,7 @@ function GPSSourceSection() {
         <TouchableOpacity
           key={device.id}
           style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }]}
-          onPress={() => { tapLight(); connect(device.id, device.name); }}
+          onPress={() => { tapLight(); isPro ? connect(device.id, device.name) : onShowProGate(t('settings.gpsSource'), 'receiver'); }}
           activeOpacity={0.8}
         >
           <View style={[styles.gpsIndicator, { borderColor: colors.border, borderWidth: 1, backgroundColor: 'transparent' }]}>
@@ -183,7 +193,7 @@ function GPSSourceSection() {
           <View style={styles.info}>
             <Text style={[styles.label, { color: colors.text }]}>{device.name}</Text>
             <Text style={[styles.themeSub, { color: colors.text3 }]}>
-              {device.rssi != null ? `RSSI: ${device.rssi} dBm` : 'Tap to connect'}
+              {device.rssi != null ? `RSSI: ${device.rssi} dBm` : t('workflow.settings.connectReceiver')}
             </Text>
           </View>
         </TouchableOpacity>
@@ -228,7 +238,9 @@ const styles = StyleSheet.create({
   title: { ...TYPE.heading,  fontSize: 16, letterSpacing: 0.8, marginBottom: 4 },
   sub: { ...TYPE.body,  fontSize: 12, letterSpacing: 0.8, marginBottom: 20 },
   divider: { height: 1, marginVertical: 20 },
+  retry: { minHeight: 44, padding: 12, justifyContent: 'center' },
   card: {
+    minHeight: 48,
     flexDirection: 'row', alignItems: 'center', padding: 14, marginBottom: 10,
     borderWidth: 1,
   },
@@ -257,7 +269,7 @@ const styles = StyleSheet.create({
   toggleText: { ...TYPE.label,  fontSize: 12, letterSpacing: 0.8 },
   scaleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20 },
   scaleBtn: {
-    width: 40, height: 40, borderWidth: 1, borderRadius: 2,
+    width: 48, height: 48, borderWidth: 1, borderRadius: 2,
     alignItems: 'center', justifyContent: 'center',
   },
   scaleBtnText: { ...TYPE.label,  fontSize: 20, },

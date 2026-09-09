@@ -116,7 +116,8 @@ test('a failed native write does not prevent a later selection being saved', asy
   AsyncStorage.setItem.mockRejectedValueOnce(new Error('Storage busy'));
   const first = saveDisplayPreferences({ theme: 'green', tacticalMode: true });
   const second = saveDisplayPreferences({ theme: 'green', tacticalMode: false });
-  await Promise.all([first, second]);
+  await expect(first).rejects.toThrow('Storage busy');
+  await second;
   expect(AsyncStorage.setItem).toHaveBeenLastCalledWith(KEY, JSON.stringify({ theme: 'green', tacticalMode: false }));
 });
 
@@ -133,8 +134,8 @@ test('a late migration read cannot overwrite a preference selected while loading
 });
 
 test('invalid preference writes leave existing storage intact', async () => {
-  await saveDisplayPreferences({ theme: 'red', tacticalMode: true });
-  await saveDisplayPreferences({ theme: 'standard', tacticalMode: null });
+  await expect(saveDisplayPreferences({ theme: 'red', tacticalMode: true })).rejects.toThrow();
+  await expect(saveDisplayPreferences({ theme: 'standard', tacticalMode: null })).rejects.toThrow();
   expect(AsyncStorage.setItem).not.toHaveBeenCalled();
 });
 

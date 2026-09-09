@@ -89,8 +89,8 @@ export const THEMES = {
   white: {
     id: 'white',
     label: 'DAY WHITE',
-    sub: 'High visibility in sunlight',
-    pro: true,
+    sub: 'Light palette for daylight use',
+    pro: false,
     colors: {
       bg:      '#F5F5F5',
       text:    '#111111',
