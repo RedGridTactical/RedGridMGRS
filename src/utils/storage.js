@@ -32,10 +32,20 @@ const KEYS = {
   DISPLAY_PREFERENCES: 'rg_display_preferences',
   COORD_FORMAT:    'rg_coord_format',
   SHAKE_TO_SPEAK:  'rg_shake_to_speak',
+  TACTICAL_SOUND:  'rg_tactical_sound',
   GRID_CROSSING:   'rg_grid_crossing',
   GRID_SCALE:      'rg_grid_scale',
   AO_PACKAGES:     'rg_ao_packages_v1',
 };
+
+// Invalid keys can crash Android SQLite outside the JavaScript Promise catch.
+// Validate before crossing the native bridge, including future settings keys.
+function validatedStorageKeys(keys) {
+  if (!Array.isArray(keys) || keys.some(key => typeof key !== 'string' || key.length === 0)) {
+    throw new TypeError('Invalid local storage key');
+  }
+  return keys;
+}
 
 /**
  * Race a promise against a timeout. Always clears the timer once the race
@@ -121,10 +131,10 @@ export async function loadSettings() {
     await withTimeout(displayWriteQueue, 5000, 'Display load timeout');
 
     const items = await withTimeout(
-      AsyncStorage.multiGet([
+      AsyncStorage.multiGet(validatedStorageKeys([
         KEYS.DECLINATION, KEYS.PACE_COUNT, KEYS.THEME, KEYS.COORD_FORMAT,
         KEYS.SHAKE_TO_SPEAK, KEYS.TACTICAL_SOUND, KEYS.GRID_CROSSING, KEYS.GRID_SCALE, KEYS.DISPLAY_PREFERENCES,
-      ]),
+      ])),
       5000,
       'Storage timeout'
     );
@@ -164,6 +174,7 @@ const settingQueues = new Map();
 function saveSetting(key, value) {
   const native = (settingQueues.get(key) || Promise.resolve()).then(async () => {
     if (!AsyncStorage?.setItem) throw new Error('Local storage unavailable');
+    validatedStorageKeys([key]);
     await AsyncStorage.setItem(key, String(value));
   });
   settingQueues.set(key, native.catch(() => {}));

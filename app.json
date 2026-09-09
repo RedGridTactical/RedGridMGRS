@@ -14,7 +14,7 @@
     },
     "android": {
       "package": "com.redgrid.redgridtactical",
-      "versionCode": 35,
+      "versionCode": 36,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive_foreground.png",
         "backgroundColor": "#000000"
@@ -29,7 +29,7 @@
     },
     "ios": {
       "bundleIdentifier": "com.redgrid.redgridtactical",
-      "buildNumber": "80",
+      "buildNumber": "81",
       "infoPlist": {
         "CFBundleDisplayName": "Red Grid MGRS",
         "NSLocationWhenInUseUsageDescription": "Red Grid MGRS uses your location for grid coordinates and navigation. You can save waypoints on your device and choose to share or send your position over a connected radio.",

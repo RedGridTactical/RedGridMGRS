@@ -17,6 +17,11 @@ const {
   saveDeclination,
   savePaceCount,
   saveTheme,
+  saveCoordFormat,
+  saveShakeToSpeak,
+  saveTacticalSound,
+  saveGridCrossing,
+  saveGridScale,
   loadWaypointLists,
   saveWaypointLists,
 } = require('../src/utils/storage');
@@ -133,6 +138,71 @@ describe('storage.js - Persistent Storage Wrapper', () => {
       expect(result.declination).toBe(0);
       expect(result.paceCount).toBe(62);
       expect(result.theme).toBe('standard');
+    });
+  });
+
+  describe('settings native bridge contract', () => {
+    const validKey = key => typeof key === 'string' && key.length > 0;
+
+    test('passes only nonempty string keys to native multiGet on startup', async () => {
+      AsyncStorage.multiGet.mockImplementation(async keys => {
+        if (!keys.every(validKey)) throw new TypeError('Invalid native storage key');
+        return keys.map(key => [key, null]);
+      });
+      const settings = await loadSettings();
+      expect(AsyncStorage.multiGet).toHaveBeenCalledTimes(1);
+      const [keys] = AsyncStorage.multiGet.mock.calls[0];
+      expect(keys.every(validKey)).toBe(true);
+      expect(keys).toContain('rg_tactical_sound');
+      expect(new Set(keys).size).toBe(keys.length);
+      expect(settings.tacticalSound).toBe(false);
+      expect(settings.shakeToSpeak).toBe(false);
+    });
+
+    test('every settings writer uses its stable string key', async () => {
+      AsyncStorage.setItem.mockImplementation(async (key, value) => {
+        if (!validKey(key) || typeof value !== 'string') throw new TypeError('Invalid native storage arguments');
+      });
+      const cases = [
+        [saveDeclination, 0, 'rg_declination', '0'],
+        [savePaceCount, 62, 'rg_pace_count', '62'],
+        [saveTheme, 'standard', 'rg_theme', 'standard'],
+        [saveCoordFormat, 'mgrs', 'rg_coord_format', 'mgrs'],
+        [saveShakeToSpeak, false, 'rg_shake_to_speak', 'false'],
+        [saveTacticalSound, true, 'rg_tactical_sound', 'true'],
+        [saveGridCrossing, false, 'rg_grid_crossing', 'false'],
+        [saveGridScale, 1, 'rg_grid_scale', '1'],
+      ];
+      for (const [save, value, key, serialized] of cases) {
+        await save(value);
+        expect(AsyncStorage.setItem).toHaveBeenLastCalledWith(key, serialized);
+      }
+    });
+
+    test('sound and shake remain off by default and sound survives a fresh settings read', async () => {
+      const disk = new Map();
+      AsyncStorage.setItem.mockImplementation(async (key, value) => {
+        if (!validKey(key) || typeof value !== 'string') throw new TypeError('Invalid native storage arguments');
+        disk.set(key, value);
+      });
+      AsyncStorage.multiGet.mockImplementation(async keys => {
+        if (!keys.every(validKey)) throw new TypeError('Invalid native storage key');
+        return keys.map(key => [key, disk.get(key) ?? null]);
+      });
+      expect(await loadSettings()).toMatchObject({ tacticalSound: false, shakeToSpeak: false });
+      await saveTacticalSound(true);
+      expect(await loadSettings()).toMatchObject({ tacticalSound: true, shakeToSpeak: false });
+      await saveTacticalSound(false);
+      expect(await loadSettings()).toMatchObject({ tacticalSound: false, shakeToSpeak: false });
+      await saveShakeToSpeak(true);
+      expect(await loadSettings()).toMatchObject({ tacticalSound: false, shakeToSpeak: true });
+    });
+
+    test('sound save failure rejects and a subsequent retry can persist', async () => {
+      AsyncStorage.setItem.mockRejectedValueOnce(new Error('Disk unavailable')).mockResolvedValue(undefined);
+      await expect(saveTacticalSound(true)).rejects.toThrow('Disk unavailable');
+      await expect(saveTacticalSound(true)).resolves.toBeUndefined();
+      expect(AsyncStorage.setItem).toHaveBeenLastCalledWith('rg_tactical_sound', 'true');
     });
   });
 
