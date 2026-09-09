@@ -1,22 +1,23 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { useColors } from '../utils/ThemeContext';
+import { useTranslation } from '../hooks/useTranslation';
 
 /**
  * WayfinderArrow — Animated directional arrow pointing to waypoint.
- * bearing: 0-360 degrees from North
+ * bearing: 0–360 degrees clockwise from the top of the phone (relative).
  * size: diameter of the component
  */
 export const WayfinderArrow = React.memo(function WayfinderArrow({ bearing, size = 180 }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const rotateAnim = useRef(new Animated.Value(bearing)).current;
   const prevBearing = useRef(bearing);
 
   useEffect(() => {
     // Shortest-path rotation to avoid spinning the wrong way
-    let delta = bearing - prevBearing.current;
-    if (delta > 180) delta -= 360;
-    if (delta < -180) delta += 360;
+    const previous = ((prevBearing.current % 360) + 360) % 360;
+    const delta = ((bearing - previous + 540) % 360) - 180;
 
     const next = prevBearing.current + delta;
     prevBearing.current = next;
@@ -40,7 +41,7 @@ export const WayfinderArrow = React.memo(function WayfinderArrow({ bearing, size
   const headHeight = size * 0.28;
 
   return (
-    <View style={[styles.container, { width: size, height: size }]} accessible={true} accessibilityRole="image" accessibilityLabel={`Wayfinder arrow pointing ${Math.round(bearing)} degrees`}>
+    <View style={[styles.container, { width: size, height: size }]} accessible={true} accessibilityRole="image" accessibilityLabel={t('navigation.arrowRelative', { degrees: Math.round(bearing) % 360, defaultValue: 'Waypoint direction {{degrees}} degrees clockwise from the top of the phone.' })}>
       {/* Outer ring */}
       <View
         style={[
@@ -80,7 +81,7 @@ export const WayfinderArrow = React.memo(function WayfinderArrow({ bearing, size
           { transform: [{ rotate }] },
         ]}
       >
-        {/* Arrowhead (pointing up = North = 0 deg) */}
+        {/* Arrowhead (pointing up = straight ahead relative to the phone) */}
         <View
           style={[
             styles.arrowHead,

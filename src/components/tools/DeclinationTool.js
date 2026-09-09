@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { applyDeclination, removeDeclination } from '../../utils/tactical';
+import { applyDeclination, removeDeclination, formatBearing, isBearing } from '../../utils/tactical';
 import { gridConvergence, gmAngle, magneticToGrid, gridToMagnetic, pointScaleFactor } from '../../utils/geodesy';
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
@@ -24,14 +24,19 @@ export function DeclinationTool({ declination, setDeclination, location }) {
   const { t } = useTranslation();
   const [decInput, setDecInput]   = useState(String(declination));
   const [bearing, setBearing]     = useState('');
+  const [bearingHasFix, setBearingHasFix] = useState(null);
   const [mode, setMode]           = useState('mag2grid'); // mag2grid | grid2mag
 
   const saveDec = () => {
-    const v = parseFloat(decInput);
-    if (!isNaN(v)) setDeclination(v);
+    const v = decInput.trim() ? Number(decInput) : NaN;
+    if (Number.isFinite(v) && Math.abs(v) <= 180) setDeclination(v);
   };
 
-  const hasFix = !!location && Number.isFinite(location.lat) && Number.isFinite(location.lon);
+  const hasFix = !!location && Number.isFinite(location.lat) && Number.isFinite(location.lon)
+    && location.lat >= -80 && location.lat <= 84 && location.lon >= -180 && location.lon <= 180;
+  // Losing/regaining grid convergence changes the input contract. Never reuse
+  // a typed grid bearing as true (or vice versa) without another user entry.
+  useEffect(() => { setBearing(''); }, [hasFix]);
   const convergence = hasFix ? gridConvergence(location.lat, location.lon) : null;
   const gm = hasFix ? gmAngle(location.lat, location.lon, declination) : null;
   // Grid vs ground: a UTM grid distance is not the distance you walk. k < 1
@@ -41,8 +46,8 @@ export function DeclinationTool({ declination, setDeclination, location }) {
   const scale = hasFix ? pointScaleFactor(location.lat, location.lon) : null;
   const groundPerKm = Number.isFinite(scale) ? (1000 / scale) - 1000 : null;
 
-  const b = parseFloat(bearing);
-  const valid = !isNaN(b) && b >= 0 && b <= 360;
+  const b = bearing.trim() ? Number(bearing) : NaN;
+  const valid = bearingHasFix === hasFix && isBearing(b);
 
   let converted = null;
   if (valid) {
@@ -100,17 +105,17 @@ export function DeclinationTool({ declination, setDeclination, location }) {
 
       <View style={styles.modeRow}>
         <TouchableOpacity style={[styles.modeBtn, { borderColor: colors.border2 }, mode==='mag2grid' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setMode('mag2grid')}>
-          <Text style={[styles.modeBtnText, { color: colors.text3 }, mode==='mag2grid' && { color: colors.text }]}>{t('toolLabels.magToGrid')}</Text>
+          <Text style={[styles.modeBtnText, { color: colors.text3 }, mode==='mag2grid' && { color: colors.text }]}>{hasFix ? t('toolLabels.magToGrid') : t('navigation.magToTrue', { defaultValue: 'MAG → TRUE' })}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.modeBtn, { borderColor: colors.border2 }, mode==='grid2mag' && { borderColor: colors.text2, backgroundColor: colors.text5 }]} onPress={() => setMode('grid2mag')}>
-          <Text style={[styles.modeBtnText, { color: colors.text3 }, mode==='grid2mag' && { color: colors.text }]}>{t('toolLabels.gridToMag')}</Text>
+          <Text style={[styles.modeBtnText, { color: colors.text3 }, mode==='grid2mag' && { color: colors.text }]}>{hasFix ? t('toolLabels.gridToMag') : t('navigation.trueToMag', { defaultValue: 'TRUE → MAG' })}</Text>
         </TouchableOpacity>
       </View>
 
       <ToolInput
-        label={mode === 'mag2grid' ? t('toolLabels.magneticBearingInput') : t('toolLabels.gridBearingInput')}
-        value={bearing}
-        onChangeText={setBearing}
+        label={mode === 'mag2grid' ? t('toolLabels.magneticBearingInput') : hasFix ? t('toolLabels.gridBearingInput') : t('navigation.trueBearingInput', { defaultValue: 'TRUE BEARING INPUT (°)' })}
+        value={bearingHasFix === hasFix ? bearing : ''}
+        onChangeText={value => { setBearing(value); setBearingHasFix(hasFix); }}
         placeholder="0 – 360"
         keyboardType="numeric"
       />
@@ -122,7 +127,7 @@ export function DeclinationTool({ declination, setDeclination, location }) {
               ? (hasFix ? t('toolLabels.gridBearingResult') : t('toolLabels.trueBearingResult'))
               : t('toolLabels.magneticBearingResult')
           }
-          value={`${Math.round(converted)}°`}
+          value={formatBearing(converted, mode === 'mag2grid' ? (hasFix ? 'grid' : 'true') : 'magnetic')}
           primary
         />
       )}

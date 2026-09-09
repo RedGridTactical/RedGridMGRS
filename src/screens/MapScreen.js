@@ -21,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '../utils/ThemeContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
+import { formatBearing } from '../utils/tactical';
 import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptics';
 import { loadWaypointLists, saveWaypointLists } from '../utils/storage';
 import { MGRSGridOverlay } from '../components/MGRSGridOverlay';
@@ -202,7 +203,7 @@ export function MapScreen({
     longitudeDelta: 0.05,
   }), [location?.lat, location?.lon]);
 
-  const coverageZooms = useMemo(() => offlineMetadata ? Array.from({ length: offlineMetadata.maxZoom - offlineMetadata.minZoom + 1 }, (_, index) => offlineMetadata.minZoom + index) : [10, 12, 14, 16], [offlineMetadata]);
+  const coverageZooms = useMemo(() => offlineMetadata?.zoomLevels || [], [offlineMetadata]);
 
   // Check cached tile count when region changes (debounced 800ms)
   useEffect(() => {
@@ -637,9 +638,9 @@ export function MapScreen({
           let desc = mgrs;
           if (location) {
             try {
-              const brg = Math.round(calculateBearing(location.lat, location.lon, node.lat, node.lon));
+              const brg = formatBearing(calculateBearing(location.lat, location.lon, node.lat, node.lon), 'true');
               const dst = formatDistance(calculateDistance(location.lat, location.lon, node.lat, node.lon));
-              desc = `${mgrs}\nBRG ${brg}° DST ${dst}`;
+              desc = `${mgrs}\nBRG ${brg} DST ${dst}`;
             } catch {}
           }
           if (node.timestamp) desc += `\n${timeSince(node.timestamp)}`;
@@ -707,7 +708,7 @@ export function MapScreen({
           </Text>
           {location && (
             <Text style={[styles.markerCardBrg, { color: colors.text3 }]} numberOfLines={1}>
-              BRG {Math.round(calculateBearing(location.lat, location.lon, selectedMarker.lat, selectedMarker.lon))}°
+              BRG {formatBearing(calculateBearing(location.lat, location.lon, selectedMarker.lat, selectedMarker.lon), 'true')}
               {'  '}DST {formatDistance(calculateDistance(location.lat, location.lon, selectedMarker.lat, selectedMarker.lon))}
             </Text>
           )}
@@ -1035,6 +1036,7 @@ export function MapScreen({
         mapStyle={mapStyle}
         isPro={isPro}
         onShowProGate={onShowProGate}
+        onImportMap={() => { setPreflightVisible(false); handleImportMap(); }}
       />
     </View>
   );

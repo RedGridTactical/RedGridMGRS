@@ -3,7 +3,35 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
-  preflight: { footnote: "Kontrole są wykonywane na tym urządzeniu. Pakiety AO i zaimportowane mapy pozostają zapisane lokalnie. Dodawaj mapy przez import pliku; pobieranie obszarów jest niedostępne." },
+    "offlinePreflight": {
+    "checking": "Sprawdzanie zaimportowanej mapy…",
+    "noMap": "Brak zaimportowanej mapy. Zaimportuj dozwolony plik MBTiles w MAPIE.",
+    "uncheckable": "Nie udało się sprawdzić pokrycia. Zmniejsz widoczny obszar lub poczekaj na koniec importu.",
+    "zoomInventory": "Zaimportowane poziomy: {{zooms}}",
+    "importedZooms": "Zaimportowane poziomy powiększenia",
+    "viewportScope": "Sprawdza widoczny obszar przy każdym zaimportowanym powiększeniu, nie całą trasę. Brakujące kafle zostawiają luki; granice nie potwierdzają pokrycia.",
+    "bounds": "Granice W, S, E, N: {{bounds}}",
+    "savedAreaOnly": "Tylko zapisany obszar odniesienia. Sprawdź z obecną zaimportowaną mapą.",
+    "checkArea": "SPRAWDŹ"
+  },
+    "routeCard": {"footer":"Red Grid MGRS · plan trasy po liniach prostych"},
+    "navigation": {
+    "trueHeadingUnavailable": "Kierunek względem północy geograficznej niedostępny. Użyj liczbowego azymutu geograficznego z mapą lub kompasem.",
+    "referenceLegend": "T = północ geograficzna · M = magnetyczna · G = siatki",
+    "arrowRelative": "Kierunek punktu: {{degrees}} stopni zgodnie z ruchem wskazówek zegara od górnej krawędzi telefonu.",
+    "resectionInputs": "Azymuty prowadzą od Twojej pozycji do każdego punktu orientacyjnego. Wybierz północ geograficzną (T) lub magnetyczną (M).",
+    "resectionLimits": "Tylko oszacowanie lokalne: każdy punkt musi być w odległości do 100 km; różnica azymutów 5°–175°. Błędy kompasu i mapy wpływają na wynik.",
+    "resectionDeclination": "Dla azymutów magnetycznych podaj znaną deklinację lokalną (wschód +, zachód −). Wpisz 0 tylko po potwierdzeniu.",
+    "resectionInvalid": "Brak wiarygodnego rozwiązania lokalnego. Sprawdź współrzędne, kierunek azymutów, odniesienie północy i kąt między nimi.",
+    "magToTrue": "MAG → GEO",
+    "trueToMag": "GEO → MAG",
+    "trueBearingInput": "AZYMUT GEOGRAFICZNY (°)"
+  },
+
+  preflight: {
+    "section": {"aos":"ZAPISANE OBSZARY"},
+    "aos": {"proFeatureName":"Dodatkowe zapisane obszary"},
+ footnote: "Kontrole lokalne. Obszary zapisują granice, nie pakiety map. Zaimportuj dozwolony plik w MAPIE; pobieranie obszarów jest niedostępne." },
   nightDisplay: {
     mapBusy: "Trwa import mapy. Poczekaj lub anuluj import przed usunięciem mapy.",
     importCancelled: "Import anulowany. Zapisana mapa pozostaje bez zmian.",
@@ -57,7 +85,7 @@ export default {
     "soloHint": "Nawigacja samodzielna korzysta z GPS i urządzenia. Radio, dostęp do aparatu i połączenie z internetem są opcjonalne.",
     "teamHint": "Kontrola gotowości zespołu obejmuje także połączenie z radiem Meshtastic. Osobno sprawdź klucz zespołu i ustawienia radia.",
     "radioOptional": "Opcjonalne przy nawigacji samodzielnej",
-    "mapsNotChecked": "Pokrycie mapowe nie jest tu sprawdzane. Sprawdź planowany obszar w zakładce MAPA i zabierz niezależną mapę oraz kompas.",
+    "mapsNotChecked": "Pokrycie mapy nie jest tu sprawdzane. Otwórz MAPĘ i sprawdź planowany obszar przed wyjściem.",
     "reviewChecksTitle": "PRZEJRZYJ WYNIKI KONTROLI",
     "reviewChecksBody": "Niektóre kontrole są niedostępne lub wymagają uwagi. Oceń warunki przed kontynuowaniem; ta lista nie potwierdza bezpieczeństwa trasy.",
     "continue": "KONTYNUUJ NAWIGACJĘ",
@@ -95,10 +123,10 @@ export default {
     continue: "KONTYNUUJ",
     startTrial: "ROZPOCZNIJ 7-DNIOWY BEZPŁATNY OKRES PRÓBNY",
     current: {
-      f1: { title: "KLUCZ ZESPOŁU", body: "Ruch zespołu przez Meshtastic jest teraz zabezpieczony end-to-end. Utwórz klucz zespołu, przekaż kod parowania i cały zespół pracuje na tej samej sieci. Pro." },
-      f2: { title: "WSPÓŁCZYNNIK SKALI", body: "Narzędzie deklinacji pokazuje teraz współczynnik skali w Twoim położeniu, więc wiesz, ile terenu naprawdę odpowiada 1000 m zmierzonym na siatce." },
-      f3: { title: "DOKŁADNIEJSZE ODLEGŁOŚCI", body: "Nawigacja zliczeniowa i odległości z uwzględnieniem wysokości liczone są teraz elipsoidalnie wg WGS84, więc długie odcinki pozostają dokładne." },
-      f4: { title: "POPRAWKI I USPRAWNIENIA", body: "Sygnalizacja ratunkowa jest opisana zgodnie z prawdą: pełnoekranowy stroboskop SOS wraz z tablicą sygnałów ziemia-powietrze. Do tego poprawki niezawodności zakupów." },
+      f1: { title: "ODNIESIENIA NAWIGACYJNE", body: "Poprawione obliczenia wcięcia wstecz i czytelniejsze azymuty geograficzne, magnetyczne oraz siatki." },
+      f2: { title: "ŚWIEŻE DANE POZYCJI", body: "Wiek pozycji i przełączenie odbiornika są widoczne. Nieaktualne pozycje nie kierują już nawigacją." },
+      f3: { title: "GOTOWOŚĆ OFFLINE", body: "Kontrola przed wyjściem sprawdza pokrycie i poziomy powiększenia importowanych map oraz wyjaśnia import." },
+      f4: { title: "ODZYSKIWANIE PRO", body: "Odporniejsze przywracanie zakupów i sprawdzanie dostępu, gdy sklep jest niedostępny." },
     },
   },
   tabs: {
@@ -125,14 +153,14 @@ export default {
     upgrade: "ULEPSZ",
     dismiss: "ODRZUĆ",
     readyForField: "GOTOWY DO DZIAŁAŃ W TERENIE?",
-    download: "POBIERZ",
+
     later: "PÓŹNIEJ",
     routeHintEmpty: "Dotknij punktów, aby dodać",
     routeHintOne: "1 punkt trasy • potrzeba 2+",
     waypointNamePlaceholder: "Nazwa punktu trasy",
     newListNote: "Zostanie utworzona nowa lista \"MAP\"",
-    firstVisitBody: "Pobierz kafelki dla swojego obszaru z Red Grid Pro. Nigdy nie daj się zaskoczyć pustą mapą w terenie.",
-    firstVisitModalBody: "Pobierz teraz kafelki map offline dla swojego bieżącego obszaru. Będziesz mieć mapy nawet wtedy, gdy stracisz zasięg sieci komórkowej.",
+
+
     center: 'CENTRUM',
     addWaypoint: 'DODAJ WAYPOINT',
     waypointAdded: 'WAYPOINT DODANY',
@@ -142,20 +170,28 @@ export default {
     estimatedTime: 'SZACOWANY CZAS',
     optimizeRoute: 'OPTYMALIZUJ TRASĘ',
     legs: 'ETAPY',
-    downloadTiles: 'POBIERZ KAFLE',
-    downloading: 'POBIERANIE',
+
+
     tilesReady: 'KAFLE W PAMIĘCI',
     tilesCached: '{count} KAFLI',
-    downloadComplete: 'Pobieranie zakończone',
-    downloadFailed: 'Pobieranie nie powiodło się',
+
+
     clearCache: 'WYCZYŚĆ PAMIĘĆ',
     cacheCleared: 'Pamięć kafli wyczyszczona',
-    confirmDownload: 'Pobrać kafle mapy dla tego obszaru? Poziomy zoomu 10-16 zostaną zapisane do użytku offline.',
+
     confirmClear: 'Wyczyścić wszystkie zapisane kafle mapy?',
     offline: 'OFFLINE',
     online: 'ONLINE',
   },
   gps: {
+    "staleFix": "NIEAKTUALNA POZYCJA",
+    "sourcePhone": "GPS TELEFONU",
+    "sourceExternal": "GPS ZEWNĘTRZNY",
+    "observedAge": "Zmierzono {{seconds}} s temu",
+    "receivedAge": "Odebrano {{seconds}} s temu",
+    "accuracyUnknown": "Dokładność nieznana",
+    "phoneFallback": "Pozycja zewnętrzna niedostępna · używany GPS telefonu",
+
     acquiring: 'POZYSKIWANIE',
     gpsFix: 'GPS FIX',
     noSignal: 'BRAK SYGNAŁU',
@@ -205,9 +241,11 @@ export default {
     retry: 'PONÓW',
   },
   tools: {
+    "photoOnDevice": "ZAPISANO W BIBLIOTECE ZDJĘĆ · OBOWIĄZUJĄ USTAWIENIA KOPII URZĄDZENIA",
+
     title: 'NARZĘDZIA',
     tapToExpand: 'STUKNIJ ABY ROZWINĄĆ',
-    footer: 'WSZYSTKIE OBLICZENIA LOKALNIE · BEZ SIECI · BEZ ZAPISU',
+    footer: "OBLICZENIA NA URZĄDZENIU",
     barometer: 'BAROMETR',
     barometerSub: 'Trend ciśnienia i ostrzeżenie o burzy',
     signal: 'SYGNAŁ RATUNKOWY',
@@ -421,9 +459,12 @@ export default {
     dms: 'STOP MIN SEK',
     dmsSub: 'Stopnie, minuty, sekundy, standard lotniczy i morski',
     fixphrase: 'FIXPHRASE',
-    fixphraseSub: '4-słowowa fraza lokalizacji, ~11m dokładność, niezależna od kolejności',
+    fixphraseSub: "Czterowyrazowe odniesienie do współrzędnych; nie poprawia dokładności GPS",
   },
   support: {
+    "faqSourcePaid": "Dlaczego udostępniać kod i oferować Pro?",
+    "faqSourcePaidA": "Kod można przeglądać zgodnie z licencją repozytorium, która zawiera ograniczenia użycia. Aplikacja ze sklepu ułatwia instalację i aktualizacje; Pro wspiera utrzymanie i dodaje zaawansowane funkcje nawigacyjne. Warunki znajdziesz w licencji połączonego repozytorium.",
+
     giftFreeTrial: "PODARUJ BEZPŁATNY OKRES PRÓBNY",
     title: 'POMOC I WSPARCIE',
     close: 'ZAMKNIJ',
@@ -436,21 +477,21 @@ export default {
     faq: 'FAQ',
     privacyLegal: 'PRYWATNOŚĆ I PRAWNE',
     privacyPolicy: 'Polityka prywatności',
-    privacySub: 'Zero zbierania danych. Zweryfikowane.',
+    privacySub: "Pamięć lokalna i opcjonalne usługi zewnętrzne",
     license: 'Licencja MIT + Commons Clause',
     copyright: '© 2026 Red Grid Tactical',
     faqCellService: 'Czy działa bez sieci komórkowej?',
-    faqCellServiceA: 'Tak. Aplikacja używa odbiornika GPS twojego telefonu, który komunikuje się bezpośrednio z satelitami. Nie wymaga wieży komórkowej, Wi-Fi ani internetu. Działa w trybie samolotowym.',
+    faqCellServiceA: "Współrzędne i obliczenia lokalne działają bez sieci komórkowej, gdy dostępna jest pozycja GPS. Mapy offline trzeba wcześniej zaimportować. Mapy online i sklep wymagają połączenia.",
     faqRestore: 'Jak przywrócić mój zakup Pro?',
-    faqRestoreA: 'Zakupy Pro są powiązane z twoim Apple ID. Jeśli przeinstalujesz lub zmienisz urządzenie, aplikacja automatycznie wykryje twój zakup. Jeśli nie, przejdź do zakładki MOTYW i poszukaj opcji Przywróć.',
+    faqRestoreA: "Użyj poniżej Przywróć zakup na tym samym koncie Apple lub Google, z którego kupiono Pro. Weryfikacja może wymagać internetu.",
     faqData: 'Jakie dane zbiera ta aplikacja?',
-    faqDataA: 'Żadnych. Zero analityki, zero śledzenia, zero raportów awarii. Współrzędne GPS istnieją tylko w pamięci i są usuwane gdy zamykasz aplikację.',
+    faqDataA: "Punkty, trasy, ustawienia i liczniki użycia pozostają na tym urządzeniu; nie są wysyłane jako analityka aplikacji. Mapy online i sklepy korzystają z usług zewnętrznych. Eksport, zapis zdjęć i udostępnianie radiowe odbywają się na Twoje żądanie.",
     faqAccuracy: 'Jak dokładna jest siatka MGRS?',
-    faqAccuracyA: 'Red Grid używa algorytmu MGRS DMA (Defense Mapping Agency) z TM 8358.1 z obliczeniami namiaru/odległości Vincenty. Dokładność zależy od chipu GPS twojego telefonu i geometrii satelitów.',
+    faqAccuracyA: "Cyfry siatki określają rozdzielczość współrzędnych, nie zmierzoną dokładność. Zależy ona od odbiornika, widoczności nieba i wieku pozycji. Sprawdzaj niepewność i używaj niezależnych środków nawigacji.",
     faqWhatIsMgrs: 'Czym jest MGRS?',
     faqWhatIsMgrsA: 'Military Grid Reference System (Wojskowy System Odniesień Siatki). Standard współrzędnych geograficznych używany przez wojska NATO. Jest oparty na UTM, ale dodaje oznaczenie strefy siatki i identyfikację kwadratu 100km dla jednoznacznego raportowania pozycji.',
-    faqDagr: 'Czy zastępuje mojego DAGR?',
-    faqDagrA: 'Do treningu, STX, marszów z plecakiem i dozwolonych środowisk GPS: tak. Moduł SAASM DAGR liczy się w środowiskach spornych, ale w większości zastosowań Red Grid oferuje te same podstawowe możliwości nawigacji lądowej.',
+    faqDagr: "Czy aplikacja zastępuje specjalistyczny sprzęt nawigacyjny?",
+    faqDagrA: "Red Grid wspiera nawigację terenową przez telefon. Nie ma certyfikacji zastępującej specjalistyczny lub wojskowy sprzęt nawigacyjny. Zabierz odpowiednie niezależne środki nawigacji.",
   },
   waypoints: {
     title: 'LISTY WAYPOINTÓW',
@@ -494,6 +535,12 @@ export default {
     importRequires: 'Do importu wymagane są expo-document-picker i expo-file-system.',
   },
   proGate: {
+    "offlineMapsSub": "Przed utratą zasięgu zaimportuj dozwoloną mapę rastrową MBTiles",
+    "waypointsRoutes": "Zapisane punkty i trasy",
+    "waypointsRoutesSub": "Do 10 list po 20 punktów; import i eksport punktów GPX/KML",
+    "reportsThemesSub": "Sześć formularzy meldunków i dodatkowe palety",
+    "pricesUnavailable": "Połącz się, aby pobrać aktualne ceny i opcje zakupu ze sklepu.",
+
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} to funkcja Pro',
@@ -514,11 +561,11 @@ export default {
     savedWaypoints: 'Zapisane listy waypointów',
     savedWaypointsSub: 'Zapisuj nazwane trasy patroli, OBJ-y i punkty zborne',
     tacticalReports: 'Raporty taktyczne',
-    tacticalReportsSub: 'ICS 201, CASEVAC, ANGUS/CFF i niestandardowe szablony',
+    tacticalReportsSub: "Formularze ICS 201, CASEVAC i ANGUS/CFF",
     coordFormats: 'Formaty współrzędnych',
     coordFormatsSub: 'UTM, stopnie dziesiętne, DMS, na głównym wyświetlaczu',
     displayThemes: 'Motywy wyświetlania',
-    displayThemesSub: 'NVG zielony, dzień biały, blue-force, chroń widzenie nocne',
+    displayThemesSub: "Zielona, biała i niebieska paleta; bez certyfikacji NVG",
   },
   mesh: {
     pairing: {
@@ -585,6 +632,9 @@ export default {
     couldNotParse: 'NIE MOŻNA PRZETWORZYĆ WSPÓŁRZĘDNEJ MGRS',
   },
   iap: {
+    "restoreUnavailableTitle": "Przywracanie niedostępne",
+    "restoreUnavailableBody": "Sklep nie mógł zweryfikować wszystkich zakupów. Dotychczasowy dostęp zachowano. Spróbuj ponownie.",
+
     unavailableTitle: 'Niedostępne',
     unavailableBody: 'Zakupy w aplikacji nie są dostępne w tej wersji.',
     storeUnavailableTitle: 'Sklep niedostępny',
@@ -606,6 +656,13 @@ export default {
     purchasedBody: 'Wszystkie funkcje Red Grid Pro są teraz aktywne.',
   },
   trial: {
+    "storageFailedTitle": "Okres próbny niedostępny",
+    "storageFailedBody": "Nie udało się zapisać danych okresu próbnego na tym urządzeniu. Spróbuj ponownie.",
+    "shareAction": "UDOSTĘPNIJ PRÓBĘ",
+    "shareFailedTitle": "Nie udało się otworzyć udostępniania",
+    "shareFailedBody": "Spróbuj ponownie. Możesz ponownie otworzyć udostępnianie i wysłać ten sam zapisany link prezentowy.",
+    "banner": "Podarowany okres próbny: pozostało {{days}} dni",
+
     welcomeAboardTitle: "WITAJ NA POKŁADZIE",
     welcomeAboardBody: "Znajomy zaprosił Cię do Red Grid Tactical. Poznaj darmowe funkcje, a gdy zechcesz, przejdź na Red Grid Pro z ekranu głównego.",
     receivedTitle: 'PRO ODBLOKOWANE',
@@ -613,18 +670,18 @@ export default {
     alreadyUsedTitle: 'OKRES PRÓBNY JUŻ WYKORZYSTANY',
     alreadyUsedBody: 'Na tym urządzeniu wykorzystano już udostępniony okres próbny.',
     linkExpiredTitle: 'LINK WYGASŁ',
-    linkExpiredBody: 'Ten link do okresu próbnego wygasł. Poproś o nowy.',
+    linkExpiredBody: "Ten link prezentowy wygasł.",
     invalidTitle: 'NIEPRAWIDŁOWY LINK',
     invalidBody: 'Nie udało się zweryfikować tego linku do okresu próbnego.',
     shareCardTitle: 'PODARUJ 7 DNI PRO',
-    shareCardBody: 'Daj znajomemu 7 dni Red Grid Pro za darmo. Jeden prezent na urządzenie, na zawsze. Wybierz znajomego rozważnie.',
+    shareCardBody: "Utwórz jeden link prezentowy na urządzenie. Otwórz udostępnianie ponownie, aby wysłać ten sam zapisany link.",
     alreadySharedTitle: 'JUŻ UDOSTĘPNIONE',
-    alreadySharedBody: 'Udostępniłeś już swój bezpłatny okres próbny. Każde urządzenie może podarować znajomemu dokładnie jeden 7-dniowy okres próbny Pro, a Ty już to zrobiłeś. Dziękujemy.',
-    shareMessage: "Używam Red Grid MGRS, bezpłatnego taktycznego nawigatora MGRS. Oto 7 dni Pro ode mnie:\n\n{{url}}\n\nZero śledzenia, mapy offline, mesh Meshtastic. Działa bez zasięgu sieci komórkowej.",
+    alreadySharedBody: "Ta instalacja utworzyła już link prezentowy w starszej wersji. Nie można go tutaj odzyskać.",
+    shareMessage: "Używam Red Grid MGRS do nawigacji terenowej. Wypróbuj Pro przez mój link prezentowy: {{url}}",
   },
   alerts: {
     tooManyTiles: 'Zbyt wiele kafli ({{count}}). Powiększ na mniejszy obszar.',
-    confirmDownloadTiles: 'Pobrać {{count}} kafli dla tego obszaru? (zoom 10-16)',
+
     deleteWaypointTitle: 'Usunąć waypoint?',
     deleteWaypointBody: 'Usuń {{label}} z mapy.',
     thisWaypoint: 'ten waypoint',

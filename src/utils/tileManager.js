@@ -17,11 +17,13 @@ export const TILE_BACKUP_DIR = FileSystem?.documentDirectory
   ? `${FileSystem.documentDirectory}map_tiles_previous/`
   : null;
 let tileCacheMutation = false;
+let tileCacheGeneration = 0;
 let recoveryPromise = null;
 
-export function beginTileCacheMutation() {
+export function beginTileCacheMutation({ recovery = false } = {}) {
   if (tileCacheMutation) return false;
   tileCacheMutation = true;
+  if (!recovery) tileCacheGeneration++;
   return true;
 }
 export function endTileCacheMutation() { tileCacheMutation = false; }
@@ -31,12 +33,13 @@ export function recoverOfflineTileCache() {
   // Preflight checks multiple zoom levels concurrently. Every reader must wait
   // for the same interrupted promotion, not report missing tiles mid-recovery.
   if (recoveryPromise) return recoveryPromise;
-  if (!FileSystem || !TILE_DIR || !beginTileCacheMutation()) return Promise.resolve(false);
+  if (!FileSystem || !TILE_DIR || !beginTileCacheMutation({ recovery: true })) return Promise.resolve(false);
   recoveryPromise = (async () => {
     const previous = await FileSystem.getInfoAsync(TILE_BACKUP_DIR);
     if (!previous.exists) return true;
     const current = await FileSystem.getInfoAsync(TILE_DIR);
     if (!current.exists) {
+      tileCacheGeneration++;
       await FileSystem.moveAsync({ from: TILE_BACKUP_DIR, to: TILE_DIR });
     } else {
       await FileSystem.deleteAsync(TILE_BACKUP_DIR, { idempotent: true });
@@ -51,10 +54,62 @@ export function recoverOfflineTileCache() {
 
 export async function getOfflineMapMetadata() {
   if (!FileSystem || !TILE_DIR) return null;
-  await recoverOfflineTileCache();
+  if (!(await recoverOfflineTileCache())) return null;
   try {
-    return JSON.parse(await FileSystem.readAsStringAsync(`${TILE_DIR}metadata.json`));
+    const metadata = JSON.parse(await FileSystem.readAsStringAsync(`${TILE_DIR}metadata.json`));
+    // A persisted inventory remains authoritative when an entire zoom directory
+    // has been lost. Missing files must not silently narrow the required zooms.
+    if (Array.isArray(metadata.zoomLevels)) {
+      const valid = metadata.zoomLevels.length > 0 && metadata.zoomLevels.every(z => Number.isInteger(z) && z >= 0 && z <= 19);
+      return valid ? { ...metadata, zoomLevels: [...new Set(metadata.zoomLevels)].sort((a, b) => a - b) } : { ...metadata, zoomLevels: [], inventoryComplete: false };
+    }
+    // Older imports only stored min/max and total count. Infer their zoom set
+    // only when every original tile is still accounted for. Otherwise a lost
+    // intermediate zoom could make the remaining subset appear complete.
+    const directories = await FileSystem.readDirectoryAsync(TILE_DIR);
+    const zoomLevels = directories.filter(name => /^(?:[0-9]|1[0-9])$/.test(name)).map(Number).sort((a, b) => a - b);
+    let tileCount = 0;
+    for (const z of zoomLevels) {
+      for (const x of await FileSystem.readDirectoryAsync(`${TILE_DIR}${z}/`)) {
+        if (!/^\d+$/.test(x) || Number(x) >= 2 ** z) continue;
+        const files = await FileSystem.readDirectoryAsync(`${TILE_DIR}${z}/${x}/`);
+        tileCount += files.filter(name => /^\d+\.png$/.test(name) && Number(name.slice(0, -4)) < 2 ** z).length;
+      }
+    }
+    const inventoryComplete = tileCount === metadata.tileCount && tileCount > 0 &&
+      zoomLevels[0] === metadata.minZoom && zoomLevels[zoomLevels.length - 1] === metadata.maxZoom;
+    return { ...metadata, zoomLevels, inventoryComplete };
   } catch { return null; }
+}
+
+/** Read local file coverage only, at zoom levels actually present in the import. */
+export async function checkImportedMapCoverage(region) {
+  const empty = { metadata: null, zoomLevels: [], byZoom: {}, cached: 0, missing: 0, total: 0 };
+  if (!region) return { ...empty, state: 'unscoped' };
+  if (!validMapRegion(region) || Math.abs(region.latitude) + region.latitudeDelta / 2 > 85.05112878) return { ...empty, state: 'uncheckable' };
+  try {
+    const generation = tileCacheGeneration;
+    const metadata = await getOfflineMapMetadata();
+    if (tileCacheMutation || tileCacheGeneration !== generation) return { ...empty, state: 'uncheckable' };
+    if (!metadata) return { ...empty, state: 'no_map' };
+    const zoomLevels = metadata.zoomLevels;
+    const base = { ...empty, metadata, zoomLevels };
+    if (!zoomLevels.length || metadata.inventoryComplete === false) return { ...base, state: 'uncheckable' };
+    const total = zoomLevels.reduce((sum, z) => sum + countTilesForRegion(region, z), 0);
+    // Apply the limit to the entire check, not separately per zoom.
+    if (total < 1 || total > CHECK_TILE_CAP) return { ...base, total, state: 'uncheckable' };
+    const byZoom = {};
+    let cached = 0;
+    for (const zoom of zoomLevels) {
+      if (tileCacheMutation || tileCacheGeneration !== generation) return { ...base, state: 'uncheckable' };
+      const coverage = await checkTilesForRegion(region, [zoom]);
+      if (coverage.tooLarge || coverage.unavailable) return { ...base, state: 'uncheckable' };
+      byZoom[zoom] = coverage;
+      cached += coverage.cached;
+    }
+    if (tileCacheMutation || tileCacheGeneration !== generation) return { ...base, state: 'uncheckable' };
+    return { ...base, byZoom, cached, total, missing: total - cached, state: cached === total ? 'complete' : 'incomplete' };
+  } catch { return { ...empty, state: 'uncheckable' }; }
 }
 
 // Shared endpoints for interactive map viewing. Imported map packages carry
@@ -69,7 +124,7 @@ export const TOPO_TILE_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
 function latLonToTile(lat, lon, zoom) {
   const n = Math.pow(2, zoom);
   const x = Math.floor(((lon + 180) / 360) * n);
-  const latRad = (lat * Math.PI) / 180;
+  const latRad = (Math.max(-85.05112878, Math.min(85.05112878, lat)) * Math.PI) / 180;
   const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
   return { x: Math.max(0, Math.min(n - 1, x)), y: Math.max(0, Math.min(n - 1, y)) };
 }
@@ -112,18 +167,10 @@ async function tileExists(z, x, y) {
  * @returns {Array<{z, x, y}>} Array of tile coordinates
  */
 function getTilesForRegion(region, zoom) {
-  const minLat = region.latitude - region.latitudeDelta / 2;
-  const maxLat = region.latitude + region.latitudeDelta / 2;
-  const minLon = region.longitude - region.longitudeDelta / 2;
-  const maxLon = region.longitude + region.longitudeDelta / 2;
-
-  const topLeft = latLonToTile(maxLat, minLon, zoom);
-  const bottomRight = latLonToTile(minLat, maxLon, zoom);
-
   const tiles = [];
-  for (let x = topLeft.x; x <= bottomRight.x; x++) {
-    for (let y = topLeft.y; y <= bottomRight.y; y++) {
-      tiles.push({ z: zoom, x, y });
+  for (const { minX, maxX, minY, maxY } of tileRanges(region, zoom)) {
+    for (let x = minX; x <= maxX; x++) {
+      for (let y = minY; y <= maxY; y++) tiles.push({ z: zoom, x, y });
     }
   }
   return tiles;
@@ -135,17 +182,27 @@ function getTilesForRegion(region, zoom) {
  * of tiles; enumerating that hangs the JS thread, counting it is arithmetic).
  */
 function countTilesForRegion(region, zoom) {
-  const minLat = region.latitude - region.latitudeDelta / 2;
-  const maxLat = region.latitude + region.latitudeDelta / 2;
-  const minLon = region.longitude - region.longitudeDelta / 2;
-  const maxLon = region.longitude + region.longitudeDelta / 2;
+  return tileRanges(region, zoom).reduce((sum, r) => sum + (r.maxX - r.minX + 1) * (r.maxY - r.minY + 1), 0);
+}
 
-  const topLeft = latLonToTile(maxLat, minLon, zoom);
-  const bottomRight = latLonToTile(minLat, maxLon, zoom);
+function validMapRegion(region) {
+  return region && ['latitude', 'longitude', 'latitudeDelta', 'longitudeDelta'].every(key => Number.isFinite(region[key])) &&
+    Math.abs(region.latitude) <= 90 && Math.abs(region.longitude) <= 180 && region.latitudeDelta > 0 && region.longitudeDelta > 0;
+}
 
-  const w = bottomRight.x - topLeft.x + 1;
-  const h = bottomRight.y - topLeft.y + 1;
-  return (w > 0 && h > 0) ? w * h : 0;
+// Split wrapped viewports so a dateline crossing does not silently omit the
+// western half. Merge overlapping low-zoom ranges to count each tile once.
+function tileRanges(region, zoom) {
+  if (!validMapRegion(region) || !Number.isInteger(zoom) || zoom < 0 || zoom > 19) return [];
+  const minY = latLonToTile(region.latitude + region.latitudeDelta / 2, 0, zoom).y;
+  const maxY = latLonToTile(region.latitude - region.latitudeDelta / 2, 0, zoom).y;
+  const west = region.longitude - region.longitudeDelta / 2;
+  const east = region.longitude + region.longitudeDelta / 2;
+  const spans = region.longitudeDelta >= 360 ? [[-180, 180]] : west < -180 ? [[west + 360, 180], [-180, east]] :
+    east > 180 ? [[west, 180], [-180, east - 360]] : [[west, east]];
+  const ranges = spans.map(([a, b]) => ({ minX: latLonToTile(0, a, zoom).x, maxX: latLonToTile(0, b, zoom).x, minY, maxY })).sort((a, b) => a.minX - b.minX);
+  if (ranges.length === 2 && ranges[1].minX <= ranges[0].maxX + 1) return [{ ...ranges[0], maxX: Math.max(ranges[0].maxX, ranges[1].maxX) }];
+  return ranges;
 }
 
 // Enumeration safety caps. Above CHECK_TILE_CAP a coverage check would mean
@@ -186,7 +243,7 @@ export async function downloadTilesForRegion(region, zoomLevels, onProgress, opt
  * @returns {{ cached: number, missing: number, total: number }}
  */
 export async function checkTilesForRegion(region, zoomLevels = [10, 12, 14]) {
-  await recoverOfflineTileCache();
+  if (!(await recoverOfflineTileCache())) return { cached: 0, missing: 0, total: 0, unavailable: true };
   if (!FileSystem || !TILE_DIR) {
     return { cached: 0, missing: 0, total: 0 };
   }

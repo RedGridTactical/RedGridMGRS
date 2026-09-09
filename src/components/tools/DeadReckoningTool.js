@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { deadReckoning, compassToGridHeading } from '../../utils/tactical';
+import { deadReckoning, compassToGridHeading, formatBearing } from '../../utils/tactical';
 import { toMGRS, formatMGRS } from '../../utils/mgrs';
 import { useColors } from '../../utils/ThemeContext';
 import { tapLight } from '../../utils/haptics';
@@ -56,7 +56,7 @@ export function DeadReckoningTool({ location, compassHeading, compassReference }
         >
           <Text style={[styles.compassBtnLabel, { color: colors.text3 }]}>{t('toolLabels.compassGrid')}</Text>
           <Text style={[styles.compassBtnValue, { color: hasCompass ? colors.text : colors.text3 }]}>
-            {hasCompass ? `${Math.round(compassGridHeading) % 360}°` : '---'}
+            {formatBearing(compassGridHeading, 'grid')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -69,7 +69,7 @@ export function DeadReckoningTool({ location, compassHeading, compassReference }
         <View style={styles.results}>
           <ToolResult label={t('toolLabels.estimatedPosition')} value={result.mgrsFormatted} primary />
           <ToolRow label={t('toolLabels.from')} value={liveMGRS || '---'} />
-          <ToolRow label={t('toolLabels.heading')} value={`${heading}°`} />
+          <ToolRow label={t('toolLabels.heading')} value={formatBearing(Number(heading), 'grid')} />
           <ToolRow label={t('toolLabels.distance')} value={`${distance}m`} />
         </View>
       )}

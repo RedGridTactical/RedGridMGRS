@@ -12,6 +12,7 @@ jest.mock('expo-file-system', () => {
     }),
     getFreeDiskStorageAsync: jest.fn(async () => 1024 * 1024 * 1024),
     makeDirectoryAsync: jest.fn(async uri => fs.mkdirSync(local(uri), { recursive: true })),
+    readDirectoryAsync: jest.fn(async uri => fs.readdirSync(local(uri))),
     copyAsync: jest.fn(async ({ from, to }) => fs.copyFileSync(local(from), local(to))),
     moveAsync: jest.fn(async ({ from, to }) => fs.renameSync(local(from), local(to))),
     deleteAsync: jest.fn(async uri => fs.rmSync(local(uri), { recursive: true, force: true })),
@@ -32,7 +33,7 @@ const FileSystem = require('expo-file-system');
 const SQLite = require('expo-sqlite');
 const { Image } = require('react-native');
 const { importRasterMBTiles, validateRasterPNG } = require('../src/utils/offlineMaps');
-const { TILE_DIR, TILE_BACKUP_DIR, recoverOfflineTileCache, clearTileCache, getOfflineMapMetadata } = require('../src/utils/tileManager');
+const { TILE_DIR, TILE_BACKUP_DIR, recoverOfflineTileCache, clearTileCache, getOfflineMapMetadata, checkImportedMapCoverage, beginTileCacheMutation, endTileCacheMutation } = require('../src/utils/tileManager');
 const root = FileSystem.documentDirectory.replace('file://', '');
 const local = uri => uri.replace('file://', '');
 const source = `${FileSystem.documentDirectory}test.mbtiles`;
@@ -85,7 +86,7 @@ test('imports both TMS rows into XYZ paths, validates pixels and saves actual bo
   expect(fs.existsSync(`${local(TILE_DIR)}2/1/3.png`)).toBe(true);
   expect(fs.existsSync(`${local(TILE_DIR)}2/1/2.png`)).toBe(true);
   expect(Buffer.compare(fs.readFileSync(`${local(TILE_DIR)}2/1/3.png`), Buffer.from(rows[0].tile_data))).toBe(0);
-  expect(result.metadata).toMatchObject({ name: 'Training map', minZoom: 2, maxZoom: 2, attribution: 'Own test artwork' });
+  expect(result.metadata).toMatchObject({ name: 'Training map', minZoom: 2, maxZoom: 2, zoomLevels: [2], tilesByZoom: { 2: 2 }, attribution: 'Own test artwork' });
   expect(result.metadata.bounds[0]).toBe(-90); expect(result.metadata.bounds[2]).toBe(0);
   expect(result.metadata.bounds[3]).toBe(0); expect(result.metadata.bounds[1]).toBeCloseTo(-85.05112878);
   expect(Image.getSize).toHaveBeenCalledTimes(2);
@@ -185,4 +186,96 @@ test('concurrent recovery readers wait until the old map is back in place', asyn
   complete();
   await Promise.all([first, second]);
   expectPrevious();
+});
+
+describe('imported-map preflight', () => {
+  const inside = { latitude: -30, longitude: -45, latitudeDelta: 1, longitudeDelta: 1 };
+  test('checks the imported zoom, not legacy default zooms, and requires files', async () => {
+    await importRasterMBTiles(source);
+    expect(await checkImportedMapCoverage(inside)).toMatchObject({ state: 'complete', zoomLevels: [2], total: 1, cached: 1 });
+    fs.unlinkSync(`${local(TILE_DIR)}2/1/2.png`);
+    expect(await checkImportedMapCoverage(inside)).toMatchObject({ state: 'incomplete', total: 1, cached: 0, missing: 1 });
+  });
+  test('reports absent coverage outside imported bounds instead of clipping the requested area', async () => {
+    await importRasterMBTiles(source);
+    expect(await checkImportedMapCoverage({ ...inside, longitude: 45 })).toMatchObject({ state: 'incomplete', cached: 0 });
+  });
+  test('preserves a non-contiguous actual zoom inventory, including old metadata', async () => {
+    rows.push({ zoom_level: 4, tile_column: 6, tile_row: 6, tile_data: png() });
+    const result = await importRasterMBTiles(source);
+    expect(result.metadata.zoomLevels).toEqual([2, 4]);
+    delete result.metadata.zoomLevels; delete result.metadata.tilesByZoom;
+    fs.writeFileSync(`${local(TILE_DIR)}metadata.json`, JSON.stringify(result.metadata));
+    expect((await getOfflineMapMetadata()).zoomLevels).toEqual([2, 4]);
+    const checked = await checkImportedMapCoverage(inside);
+    expect(checked.zoomLevels).toEqual([2, 4]);
+    expect(Object.keys(checked.byZoom)).toEqual(['2', '4']);
+  });
+  test('never treats a list-only check, legacy cache or concurrent import as ready', async () => {
+    expect((await checkImportedMapCoverage(null)).state).toBe('unscoped');
+    expect((await checkImportedMapCoverage(inside)).state).toBe('no_map');
+    await importRasterMBTiles(source);
+    expect(beginTileCacheMutation()).toBe(true);
+    try { expect((await checkImportedMapCoverage(inside)).state).not.toBe('complete'); }
+    finally { endTileCacheMutation(); }
+  });
+  test('bounds the total work across zooms and rejects invalid regions', async () => {
+    rows.push({ zoom_level: 19, tile_column: 1, tile_row: 1, tile_data: png() });
+    await importRasterMBTiles(source);
+    expect((await checkImportedMapCoverage({ ...inside, latitudeDelta: 90, longitudeDelta: 180 })).state).toBe('uncheckable');
+    expect((await checkImportedMapCoverage({ ...inside, latitude: NaN })).state).toBe('uncheckable');
+  });
+  test('checks both sides of the antimeridian with no duplicate low-zoom tiles', async () => {
+    rows = [0, 3].map(x => ({ zoom_level: 2, tile_column: x, tile_row: 1, tile_data: png() }));
+    await importRasterMBTiles(source);
+    expect(await checkImportedMapCoverage({ latitude: -30, longitude: 179.9, latitudeDelta: 1, longitudeDelta: 1 })).toMatchObject({ state: 'complete', total: 2, cached: 2 });
+    fs.unlinkSync(`${local(TILE_DIR)}2/0/2.png`);
+    expect(await checkImportedMapCoverage({ latitude: -30, longitude: 179.9, latitudeDelta: 1, longitudeDelta: 1 })).toMatchObject({ state: 'incomplete', cached: 1, total: 2 });
+  });
+});
+
+test('preflight refuses polar extent instead of clamping it into cached Mercator tiles', async () => {
+  rows = [{ zoom_level: 0, tile_column: 0, tile_row: 0, tile_data: png() }];
+  await importRasterMBTiles(source);
+  for (const latitude of [89, -89, 85]) {
+    expect((await checkImportedMapCoverage({ latitude, longitude: 0, latitudeDelta: 1, longitudeDelta: 1 })).state).toBe('uncheckable');
+  }
+});
+
+test('persisted zoom inventory still requires a deleted zoom directory', async () => {
+  rows.push({ zoom_level: 4, tile_column: 6, tile_row: 6, tile_data: png() });
+  await importRasterMBTiles(source);
+  fs.rmSync(`${local(TILE_DIR)}4`, { recursive: true });
+  const coverage = await checkImportedMapCoverage({ latitude: -30, longitude: -45, latitudeDelta: 1, longitudeDelta: 1 });
+  expect(coverage).toMatchObject({ state: 'incomplete', zoomLevels: [2, 4] });
+  expect(coverage.byZoom[4].missing).toBeGreaterThan(0);
+});
+
+test('legacy inventory cannot become complete by losing an intermediate zoom', async () => {
+  rows.push({ zoom_level: 3, tile_column: 3, tile_row: 3, tile_data: png() });
+  rows.push({ zoom_level: 4, tile_column: 6, tile_row: 6, tile_data: png() });
+  const result = await importRasterMBTiles(source);
+  delete result.metadata.zoomLevels; delete result.metadata.tilesByZoom;
+  fs.writeFileSync(`${local(TILE_DIR)}metadata.json`, JSON.stringify(result.metadata));
+  fs.rmSync(`${local(TILE_DIR)}3`, { recursive: true });
+  expect((await checkImportedMapCoverage({ latitude: -30, longitude: -45, latitudeDelta: 1, longitudeDelta: 1 })).state).toBe('uncheckable');
+});
+
+test('a completed cache mutation during the final tile stat invalidates coverage', async () => {
+  await importRasterMBTiles(source);
+  const original = FileSystem.getInfoAsync.getMockImplementation();
+  let mutated = false;
+  FileSystem.getInfoAsync.mockImplementation(async uri => {
+    const result = await original(uri);
+    if (!mutated && uri.endsWith('/2/1/2.png')) {
+      mutated = true;
+      expect(beginTileCacheMutation()).toBe(true);
+      endTileCacheMutation();
+    }
+    return result;
+  });
+  try {
+    expect((await checkImportedMapCoverage({ latitude: -30, longitude: -45, latitudeDelta: 1, longitudeDelta: 1 })).state).toBe('uncheckable');
+    expect(mutated).toBe(true);
+  } finally { FileSystem.getInfoAsync.mockImplementation(original); }
 });

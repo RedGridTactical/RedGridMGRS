@@ -10,6 +10,7 @@ import { Modal } from './FieldModal';
 import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
 import { buildDTG, buildRouteSummary, buildRouteCardText } from '../utils/routeCard';
 import { formatDistance } from '../utils/mgrs';
+import { formatBearing } from '../utils/tactical';
 import { useColors } from '../utils/ThemeContext';
 import { TYPE } from '../utils/typography';
 import { useTranslation } from '../hooks/useTranslation';
@@ -123,7 +124,7 @@ export function RouteCard({ visible, list, onClose }) {
                   <Text style={[styles.legMgrs, { color: colors.text2 }]}>{leg.mgrs}</Text>
                 </View>
                 <View style={styles.legBrgCol}>
-                  <Text style={[styles.legBrg, { color: colors.text }]}>{String(Math.round(leg.bearing)).padStart(3, '0')}°</Text>
+                  <Text style={[styles.legBrg, { color: colors.text }]}>{formatBearing(leg.bearing, 'true', true)}</Text>
                   <Text style={[styles.legDist, { color: colors.text3 }]}>{leg.distanceFormatted}</Text>
                 </View>
               </View>

@@ -3,6 +3,7 @@
  * Wraps src/utils/meshtastic.js with React state management.
  * Provides scan, connect, disconnect, position sharing, and received positions.
  */
+import { isFreshPosition, validCoordinates } from '../utils/position';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   CONNECTION_STATES,
@@ -86,7 +87,7 @@ export function useMeshtastic() {
       const tick = () => {
         if (!mounted.current || !autoShareRef.current) return;
         const pos = lastPosition.current;
-        if (pos) {
+        if (isFreshPosition(pos)) {
           sendPosition(pos.lat, pos.lon, pos.alt).catch(() => {});
         }
       };
@@ -157,7 +158,7 @@ export function useMeshtastic() {
   }, []);
 
   const sharePosition = useCallback(async (lat, lon, alt) => {
-    lastPosition.current = { lat, lon, alt };
+    if (!validCoordinates({ lat, lon })) return;
     if (connectionState !== CONNECTION_STATES.CONNECTED) return;
     try {
       await sendPosition(lat, lon, alt);
@@ -168,8 +169,9 @@ export function useMeshtastic() {
     setAutoShare(prev => !prev);
   }, []);
 
-  const setLastPosition = useCallback((lat, lon, alt) => {
-    lastPosition.current = { lat, lon, alt };
+  const setLastPosition = useCallback((lat, lon, alt, timestamp) => {
+    lastPosition.current = validCoordinates({ lat, lon }) && Number.isFinite(timestamp)
+      ? { lat, lon, alt, timestamp } : null;
   }, []);
 
   // Memoized so consumers' dependency arrays stop churning on every render —

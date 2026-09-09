@@ -298,7 +298,7 @@ describe('tileManager.js - Offline Tile Cache', () => {
         { latitude: 38.89, longitude: -77.04, latitudeDelta: 0.05, longitudeDelta: 0.05 },
         [10, 12]
       );
-      expect(result).toEqual({ cached: 0, missing: 0, total: 0 });
+      expect(result).toEqual({ cached: 0, missing: 0, total: 0, unavailable: true });
     });
 
     test('clearTileCache returns false without FileSystem', async () => {

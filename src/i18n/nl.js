@@ -3,7 +3,35 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
-  preflight: { footnote: "Controles worden op dit apparaat uitgevoerd. AO-pakketten en geïmporteerde kaarten blijven lokaal opgeslagen. Voeg kaarten toe door een bestand te importeren; gebieden downloaden is niet beschikbaar." },
+    "offlinePreflight": {
+    "checking": "Geïmporteerde kaart controleren…",
+    "noMap": "Geen geïmporteerde kaart. Importeer een toegestaan MBTiles-bestand via KAART.",
+    "uncheckable": "Dekking niet gecontroleerd. Kies een kleiner kaartgebied of wacht tot de import klaar is.",
+    "zoomInventory": "Geïmporteerde zoomniveaus: {{zooms}}",
+    "importedZooms": "Geïmporteerde zoomniveaus",
+    "viewportScope": "Controleert het zichtbare gebied op elk geïmporteerd zoomniveau, niet de hele route. Ontbrekende tegels geven gaten; grenzen bewijzen geen dekking.",
+    "bounds": "Grenzen W, Z, O, N: {{bounds}}",
+    "savedAreaOnly": "Alleen een gebiedsreferentie. Controleer met de huidige geïmporteerde kaart.",
+    "checkArea": "CONTROLEREN"
+  },
+    "routeCard": {"footer":"Red Grid MGRS · routeplan met rechte lijnen"},
+    "navigation": {
+    "trueHeadingUnavailable": "Ware koers niet beschikbaar. Gebruik de numerieke ware peiling met kaart of kompas.",
+    "referenceLegend": "T = ware noorden · M = magnetische noorden · G = rasternoorden",
+    "arrowRelative": "Waypointrichting {{degrees}} graden met de klok mee vanaf de bovenkant van de telefoon.",
+    "resectionInputs": "Peilingen lopen van jouw positie naar elk herkenningspunt. Kies ware (T) of magnetische (M) noorden.",
+    "resectionLimits": "Alleen lokale schatting: elk punt moet binnen 100 km liggen; hoekverschil 5°–175°. Kompas- en kaartfouten beïnvloeden het resultaat.",
+    "resectionDeclination": "Voer voor magnetische peilingen de bekende lokale declinatie in (oost +, west −). Voer alleen 0 in als dit bevestigd is.",
+    "resectionInvalid": "Geen betrouwbare lokale oplossing. Controleer coördinaten, peilrichting, noordreferentie en hoekverschil.",
+    "magToTrue": "MAG → WAAR",
+    "trueToMag": "WAAR → MAG",
+    "trueBearingInput": "WARE PEILING (°)"
+  },
+
+  preflight: {
+    "section": {"aos":"OPGESLAGEN GEBIEDEN"},
+    "aos": {"proFeatureName":"Extra opgeslagen gebieden"},
+ footnote: "Lokale controles. Gebieden bewaren grenzen, geen kaartpakketten. Importeer een toegestaan bestand via KAART; gebiedsdownloads zijn niet beschikbaar." },
   nightDisplay: {
     mapBusy: "Er wordt een kaart geïmporteerd. Wacht of annuleer de import voordat je de kaart wist.",
     importCancelled: "Import geannuleerd. Je opgeslagen kaart is ongewijzigd.",
@@ -57,7 +85,7 @@ export default {
     "soloHint": "Solonavigatie gebruikt je GPS en je apparaat. Een radio, cameratoestemming en een internetverbinding zijn optioneel.",
     "teamHint": "Voor de teamgereedheid wordt ook de Meshtastic-radioverbinding gecontroleerd. Controleer je teamsleutel en radio-instellingen afzonderlijk.",
     "radioOptional": "Optioneel voor solonavigatie",
-    "mapsNotChecked": "De kaartdekking wordt hier niet gecontroleerd. Controleer het geplande gebied in KAART en neem een aparte kaart en een kompas mee.",
+    "mapsNotChecked": "Kaartdekking wordt hier niet gecontroleerd. Open KAART om het geplande gebied voor vertrek te controleren.",
     "reviewChecksTitle": "CONTROLES BEKIJKEN",
     "reviewChecksBody": "Sommige controles zijn niet beschikbaar of vereisen aandacht. Beoordeel de omstandigheden voordat je doorgaat; deze checklist bepaalt niet of de route veilig is.",
     "continue": "NAVIGATIE VOORTZETTEN",
@@ -95,10 +123,10 @@ export default {
     continue: "DOORGAAN",
     startTrial: "START GRATIS PROEFPERIODE VAN 7 DAGEN",
     current: {
-      f1: { title: "TEAMSLEUTEL", body: "Teamverkeer over Meshtastic is nu end-to-end verzegeld. Maak een teamsleutel, geef de koppelcode door en iedereen zit op hetzelfde net. Pro." },
-      f2: { title: "SCHAALFACTOR", body: "De declinatietool toont nu de schaalfactor op je positie, zodat je weet hoeveel terrein 1000 m op het raster echt is." },
-      f3: { title: "ZUIVERDERE AFSTANDEN", body: "Gegist bestek en hoogteafstanden rekenen nu ellipsoïdisch volgens WGS84, dus lange benen blijven kloppen." },
-      f4: { title: "CORRECTIES & FIXES", body: "Noodsignalen zijn nu correct beschreven: een schermvullende SOS-stroboscoop met de referentie voor grond-luchtsignalen. Plus fixes voor aankopen." },
+      f1: { title: "NAVIGATIEREFERENTIES", body: "Gecorrigeerde achterwaartse insnijding en duidelijkere ware, magnetische en rasterpeilingen." },
+      f2: { title: "RECENTE POSITIES", body: "Positieouderdom en terugval naar een andere ontvanger zijn zichtbaar. Verouderde fixes sturen de navigatie niet meer." },
+      f3: { title: "OFFLINE GEREEDHEID", body: "De voorcontrole controleert kaartdekking en geïmporteerde zoomniveaus en geeft duidelijke importinstructies." },
+      f4: { title: "PRO HERSTELLEN", body: "Betrouwbaarder aankoopherstel en toegangscontrole wanneer de winkel niet beschikbaar is." },
     },
   },
   tabs: {
@@ -125,14 +153,14 @@ export default {
     upgrade: "UPGRADEN",
     dismiss: "SLUITEN",
     readyForField: "KLAAR VOOR HET VELD?",
-    download: "DOWNLOADEN",
+
     later: "LATER",
     routeHintEmpty: "Tik op waypoints om toe te voegen",
     routeHintOne: "1 waypoint • 2+ nodig",
     waypointNamePlaceholder: "Naam waypoint",
     newListNote: "Nieuwe lijst \"MAP\" wordt aangemaakt",
-    firstVisitBody: "Download tegels voor jouw gebied met Red Grid Pro. Sta nooit meer met een lege kaart in het veld.",
-    firstVisitModalBody: "Download nu offline kaarttegels voor je huidige gebied. Zo heb je kaarten, zelfs als je geen mobiel bereik meer hebt.",
+
+
     center: 'CENTRUM',
     addWaypoint: 'WAYPOINT TOEVOEGEN',
     waypointAdded: 'WAYPOINT TOEGEVOEGD',
@@ -142,20 +170,28 @@ export default {
     estimatedTime: 'GESCHATTE TIJD',
     optimizeRoute: 'ROUTE OPTIMALISEREN',
     legs: 'TRAJECTEN',
-    downloadTiles: 'TEGELS DOWNLOADEN',
-    downloading: 'DOWNLOADEN',
+
+
     tilesReady: 'TEGELS GECACHED',
     tilesCached: '{count} TEGELS',
-    downloadComplete: 'Download voltooid',
-    downloadFailed: 'Download mislukt',
+
+
     clearCache: 'CACHE WISSEN',
     cacheCleared: 'Tegelcache gewist',
-    confirmDownload: 'Kaarttegels downloaden voor dit gebied? Zoomniveaus 10-16 worden gecached voor offline gebruik.',
+
     confirmClear: 'Alle gecachede kaarttegels wissen?',
     offline: 'OFFLINE',
     online: 'ONLINE',
   },
   gps: {
+    "staleFix": "VEROUDERDE FIX",
+    "sourcePhone": "TELEFOON-GPS",
+    "sourceExternal": "EXTERNE GPS",
+    "observedAge": "{{seconds}} s geleden gemeten",
+    "receivedAge": "{{seconds}} s geleden ontvangen",
+    "accuracyUnknown": "Nauwkeurigheid onbekend",
+    "phoneFallback": "Externe fix niet beschikbaar · telefoon-GPS wordt gebruikt",
+
     acquiring: 'BEZIG',
     gpsFix: 'GPS FIX',
     noSignal: 'GEEN SIGNAAL',
@@ -205,9 +241,11 @@ export default {
     retry: 'OPNIEUW',
   },
   tools: {
+    "photoOnDevice": "OPGESLAGEN IN FOTOBIBLIOTHEEK · BACK-UPINSTELLINGEN VAN HET APPARAAT GELDEN",
+
     title: 'TOOLS',
     tapToExpand: 'TIK OM UIT TE KLAPPEN',
-    footer: 'ALLE BEREKENINGEN LOKAAL · GEEN NETWERK · GEEN OPSLAG',
+    footer: "BEREKENINGEN OP HET APPARAAT",
     barometer: 'BAROMETER',
     barometerSub: 'Drukverloop en stormwaarschuwing',
     signal: 'NOODSIGNAAL',
@@ -421,9 +459,12 @@ export default {
     dms: 'GRA MIN SEC',
     dmsSub: 'Graden, minuten, seconden, luchtvaart- en nautische standaard',
     fixphrase: 'FIXPHRASE',
-    fixphraseSub: 'Locatie van 4 woorden, ~11m nauwkeurig, volgorde-onafhankelijk',
+    fixphraseSub: "Coördinatenreferentie van vier woorden; verbetert de GPS-nauwkeurigheid niet",
   },
   support: {
+    "faqSourcePaid": "Waarom de broncode publiceren en Pro aanbieden?",
+    "faqSourcePaidA": "De broncode is in te zien onder de repositorylicentie, met gebruiksbeperkingen. De winkelapp vereenvoudigt installatie en updates; Pro ondersteunt onderhoud en voegt geavanceerde navigatiewerkstromen toe. Zie de licentie in de gekoppelde repository.",
+
     giftFreeTrial: "GRATIS PROEF CADEAU GEVEN",
     title: 'HULP & ONDERSTEUNING',
     close: 'SLUITEN',
@@ -436,21 +477,21 @@ export default {
     faq: 'FAQ',
     privacyLegal: 'PRIVACY & JURIDISCH',
     privacyPolicy: 'Privacybeleid',
-    privacySub: 'Geen dataverzameling. Geverifieerd.',
+    privacySub: "Lokale opslag en optionele externe diensten",
     license: 'MIT + Commons Clause-licentie',
     copyright: '© 2026 Red Grid Tactical',
     faqCellService: 'Werkt dit zonder mobiel netwerk?',
-    faqCellServiceA: 'Ja. De app gebruikt de GPS-ontvanger van je telefoon, die direct met satellieten communiceert. Geen zendmast, Wi-Fi of internet nodig. Werkt in vliegtuigmodus.',
+    faqCellServiceA: "Coördinaten en lokale berekeningen werken zonder mobiel bereik bij een GPS-fix. Offlinekaarten moeten vooraf zijn geïmporteerd. Onlinekaarten en winkelfuncties vereisen verbinding.",
     faqRestore: 'Hoe herstel ik mijn Pro-aankoop?',
-    faqRestoreA: 'Pro-aankopen zijn gekoppeld aan je Apple ID. Als je opnieuw installeert of van apparaat wisselt, detecteert de app je aankoop automatisch. Zo niet, ga dan naar het tabblad THEMA en zoek naar een Herstel-optie.',
+    faqRestoreA: "Gebruik hieronder Aankoop herstellen met hetzelfde Apple- of Google-account als bij de Pro-aankoop. Voor verificatie kan internet nodig zijn.",
     faqData: 'Welke data verzamelt deze app?',
-    faqDataA: 'Geen. Geen analytics, geen tracking, geen crashrapportage. GPS-coördinaten bestaan alleen in het geheugen en worden gewist wanneer je de app sluit.',
+    faqDataA: "Punten, routes, instellingen en gebruikstellers blijven op dit apparaat; ze worden niet als appanalyses geüpload. Onlinekaarten en winkels gebruiken externe diensten. Exporteren, foto’s opslaan en delen via radio gebeuren op jouw verzoek.",
     faqAccuracy: 'Hoe nauwkeurig is het MGRS-grid?',
-    faqAccuracyA: 'Red Grid gebruikt het DMA (Defense Mapping Agency) MGRS-algoritme uit TM 8358.1 met Vincenty-peiling/afstandsberekeningen. Nauwkeurigheid hangt af van de GPS-chip van je telefoon en satellietgeometrie.',
+    faqAccuracyA: "Rastercijfers geven coördinaatresolutie aan, niet de gemeten nauwkeurigheid. Die hangt af van ontvanger, vrij zicht op de lucht en ouderdom van de fix. Controleer de onzekerheid en gebruik onafhankelijke navigatiemiddelen.",
     faqWhatIsMgrs: 'Wat is MGRS?',
     faqWhatIsMgrsA: 'Military Grid Reference System. Een geocoördinaten-standaard die door NAVO-strijdkrachten wordt gebruikt. Het is gebouwd op UTM maar voegt een grid-zone-aanduiding en 100km-vierkantsidentificatie toe voor ondubbelzinnige positierapportage.',
-    faqDagr: 'Vervangt het mijn DAGR?',
-    faqDagrA: 'Voor training, STX\'s, mars-marsen en permissieve GPS-omgevingen: ja. De SAASM-module van de DAGR is belangrijk in betwiste omgevingen, maar voor de meeste use-cases biedt Red Grid dezelfde kern-landnavigatie-mogelijkheden.',
+    faqDagr: "Vervangt dit speciale navigatieapparatuur?",
+    faqDagrA: "Red Grid ondersteunt veldnavigatie met een telefoon. Het is niet gecertificeerd als vervanging voor speciale of militaire navigatieapparatuur. Neem geschikte onafhankelijke navigatiemiddelen mee.",
   },
   waypoints: {
     title: 'WAYPOINT-LIJSTEN',
@@ -494,6 +535,12 @@ export default {
     importRequires: 'expo-document-picker en expo-file-system zijn vereist voor importeren.',
   },
   proGate: {
+    "offlineMapsSub": "Importeer een toegestane raster-MBTiles-kaart voordat je het bereik verlaat",
+    "waypointsRoutes": "Opgeslagen waypoints en routes",
+    "waypointsRoutesSub": "Maximaal 10 lijsten van 20 punten; GPX/KML-punten importeren en exporteren",
+    "reportsThemesSub": "Zes rapportformulieren en extra paletten",
+    "pricesUnavailable": "Maak verbinding om actuele winkelprijzen en koopopties te laden.",
+
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} is een Pro-functie',
@@ -514,11 +561,11 @@ export default {
     savedWaypoints: 'Opgeslagen waypoint-lijsten',
     savedWaypointsSub: 'Sla benoemde patrouilleroutes, OBJ\'s en verzamelpunten op',
     tacticalReports: 'Tactische rapporten',
-    tacticalReportsSub: 'ICS 201, CASEVAC, ANGUS/CFF en aangepaste sjablonen',
+    tacticalReportsSub: "Formulieren voor ICS 201, CASEVAC en ANGUS/CFF",
     coordFormats: 'Coördinaten-formaten',
     coordFormatsSub: 'UTM, decimale graden, DMS, op de hoofd-griddisplay',
     displayThemes: 'Weergavethema\'s',
-    displayThemesSub: 'NVG-groen, dag-wit, blue-force, bewaar nachtzicht',
+    displayThemesSub: "Groene, witte en blauwe paletten; geen NVG-certificering",
   },
   mesh: {
     pairing: {
@@ -585,6 +632,9 @@ export default {
     couldNotParse: 'KON MGRS-COÖRDINAAT NIET ANALYSEREN',
   },
   iap: {
+    "restoreUnavailableTitle": "Herstellen niet beschikbaar",
+    "restoreUnavailableBody": "De winkel kon niet alle aankopen verifiëren. Bestaande toegang blijft behouden. Probeer opnieuw.",
+
     unavailableTitle: 'NIET BESCHIKBAAR',
     unavailableBody: 'In-app aankopen zijn niet beschikbaar in deze build.',
     storeUnavailableTitle: 'STORE NIET BESCHIKBAAR',
@@ -606,6 +656,13 @@ export default {
     purchasedBody: 'Alle Red Grid Pro-functies zijn nu actief.',
   },
   trial: {
+    "storageFailedTitle": "Proefperiode niet beschikbaar",
+    "storageFailedBody": "Proefgegevens konden niet op dit apparaat worden opgeslagen. Probeer opnieuw.",
+    "shareAction": "PROEFPERIODE DELEN",
+    "shareFailedTitle": "Delen kon niet worden geopend",
+    "shareFailedBody": "Probeer opnieuw. Je kunt delen opnieuw openen om dezelfde opgeslagen cadeaulink te versturen.",
+    "banner": "Cadeauproefperiode: nog {{days}} dagen",
+
     welcomeAboardTitle: "WELKOM AAN BOORD",
     welcomeAboardBody: "Een vriend heeft je uitgenodigd voor Red Grid Tactical. Verken de gratis functies en stap wanneer je wilt vanaf het startscherm over op Red Grid Pro.",
     receivedTitle: 'PRO ONTGRENDELD',
@@ -613,18 +670,18 @@ export default {
     alreadyUsedTitle: 'PROEF AL GEBRUIKT',
     alreadyUsedBody: 'Je hebt al een gedeelde proefperiode ingewisseld op dit apparaat.',
     linkExpiredTitle: 'LINK VERLOPEN',
-    linkExpiredBody: 'Deze proeflink is verlopen. Vraag om een nieuwe.',
+    linkExpiredBody: "Deze cadeaulink is verlopen.",
     invalidTitle: 'ONGELDIGE PROEFLINK',
     invalidBody: 'Deze proeflink kon niet worden geverifieerd.',
     shareCardTitle: 'DEEL 7 DAGEN PRO',
-    shareCardBody: 'Geef een vriend 7 dagen Red Grid Pro gratis. Eén cadeau per apparaat, ooit. Kies je vriend zorgvuldig.',
+    shareCardBody: "Maak één cadeaulink per apparaat. Open delen opnieuw om dezelfde opgeslagen link te versturen.",
     alreadySharedTitle: 'AL GEDEELD',
-    alreadySharedBody: 'Je hebt je gratis proefperiode al gedeeld. Elk apparaat kan precies één proefperiode van 7 dagen Pro aan een vriend geven, en dat heb je al gedaan. Bedankt.',
-    shareMessage: "Ik gebruik Red Grid MGRS, een gratis tactische MGRS-navigator. Hier is 7 dagen Pro van mij:\\n\\n{{url}}\\n\\nGeen tracking, offlinekaarten, Meshtastic-mesh. Werkt zonder mobiel netwerk.",
+    alreadySharedBody: "Deze installatie heeft in een oudere versie al een cadeaulink gemaakt. Die link kan hier niet worden hersteld.",
+    shareMessage: "Ik gebruik Red Grid MGRS voor veldnavigatie. Probeer Pro via mijn cadeaulink: {{url}}",
   },
   alerts: {
     tooManyTiles: 'Te veel tegels ({{count}}). Zoom in op een kleiner gebied.',
-    confirmDownloadTiles: '{{count}} tegels voor dit gebied downloaden? (zoom 10-16)',
+
     deleteWaypointTitle: 'Waypoint verwijderen?',
     deleteWaypointBody: 'Verwijder {{label}} van de kaart.',
     thisWaypoint: 'dit waypoint',

@@ -3,7 +3,8 @@
  *
  * Rules (product spec, enforced here + in UI):
  *   - Every device can RECEIVE one trial, exactly once, ever.
- *   - Every device can SHARE one trial (one link that successfully redeems), exactly once, ever.
+ *   - Every installation can create one gift link and reopen sharing for that same link.
+ *     Offline tokens cannot enforce a single recipient across different devices.
  *   - These are two independent one-shot permissions.
  *   - Receiver gets a 7-day Pro grant when TRIAL_ENTITLEMENT_GRANTED is true.
  *     Sender gets no reward — sharing is altruistic.
@@ -47,13 +48,15 @@
  *     embedded in the share link.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform, NativeModules } from 'react-native';
+import { Share } from 'react-native';
 
 const KEYS = {
   RECEIVED: 'rg_trial_received_v1',
   SHARED:   'rg_trial_shared_v1',
   EXPIRES:  'rg_trial_expires_v1',
   NONCE:    'rg_trial_nonce_v1',
+  REDEMPTION: 'rg_trial_redemption_v2',
+  SHARE_TOKEN: 'rg_trial_share_token_v2',
 };
 
 // Hardcoded shared secret. Rotated per app version when needed.
@@ -235,7 +238,12 @@ export function verifyShareToken(token) {
     const payload = JSON.parse(payloadJson);
     if (payload.v !== 1) return { ok: false, reason: 'version' };
     const now = Date.now();
-    if (new Date(payload.exp).getTime() < now) return { ok: false, reason: 'expired' };
+    const issuedAt = Date.parse(payload.iat);
+    const expiresAt = Date.parse(payload.exp);
+    if (!Number.isFinite(issuedAt) || !Number.isFinite(expiresAt) || expiresAt <= issuedAt) {
+      return { ok: false, reason: 'format' };
+    }
+    if (expiresAt <= now) return { ok: false, reason: 'expired' };
     return { ok: true, payload };
   } catch {
     return { ok: false, reason: 'parse' };
@@ -245,87 +253,109 @@ export function verifyShareToken(token) {
 // ──────────────────────────────────────────────────────────────────────────
 // Receive side: user tapped someone's link or redeemed a code
 // ──────────────────────────────────────────────────────────────────────────
+// One durable record avoids consuming permission before the expiry was saved.
+// Legacy records remain readable; an existing receipt is never overwritten.
+async function readRedemption() {
+  const record = await AsyncStorage.getItem(KEYS.REDEMPTION);
+  if (record != null) {
+    const parsed = JSON.parse(record);
+    if (parsed?.version !== 2 || parsed.received !== true) throw new Error('Invalid trial record');
+    return parsed;
+  }
+  const [received, expiresAt] = await Promise.all([
+    AsyncStorage.getItem(KEYS.RECEIVED), AsyncStorage.getItem(KEYS.EXPIRES),
+  ]);
+  return { received: received === 'true', expiresAt };
+}
+
 export async function hasReceivedTrial() {
-  try { return (await AsyncStorage.getItem(KEYS.RECEIVED)) === 'true'; } catch { return false; }
+  // An unreadable record is not permission to grant another trial.
+  try { return (await readRedemption()).received; } catch { return true; }
 }
 
-/**
- * Attempt to redeem an inbound share token.
- *
- * Returns:
- *   - { ok: true, expiresAt } when entitlement is granted (legacy mode).
- *   - { ok: true, granted: false, reason: 'disabled' } when the kill switch
- *     is off — token is valid but no Pro is given. UI should treat this as
- *     a successful install/acquisition signal without unlocking features.
- *   - { ok: false, reason } on rejection.
- */
-export async function redeemShareToken(token) {
-  if (await hasReceivedTrial()) {
-    return { ok: false, reason: 'already_received' };
-  }
-  const verify = verifyShareToken(token);
-  if (!verify.ok) return verify;
-
-  // Kill switch path — record the redemption so the user can't try again,
-  // but do NOT grant the entitlement. See TRIAL_ENTITLEMENT_GRANTED for
-  // rationale. UI should display a friendly "thanks for installing" rather
-  // than a Pro-unlocked celebration.
-  if (!TRIAL_ENTITLEMENT_GRANTED) {
-    try { await AsyncStorage.setItem(KEYS.RECEIVED, 'true'); } catch {}
-    return { ok: true, granted: false, reason: 'disabled' };
-  }
-
-  const trialExpires = new Date(Date.now() + TRIAL_DAYS * 86400 * 1000).toISOString();
-  try {
-    await AsyncStorage.setItem(KEYS.RECEIVED, 'true');
-    await AsyncStorage.setItem(KEYS.EXPIRES, trialExpires);
-  } catch {}
-  return { ok: true, granted: true, expiresAt: trialExpires };
+// Serialise double taps/deep-link delivery; failures do not poison later retries.
+let redemptionQueue = Promise.resolve();
+export function redeemShareToken(token) {
+  const run = redemptionQueue.then(async () => {
+    try {
+      if ((await readRedemption()).received) return { ok: false, reason: 'already_received' };
+      const verify = verifyShareToken(token);
+      if (!verify.ok) return verify;
+      const expiresAt = TRIAL_ENTITLEMENT_GRANTED
+        ? new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString() : null;
+      await AsyncStorage.setItem(KEYS.REDEMPTION, JSON.stringify({ version: 2, received: true, expiresAt }));
+      return TRIAL_ENTITLEMENT_GRANTED
+        ? { ok: true, granted: true, expiresAt }
+        : { ok: true, granted: false, reason: 'disabled' };
+    } catch {
+      return { ok: false, reason: 'storage' };
+    }
+  });
+  redemptionQueue = run.catch(() => {});
+  return run;
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// Share side: user wants to mint a link for a friend
-// ──────────────────────────────────────────────────────────────────────────
 export async function hasSharedTrial() {
-  try { return (await AsyncStorage.getItem(KEYS.SHARED)) === 'true'; } catch { return false; }
+  try {
+    return !!(await AsyncStorage.getItem(KEYS.SHARE_TOKEN)) || (await AsyncStorage.getItem(KEYS.SHARED)) === 'true';
+  } catch { return true; }
 }
 
-/**
- * Mint the device's one-and-only shareable link.
- * Returns { ok: true, url } or { ok: false, reason: 'already_shared' }.
- * Marks the device as having shared — call only when the user is actually
- * about to hit the share sheet.
- */
-export async function mintShareLink() {
-  if (await hasSharedTrial()) {
-    return { ok: false, reason: 'already_shared' };
+// Save the one gift token before opening OS sharing. Canceling/rejecting the
+// sheet can then safely reopen the exact link; it never mints another gift.
+// Old installations with only SHARED=true cannot recover their original token.
+let shareQueue = Promise.resolve();
+export function mintShareLink() {
+  const run = shareQueue.then(async () => {
+    try {
+      let token = await AsyncStorage.getItem(KEYS.SHARE_TOKEN);
+      if (!token) {
+        if ((await AsyncStorage.getItem(KEYS.SHARED)) === 'true') return { ok: false, reason: 'already_shared' };
+        token = await mintShareToken();
+        await AsyncStorage.setItem(KEYS.SHARE_TOKEN, token);
+      }
+      const verify = verifyShareToken(token);
+      if (!verify.ok) return verify;
+      return { ok: true, url: `https://redgridtactical.com/trial#${token}`, token };
+    } catch {
+      return { ok: false, reason: 'storage' };
+    }
+  });
+  shareQueue = run.catch(() => {});
+  return run;
+}
+
+// A resolved OS share sheet is not proof of delivery. Only report the action
+// the OS supplies; dismissal preserves the saved link for another attempt.
+export async function shareTrialLink(messageForUrl) {
+  const link = await mintShareLink();
+  if (!link.ok) return link;
+  try {
+    const result = await Share.share({ message: messageForUrl(link.url), url: link.url });
+    return { ok: true, shared: result?.action === Share.sharedAction };
+  } catch {
+    return { ok: false, reason: 'share' };
   }
-  const token = await mintShareToken();
-  try { await AsyncStorage.setItem(KEYS.SHARED, 'true'); } catch {}
-  // iOS universal link fallback: https://redgridtactical.com/trial#<token>
-  // Deep link (preferred if app installed): redgrid://share/<token>
-  const url = `https://redgridtactical.com/trial#${token}`;
-  return { ok: true, url, token };
 }
 
-// ──────────────────────────────────────────────────────────────────────────
-// Trial status for UI
-// ──────────────────────────────────────────────────────────────────────────
+export function trialStatusAt(record, now = Date.now()) {
+  const expiresMs = Date.parse(record?.expiresAt);
+  const received = record?.received === true;
+  const validExpiry = Number.isFinite(expiresMs);
+  const msLeft = validExpiry ? Math.max(0, expiresMs - now) : 0;
+  return {
+    active: received && msLeft > 0,
+    received,
+    expiresAt: received && validExpiry ? record.expiresAt : null,
+    daysLeft: received ? Math.ceil(msLeft / 86400000) : 0,
+  };
+}
+
 export async function getTrialStatus() {
   try {
-    const [receivedStr, expiresStr] = await Promise.all([
-      AsyncStorage.getItem(KEYS.RECEIVED),
-      AsyncStorage.getItem(KEYS.EXPIRES),
-    ]);
-    const received = receivedStr === 'true';
-    if (!received || !expiresStr) return { active: false, received, expiresAt: null, daysLeft: 0 };
-    const expiresMs = new Date(expiresStr).getTime();
-    const msLeft = expiresMs - Date.now();
-    const active = msLeft > 0;
-    const daysLeft = Math.max(0, Math.ceil(msLeft / 86400000));
-    return { active, received, expiresAt: expiresStr, daysLeft };
+    return { ...trialStatusAt(await readRedemption()), available: true };
   } catch {
-    return { active: false, received: false, expiresAt: null, daysLeft: 0 };
+    return { active: false, received: false, expiresAt: null, daysLeft: 0, available: false };
   }
 }
 
@@ -339,7 +369,7 @@ export function extractTokenFromUrl(url) {
   if (deepMatch) return deepMatch[1];
   // https://redgridtactical.com/trial#<token>
   const hashIdx = url.indexOf('#');
-  if (hashIdx >= 0 && /^https?:\/\/[^/]*redgridtactical\.com\/trial/.test(url)) {
+  if (hashIdx >= 0 && /^https:\/\/redgridtactical\.com\/trial(?:\/)?#/.test(url)) {
     return url.slice(hashIdx + 1);
   }
   return null;

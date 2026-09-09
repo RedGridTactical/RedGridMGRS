@@ -193,3 +193,14 @@ export function needsAndroidAck(purchase, allowedIds) {
   if (!(purchase.purchaseToken || purchase.purchaseTokenAndroid)) return false;
   return !!entitlingSku(purchase, allowedIds);
 }
+
+/**
+ * expo-iap 2.8 iOS filters currentEntitlements through its ProductStore.
+ * A negative query requires every entitlement SKU, including retired annual.
+ * Android queries BillingClient directly, independent of its price catalog.
+ */
+export function canConfirmNoEntitlement(platform, resolvedProductIds, allowedIds) {
+  if (platform === 'android') return true;
+  if (platform !== 'ios' || !Array.isArray(resolvedProductIds)) return false;
+  return allowedIds.length > 0 && allowedIds.every(id => resolvedProductIds.includes(id));
+}

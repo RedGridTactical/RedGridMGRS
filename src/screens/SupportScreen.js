@@ -3,21 +3,21 @@
  * Shows FAQ, contact info, version, and links.
  * Opened via info button on grid footer.
  */
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Share } from 'react-native';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
 import { Modal } from '../components/FieldModal';
 import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
 import { useColors } from '../utils/ThemeContext';
 import { TYPE } from '../utils/typography';
 import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
-import { hasSharedTrial, mintShareLink, getTrialStatus } from '../utils/referral';
+import { shareTrialLink } from '../utils/referral';
+import { useReferralTrial } from '../hooks/useReferralTrial';
 
-const APP_VERSION = '4.0.5';
+const APP_VERSION = '4.0.6';
 const SUPPORT_EMAIL = 'support@redgridtactical.com';
 const GITHUB_URL = 'https://github.com/RedGridTactical/RedGridMGRS';
-const PRIVACY_URL = 'https://redgridtactical.github.io/RedGridMGRS/privacy.html';
-const SUPPORT_URL = 'https://redgridtactical.github.io/RedGridMGRS/support.html';
+const PRIVACY_URL = 'https://redgridtactical.com/privacy';
 
 async function openLink(url) {
   if (!(await allowSystemDisplay())) return;
@@ -33,52 +33,42 @@ function FAQItem({ q, a, colors }) {
   );
 }
 
-export function SupportScreen({ visible, onClose }) {
+export function SupportScreen({ visible, onClose, onRestore, isRestoring = false }) {
   const colors = useColors();
   const { t } = useTranslation();
-  const [alreadyShared, setAlreadyShared] = useState(false);
-  const [trialStatus, setTrialStatus] = useState({ active: false, daysLeft: 0 });
+  const [shareBusy, setShareBusy] = useState(false);
+  const sharing = useRef(false);
+  const trialStatus = useReferralTrial();
+  const { refresh: refreshTrial } = trialStatus;
 
-  useEffect(() => {
-    if (!visible) return;
-    let cancelled = false;
-    (async () => {
-      const shared = await hasSharedTrial();
-      const status = await getTrialStatus();
-      if (cancelled) return;
-      setAlreadyShared(shared);
-      setTrialStatus(status);
-    })();
-    return () => { cancelled = true; };
-  }, [visible]);
+  useEffect(() => { if (visible) refreshTrial(); }, [visible, refreshTrial]);
 
   const handleShareTrial = useCallback(async () => {
-    if (!(await allowSystemDisplay())) return;
-    tapMedium();
-    const result = await mintShareLink();
-    if (!result.ok) {
-      notifyError();
-      try {
-        Alert.alert(
-          t('trial.alreadySharedTitle'),
-          t('trial.alreadySharedBody')
-        );
-      } catch {}
-      setAlreadyShared(true);
-      return;
-    }
+    if (sharing.current) return;
+    sharing.current = true;
+    setShareBusy(true);
     try {
-      await Share.share({
-        message: t('trial.shareMessage', { url: result.url }),
-        url: result.url,
-      });
-      notifySuccess();
-      setAlreadyShared(true);
+      if (!(await allowSystemDisplay())) return;
+      tapMedium();
+      const result = await shareTrialLink(url => t('trial.shareMessage', { url }));
+      if (result.ok) {
+        if (result.shared) notifySuccess();
+        return;
+      }
+      notifyError();
+      const key = result.reason === 'already_shared' ? 'alreadyShared'
+        : result.reason === 'expired' ? 'linkExpired'
+        : result.reason === 'storage' ? 'storageFailed'
+        : result.reason === 'share' ? 'shareFailed' : 'invalid';
+      Alert.alert(t(`trial.${key}Title`), t(`trial.${key}Body`));
     } catch {
-      // User cancelled or share failed — still marked as shared (mint was successful).
-      setAlreadyShared(true);
+      notifyError();
+      try { Alert.alert(t('trial.shareFailedTitle'), t('trial.shareFailedBody')); } catch {}
+    } finally {
+      sharing.current = false;
+      setShareBusy(false);
     }
-  }, []);
+  }, [t]);
 
   return (
     <Modal
@@ -148,21 +138,22 @@ export function SupportScreen({ visible, onClose }) {
             </Text>
             {trialStatus.active && (
               <Text style={[styles.shareStatus, { color: colors.text2 }]}>
-                ▸ Your trial: {trialStatus.daysLeft} day{trialStatus.daysLeft === 1 ? '' : 's'} remaining
+                {t('trial.banner', { days: trialStatus.daysLeft })}
               </Text>
             )}
             <TouchableOpacity
               style={[
                 styles.shareBtn,
-                { borderColor: alreadyShared ? colors.border : colors.text, backgroundColor: alreadyShared ? 'transparent' : colors.border2 },
+                { borderColor: colors.text, backgroundColor: colors.border2, opacity: shareBusy ? 0.5 : 1 },
               ]}
-              disabled={alreadyShared}
+              disabled={shareBusy}
+              accessibilityState={{ disabled: shareBusy, busy: shareBusy }}
               onPress={handleShareTrial}
               accessibilityRole="button"
-              accessibilityLabel={alreadyShared ? 'Already shared' : 'Share free trial with a friend'}
+              accessibilityLabel={t('trial.shareAction')}
             >
-              <Text style={[styles.shareBtnText, { color: alreadyShared ? colors.text3 : colors.text }]}>
-                {alreadyShared ? '✓ ALREADY SHARED' : '⤴ SHARE TRIAL'}
+              <Text style={[styles.shareBtnText, { color: colors.text }]}>
+                {t('trial.shareAction')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -172,10 +163,20 @@ export function SupportScreen({ visible, onClose }) {
 
           <FAQItem colors={colors} q={t('support.faqCellService')} a={t('support.faqCellServiceA')} />
           <FAQItem colors={colors} q={t('support.faqRestore')} a={t('support.faqRestoreA')} />
+          <TouchableOpacity
+            style={[styles.linkCard, { backgroundColor: colors.card, borderColor: colors.border2, opacity: isRestoring || !onRestore ? 0.5 : 1 }]}
+            onPress={onRestore}
+            disabled={isRestoring || !onRestore}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isRestoring || !onRestore, busy: isRestoring }}
+          >
+            <Text style={[styles.faqQ, { color: colors.accentText }]}>{t('proGate.restore')}</Text>
+          </TouchableOpacity>
           <FAQItem colors={colors} q={t('support.faqData')} a={t('support.faqDataA')} />
           <FAQItem colors={colors} q={t('support.faqAccuracy')} a={t('support.faqAccuracyA')} />
           <FAQItem colors={colors} q={t('support.faqWhatIsMgrs')} a={t('support.faqWhatIsMgrsA')} />
           <FAQItem colors={colors} q={t('support.faqDagr')} a={t('support.faqDagrA')} />
+          <FAQItem colors={colors} q={t('support.faqSourcePaid')} a={t('support.faqSourcePaidA')} />
 
           {/* Privacy & Legal */}
           <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>{t('support.privacyLegal')}</Text>

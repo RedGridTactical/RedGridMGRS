@@ -54,9 +54,9 @@ describe('routeCard — text export', () => {
     expect(text).toContain('START  CCP 1');
     expect(text).toContain('OBJ WRECK');
     expect(text).toContain('PZ TOMAHAWK');
-    expect(text).toContain('Red Grid MGRS · offline · no network');
-    // each leg renders a 3-digit bearing + degree sign
-    expect(text).toMatch(/\d{2}\s+OBJ WRECK\s+\d{3}°/);
+    expect(text).toContain('Red Grid MGRS · straight-line route plan');
+    // Each leg names true north, matching the actual inverse bearing.
+    expect(text).toMatch(/\d{2}\s+OBJ WRECK\s+\d{3}°T/);
   });
 
   test('singular LEG for a 2-waypoint route', () => {

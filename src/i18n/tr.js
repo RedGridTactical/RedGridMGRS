@@ -3,7 +3,35 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
-  preflight: { footnote: "Kontroller bu cihazda yapılır. AO paketleri ve içe aktarılan haritalar yerel olarak saklanır. Harita eklemek için dosya içe aktar; alan indirme kullanılamıyor." },
+    "offlinePreflight": {
+    "checking": "İçe aktarılan harita kontrol ediliyor…",
+    "noMap": "İçe aktarılmış harita yok. HARİTA bölümünden izinli bir MBTiles dosyası içe aktarın.",
+    "uncheckable": "Kapsama kontrol edilemedi. Görünür alanı küçültün veya içe aktarma bitince tekrar kontrol edin.",
+    "zoomInventory": "İçe aktarılan yakınlaştırmalar: {{zooms}}",
+    "importedZooms": "İçe aktarılan yakınlaştırma düzeyleri",
+    "viewportScope": "Tüm rotayı değil, görünür alanı her içe aktarılmış yakınlaştırmada kontrol eder. Eksik karolar boşluk bırakır; sınırlar kapsamayı kanıtlamaz.",
+    "bounds": "Sınırlar B, G, D, K: {{bounds}}",
+    "savedAreaOnly": "Yalnızca kayıtlı alan referansı. Mevcut içe aktarılmış haritayla kontrol edin.",
+    "checkArea": "KONTROL ET"
+  },
+    "routeCard": {"footer":"Red Grid MGRS · düz hat rota planı"},
+    "navigation": {
+    "trueHeadingUnavailable": "Gerçek yön kullanılamıyor. Sayısal gerçek kerterizi harita veya pusulayla kullanın.",
+    "referenceLegend": "T = gerçek kuzey · M = manyetik kuzey · G = ızgara kuzeyi",
+    "arrowRelative": "Nokta yönü, telefonun üstünden saat yönünde {{degrees}} derece.",
+    "resectionInputs": "Kerterizler konumunuzdan her referans noktasına doğrudur. Gerçek (T) veya manyetik (M) kuzeyi seçin.",
+    "resectionLimits": "Yalnızca yerel tahmin: her nokta 100 km içinde olmalı; kerteriz ayrımı 5°–175° olmalı. Pusula ve harita hataları sonucu etkiler.",
+    "resectionDeclination": "Manyetik kerterizler için bilinen yerel sapmayı girin (doğu +, batı −). Yalnızca doğrulanmışsa 0 girin.",
+    "resectionInvalid": "Güvenilir yerel çözüm yok. Koordinatları, kerteriz yönünü, kuzey referansını ve ayrımı kontrol edin.",
+    "magToTrue": "MANYETİK → GERÇEK",
+    "trueToMag": "GERÇEK → MANYETİK",
+    "trueBearingInput": "GERÇEK KERTERİZ GİRİŞİ (°)"
+  },
+
+  preflight: {
+    "section": {"aos":"KAYITLI ALANLAR"},
+    "aos": {"proFeatureName":"Ek kayıtlı alanlar"},
+ footnote: "Kontroller yereldir. Alanlar harita paketi değil sınırları kaydeder. HARİTA bölümünden izinli dosya içe aktarın; alan indirmeleri kullanılamaz." },
   nightDisplay: {
     mapBusy: "Harita içe aktarılıyor. Haritayı temizlemeden önce bekle veya içe aktarmayı iptal et.",
     importCancelled: "İçe aktarma iptal edildi. Kayıtlı haritan değişmedi.",
@@ -57,7 +85,7 @@ export default {
     "soloHint": "Bireysel navigasyon GPS’i ve cihazını kullanır. Telsiz, kamera izni ve internet bağlantısı isteğe bağlıdır.",
     "teamHint": "Ekip hazırlığı Meshtastic telsiz bağlantısını da kontrol eder. Ekip anahtarını ve telsiz ayarlarını ayrıca doğrula.",
     "radioOptional": "Bireysel navigasyon için isteğe bağlı",
-    "mapsNotChecked": "Harita kapsamı burada kontrol edilmez. Planlanan alanı HARİTA bölümünde kontrol et; ayrı bir harita ve pusula taşı.",
+    "mapsNotChecked": "Harita kapsaması burada kontrol edilmez. Çıkmadan önce planlanan alanı HARİTA bölümünde kontrol edin.",
     "reviewChecksTitle": "KONTROLLERİ İNCELE",
     "reviewChecksBody": "Bazı kontroller kullanılamıyor veya dikkat gerektiriyor. Devam etmeden önce koşulları değerlendir; bu liste rotanın güvenli olduğunu doğrulamaz.",
     "continue": "NAVİGASYONA DEVAM ET",
@@ -95,10 +123,10 @@ export default {
     continue: "DEVAM ET",
     startTrial: "7 GÜNLÜK ÜCRETSİZ DENEMEYİ BAŞLAT",
     current: {
-      f1: { title: "TAKIM ANAHTARI", body: "Meshtastic üzerindeki takım trafiği artık uçtan uca mühürlü. Bir takım anahtarı oluştur, eşleştirme kodunu takımına ver, herkes aynı ağı paylaşsın. Pro." },
-      f2: { title: "ÖLÇEK KATSAYISI", body: "Manyetik sapma aracı artık bulunduğun noktadaki ölçek katsayısını gösteriyor; ızgarada ölçülen 1000 m'nin arazide gerçekte ne kadar ettiğini bilirsin." },
-      f3: { title: "DAHA DOĞRU MESAFELER", body: "Kestirme seyir ve yükseklik mesafeleri artık WGS84 elipsoit hesabıyla yapılıyor; uzun kollar da doğru kalıyor." },
-      f4: { title: "DÜZELTMELER VE İYİLEŞTİRMELER", body: "İmdat işaretleri artık doğru anlatılıyor: tam ekran SOS flaşı ve yer-hava işaret tablosu. Ayrıca satın alma güvenilirliği düzeltmeleri." },
+      f1: { title: "NAVİGASYON REFERANSLARI", body: "Geriden kestirme hesapları düzeltildi; gerçek, manyetik ve ızgara kerterizleri netleştirildi." },
+      f2: { title: "GÜNCEL KONUM VERİLERİ", body: "Konum yaşı ve yedek alıcı açıkça gösterilir. Eski konumlar artık navigasyonu yönlendirmez." },
+      f3: { title: "ÇEVRİMDIŞI HAZIRLIK", body: "Ön kontrol, içe aktarılan haritanın kapsamasını ve yakınlaştırmalarını denetler; açık içe aktarma yönlendirmesi sunar." },
+      f4: { title: "PRO GERİ YÜKLEME", body: "Mağaza kullanılamadığında daha dayanıklı satın alım geri yükleme ve ücretli erişim kontrolü." },
     },
   },
   tabs: {
@@ -125,14 +153,14 @@ export default {
     upgrade: "YÜKSELT",
     dismiss: "KAPAT",
     readyForField: "SAHAYA HAZIR MISIN?",
-    download: "İNDİR",
+
     later: "SONRA",
     routeHintEmpty: "Eklemek için noktalara dokun",
     routeHintOne: "1 nokta • 2+ gerekli",
     waypointNamePlaceholder: "Nokta adı",
     newListNote: "Yeni \"MAP\" listesi oluşturulacak",
-    firstVisitBody: "Red Grid Pro ile bölgenize ait döşemeleri indirin. Sahada asla boş haritayla yakalanmayın.",
-    firstVisitModalBody: "Şu anki bölgeniz için çevrimdışı harita döşemelerini hemen indirin. Telefon şebekesini kaybetseniz bile haritalarınız yanınızda olur.",
+
+
     center: 'MERKEZ',
     addWaypoint: 'WAYPOINT EKLE',
     waypointAdded: 'WAYPOINT EKLENDİ',
@@ -142,20 +170,28 @@ export default {
     estimatedTime: 'TAHMİNİ SÜRE',
     optimizeRoute: 'ROTAYI OPTİMİZE ET',
     legs: 'BACAKLAR',
-    downloadTiles: 'KAREMLERİ İNDİR',
-    downloading: 'İNDİRİLİYOR',
+
+
     tilesReady: 'KAREMLER ÖNBELLEKTE',
     tilesCached: '{count} KAREM',
-    downloadComplete: 'İndirme tamamlandı',
-    downloadFailed: 'İndirme başarısız',
+
+
     clearCache: 'ÖNBELLEĞİ TEMİZLE',
     cacheCleared: 'Karem önbelleği temizlendi',
-    confirmDownload: 'Bu alan için harita karemleri indirilsin mi? 10-16 yakınlaştırma seviyeleri çevrimdışı kullanım için önbelleğe alınacak.',
+
     confirmClear: 'Önbelleğe alınmış tüm harita karemleri temizlensin mi?',
     offline: 'ÇEVRİMDIŞI',
     online: 'ÇEVRİMİÇİ',
   },
   gps: {
+    "staleFix": "ESKİ KONUM",
+    "sourcePhone": "TELEFON GPS",
+    "sourceExternal": "HARİCİ GPS",
+    "observedAge": "{{seconds}} sn önce gözlendi",
+    "receivedAge": "{{seconds}} sn önce alındı",
+    "accuracyUnknown": "Doğruluk bilinmiyor",
+    "phoneFallback": "Harici konum yok · telefon GPS kullanılıyor",
+
     acquiring: 'ALINIYOR',
     gpsFix: 'GPS FIX',
     noSignal: 'SİNYAL YOK',
@@ -205,9 +241,11 @@ export default {
     retry: 'TEKRAR DENE',
   },
   tools: {
+    "photoOnDevice": "FOTOĞRAF KİTAPLIĞINA KAYDEDİLDİ · CİHAZ YEDEKLEME AYARLARI GEÇERLİDİR",
+
     title: 'ARAÇLAR',
     tapToExpand: 'GENİŞLETMEK İÇİN DOKUNUN',
-    footer: 'TÜM HESAPLAMALAR YEREL · AĞ YOK · DEPOLAMA YOK',
+    footer: "CİHAZDA HESAPLAMALAR",
     barometer: 'BAROMETRE',
     barometerSub: 'Basınç eğilimi ve fırtına uyarısı',
     signal: 'İMDAT SİNYALİ',
@@ -421,9 +459,12 @@ export default {
     dms: 'DER DAK SAN',
     dmsSub: 'Derece, dakika, saniye, havacılık ve denizcilik standardı',
     fixphrase: 'FIXPHRASE',
-    fixphraseSub: '4 kelimelik konum ifadesi, ~11m hassasiyet, sıralama bağımsız',
+    fixphraseSub: "Dört kelimelik koordinat referansı; GPS doğruluğunu artırmaz",
   },
   support: {
+    "faqSourcePaid": "Neden kaynak kodu yayınlanıyor ve Pro sunuluyor?",
+    "faqSourcePaidA": "Kaynak kodu, kullanım kısıtlamaları içeren depo lisansı kapsamında incelenebilir. Mağaza uygulaması kurulum ve güncellemeleri kolaylaştırır; Pro bakımı destekler ve gelişmiş navigasyon işlevleri ekler. Koşullar için bağlantılı deponun lisansına bakın.",
+
     giftFreeTrial: "ÜCRETSİZ DENEME HEDİYE ET",
     title: 'YARDIM VE DESTEK',
     close: 'KAPAT',
@@ -436,21 +477,21 @@ export default {
     faq: 'SSS',
     privacyLegal: 'GİZLİLİK VE YASAL',
     privacyPolicy: 'Gizlilik Politikası',
-    privacySub: 'Sıfır veri toplama. Doğrulanmış.',
+    privacySub: "Yerel depolama ve isteğe bağlı harici hizmetler",
     license: 'MIT + Commons Clause Lisansı',
     copyright: '© 2026 Red Grid Tactical',
     faqCellService: 'Hücresel hizmet olmadan çalışır mı?',
-    faqCellServiceA: 'Evet. Uygulama, telefonunuzun GPS alıcısını kullanır ve doğrudan uydularla iletişim kurar. Baz istasyonu, Wi-Fi veya internet gerektirmez. Uçak modunda da çalışır.',
+    faqCellServiceA: "GPS konumu varsa koordinatlar ve yerel hesaplamalar hücresel bağlantı olmadan çalışır. Çevrimdışı haritalar önceden içe aktarılmalıdır. Çevrimiçi haritalar ve mağaza işlemleri bağlantı gerektirir.",
     faqRestore: 'Pro satın alımımı nasıl geri yüklerim?',
-    faqRestoreA: 'Pro satın alımları Apple ID\'nize bağlıdır. Yeniden yüklerseniz veya cihaz değiştirirseniz uygulama satın alımınızı otomatik olarak algılar. Algılamazsa, TEMA sekmesine gidin ve Geri Yükle seçeneğini arayın.',
+    faqRestoreA: "Pro satın aldığınız Apple veya Google hesabıyla aşağıdaki Satın alımı geri yükle seçeneğini kullanın. Satın alımı doğrulamak için internet gerekebilir.",
     faqData: 'Bu uygulama hangi verileri toplar?',
-    faqDataA: 'Hiçbir şey. Sıfır analitik, sıfır izleme, sıfır çökme raporu. GPS koordinatları yalnızca bellekte bulunur ve uygulamayı kapattığınızda atılır.',
+    faqDataA: "Kayıtlı noktalar, rotalar, ayarlar ve kullanım sayaçları cihazda kalır; uygulama analitiği olarak yüklenmez. Çevrimiçi haritalar ve mağazalar harici hizmetler kullanır. Dışa aktarma, fotoğraf kaydetme ve telsiz paylaşımı sizin seçiminizle yapılır.",
     faqAccuracy: 'MGRS ızgarası ne kadar hassastır?',
-    faqAccuracyA: 'Red Grid, Vincenty kerteriz/mesafe hesaplamalarıyla TM 8358.1\'den DMA (Defense Mapping Agency) MGRS algoritmasını kullanır. Hassasiyet, telefonunuzun GPS yongası ve uydu geometrisine bağlıdır.',
+    faqAccuracyA: "Izgara basamakları koordinat çözünürlüğünü gösterir, ölçülen doğruluğu değil. Doğruluk alıcıya, açık gökyüzüne ve konumun yaşına bağlıdır. Gösterilen belirsizliği kontrol edin ve bağımsız navigasyon referansları kullanın.",
     faqWhatIsMgrs: 'MGRS nedir?',
     faqWhatIsMgrsA: 'Military Grid Reference System (Askeri Izgara Referans Sistemi). NATO orduları tarafından kullanılan bir coğrafi koordinat standardıdır. UTM üzerine kuruludur ancak belirsiz olmayan konum raporlaması için bir ızgara bölgesi belirleyici ve 100km kare tanımlaması ekler.',
-    faqDagr: 'DAGR\'ımın yerine geçer mi?',
-    faqDagrA: 'Eğitim, STX, sırt çantalı yürüyüşler ve izin verilen GPS ortamları için: evet. DAGR\'ın SAASM modülü, çekişmeli ortamlarda önemlidir, ancak çoğu kullanım durumunda Red Grid aynı temel kara navigasyon yeteneklerini sunar.',
+    faqDagr: "Özel navigasyon ekipmanının yerini alır mı?",
+    faqDagrA: "Red Grid telefonla saha navigasyonunu destekler. Özel veya askerî navigasyon ekipmanının yerine kullanım için sertifikalı değildir. Uygun bağımsız navigasyon araçları taşıyın.",
   },
   waypoints: {
     title: 'WAYPOINT LİSTELERİ',
@@ -494,6 +535,12 @@ export default {
     importRequires: 'İçe aktarma için expo-document-picker ve expo-file-system gereklidir.',
   },
   proGate: {
+    "offlineMapsSub": "Kapsama alanından çıkmadan izinli bir raster MBTiles haritası içe aktarın",
+    "waypointsRoutes": "Kayıtlı Noktalar ve Rotalar",
+    "waypointsRoutesSub": "20 noktadan oluşan en fazla 10 liste; GPX/KML nokta içe ve dışa aktarma",
+    "reportsThemesSub": "Altı rapor formu ve ek ekran paletleri",
+    "pricesUnavailable": "Güncel mağaza fiyatlarını ve satın alma seçeneklerini yüklemek için bağlanın.",
+
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} bir Pro özelliğidir',
@@ -514,11 +561,11 @@ export default {
     savedWaypoints: 'Kaydedilmiş Waypoint Listeleri',
     savedWaypointsSub: 'Adlandırılmış devriye rotaları, OBJ\'leri ve toplanma noktalarını kaydedin',
     tacticalReports: 'Taktik Raporlar',
-    tacticalReportsSub: 'ICS 201, CASEVAC, ANGUS/CFF ve özel şablonlar',
+    tacticalReportsSub: "ICS 201, CASEVAC ve ANGUS/CFF formları",
     coordFormats: 'Koordinat Formatları',
     coordFormatsSub: 'UTM, ondalık dereceler, DMS, ana ızgara ekranında',
     displayThemes: 'Görünüm Temaları',
-    displayThemesSub: 'NVG yeşili, gün beyazı, blue-force, gece görüşünü koruyun',
+    displayThemesSub: "Yeşil, beyaz ve mavi paletler; NVG sertifikası yok",
   },
   mesh: {
     pairing: {
@@ -585,6 +632,9 @@ export default {
     couldNotParse: 'MGRS KOORDİNATI AYRIŞTIRILAMADI',
   },
   iap: {
+    "restoreUnavailableTitle": "Geri yükleme kullanılamıyor",
+    "restoreUnavailableBody": "Mağaza tüm satın alımları doğrulayamadı. Mevcut erişim korundu. Lütfen tekrar deneyin.",
+
     unavailableTitle: 'Kullanılamıyor',
     unavailableBody: 'Bu derlemede uygulama içi satın alımlar kullanılamıyor.',
     storeUnavailableTitle: 'Mağaza kullanılamıyor',
@@ -606,6 +656,13 @@ export default {
     purchasedBody: 'Tüm Red Grid Pro özellikleri artık etkin.',
   },
   trial: {
+    "storageFailedTitle": "Deneme kullanılamıyor",
+    "storageFailedBody": "Deneme verileri bu cihaza kaydedilemedi. Lütfen tekrar deneyin.",
+    "shareAction": "DENEMEYİ PAYLAŞ",
+    "shareFailedTitle": "Paylaşım açılamadı",
+    "shareFailedBody": "Lütfen tekrar deneyin. Aynı kayıtlı hediye bağlantısını göndermek için paylaşımı yeniden açabilirsiniz.",
+    "banner": "Hediye deneme: {{days}} gün kaldı",
+
     welcomeAboardTitle: "ARAMIZA HOŞ GELDİN",
     welcomeAboardBody: "Bir arkadaşın seni Red Grid Tactical'a davet etti. Ücretsiz özellikleri keşfet, hazır olduğunda ana ekrandan Red Grid Pro'ya geç.",
     receivedTitle: 'PRO AÇILDI',
@@ -613,18 +670,18 @@ export default {
     alreadyUsedTitle: 'DENEME ZATEN KULLANILDI',
     alreadyUsedBody: 'Bu cihazda paylaşılan bir denemeyi zaten kullandınız.',
     linkExpiredTitle: 'BAĞLANTININ SÜRESİ DOLDU',
-    linkExpiredBody: 'Bu deneme bağlantısının süresi doldu. Yeni bir tane isteyin.',
+    linkExpiredBody: "Bu hediye bağlantısının süresi dolmuş.",
     invalidTitle: 'GEÇERSİZ DENEME BAĞLANTISI',
     invalidBody: 'Bu deneme bağlantısı doğrulanamadı.',
     shareCardTitle: '7 GÜNLÜK PRO PAYLAŞ',
-    shareCardBody: 'Bir arkadaşınıza 7 gün ücretsiz Red Grid Pro verin. Cihaz başına ömür boyu tek hediye. Arkadaşınızı dikkatle seçin.',
+    shareCardBody: "Cihaz başına bir hediye bağlantısı oluşturun. Aynı kayıtlı bağlantıyı göndermek için paylaşımı yeniden açabilirsiniz.",
     alreadySharedTitle: 'ZATEN PAYLAŞILDI',
-    alreadySharedBody: 'Ücretsiz denemenizi zaten paylaştınız. Her cihaz bir arkadaşına tam olarak bir tane 7 günlük Pro denemesi verebilir ve siz bunu zaten yaptınız. Teşekkürler.',
-    shareMessage: "Red Grid MGRS kullanıyorum, ücretsiz bir taktik MGRS navigatörü. İşte benden 7 günlük Pro:\n\n{{url}}\n\nSıfır takip, çevrimdışı haritalar, Meshtastic mesh. Telefon şebekesi olmadan çalışır.",
+    alreadySharedBody: "Bu kurulum eski bir sürümde zaten bir hediye bağlantısı oluşturmuş. Bu bağlantı burada kurtarılamaz.",
+    shareMessage: "Saha navigasyonu için Red Grid MGRS kullanıyorum. Hediye bağlantımla Pro’yu deneyin: {{url}}",
   },
   alerts: {
     tooManyTiles: 'Çok fazla karem ({{count}}). Daha küçük bir alana yakınlaştırın.',
-    confirmDownloadTiles: 'Bu alan için {{count}} karem indirilsin mi? (10-16 yakınlaştırma)',
+
     deleteWaypointTitle: 'Waypoint silinsin mi?',
     deleteWaypointBody: '{{label}} haritadan kaldırılsın.',
     thisWaypoint: 'bu waypoint',

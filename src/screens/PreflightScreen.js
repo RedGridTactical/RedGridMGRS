@@ -1,24 +1,5 @@
-/**
- * PreflightScreen — Mission Preflight (v3.4).
- *
- * Surfaces every check an operator needs before stepping off coverage:
- *   • GPS source (phone vs external) + accuracy
- *   • Mesh radio (Meshtastic) BLE connection state
- *   • Offline tile coverage for the current AO at each zoom
- *   • Permissions health (location, photo)
- *   • Battery / network hints
- *   • Saved AO packages (named bbox + zoom set bundles)
- *
- * Top of the screen shows a single READY / NOT READY summary derived from the
- * worst row, so the operator gets one-glance status before drilling in.
- *
- * Free tier: see every check + save 1 AO package. Saving a 2nd routes to the
- * Pro paywall via onShowProGate('AO Packages').
- *
- * Network policy: no fetches. The only side-effect this screen can trigger is
- * `downloadTilesForRegion` which is already user-initiated (tap "Download").
- */
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+/** Local readiness checks. Saved areas are references, not downloaded map packages. */
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Modal } from '../components/FieldModal';
 import { TextInput } from '../components/FieldInput';
@@ -26,13 +7,9 @@ import { Alert } from '../utils/fieldAlert';
 
 import { useColors } from '../utils/ThemeContext';
 import { useTranslation } from '../hooks/useTranslation';
-import { useAOPackages, FREE_AO_LIMIT, DEFAULT_AO_ZOOMS } from '../hooks/useAOPackages';
+import { useAOPackages, FREE_AO_LIMIT } from '../hooks/useAOPackages';
 import { PreflightStatusRow } from '../components/PreflightStatusRow';
-import {
-  estimateTilesForRegion,
-  checkTilesForRegion,
-  downloadTilesForRegion,
-} from '../utils/tileManager';
+import { checkImportedMapCoverage } from '../utils/tileManager';
 import { tapLight, tapMedium, notifySuccess } from '../utils/haptics';
 import { TYPE } from '../utils/typography';
 import { navigationReadiness, locationPermissionReadiness } from '../utils/fieldReadiness';
@@ -74,6 +51,7 @@ export function PreflightScreen({
   onShowProGate,
   preparedRoute,
   onStartNavigation,
+  onImportMap,
 }) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -81,7 +59,6 @@ export function PreflightScreen({
     aoPackages,
     addAOPackage,
     deleteAOPackage,
-    markAOPackageRefreshed,
     canSaveMore,
   } = useAOPackages();
 
@@ -90,28 +67,27 @@ export function PreflightScreen({
   const [pendingName, setPendingName] = useState('');
 
   // ── Tile coverage for the current AO viewport ────────────────────────────
-  const [tileCoverage, setTileCoverage] = useState({ cached: 0, total: 0 });
-  const [tileCoverageByZoom, setTileCoverageByZoom] = useState({});
-  const [tileEstimate, setTileEstimate] = useState({ totalTiles: 0, estimatedBytes: 0 });
-  const [downloading, setDownloading] = useState(false);
-  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [mapCoverage, setMapCoverage] = useState({ state: 'checking', zoomLevels: [], byZoom: {} });
+  const [areaCoverage, setAreaCoverage] = useState({});
+  const [checkingArea, setCheckingArea] = useState(null);
+  const areaCheckRequest = useRef(null);
   const [permissionHealth, setPermissionHealth] = useState({ status: 'idle', value: '' });
   const [deviceHealth, setDeviceHealth] = useState({ status: 'idle', value: '' });
   const [readinessMode, setReadinessMode] = useState('solo');
 
   // Refresh tile coverage whenever the modal opens or the viewport shifts.
   useEffect(() => {
-    if (!visible || !mapRegion) return;
+    areaCheckRequest.current = null;
+    setCheckingArea(null);
+    if (!visible) return;
     let cancelled = false;
+    setMapCoverage({ state: 'checking', zoomLevels: [], byZoom: {} });
+    setAreaCoverage({});
     (async () => {
-      const estimate = estimateTilesForRegion(mapRegion, DEFAULT_AO_ZOOMS);
-      const { aggregate, byZoom } = await readTileCoverage(mapRegion, DEFAULT_AO_ZOOMS);
-      if (cancelled) return;
-      setTileEstimate(estimate);
-      setTileCoverage(aggregate);
-      setTileCoverageByZoom(byZoom);
+      const coverage = await checkImportedMapCoverage(mapRegion);
+      if (!cancelled) setMapCoverage(coverage);
     })();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; areaCheckRequest.current = null; };
   }, [visible, mapRegion?.latitude, mapRegion?.longitude, mapRegion?.latitudeDelta, mapRegion?.longitudeDelta]);
 
   useEffect(() => {
@@ -161,30 +137,18 @@ export function PreflightScreen({
     return { status: 'warn', value: t('preflight.mesh.disconnected') };
   }, [mesh?.connectionState, mesh?.connectedDevice, mesh?.autoShare, t]);
 
-  const tilesStatus = useMemo(() => {
-    const total = tileCoverage.total || tileEstimate.totalTiles || 0;
-    const cached = tileCoverage.cached || 0;
-    if (total === 0) return { status: 'idle', value: t('preflight.tiles.noViewport') };
-    const pct = Math.round((cached / total) * 100);
-    if (pct === 100) return { status: 'ok', value: t('preflight.tiles.coverageFull', { count: total }) };
-    if (pct >= 50) return { status: 'warn', value: t('preflight.tiles.coveragePartial', { pct, count: total }) };
-    return { status: 'fail', value: t('preflight.tiles.coverageLow', { pct, count: total }) };
-  }, [tileCoverage, tileEstimate.totalTiles, t]);
-
+  const tilesStatus = useMemo(() => describeCoverage(mapCoverage, t), [mapCoverage, t]);
   const missingZoomStatus = useMemo(() => {
-    const entries = DEFAULT_AO_ZOOMS
-      .map((zoom) => ({ zoom, ...(tileCoverageByZoom[zoom] || {}) }))
-      .filter((entry) => entry.total > 0);
-    if (entries.length === 0) {
-      return { status: 'idle', value: t('preflight.tiles.missingUnknown') };
-    }
-    const missing = entries.filter((entry) => entry.cached < entry.total).map((entry) => entry.zoom);
-    if (missing.length === 0) {
-      return { status: 'ok', value: t('preflight.tiles.allZoomsCached', { zooms: DEFAULT_AO_ZOOMS.join(', ') }) };
-    }
-    const status = missing.length === entries.length ? 'fail' : 'warn';
-    return { status, value: t('preflight.tiles.missingZooms', { zooms: missing.join(', ') }) };
-  }, [tileCoverageByZoom, t]);
+    const zooms = mapCoverage.zoomLevels || [];
+    if (!zooms.length) return { status: 'warn', value: t('preflight.tiles.missingUnknown') };
+    const missing = zooms.filter(zoom => mapCoverage.byZoom?.[zoom]?.missing > 0);
+    return {
+      status: mapCoverage.state === 'complete' ? 'ok' : 'warn',
+      value: missing.length
+        ? t('preflight.tiles.missingZooms', { zooms: missing.join(', ') })
+        : t('offlinePreflight.zoomInventory', { zooms: zooms.join(', ') }),
+    };
+  }, [mapCoverage, t]);
 
   const overallStatus = navigationReadiness({
     gps: gpsStatus.status,
@@ -192,7 +156,7 @@ export function PreflightScreen({
     device: deviceHealth.status,
     mesh: meshStatus.status,
     mode: readinessMode,
-    mapStatuses: mapRegion ? [tilesStatus.status, missingZoomStatus.status] : [],
+    mapStatuses: [tilesStatus.status],
   });
 
   const beginNavigation = () => {
@@ -230,52 +194,25 @@ export function PreflightScreen({
       name,
       mapStyle,
       region: mapRegion,
+      zoomLevels: mapCoverage.zoomLevels,
     });
     if (pkg) notifySuccess();
-  }, [pendingName, mapRegion, mapStyle, addAOPackage]);
+  }, [pendingName, mapRegion, mapStyle, mapCoverage.zoomLevels, addAOPackage]);
 
-  // ── Download flow ────────────────────────────────────────────────────────
-  const triggerDownload = useCallback(async (
-    region,
-    aoId,
-    zoomLevels = DEFAULT_AO_ZOOMS,
-    style = mapStyle,
-    updateCurrentCoverage = true
-  ) => {
-    if (!region) return;
-    setDownloading(true);
-    setDownloadProgress(0);
+  // Recheck saved bounds against the currently imported map. This never
+  // downloads tiles or changes a saved area's refresh timestamp.
+  const checkSavedArea = useCallback(async (pkg) => {
+    if (areaCheckRequest.current) return;
+    const request = {};
+    areaCheckRequest.current = request;
+    setCheckingArea(pkg.id);
     try {
-      const result = await downloadTilesForRegion(
-        region,
-        zoomLevels,
-        (done, total) => {
-          setDownloadProgress(total > 0 ? done / total : 0);
-        },
-        { style }
-      );
-      if (aoId) await markAOPackageRefreshed(aoId);
-      const shouldUpdateCurrent = updateCurrentCoverage || regionsEqual(region, mapRegion);
-      if (shouldUpdateCurrent) {
-        const { aggregate, byZoom } = await readTileCoverage(mapRegion || region, DEFAULT_AO_ZOOMS);
-        setTileCoverage(aggregate);
-        setTileCoverageByZoom(byZoom);
-      }
-      Alert.alert(
-        t('preflight.tiles.downloadDoneTitle'),
-        t('preflight.tiles.downloadDoneBody', {
-          downloaded: result.downloaded,
-          skipped: result.skipped,
-          failed: result.failed,
-        })
-      );
-    } catch (err) {
-      Alert.alert(t('preflight.errors.title'), t('preflight.errors.downloadFailed'));
+      const coverage = await checkImportedMapCoverage(pkg.region);
+      if (areaCheckRequest.current === request) setAreaCoverage(current => ({ ...current, [pkg.id]: coverage }));
     } finally {
-      setDownloading(false);
-      setDownloadProgress(0);
+      if (areaCheckRequest.current === request) { areaCheckRequest.current = null; setCheckingArea(null); }
     }
-  }, [mapStyle, mapRegion, markAOPackageRefreshed, t]);
+  }, []);
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
@@ -351,28 +288,18 @@ export function PreflightScreen({
             label={t('preflight.tiles.label')}
             value={tilesStatus.value}
             status={tilesStatus.status}
-            actionLabel={
-              downloading
-                ? t('preflight.tiles.downloading', { pct: Math.round(downloadProgress * 100) })
-                : (tileCoverage.total > 0 && tileCoverage.cached < tileCoverage.total ? t('preflight.tiles.download') : null)
-            }
-            onAction={
-              !downloading && tileCoverage.total > 0 && tileCoverage.cached < tileCoverage.total
-                ? () => triggerDownload(mapRegion, null, DEFAULT_AO_ZOOMS, mapStyle, true)
-                : undefined
-              }
+            actionLabel={onImportMap ? t('nightDisplay.importMap') : null}
+            onAction={onImportMap}
           />
           <PreflightStatusRow
-            label={t('preflight.tiles.missingLabel')}
+            label={t('offlinePreflight.importedZooms')}
             value={missingZoomStatus.value}
             status={missingZoomStatus.status}
           />
-          {tileEstimate.totalTiles > 0 && (
+          <Text style={[styles.estimateLine, { color: colors.text3 }]}>{t(mapRegion ? 'offlinePreflight.viewportScope' : 'fieldNav.mapsNotChecked')}</Text>
+          {mapCoverage.metadata && (
             <Text style={[styles.estimateLine, { color: colors.text3 }]}>
-              {t('preflight.tiles.estimate', {
-                tiles: tileEstimate.totalTiles,
-                size: formatMB(tileEstimate.estimatedBytes),
-              })}
+              {mapCoverage.metadata.name}{'\n'}{t('offlinePreflight.bounds', { bounds: formatBounds(mapCoverage.metadata.bounds) })}
             </Text>
           )}
 
@@ -416,15 +343,10 @@ export function PreflightScreen({
               pkg={pkg}
               colors={colors}
               t={t}
-              onRefresh={() => triggerDownload(
-                pkg.region,
-                pkg.id,
-                Array.isArray(pkg.zoomLevels) ? pkg.zoomLevels : DEFAULT_AO_ZOOMS,
-                pkg.mapStyle || mapStyle,
-                false
-              )}
+              onCheck={() => checkSavedArea(pkg)}
+              coverage={areaCoverage[pkg.id]}
               onDelete={() => deleteAOPackage(pkg.id)}
-              busy={downloading}
+              busy={!!checkingArea}
             />
           ))}
 
@@ -489,14 +411,8 @@ function SectionHeader({ colors, label }) {
   );
 }
 
-function AOPackageRow({ pkg, colors, t, onRefresh, onDelete, busy }) {
-  const ago = pkg.lastRefreshed
-    ? t('preflight.aos.refreshedAgo', { ago: timeAgo(pkg.lastRefreshed) })
-    : t('preflight.aos.neverRefreshed');
-  const mapStyle = String(pkg.mapStyle || 'standard').toUpperCase();
-  const tileCount = Number.isFinite(pkg.tileCount) ? pkg.tileCount : 0;
-  const estimatedBytes = Number.isFinite(pkg.estimatedBytes) ? pkg.estimatedBytes : 0;
-  const detail = `${mapStyle} · ${tileCount} tiles · ${formatMB(estimatedBytes)} · ${ago}`;
+function AOPackageRow({ pkg, colors, t, onCheck, onDelete, busy, coverage }) {
+  const detail = coverage ? describeCoverage(coverage, t).value : t('offlinePreflight.savedAreaOnly');
   return (
     <View style={[styles.aoRow, { borderColor: colors.border2 }]}>
       <View style={styles.textCol}>
@@ -506,12 +422,12 @@ function AOPackageRow({ pkg, colors, t, onRefresh, onDelete, busy }) {
       <View style={styles.aoActions}>
         <TouchableOpacity
           style={[styles.aoBtn, { borderColor: colors.accent }, busy && { opacity: 0.4 }]}
-          onPress={busy ? undefined : onRefresh}
+          onPress={busy ? undefined : onCheck}
           disabled={busy}
           accessibilityRole="button"
-          accessibilityLabel={`${t('preflight.aos.refresh')} ${pkg.name}`}
+          accessibilityLabel={`${t('offlinePreflight.checkArea')} ${pkg.name}`}
         >
-          <Text style={[styles.aoBtnText, { color: colors.accentText }]}>{t('preflight.aos.refresh')}</Text>
+          <Text style={[styles.aoBtnText, { color: colors.accentText }]}>{t('offlinePreflight.checkArea')}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.aoBtn, { borderColor: colors.border }]}
@@ -536,35 +452,25 @@ function AOPackageRow({ pkg, colors, t, onRefresh, onDelete, busy }) {
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
-async function readTileCoverage(region, zoomLevels) {
-  if (!region || !Array.isArray(zoomLevels)) {
-    return { aggregate: { cached: 0, missing: 0, total: 0 }, byZoom: {} };
+function describeCoverage(coverage, t) {
+  const states = {
+    checking: ['warn', 'offlinePreflight.checking'],
+    unscoped: ['warn', 'fieldNav.mapsNotChecked'],
+    no_map: ['fail', 'offlinePreflight.noMap'],
+    uncheckable: ['warn', 'offlinePreflight.uncheckable'],
+  };
+  if (states[coverage.state]) {
+    const [status, key] = states[coverage.state];
+    return { status, value: t(key) };
   }
+  if (coverage.state === 'complete') return { status: 'ok', value: t('preflight.tiles.coverageFull', { count: coverage.total }) };
+  const pct = coverage.total ? Math.floor(coverage.cached / coverage.total * 100) : 0;
+  return { status: 'fail', value: t('preflight.tiles.coverageLow', { pct, count: coverage.total || 0 }) };
+}
 
-  const results = await Promise.all(zoomLevels.map(async (zoom) => {
-    try {
-      const coverage = await checkTilesForRegion(region, [zoom]);
-      return { zoom, coverage };
-    } catch {
-      return { zoom, coverage: { cached: 0, missing: 0, total: 0 } };
-    }
-  }));
-
-  const byZoom = {};
-  const aggregate = { cached: 0, missing: 0, total: 0 };
-  results.forEach(({ zoom, coverage }) => {
-    const safeCoverage = {
-      cached: Number.isFinite(coverage?.cached) ? coverage.cached : 0,
-      missing: Number.isFinite(coverage?.missing) ? coverage.missing : 0,
-      total: Number.isFinite(coverage?.total) ? coverage.total : 0,
-    };
-    byZoom[zoom] = safeCoverage;
-    aggregate.cached += safeCoverage.cached;
-    aggregate.missing += safeCoverage.missing;
-    aggregate.total += safeCoverage.total;
-  });
-
-  return { aggregate, byZoom };
+function formatBounds(bounds) {
+  if (!Array.isArray(bounds) || bounds.length !== 4 || !bounds.every(Number.isFinite)) return '—';
+  return bounds.map(value => value.toFixed(4)).join(', ');
 }
 
 async function buildPermissionHealth(t) {
@@ -721,39 +627,6 @@ function networkTypeLabel(t, type) {
 function worstStatus(a, b) {
   const rank = { idle: 0, ok: 1, warn: 2, fail: 3 };
   return (rank[b] || 0) > (rank[a] || 0) ? b : a;
-}
-
-function regionsEqual(a, b) {
-  if (!a || !b) return false;
-  const fields = ['latitude', 'longitude', 'latitudeDelta', 'longitudeDelta'];
-  return fields.every((field) => (
-    Number.isFinite(a[field]) &&
-    Number.isFinite(b[field]) &&
-    Math.abs(a[field] - b[field]) < 0.000001
-  ));
-}
-
-function formatMB(bytes) {
-  if (!bytes || bytes < 1) return '0 MB';
-  const mb = bytes / (1024 * 1024);
-  if (mb < 1) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${mb.toFixed(1)} MB`;
-}
-
-function timeAgo(iso) {
-  try {
-    const then = new Date(iso).getTime();
-    const diff = Date.now() - then;
-    const m = Math.floor(diff / 60000);
-    if (m < 1) return 'just now';
-    if (m < 60) return `${m}m ago`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h ago`;
-    const d = Math.floor(h / 24);
-    return `${d}d ago`;
-  } catch {
-    return '—';
-  }
 }
 
 const styles = StyleSheet.create({

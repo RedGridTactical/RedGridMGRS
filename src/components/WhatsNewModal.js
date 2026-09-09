@@ -17,10 +17,16 @@ const SEEN_KEY = 'rg_whatsnew_seen_version';
 // The release whose bullets are translated under `whatsNew.current` in i18n.
 // Bump this in lockstep with the entry added to FEATURES_BY_VERSION below, or
 // the modal silently falls back to English.
-const LOCALIZED_VERSION = '4.0.4';
+const LOCALIZED_VERSION = '4.0.6';
 
 // Features to showcase for a given version. Keep terse — this is a glance screen.
 const FEATURES_BY_VERSION = {
+  '4.0.6': [
+    { icon: '◉', title: 'NAVIGATION REFERENCES', body: 'Corrected resection calculations and clearer true, magnetic and grid bearings.' },
+    { icon: '◆', title: 'FRESH POSITION DATA', body: 'Position age and receiver fallback are explicit. Stale fixes no longer drive navigation.' },
+    { icon: '✓', title: 'OFFLINE READINESS', body: 'Preflight checks imported map coverage and zoom levels, with clear import guidance.' },
+    { icon: '⤴', title: 'PRO RECOVERY', body: 'More resilient purchase restoration and paid-access checks when the store is unavailable.' },
+  ],
   '4.0.4': [
     {
       icon: '⤴',

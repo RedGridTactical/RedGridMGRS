@@ -3,6 +3,30 @@
  * Military/NATO terms (MGRS, SALUTE, UTM, DAGR, etc.) stay English in all locales.
  */
 export default {
+    "offlinePreflight": {
+    "checking": "Checking imported map…",
+    "noMap": "No imported map. Import a permitted MBTiles file from MAP.",
+    "uncheckable": "Coverage could not be checked. Try a smaller viewport or check after the import finishes.",
+    "zoomInventory": "Imported zooms: {{zooms}}",
+    "importedZooms": "Imported zoom levels",
+    "viewportScope": "Checks the current map viewport at each imported zoom, not the whole route. Missing tiles can leave gaps; bounds alone do not prove coverage.",
+    "bounds": "Bounds W, S, E, N: {{bounds}}",
+    "savedAreaOnly": "Saved area reference only. Check against the current imported map.",
+    "checkArea": "CHECK"
+  },
+    "navigation": {
+    "trueHeadingUnavailable": "True heading unavailable. Use the numeric true bearing with a map or compass.",
+    "referenceLegend": "T = true north · M = magnetic north · G = grid north",
+    "arrowRelative": "Waypoint direction {{degrees}} degrees clockwise from the top of the phone.",
+    "resectionInputs": "Bearings are from your position to each landmark. Select true (T) or magnetic (M) north.",
+    "resectionLimits": "Local estimate only: each landmark must be within 100 km; bearing separation must be 5°–175°. Compass and map errors affect the result.",
+    "resectionDeclination": "For magnetic bearings, enter known local declination (east +, west −). Enter 0 only if confirmed.",
+    "resectionInvalid": "No reliable local solution. Check coordinates, bearing direction, north reference and separation.",
+    "magToTrue": "MAG → TRUE",
+    "trueToMag": "TRUE → MAG",
+    "trueBearingInput": "TRUE BEARING INPUT (°)"
+  },
+
   nightDisplay: {
     mapBusy: "A map import is in progress. Wait or cancel it before clearing the map.",
     importCancelled: "Import cancelled. Your saved map is unchanged.",
@@ -32,7 +56,7 @@ export default {
     legs: "LEGS",
     total: "TOTAL",
     dtg: "DTG",
-    footer: "Red Grid MGRS · offline · no network",
+    footer: "Red Grid MGRS · straight-line route plan",
     shareTitle: "Route Card",
     shareFailed: "Share failed",
     saveFailed: "Save failed",
@@ -68,7 +92,7 @@ export default {
     soloHint: 'Solo navigation uses your GPS and device. A radio, camera permission and an internet connection are optional.',
     teamHint: 'Team readiness also checks the Meshtastic radio connection. Confirm your team key and radio settings separately.',
     radioOptional: 'Optional for solo navigation',
-    mapsNotChecked: 'Map coverage is not checked here. Check the intended area in MAP and carry an independent map and compass.',
+    mapsNotChecked: "Map coverage is not checked here. Open MAP to check the intended area before departure.",
     reviewChecksTitle: 'REVIEW THE CHECKS',
     reviewChecksBody: 'Some checks are unavailable or need attention. Review the conditions before continuing; this checklist does not establish route safety.',
     continue: 'CONTINUE NAVIGATION',
@@ -108,13 +132,13 @@ export default {
     saveNav: 'SAVE + NAV',
     navOnly: 'NAV ONLY',
     offlineMapsReady: 'OFFLINE MAPS READY',
-    firstVisitBody: 'Download tiles for your area with Red Grid Pro. Never get caught with a blank map in the field.',
+
     startFreeTrial: 'START FREE TRIAL',
     upgrade: 'UPGRADE',
     dismiss: 'DISMISS',
     readyForField: 'READY FOR THE FIELD?',
-    firstVisitModalBody: "Download offline map tiles for your current area now. You'll have maps even when you lose cell service.",
-    download: 'DOWNLOAD',
+
+
     later: 'LATER',
     center: 'CENTER',
     addWaypoint: 'ADD WAYPOINT',
@@ -125,15 +149,15 @@ export default {
     estimatedTime: 'ESTIMATED TIME',
     optimizeRoute: 'OPTIMIZE ROUTE',
     legs: 'LEGS',
-    downloadTiles: 'DOWNLOAD TILES',
-    downloading: 'DOWNLOADING',
+
+
     tilesReady: 'TILES CACHED',
     tilesCached: '{count} TILES',
-    downloadComplete: 'Download complete',
-    downloadFailed: 'Download failed',
+
+
     clearCache: 'CLEAR CACHE',
     cacheCleared: 'Tile cache cleared',
-    confirmDownload: 'Download map tiles for this area? This will cache zoom levels 10-16 for offline use.',
+
     confirmClear: 'Clear all cached map tiles?',
     offline: 'OFFLINE',
     online: 'ONLINE',
@@ -141,6 +165,14 @@ export default {
 
   // ─── GPS / Signal ─────────────────────────────────────────────────────
   gps: {
+    "staleFix": "STALE FIX",
+    "sourcePhone": "PHONE GPS",
+    "sourceExternal": "EXTERNAL GPS",
+    "observedAge": "Observed {{seconds}}s ago",
+    "receivedAge": "Received {{seconds}}s ago",
+    "accuracyUnknown": "Accuracy unknown",
+    "phoneFallback": "External fix unavailable · using phone GPS",
+
     acquiring: 'ACQUIRING',
     gpsFix: 'GPS FIX',
     noSignal: 'NO SIGNAL',
@@ -198,9 +230,11 @@ export default {
 
   // ─── Tools screen ─────────────────────────────────────────────────────
   tools: {
+    "photoOnDevice": "SAVED TO PHOTO LIBRARY · DEVICE BACKUP SETTINGS APPLY",
+
     title: 'TOOLS',
     tapToExpand: 'TAP TO EXPAND',
-    footer: 'ALL COMPUTATIONS LOCAL \u00b7 NO NETWORK \u00b7 NO STORAGE',
+    footer: "ON-DEVICE CALCULATIONS",
     barometer: 'BAROMETER',
     barometerSub: 'Pressure trend and storm warning',
     signal: 'DISTRESS SIGNAL',
@@ -425,11 +459,14 @@ export default {
     dms: 'DEG MIN SEC',
     dmsSub: 'Degrees, minutes, seconds, aviation and nautical standard',
     fixphrase: 'FIXPHRASE',
-    fixphraseSub: '4-word location phrase, ~11m accuracy, order-independent',
+    fixphraseSub: "Four-word coordinate reference; does not improve GPS accuracy",
   },
 
   // ─── Support / Help screen ────────────────────────────────────────────
   support: {
+    "faqSourcePaid": "Why publish the source and offer Pro?",
+    "faqSourcePaidA": "The source is available for inspection under the repository license, which includes use restrictions. The store app makes installation and updates simpler; Pro supports maintenance and adds advanced navigation workflows. See the license in the linked source repository for its terms.",
+
     giftFreeTrial: 'GIFT A FREE TRIAL',
     title: 'HELP & SUPPORT',
     close: 'CLOSE',
@@ -442,22 +479,22 @@ export default {
     faq: 'FAQ',
     privacyLegal: 'PRIVACY & LEGAL',
     privacyPolicy: 'Privacy Policy',
-    privacySub: 'Zero data collection. Verified.',
+    privacySub: "Local storage and optional external services",
     license: 'MIT + Commons Clause License',
     copyright: '\u00a9 2026 Red Grid Tactical',
     // FAQ items
     faqCellService: 'Does this work without cell service?',
-    faqCellServiceA: "Yes. The app uses your phone's GPS receiver, which communicates directly with satellites. No cell tower, Wi-Fi, or internet required. Works in airplane mode.",
+    faqCellServiceA: "Coordinates and local calculations work without cell service when a GPS fix is available. Offline maps require a map imported beforehand. Online maps and store actions need a connection.",
     faqRestore: 'How do I restore my Pro purchase?',
-    faqRestoreA: "Pro purchases are tied to your Apple ID. If you reinstall or switch devices, the app will automatically detect your purchase. If it doesn't, go to the THEME tab and look for a Restore option.",
+    faqRestoreA: "Use Restore Previous Purchase below while signed into the same Apple or Google store account used to buy Pro. An internet connection may be needed to verify the purchase.",
     faqData: 'What data does this app collect?',
-    faqDataA: 'None. Zero analytics, zero tracking, zero crash reporting. GPS coordinates exist in memory only and are discarded when you close the app.',
+    faqDataA: "Saved points, routes, settings and usage counters remain on this device; they are not uploaded as app analytics. Online maps and stores use external services. Exports, photo saving and radio sharing happen when you choose those actions.",
     faqAccuracy: 'How accurate is the MGRS grid?',
-    faqAccuracyA: "Red Grid uses the DMA (Defense Mapping Agency) MGRS algorithm from TM 8358.1 with Vincenty bearing/distance calculations. Accuracy depends on your phone's GPS chip and satellite geometry.",
+    faqAccuracyA: "Grid digits describe coordinate resolution, not measured position accuracy. Accuracy depends on the receiver, sky view and fix age. Check the displayed uncertainty and use independent navigation references.",
     faqWhatIsMgrs: 'What is MGRS?',
     faqWhatIsMgrsA: "Military Grid Reference System. A geocoordinate standard used by NATO militaries. It's built on UTM but adds a grid zone designator and 100km square identification for unambiguous position reporting.",
-    faqDagr: 'Does it replace my DAGR?',
-    faqDagrA: "For training, STXs, ruck marches, and permissive GPS environments: yes. The DAGR's SAASM module matters in contested environments, but for most use cases Red Grid delivers the same core land nav capabilities.",
+    faqDagr: "Can this replace dedicated navigation equipment?",
+    faqDagrA: "Red Grid supports phone-based field navigation. It has not been certified as a replacement for dedicated or military navigation equipment. Carry suitable independent navigation references.",
   },
 
   // ─── Waypoint lists screen ────────────────────────────────────────────
@@ -540,22 +577,22 @@ export default {
     savedWaypoints: 'Saved Waypoint Lists',
     savedWaypointsSub: 'Save named patrol routes, OBJs, and rally points',
     tacticalReports: 'Tactical Reports',
-    tacticalReportsSub: 'ICS 201, CASEVAC, ANGUS/CFF, and custom templates',
+    tacticalReportsSub: "ICS 201, CASEVAC and ANGUS/CFF forms",
     coordFormats: 'Coordinate Formats',
     coordFormatsSub: 'UTM, decimal degrees, DMS, on the main grid display',
     displayThemes: 'Display Themes',
-    displayThemesSub: 'NVG green, day white, blue-force, preserve night vision',
+    displayThemesSub: "Green, white and blue display palettes; no NVG certification",
     offlineMaps: 'Offline Tactical Maps',
-    offlineMapsSub: 'Download your AO, never a blank map in the field',
+    offlineMapsSub: "Import a permitted raster MBTiles map before leaving coverage",
     meshAwareness: 'Meshtastic Mesh',
     meshAwarenessSub: 'See mesh nodes on the map, no cell service needed',
     allTools: 'All 12 Tactical Tools',
     allToolsSub: 'Dead reckoning, resection, sun/moon, geostamp, and more',
-    waypointsRoutes: 'Unlimited Waypoints & Routes',
-    waypointsRoutesSub: 'Plan routes, save lists, import/export GPX & KML',
+    waypointsRoutes: "Saved Waypoints & Routes",
+    waypointsRoutesSub: "Up to 10 lists of 20 points; GPX/KML point import and export",
     reportsThemes: 'All Reports & Themes',
-    reportsThemesSub: 'ICS 201, CASEVAC, CFF, plus NVG and day themes',
-    pricesUnavailable: 'Connect to the internet to load prices and subscribe.',
+    reportsThemesSub: "Six report forms and additional display palettes",
+    pricesUnavailable: "Connect to load current store prices and purchase options.",
     tryFreeBadge: 'PRO, TRY FREE',
   },
 
@@ -655,6 +692,9 @@ export default {
   },
 
   iap: {
+    "restoreUnavailableTitle": "Restore unavailable",
+    "restoreUnavailableBody": "The store could not verify all purchases. Existing access has been kept. Please try again.",
+
     unavailableTitle: 'Unavailable',
     unavailableBody: 'In-app purchases are not available in this build.',
     storeUnavailableTitle: 'Store unavailable',
@@ -677,6 +717,13 @@ export default {
   },
 
   trial: {
+    "storageFailedTitle": "Trial unavailable",
+    "storageFailedBody": "Could not save trial data on this device. Please try again.",
+    "shareAction": "SHARE TRIAL",
+    "shareFailedTitle": "Could not open sharing",
+    "shareFailedBody": "Please try again. You can reopen sharing to send the same saved gift link.",
+    "banner": "Gift trial: {{days}} days remaining",
+
     welcomeAboardTitle: "WELCOME ABOARD",
     welcomeAboardBody: "A friend has invited you to Red Grid Tactical. Explore the free features, then upgrade to Red Grid Pro from the home screen whenever you're ready.",
     receivedTitle: 'PRO UNLOCKED',
@@ -684,19 +731,19 @@ export default {
     alreadyUsedTitle: 'Trial Already Used',
     alreadyUsedBody: 'You have already redeemed a shared trial on this device.',
     linkExpiredTitle: 'Link Expired',
-    linkExpiredBody: 'This trial link has expired. Ask for a new one.',
+    linkExpiredBody: "This gift link has expired.",
     invalidTitle: 'Invalid Trial Link',
     invalidBody: 'This trial link could not be verified.',
     shareCardTitle: 'SHARE 7 DAYS OF PRO',
-    shareCardBody: 'Give a friend 7 days of Red Grid Pro free. One gift per device, ever. Choose your friend carefully.',
+    shareCardBody: "Create one gift link per device. You can reopen sharing to send the same saved link.",
     alreadySharedTitle: 'Already Shared',
-    alreadySharedBody: 'You have already shared your free trial. Each device can give exactly one 7-day Pro trial to a friend, and you already did. Thank you.',
-    shareMessage: "I'm using Red Grid MGRS, a free tactical MGRS navigator. Here's 7 days of Pro on me:\n\n{{url}}\n\nZero tracking, offline maps, Meshtastic mesh. Works without cell service.",
+    alreadySharedBody: "This installation already created a gift link in an older version. That link cannot be recovered here.",
+    shareMessage: "I use Red Grid MGRS for field navigation. Try Pro using my gift link: {{url}}",
   },
 
   alerts: {
     tooManyTiles: 'Too many tiles ({{count}}). Zoom in to a smaller area.',
-    confirmDownloadTiles: 'Download {{count}} tiles for this area? (zoom 10-16)',
+
     deleteWaypointTitle: 'Delete waypoint?',
     deleteWaypointBody: 'Remove {{label}} from the map.',
     thisWaypoint: 'this waypoint',
@@ -713,10 +760,10 @@ export default {
     continue: 'CONTINUE',
     startTrial: 'START 7-DAY FREE TRIAL',
     current: {
-      f1: { title: "TEAM KEY", body: "Team traffic over Meshtastic is now sealed end to end. Create a team key, read the pairing code to your team, and everyone on it shares the same net. Pro." },
-      f2: { title: "GRID SCALE FACTOR", body: "The Declination tool now shows the scale factor where you stand, so you know how much ground you really cover per 1000 m measured off the grid." },
-      f3: { title: "TRUER DISTANCES", body: "Dead reckoning and elevation distances now use ellipsoidal WGS84 math, so long legs stay accurate." },
-      f4: { title: "CORRECTIONS & FIXES", body: "Distress signalling is now described accurately: a full-screen SOS strobe with the ground-to-air signal reference. Plus purchase reliability fixes." },
+      f1: { title: "NAVIGATION REFERENCES", body: "Corrected resection calculations and clearer true, magnetic and grid bearings." },
+      f2: { title: "FRESH POSITION DATA", body: "Position age and receiver fallback are explicit. Stale fixes no longer drive navigation." },
+      f3: { title: "OFFLINE READINESS", body: "Preflight checks imported map coverage and zoom levels, with clear import guidance." },
+      f4: { title: "PRO RECOVERY", body: "More resilient purchase restoration and paid-access checks when the store is unavailable." },
     },
   },
 
@@ -733,7 +780,7 @@ export default {
       mesh: 'MESH RADIO',
       offline: 'OFFLINE TILES',
       device: 'DEVICE READINESS',
-      aos: 'SAVED AO PACKAGES',
+      aos: "SAVED AREAS",
     },
     gps: {
       source: 'GPS source',
@@ -757,11 +804,11 @@ export default {
       missingUnknown: 'Zoom coverage not checked yet',
       allZoomsCached: 'Zooms {{zooms}} cached',
       missingZooms: 'Missing zooms {{zooms}}',
-      download: 'DOWNLOAD',
-      downloading: '{{pct}}%',
-      estimate: '{{tiles}} tiles \u00b7 ~{{size}}',
-      downloadDoneTitle: 'TILES DOWNLOADED',
-      downloadDoneBody: '{{downloaded}} downloaded, {{skipped}} already cached, {{failed}} failed.',
+
+
+
+
+
     },
     permissions: {
       label: 'Permissions health',
@@ -812,23 +859,23 @@ export default {
       countPro: '{{count}}',
       empty: 'No saved AOs yet. Save the current viewport to start.',
       saveCurrent: 'SAVE CURRENT AO',
-      refresh: 'REFRESH',
+
       delete: 'DELETE',
-      refreshedAgo: 'refreshed {{ago}}',
-      neverRefreshed: 'never refreshed',
+
+
       namePromptTitle: 'NAME THIS AO',
       namePromptHint: 'Short tactical label, e.g. "Range 23", "Patrol Base", "SAR Segment A".',
       namePlaceholder: 'Range 23',
       deleteTitle: 'DELETE AO?',
       deleteBody: 'Remove "{{name}}" from saved AOs? Tiles in cache are not affected.',
-      proFeatureName: 'Unlimited AO Packages',
+      proFeatureName: "Additional saved areas",
     },
     errors: {
       title: 'PREFLIGHT ERROR',
       noViewport: 'Open the map first so the preflight can read a viewport.',
-      downloadFailed: 'Tile download failed. Check connectivity and try again.',
+
     },
-    footnote: "Checks run on this device. AO packages and imported maps stay local. Add maps by importing a file; area downloads are unavailable.",
+    footnote: "Checks stay local. Saved areas store bounds, not map packages. Import a permitted file in MAP; area downloads are unavailable.",
   },
   waypoint: {
     replaceTitle: "Replace current waypoint?",

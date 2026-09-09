@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { TextInput } from '../FieldInput';
-import { backAzimuth, applyDeclination } from '../../utils/tactical';
-import { ToolInput, ToolResult, ToolRow } from './ToolShared';
+import { backAzimuth, applyDeclination, formatBearing, isBearing, compassToGridHeading } from '../../utils/tactical';
+import { ToolInput, ToolResult, ToolRow, ToolHint } from './ToolShared';
 import { useTranslation } from '../../hooks/useTranslation';
 
-export function BackAzimuthTool({ declination }) {
+export function BackAzimuthTool({ declination, location }) {
   const { t } = useTranslation();
   const [bearing, setBearing] = useState('');
 
-  const b = parseFloat(bearing);
-  const valid = !isNaN(b) && b >= 0 && b <= 360;
+  const b = bearing.trim() ? Number(bearing) : NaN;
+  const valid = isBearing(b);
   const back = valid ? backAzimuth(b) : null;
   const backCorrected = valid ? applyDeclination(back, declination) : null;
+  const gridBack = compassToGridHeading(backCorrected, 'true', location?.lat, location?.lon);
 
   return (
     <View>
@@ -20,11 +20,11 @@ export function BackAzimuthTool({ declination }) {
 
       {back !== null && (
         <View style={styles.results}>
-          <ToolResult label={t('toolLabels.backAzimuthResult')} value={`${Math.round(back)}°`} primary />
-          {declination !== 0 && (
-            <ToolResult label={`${declination > 0 ? '+' : ''}${declination}° ${t('toolLabels.declinationLabel')}`} value={`${Math.round(backCorrected)}° ${t('toolLabels.gridBearing')}`} />
-          )}
-          <ToolRow label={t('toolLabels.input')} value={`${Math.round(b)}°`} />
+          <ToolResult label={t('toolLabels.backAzimuthResult')} value={formatBearing(back, 'magnetic')} primary />
+          <ToolResult label={`${declination > 0 ? '+' : ''}${declination}° ${t('toolLabels.declinationLabel')}`} value={formatBearing(backCorrected, 'true')} />
+          {gridBack !== null && <ToolResult label={t('toolLabels.gridBearingResult')} value={formatBearing(gridBack, 'grid')} />}
+          <ToolRow label={t('toolLabels.input')} value={formatBearing(b, 'magnetic')} />
+          <ToolHint text={t('navigation.referenceLegend', { defaultValue: 'T = true north · M = magnetic north · G = grid north' })} />
         </View>
       )}
     </View>

@@ -3,7 +3,35 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
-  preflight: { footnote: "檢查在本裝置上進行。AO 區域套件與匯入的地圖儲存於本機。請透過匯入檔案新增地圖；區域下載無法使用。" },
+    "offlinePreflight": {
+    "checking": "正在檢查已匯入地圖…",
+    "noMap": "尚未匯入地圖。請在地圖中匯入獲准使用的MBTiles檔案。",
+    "uncheckable": "無法檢查涵蓋範圍。請縮小目前顯示區域，或待匯入完成後檢查。",
+    "zoomInventory": "已匯入縮放層級：{{zooms}}",
+    "importedZooms": "已匯入的縮放層級",
+    "viewportScope": "依每個已匯入縮放層級檢查目前地圖顯示區域，而非整條路線。缺少的圖磚可能形成空白；僅有邊界資訊不能證明涵蓋完整。",
+    "bounds": "邊界（西、南、東、北）：{{bounds}}",
+    "savedAreaOnly": "僅為已儲存區域的參考資訊。請與目前匯入的地圖核對。",
+    "checkArea": "檢查"
+  },
+    "routeCard": {"footer":"Red Grid MGRS · 航點間直線路線計畫"},
+    "navigation": {
+    "trueHeadingUnavailable": "無法取得真北航向。請搭配地圖或羅盤使用顯示的真方位角數值。",
+    "referenceLegend": "T = 真北 · M = 磁北 · G = 方格北",
+    "arrowRelative": "航點方向為從手機頂端順時針轉{{degrees}}度。",
+    "resectionInputs": "方位角指從您所在位置指向各地標的方向。請選擇真北（T）或磁北（M）。",
+    "resectionLimits": "僅用於近距離估算：各地標須在100 km以內，方位角夾角須為5°–175°。羅盤和地圖誤差會影響結果。",
+    "resectionDeclination": "使用磁方位角時，請輸入已知的當地磁偏角（東為+，西為−）。只有確認後才能輸入0。",
+    "resectionInvalid": "無法求得可靠的近距離位置。請檢查座標、方位角方向、北向基準及夾角。",
+    "magToTrue": "磁北 → 真北",
+    "trueToMag": "真北 → 磁北",
+    "trueBearingInput": "輸入真方位角（°）"
+  },
+
+  preflight: {
+    "section": {"aos":"已儲存區域"},
+    "aos": {"proFeatureName":"更多已儲存區域"},
+ footnote: "檢查在本機進行。已儲存區域僅儲存邊界，不包含地圖套件。請在地圖中匯入獲准使用的檔案；區域下載不可用。" },
   nightDisplay: {
     "mapBusy": "正在匯入地圖。請等待或取消匯入後再清除地圖。",
     "importCancelled": "已取消匯入。已儲存的地圖未變更。",
@@ -57,7 +85,7 @@ export default {
     "soloHint": "單人導航使用本機 GPS 與裝置。無線電、相機權限及網際網路連線均為選用。",
     "teamHint": "團隊整備檢查也會檢查 Meshtastic 無線電連線。請另外確認團隊金鑰與無線電設定。",
     "radioOptional": "單人導航選用",
-    "mapsNotChecked": "此處不檢查地圖涵蓋範圍。請在「地圖」中檢查預定區域，並攜帶獨立的地圖與指北針。",
+    "mapsNotChecked": "此處不檢查地圖涵蓋範圍。出發前請開啟地圖，檢查預定使用的區域。",
     "reviewChecksTitle": "檢查各項狀態",
     "reviewChecksBody": "部分項目無法檢查或需要注意。繼續前請確認狀況；此檢查清單不代表路線安全。",
     "continue": "繼續導航",
@@ -95,10 +123,10 @@ export default {
     continue: "繼續",
     startTrial: "開始 7 天免費試用",
     current: {
-      f1: { title: "小隊金鑰", body: "經 Meshtastic 的小隊通訊現已端對端加密。建立小隊金鑰，把配對碼告訴隊友，全隊即可共用同一條鏈路。Pro。" },
-      f2: { title: "比例因子", body: "磁偏角工具現在會顯示所在位置的比例因子，讓你知道格網上量得的 1000 公尺在實地究竟有多遠。" },
-      f3: { title: "更準的距離", body: "航位推算與含高程的距離改用 WGS84 橢球演算法，長距離航段依然準確。" },
-      f4: { title: "更正與修正", body: "求救訊號的說明已改為準確描述：全螢幕 SOS 閃爍，並附對空地面訊號對照。另修正了購買流程的可靠性問題。" },
+      f1: { title: "導航方位基準", body: "修正後方交會計算，並明確標示真方位、磁方位及方格方位。" },
+      f2: { title: "及時的定位資料", body: "明確顯示定位資料的時效及接收機回退狀態。過時定位不再用於導航。" },
+      f3: { title: "離線準備", body: "出發前檢查已匯入地圖的涵蓋範圍和縮放層級，並提供清楚的匯入指引。" },
+      f4: { title: "PRO還原", body: "改進商店不可用時的購買還原及使用權限檢查。" },
     },
   },
   tabs: {
@@ -125,14 +153,14 @@ export default {
     upgrade: "升級",
     dismiss: "略過",
     readyForField: "準備好出勤了嗎？",
-    download: "下載",
+
     later: "稍後",
     routeHintEmpty: "點選航點以加入",
     routeHintOne: "1 個航點 • 需要 2+",
     waypointNamePlaceholder: "航點名稱",
     newListNote: "將建立新的「MAP」清單",
-    firstVisitBody: "透過 Red Grid Pro 下載您所在區域的圖磚。絕不會在野外遇到空白地圖。",
-    firstVisitModalBody: "立即下載您目前區域的離線地圖圖磚。即使失去行動網路訊號，您也能繼續使用地圖。",
+
+
     center: '中心',
     addWaypoint: '新增航點',
     waypointAdded: '已新增航點',
@@ -142,20 +170,28 @@ export default {
     estimatedTime: '預計時間',
     optimizeRoute: '最佳化路線',
     legs: '航段',
-    downloadTiles: '下載圖磚',
-    downloading: '下載中',
+
+
     tilesReady: '圖磚已快取',
     tilesCached: '{count} 個圖磚',
-    downloadComplete: '下載完成',
-    downloadFailed: '下載失敗',
+
+
     clearCache: '清除快取',
     cacheCleared: '圖磚快取已清除',
-    confirmDownload: '為此區域下載地圖圖磚?將快取縮放等級 10-16 以供離線使用。',
+
     confirmClear: '清除所有已快取的地圖圖磚?',
     offline: '離線',
     online: '線上',
   },
   gps: {
+    "staleFix": "定位已過時",
+    "sourcePhone": "手機GPS",
+    "sourceExternal": "外部GPS",
+    "observedAge": "{{seconds}}秒前測得",
+    "receivedAge": "{{seconds}}秒前收到",
+    "accuracyUnknown": "精度未知",
+    "phoneFallback": "外部定位不可用 · 正在使用手機GPS",
+
     acquiring: '擷取中',
     gpsFix: 'GPS 定位',
     noSignal: '無訊號',
@@ -205,9 +241,11 @@ export default {
     retry: '重試',
   },
   tools: {
+    "photoOnDevice": "儲存至照片圖庫 · 依裝置備份設定處理",
+
     title: '工具',
     tapToExpand: '點擊展開',
-    footer: '所有計算皆於本機 · 無網路 · 無儲存',
+    footer: "裝置內計算",
     barometer: '氣壓計',
     barometerSub: '氣壓趨勢與風暴預警',
     signal: '求救訊號',
@@ -421,9 +459,12 @@ export default {
     dms: '度 分 秒',
     dmsSub: '度、分、秒, 航空與航海標準',
     fixphrase: 'FIXPHRASE',
-    fixphraseSub: '4 個詞的位置短語, 約 11m 精度,與順序無關',
+    fixphraseSub: "四詞座標標識；不會提高GPS精度",
   },
   support: {
+    "faqSourcePaid": "為什麼公開原始碼並提供Pro？",
+    "faqSourcePaidA": "原始碼可依儲存庫授權條款查閱，條款包含使用限制。商店版應用程式便於安裝和更新；Pro支持維護，並提供進階導航功能。具體條款請查閱所連結儲存庫的授權文件。",
+
     giftFreeTrial: "贈送免費試用",
     title: '說明與支援',
     close: '關閉',
@@ -436,21 +477,21 @@ export default {
     faq: '常見問題',
     privacyLegal: '隱私與法律',
     privacyPolicy: '隱私權政策',
-    privacySub: '零資料蒐集。已驗證。',
+    privacySub: "本機儲存及選用的外部服務",
     license: 'MIT + Commons Clause 授權',
     copyright: '© 2026 Red Grid Tactical',
     faqCellService: '沒有行動訊號也能用嗎?',
-    faqCellServiceA: '可以。本應用程式使用您手機的 GPS 接收器,直接與衛星通訊。不需要基地台、Wi-Fi 或網際網路。在飛航模式下也能運作。',
+    faqCellServiceA: "取得GPS定位後，座標顯示和本機計算不需行動網路即可使用。離線地圖須事先匯入。線上地圖和商店操作需要網路連線。",
     faqRestore: '如何還原我的 Pro 購買?',
-    faqRestoreA: 'Pro 購買與您的 Apple ID 綁定。如果您重新安裝或更換裝置,應用程式將自動偵測您的購買。如果未偵測到,請進入「主題」標籤尋找「還原」選項。',
+    faqRestoreA: "請登入購買Pro時使用的同一Apple或Google商店帳號，再使用下方的還原先前購買。驗證購買可能需要網際網路連線。",
     faqData: '此應用程式收集哪些資料?',
-    faqDataA: '不收集任何資料。零分析、零追蹤、零當機回報。GPS 座標僅存在於記憶體中,關閉應用程式時即被丟棄。',
+    faqDataA: "儲存的地點、路線、設定和使用次數保留在本裝置上，不會作為應用程式分析資料上傳。線上地圖和商店使用外部服務。匯出、儲存照片和無線電分享只在您選擇相應操作時進行。",
     faqAccuracy: 'MGRS 網格有多精確?',
-    faqAccuracyA: 'Red Grid 使用來自 TM 8358.1 的 DMA(國防製圖局)MGRS 演算法,採用 Vincenty 方位/距離計算。精度取決於您手機的 GPS 晶片與衛星幾何。',
+    faqAccuracyA: "方格位數表示座標解析度，而非實際定位精度。精度取決於接收機、天空視野及定位資料的時效。請檢查顯示的誤差，並備有獨立的導航參考。",
     faqWhatIsMgrs: '什麼是 MGRS?',
     faqWhatIsMgrsA: 'Military Grid Reference System(軍用網格參考系統)。北約軍方使用的地理座標標準。它建立於 UTM 之上,但加入了網格區指示符與 100km 方格識別符,以實現明確的位置回報。',
-    faqDagr: '它能取代我的 DAGR 嗎?',
-    faqDagrA: '對於訓練、STX、負重行軍與允許使用 GPS 的環境:可以。DAGR 的 SAASM 模組在受爭議環境中很重要,但在大多數使用場景中,Red Grid 提供相同的核心地面導航能力。',
+    faqDagr: "能否取代專用導航設備？",
+    faqDagrA: "Red Grid支援以手機進行野外導航，未被認證為專用或軍用導航設備的替代品。請攜帶合適的獨立導航工具。",
   },
   waypoints: {
     title: '航點清單',
@@ -494,6 +535,12 @@ export default {
     importRequires: '匯入需要 expo-document-picker 與 expo-file-system。',
   },
   proGate: {
+    "offlineMapsSub": "離開網路涵蓋區前，匯入獲准使用的點陣式MBTiles地圖",
+    "waypointsRoutes": "已儲存的航點和路線",
+    "waypointsRoutesSub": "最多10個清單，每個20個地點；支援GPX/KML地點匯入和匯出",
+    "reportsThemesSub": "六種報告表單及額外顯示配色",
+    "pricesUnavailable": "請連線以載入目前的商店價格和購買選項。",
+
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} 是 Pro 功能',
@@ -514,11 +561,11 @@ export default {
     savedWaypoints: '已儲存的航點清單',
     savedWaypointsSub: '儲存命名的巡邏路線、目標與集結點',
     tacticalReports: '戰術報告',
-    tacticalReportsSub: 'ICS 201、CASEVAC、ANGUS/CFF 與自訂範本',
+    tacticalReportsSub: "ICS 201、CASEVAC和ANGUS/CFF報告表單",
     coordFormats: '座標格式',
     coordFormatsSub: 'UTM、十進位度、DMS, 在主網格顯示上',
     displayThemes: '顯示主題',
-    displayThemesSub: 'NVG 綠、白晝白、blue-force, 保護夜視',
+    displayThemesSub: "綠色、白色和藍色顯示配色；無NVG認證",
   },
   mesh: {
     pairing: {
@@ -585,6 +632,9 @@ export default {
     couldNotParse: '無法解析 MGRS 座標',
   },
   iap: {
+    "restoreUnavailableTitle": "無法還原購買",
+    "restoreUnavailableBody": "商店未能驗證所有購買。現有使用權限已保留。請重試。",
+
     unavailableTitle: '無法使用',
     unavailableBody: '此版本不支援應用程式內購買。',
     storeUnavailableTitle: '商店無法使用',
@@ -606,6 +656,13 @@ export default {
     purchasedBody: '所有 Red Grid Pro 功能現已啟用。',
   },
   trial: {
+    "storageFailedTitle": "試用暫不可用",
+    "storageFailedBody": "無法在此裝置上儲存試用資料。請重試。",
+    "shareAction": "分享試用",
+    "shareFailedTitle": "無法開啟分享",
+    "shareFailedBody": "請重試。重新開啟分享即可傳送已儲存的同一贈禮連結。",
+    "banner": "贈禮試用：剩餘{{days}}天",
+
     welcomeAboardTitle: "歡迎加入",
     welcomeAboardBody: "朋友邀請你使用 Red Grid Tactical。先體驗免費功能，準備好後可隨時在主畫面升級到 Red Grid Pro。",
     receivedTitle: 'PRO 已解鎖',
@@ -613,18 +670,18 @@ export default {
     alreadyUsedTitle: '試用已使用過',
     alreadyUsedBody: '您已在此裝置上兌換過分享的試用。',
     linkExpiredTitle: '連結已過期',
-    linkExpiredBody: '此試用連結已過期。請索取新的連結。',
+    linkExpiredBody: "此贈禮連結已過期。",
     invalidTitle: '無效的試用連結',
     invalidBody: '無法驗證此試用連結。',
     shareCardTitle: '分享 7 天 PRO',
-    shareCardBody: '免費送朋友 7 天 Red Grid Pro。每台裝置僅限贈送一次。請慎選您的朋友。',
+    shareCardBody: "每台裝置可建立一個贈禮連結。重新開啟分享即可傳送已儲存的同一連結。",
     alreadySharedTitle: '已分享過',
-    alreadySharedBody: '您已分享過免費試用。每台裝置只能贈送一次 7 天 Pro 試用給朋友,而您已經送出了。感謝您。',
-    shareMessage: "我正在使用 Red Grid MGRS,一款免費的戰術 MGRS 導航工具。這是我送你的 7 天 Pro：\n\n{{url}}\n\n零追蹤、離線地圖、Meshtastic 網狀網路。無需行動網路也能運作。",
+    alreadySharedBody: "此安裝已在舊版本中建立過贈禮連結。無法在此還原該連結。",
+    shareMessage: "我使用Red Grid MGRS進行野外導航。透過我的贈禮連結試用Pro：{{url}}",
   },
   alerts: {
     tooManyTiles: '圖磚過多 ({{count}})。請放大至較小的區域。',
-    confirmDownloadTiles: '為此區域下載 {{count}} 個圖磚? (縮放 10-16)',
+
     deleteWaypointTitle: '刪除航點?',
     deleteWaypointBody: '從地圖移除 {{label}}。',
     thisWaypoint: '此航點',

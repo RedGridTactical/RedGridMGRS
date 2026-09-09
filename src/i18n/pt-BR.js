@@ -3,7 +3,35 @@
  * NATO/military terms (MGRS, SALUTE, UTM, DAGR, etc.) stay in English.
  */
 export default {
-  preflight: { footnote: "As verificações são executadas neste dispositivo. Os pacotes AO e os mapas importados ficam armazenados localmente. Adicione mapas importando um arquivo; o download de áreas está indisponível." },
+    "offlinePreflight": {
+    "checking": "Verificando mapa importado…",
+    "noMap": "Nenhum mapa importado. Importe um arquivo MBTiles autorizado em MAPA.",
+    "uncheckable": "Não foi possível verificar a cobertura. Reduza a área visível ou aguarde o fim da importação.",
+    "zoomInventory": "Níveis importados: {{zooms}}",
+    "importedZooms": "Níveis de zoom importados",
+    "viewportScope": "Verifica a área visível em cada zoom importado, não a rota inteira. Blocos ausentes deixam lacunas; os limites não comprovam a cobertura.",
+    "bounds": "Limites O, S, L, N: {{bounds}}",
+    "savedAreaOnly": "Apenas referência de área. Verifique com o mapa importado atual.",
+    "checkArea": "VERIFICAR"
+  },
+    "routeCard": {"footer":"Red Grid MGRS · plano de rota em linha reta"},
+    "navigation": {
+    "trueHeadingUnavailable": "Rumo verdadeiro indisponível. Use o azimute verdadeiro numérico com mapa ou bússola.",
+    "referenceLegend": "T = norte verdadeiro · M = norte magnético · G = norte da quadrícula",
+    "arrowRelative": "Direção do ponto: {{degrees}} graus no sentido horário a partir do topo do telefone.",
+    "resectionInputs": "Os azimutes vão da sua posição a cada referência. Selecione norte verdadeiro (T) ou magnético (M).",
+    "resectionLimits": "Somente estimativa local: cada referência deve estar a até 100 km; separação dos azimutes entre 5° e 175°. Erros de bússola e mapa afetam o resultado.",
+    "resectionDeclination": "Para azimutes magnéticos, informe a declinação local conhecida (leste +, oeste −). Digite 0 apenas se confirmado.",
+    "resectionInvalid": "Sem solução local confiável. Confira coordenadas, sentido dos azimutes, referência norte e separação.",
+    "magToTrue": "MAG → VERDADEIRO",
+    "trueToMag": "VERDADEIRO → MAG",
+    "trueBearingInput": "AZIMUTE VERDADEIRO (°)"
+  },
+
+  preflight: {
+    "section": {"aos":"ÁREAS SALVAS"},
+    "aos": {"proFeatureName":"Áreas salvas adicionais"},
+ footnote: "Verificações locais. Áreas guardam limites, não pacotes de mapas. Importe um arquivo autorizado em MAPA; downloads de áreas estão indisponíveis." },
   nightDisplay: {
     mapBusy: "Há uma importação de mapa em andamento. Aguarde ou cancele a importação antes de apagar o mapa.",
     importCancelled: "Importação cancelada. Seu mapa salvo não foi alterado.",
@@ -57,7 +85,7 @@ export default {
     "soloHint": "A navegação individual usa seu GPS e seu dispositivo. Rádio, permissão de câmera e conexão à internet são opcionais.",
     "teamHint": "A prontidão da equipe também verifica a conexão de rádio Meshtastic. Confira separadamente a chave da equipe e as configurações de rádio.",
     "radioOptional": "Opcional para navegação individual",
-    "mapsNotChecked": "A cobertura dos mapas não é verificada aqui. Confira a área planejada em MAPA e leve um mapa e uma bússola independentes.",
+    "mapsNotChecked": "A cobertura do mapa não é verificada aqui. Abra MAPA para verificar a área prevista antes de sair.",
     "reviewChecksTitle": "REVISAR VERIFICAÇÕES",
     "reviewChecksBody": "Algumas verificações estão indisponíveis ou precisam de atenção. Avalie as condições antes de continuar; esta lista não garante a segurança da rota.",
     "continue": "CONTINUAR NAVEGAÇÃO",
@@ -95,10 +123,10 @@ export default {
     continue: "CONTINUAR",
     startTrial: "INICIAR TESTE GRÁTIS DE 7 DIAS",
     current: {
-      f1: { title: "CHAVE DA EQUIPE", body: "O tráfego da equipe pelo Meshtastic agora é selado ponta a ponta. Crie uma chave de equipe, passe o código de pareamento e todos ficam na mesma rede. Pro." },
-      f2: { title: "FATOR DE ESCALA", body: "A ferramenta de declinação agora mostra o fator de escala na sua posição, para você saber quanto terreno realmente cobrem 1000 m medidos na quadrícula." },
-      f3: { title: "DISTÂNCIAS MAIS EXATAS", body: "Navegação estimada e distâncias com altitude agora usam cálculo elipsoidal WGS84, então trechos longos continuam precisos." },
-      f4: { title: "CORREÇÕES E AJUSTES", body: "Os sinais de socorro estão descritos com precisão: estroboscópio SOS em tela cheia e a referência de sinais solo-ar. Mais correções de confiabilidade nas compras." },
+      f1: { title: "REFERÊNCIAS DE NAVEGAÇÃO", body: "Cálculos de resseção corrigidos e azimutes verdadeiro, magnético e de quadrícula mais claros." },
+      f2: { title: "POSIÇÕES RECENTES", body: "A idade da posição e o receptor alternativo são explícitos. Posições antigas não orientam mais a navegação." },
+      f3: { title: "PREPARAÇÃO OFFLINE", body: "A verificação prévia confere cobertura e níveis de zoom importados, com instruções claras de importação." },
+      f4: { title: "RECUPERAÇÃO PRO", body: "Restauração de compras e verificação do acesso mais resistentes quando a loja está indisponível." },
     },
   },
   tabs: {
@@ -125,14 +153,14 @@ export default {
     upgrade: "FAZER UPGRADE",
     dismiss: "DISPENSAR",
     readyForField: "PRONTO PARA O CAMPO?",
-    download: "BAIXAR",
+
     later: "DEPOIS",
     routeHintEmpty: "Toque nos pontos para adicionar",
     routeHintOne: "1 ponto • precisa de 2+",
     waypointNamePlaceholder: "Nome do ponto",
     newListNote: "A lista \"MAP\" será criada",
-    firstVisitBody: "Baixe os blocos da sua área com o Red Grid Pro. Nunca fique sem mapa no campo.",
-    firstVisitModalBody: "Baixe os blocos de mapa offline da sua área atual agora. Você terá mapas mesmo quando perder o sinal de celular.",
+
+
     center: 'CENTRO',
     addWaypoint: 'ADICIONAR WAYPOINT',
     waypointAdded: 'WAYPOINT ADICIONADO',
@@ -142,20 +170,28 @@ export default {
     estimatedTime: 'TEMPO ESTIMADO',
     optimizeRoute: 'OTIMIZAR ROTA',
     legs: 'TRECHOS',
-    downloadTiles: 'BAIXAR TILES',
-    downloading: 'BAIXANDO',
+
+
     tilesReady: 'TILES EM CACHE',
     tilesCached: '{count} TILES',
-    downloadComplete: 'Download concluído',
-    downloadFailed: 'Download falhou',
+
+
     clearCache: 'LIMPAR CACHE',
     cacheCleared: 'Cache de tiles limpo',
-    confirmDownload: 'Baixar tiles do mapa para esta área? Os níveis de zoom 10-16 serão armazenados em cache para uso offline.',
+
     confirmClear: 'Limpar todos os tiles do mapa em cache?',
     offline: 'OFFLINE',
     online: 'ONLINE',
   },
   gps: {
+    "staleFix": "POSIÇÃO ANTIGA",
+    "sourcePhone": "GPS DO TELEFONE",
+    "sourceExternal": "GPS EXTERNO",
+    "observedAge": "Observada há {{seconds}} s",
+    "receivedAge": "Recebida há {{seconds}} s",
+    "accuracyUnknown": "Precisão desconhecida",
+    "phoneFallback": "Posição externa indisponível · usando GPS do telefone",
+
     acquiring: 'ADQUIRINDO',
     gpsFix: 'GPS FIX',
     noSignal: 'SEM SINAL',
@@ -205,9 +241,11 @@ export default {
     retry: 'TENTAR NOVAMENTE',
   },
   tools: {
+    "photoOnDevice": "SALVA NA BIBLIOTECA DE FOTOS · APLICAM-SE AS CONFIGURAÇÕES DE BACKUP DO DISPOSITIVO",
+
     title: 'FERRAMENTAS',
     tapToExpand: 'TOQUE PARA EXPANDIR',
-    footer: 'TODOS OS CÁLCULOS LOCAIS · SEM REDE · SEM ARMAZENAMENTO',
+    footer: "CÁLCULOS NO DISPOSITIVO",
     barometer: 'BARÔMETRO',
     barometerSub: 'Tendência de pressão e alerta de tempestade',
     signal: 'SINAL DE SOCORRO',
@@ -421,9 +459,12 @@ export default {
     dms: 'GRA MIN SEG',
     dmsSub: 'Graus, minutos, segundos, padrão aviação e náutico',
     fixphrase: 'FIXPHRASE',
-    fixphraseSub: 'Frase de localização de 4 palavras, ~11m de precisão, independente de ordem',
+    fixphraseSub: "Referência de coordenadas com quatro palavras; não melhora a precisão do GPS",
   },
   support: {
+    "faqSourcePaid": "Por que publicar o código e oferecer Pro?",
+    "faqSourcePaidA": "O código pode ser consultado sob a licença do repositório, que inclui restrições de uso. O aplicativo da loja simplifica instalação e atualizações; Pro apoia a manutenção e adiciona recursos avançados de navegação. Consulte a licença no repositório vinculado.",
+
     giftFreeTrial: "PRESENTEAR UM TESTE GRÁTIS",
     title: 'AJUDA E SUPORTE',
     close: 'FECHAR',
@@ -436,21 +477,21 @@ export default {
     faq: 'FAQ',
     privacyLegal: 'PRIVACIDADE E LEGAL',
     privacyPolicy: 'Política de privacidade',
-    privacySub: 'Zero coleta de dados. Verificado.',
+    privacySub: "Armazenamento local e serviços externos opcionais",
     license: 'Licença MIT + Commons Clause',
     copyright: '© 2026 Red Grid Tactical',
     faqCellService: 'Funciona sem sinal de celular?',
-    faqCellServiceA: 'Sim. O app usa o receptor GPS do seu telefone, que comunica diretamente com satélites. Não requer torre de celular, Wi-Fi ou internet. Funciona em modo avião.',
+    faqCellServiceA: "Coordenadas e cálculos locais funcionam sem rede móvel quando há uma posição GPS. Mapas offline devem ser importados antes. Mapas online e ações da loja precisam de conexão.",
     faqRestore: 'Como restauro minha compra Pro?',
-    faqRestoreA: 'As compras Pro estão vinculadas ao seu Apple ID. Se você reinstalar ou trocar de dispositivo, o app detectará automaticamente sua compra. Se não, vá à aba TEMA e procure uma opção de Restaurar.',
+    faqRestoreA: "Use Restaurar compra abaixo com a mesma conta Apple ou Google usada para comprar Pro. Pode ser necessária conexão para verificar a compra.",
     faqData: 'Quais dados este app coleta?',
-    faqDataA: 'Nenhum. Zero análises, zero rastreamento, zero relatórios de falha. Coordenadas GPS existem apenas em memória e são descartadas quando você fecha o app.',
+    faqDataA: "Pontos, rotas, configurações e contadores de uso ficam neste dispositivo; não são enviados como análise do aplicativo. Mapas online e lojas usam serviços externos. Exportações, salvamento de fotos e compartilhamento por rádio ocorrem quando você escolhe essas ações.",
     faqAccuracy: 'Qual é a precisão da grade MGRS?',
-    faqAccuracyA: 'Red Grid usa o algoritmo MGRS do DMA (Defense Mapping Agency) do TM 8358.1 com cálculos de azimute/distância de Vincenty. A precisão depende do chip GPS do seu telefone e da geometria dos satélites.',
+    faqAccuracyA: "Os dígitos indicam resolução das coordenadas, não precisão medida. A precisão depende do receptor, da visibilidade do céu e da idade da posição. Confira a incerteza e use referências de navegação independentes.",
     faqWhatIsMgrs: 'O que é MGRS?',
     faqWhatIsMgrsA: 'Military Grid Reference System. Um padrão de geocoordenadas usado pelos militares da OTAN. É construído sobre o UTM mas adiciona um designador de zona de grade e identificação de quadrado de 100km para relato de posição inequívoco.',
-    faqDagr: 'Substitui meu DAGR?',
-    faqDagrA: 'Para treinamento, STX, marchas com mochila e ambientes GPS permissivos: sim. O módulo SAASM do DAGR importa em ambientes contestados, mas para a maioria dos casos de uso o Red Grid entrega os mesmos recursos centrais de navegação terrestre.',
+    faqDagr: "Substitui equipamentos dedicados de navegação?",
+    faqDagrA: "Red Grid auxilia a navegação em campo pelo telefone. Não é certificado como substituto de equipamentos dedicados ou militares. Leve meios de navegação independentes adequados.",
   },
   waypoints: {
     title: 'LISTAS DE WAYPOINTS',
@@ -494,6 +535,12 @@ export default {
     importRequires: 'expo-document-picker e expo-file-system são necessários para importação.',
   },
   proGate: {
+    "offlineMapsSub": "Importe um mapa raster MBTiles autorizado antes de sair da cobertura",
+    "waypointsRoutes": "Pontos e rotas salvos",
+    "waypointsRoutesSub": "Até 10 listas de 20 pontos; importação e exportação de pontos GPX/KML",
+    "reportsThemesSub": "Seis formulários de relatório e paletas adicionais",
+    "pricesUnavailable": "Conecte-se para carregar preços e opções de compra atuais.",
+
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} é um recurso Pro',
@@ -514,11 +561,11 @@ export default {
     savedWaypoints: 'Listas de waypoints salvas',
     savedWaypointsSub: 'Salve rotas de patrulha, OBJs e pontos de encontro',
     tacticalReports: 'Relatórios táticos',
-    tacticalReportsSub: 'ICS 201, CASEVAC, ANGUS/CFF e modelos personalizados',
+    tacticalReportsSub: "Formulários ICS 201, CASEVAC e ANGUS/CFF",
     coordFormats: 'Formatos de coordenadas',
     coordFormatsSub: 'UTM, graus decimais, DMS, na tela principal',
     displayThemes: 'Temas de exibição',
-    displayThemesSub: 'NVG verde, dia branco, blue-force, preserve a visão noturna',
+    displayThemesSub: "Paletas verde, branca e azul; sem certificação NVG",
   },
   mesh: {
     pairing: {
@@ -585,6 +632,9 @@ export default {
     couldNotParse: 'NÃO FOI POSSÍVEL ANALISAR A COORDENADA MGRS',
   },
   iap: {
+    "restoreUnavailableTitle": "Restauração indisponível",
+    "restoreUnavailableBody": "A loja não conseguiu verificar todas as compras. O acesso existente foi mantido. Tente novamente.",
+
     unavailableTitle: 'Indisponível',
     unavailableBody: 'As compras no app não estão disponíveis nesta versão.',
     storeUnavailableTitle: 'Loja indisponível',
@@ -606,6 +656,13 @@ export default {
     purchasedBody: 'Todos os recursos do Red Grid Pro agora estão ativos.',
   },
   trial: {
+    "storageFailedTitle": "Teste indisponível",
+    "storageFailedBody": "Não foi possível salvar os dados do teste neste dispositivo. Tente novamente.",
+    "shareAction": "COMPARTILHAR TESTE",
+    "shareFailedTitle": "Não foi possível abrir o compartilhamento",
+    "shareFailedBody": "Tente novamente. Você pode reabrir o compartilhamento para enviar o mesmo link de presente salvo.",
+    "banner": "Teste de presente: {{days}} dias restantes",
+
     welcomeAboardTitle: "BEM-VINDO A BORDO",
     welcomeAboardBody: "Um amigo convidou você para o Red Grid Tactical. Explore os recursos gratuitos e faça o upgrade para o Red Grid Pro pela tela inicial quando quiser.",
     receivedTitle: 'PRO DESBLOQUEADO',
@@ -613,18 +670,18 @@ export default {
     alreadyUsedTitle: 'Teste já utilizado',
     alreadyUsedBody: 'Você já resgatou um teste compartilhado neste dispositivo.',
     linkExpiredTitle: 'Link expirado',
-    linkExpiredBody: 'Este link de teste expirou. Peça um novo.',
+    linkExpiredBody: "Este link de presente expirou.",
     invalidTitle: 'Link de teste inválido',
     invalidBody: 'Não foi possível verificar este link de teste.',
     shareCardTitle: 'PRESENTEIE 7 DIAS DE PRO',
-    shareCardBody: 'Dê a um amigo 7 dias de Red Grid Pro grátis. Um presente por dispositivo, para sempre. Escolha seu amigo com cuidado.',
+    shareCardBody: "Crie um link de presente por dispositivo. Você pode reabrir o compartilhamento para enviar o mesmo link salvo.",
     alreadySharedTitle: 'Já compartilhado',
-    alreadySharedBody: 'Você já compartilhou seu teste grátis. Cada dispositivo pode dar exatamente um teste Pro de 7 dias a um amigo, e você já fez isso. Obrigado.',
-    shareMessage: "Estou usando o Red Grid MGRS, um navegador MGRS tático e gratuito. Aqui estão 7 dias de Pro por minha conta:\n\n{{url}}\n\nZero rastreamento, mapas offline, mesh Meshtastic. Funciona sem sinal de celular.",
+    alreadySharedBody: "Esta instalação já criou um link de presente em uma versão anterior. Esse link não pode ser recuperado aqui.",
+    shareMessage: "Uso Red Grid MGRS para navegação em campo. Experimente Pro com meu link de presente: {{url}}",
   },
   alerts: {
     tooManyTiles: 'Tiles em excesso ({{count}}). Aproxime o zoom em uma área menor.',
-    confirmDownloadTiles: 'Baixar {{count}} tiles para esta área? (zoom 10-16)',
+
     deleteWaypointTitle: 'Excluir waypoint?',
     deleteWaypointBody: 'Remover {{label}} do mapa.',
     thisWaypoint: 'este waypoint',

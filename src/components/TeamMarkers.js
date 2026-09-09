@@ -15,6 +15,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Marker } from 'react-native-maps';
 import { PEER_STATUS, projectGhostPosition } from '../utils/teamAwareness';
 import { formatMGRS, toMGRS, calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
+import { formatBearing } from '../utils/tactical';
 
 const SOS_RED = '#ff3b30';
 
@@ -45,9 +46,9 @@ const TeamMarker = React.memo(function TeamMarker({ peer, origin, colors, now, o
   try { desc = formatMGRS(toMGRS(lat, lon, 5)); } catch {}
   if (origin && Number.isFinite(origin.lat)) {
     try {
-      const brg = Math.round(calculateBearing(origin.lat, origin.lon, lat, lon));
+      const brg = formatBearing(calculateBearing(origin.lat, origin.lon, lat, lon), 'true', true);
       const dst = formatDistance(calculateDistance(origin.lat, origin.lon, lat, lon));
-      desc += `\nBRG ${String(brg).padStart(3, '0')}° DST ${dst}`;
+      desc += `\nBRG ${brg} DST ${dst}`;
     } catch {}
   }
   desc += `\n${peer.status.toUpperCase()} · ${ageLabel(peer.ageMs)}`;

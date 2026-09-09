@@ -20,7 +20,7 @@ import { Alert } from '../utils/fieldAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   detectFreeTrial, hasPriorSubscription, getAndroidTrialOfferToken, entitlingSku,
-  needsAndroidAck,
+  needsAndroidAck, canConfirmNoEntitlement,
   PRO_PRODUCT_ID, SUB_MONTHLY_ID, SUB_ANNUAL_ID, tierToSku, isSubTier,
 } from '../utils/iapOffers';
 
@@ -145,13 +145,38 @@ export function useIAP() {
   // requestPurchase before Play Billing has the ProductDetails cached.
   const fetchPromiseRef = useRef(null);
   const initConnectedRef = useRef(false);
+  const initPromiseRef = useRef(null);
   // Always points at the current fetchProductDetails. The entitlement effect
   // below is declared before that callback exists, and must be able to warm
   // the native product cache before querying the store.
   const fetchProductDetailsRef = useRef(null);
 
+  const entitlementRevision = useRef(0);
+  const entitlementWrites = useRef(Promise.resolve());
+  const writeEntitlement = useCallback(operation => {
+    const next = entitlementWrites.current.then(operation, operation);
+    entitlementWrites.current = next.catch(() => {});
+    return next;
+  }, []);
+
+  // initConnection replaces the iOS ProductStore. Share the in-flight attempt
+  // so startup cannot clear the catalog being loaded for restoration.
+  const ensureConnection = useCallback(async () => {
+    if (!IAPModule?.initConnection || initConnectedRef.current) return;
+    if (!initPromiseRef.current) {
+      let timer;
+      initPromiseRef.current = Promise.race([
+        Promise.resolve().then(() => IAPModule.initConnection()),
+        new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Init timeout')), 4000); }),
+      ]).then(() => { initConnectedRef.current = true; })
+        .finally(() => { clearTimeout(timer); initPromiseRef.current = null; });
+    }
+    await initPromiseRef.current;
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
+    mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
 
@@ -166,6 +191,7 @@ export function useIAP() {
     let cancelled = false;
 
     const reverifyEntitlement = async (recordedProduct) => {
+      const revision = entitlementRevision.current;
       if (!IAPModule?.getAvailablePurchases) return;
       try {
         // MUST warm the native product cache before querying entitlements: on
@@ -174,7 +200,7 @@ export function useIAP() {
         // Details also does initConnection and is deduped, so it replaces
         // ensureConnection here rather than adding a second connect.
         const cache = await fetchProductDetailsRef.current?.().catch(() => null);
-        const cacheWarm = !!(cache && (cache.lifetime || cache.monthly));
+        const cacheWarm = canConfirmNoEntitlement(Platform.OS, cache?.resolvedProductIds, ALL_PRODUCT_IDS);
         let purchasesTimer;
         const result = await Promise.race([
           IAPModule.getAvailablePurchases(),
@@ -201,8 +227,11 @@ export function useIAP() {
           const best = lifetimeOwned || owned[0];
           const bestSku =
             entitlingSku(best, ALL_PRODUCT_IDS) || recordedProduct || 'unknown';
-          await AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {});
-          await AsyncStorage.setItem(PRO_PRODUCT_KEY, String(bestSku)).catch(() => {});
+          await writeEntitlement(async () => {
+            if (revision !== entitlementRevision.current) return;
+            await AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {});
+            await AsyncStorage.setItem(PRO_PRODUCT_KEY, String(bestSku)).catch(() => {});
+          });
           return;
         }
 
@@ -217,22 +246,23 @@ export function useIAP() {
         }
 
         const verifiedAtRaw = await AsyncStorage.getItem(PRO_VERIFIED_AT).catch(() => null);
-        const verifiedAt = Number(verifiedAtRaw) || 0;
-        if (!verifiedAt) {
-          // First negative observation with no clock — start the grace clock
-          // instead of revoking, protecting against a transient empty result.
-          await AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {});
-          return;
-        }
-        if (Date.now() - verifiedAt > SUB_REVERIFY_GRACE_MS) {
-          // Lapsed beyond the grace window — re-lock. A false negative is
-          // recoverable instantly via RESTORE on the paywall.
-          if (mounted.current && !cancelled) setIsPro(false);
-          await AsyncStorage.removeItem(PRO_KEY).catch(() => {});
-          await AsyncStorage.removeItem(PRO_RECEIPT_KEY).catch(() => {});
-          await AsyncStorage.removeItem(PRO_PRODUCT_KEY).catch(() => {});
-          await AsyncStorage.removeItem(PRO_VERIFIED_AT).catch(() => {});
-        }
+        await writeEntitlement(async () => {
+          // A purchase/restore may have succeeded while the old query or
+          // storage read was pending. Its newer grant always wins.
+          if (revision !== entitlementRevision.current || cancelled || !mounted.current) return;
+          const verifiedAt = Number(verifiedAtRaw) || 0;
+          if (!verifiedAt) {
+            await AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {});
+            return;
+          }
+          if (Date.now() - verifiedAt > SUB_REVERIFY_GRACE_MS) {
+            setIsPro(false);
+            await AsyncStorage.removeItem(PRO_KEY).catch(() => {});
+            await AsyncStorage.removeItem(PRO_RECEIPT_KEY).catch(() => {});
+            await AsyncStorage.removeItem(PRO_PRODUCT_KEY).catch(() => {});
+            await AsyncStorage.removeItem(PRO_VERIFIED_AT).catch(() => {});
+          }
+        });
       } catch {
         // Store unreachable (offline / outage) — keep Pro. Field-first app:
         // never punish a user for being off-grid.
@@ -240,6 +270,7 @@ export function useIAP() {
     };
 
     const loadProStatus = async () => {
+      const revision = entitlementRevision.current;
       try {
         if (!AsyncStorage) return;
 
@@ -274,7 +305,7 @@ export function useIAP() {
         if (IAPModule && IAPModule.getAvailablePurchases) {
           try {
             // Warm the native product cache first — see reverifyEntitlement.
-            await fetchProductDetailsRef.current?.().catch(() => {});
+            const cache = await fetchProductDetailsRef.current?.().catch(() => null);
 
             let purchasesTimer;
             const purchases = await Promise.race([
@@ -288,19 +319,25 @@ export function useIAP() {
               (p) => !isPendingAndroid(p) && entitlingSku(p, ALL_PRODUCT_IDS)
             );
 
-            if (ownedPro.length > 0) {
-              if (!cancelled && mounted.current) setIsPro(true);
-              const lifetimeOwned = ownedPro.find(
-                (p) => entitlingSku(p, ALL_PRODUCT_IDS) === PRO_PRODUCT_ID
-              );
-              const best = lifetimeOwned || ownedPro[0];
-              await AsyncStorage.setItem(PRO_RECEIPT_KEY, 'verified').catch(() => {});
-              await AsyncStorage.setItem(PRO_PRODUCT_KEY, String(entitlingSku(best, ALL_PRODUCT_IDS) || 'unknown')).catch(() => {});
-              await AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {});
-            } else {
-              if (!cancelled && mounted.current) setIsPro(false);
-              await AsyncStorage.removeItem(PRO_KEY).catch(() => {});
-            }
+            await writeEntitlement(async () => {
+              if (revision !== entitlementRevision.current || cancelled || !mounted.current) return;
+              if (ownedPro.length > 0) {
+                if (!cancelled && mounted.current) setIsPro(true);
+                const lifetimeOwned = ownedPro.find(
+                  (p) => entitlingSku(p, ALL_PRODUCT_IDS) === PRO_PRODUCT_ID
+                );
+                const best = lifetimeOwned || ownedPro[0];
+                await AsyncStorage.setItem(PRO_RECEIPT_KEY, 'verified').catch(() => {});
+                await AsyncStorage.setItem(PRO_PRODUCT_KEY, String(entitlingSku(best, ALL_PRODUCT_IDS) || 'unknown')).catch(() => {});
+                await AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {});
+              } else if (Array.isArray(purchases) && canConfirmNoEntitlement(Platform.OS, cache?.resolvedProductIds, ALL_PRODUCT_IDS)) {
+                if (!cancelled && mounted.current) setIsPro(false);
+                await AsyncStorage.removeItem(PRO_KEY).catch(() => {});
+              } else {
+                // A partial catalog or ambiguous query cannot disprove ownership.
+                if (!cancelled && mounted.current) setIsPro(true);
+              }
+            });
           } catch {
             if (!cancelled && mounted.current) setIsPro(true);
           }
@@ -319,7 +356,7 @@ export function useIAP() {
   }, []);
 
   // ── Fetch product + subscription details (cache-aware, dedup'd) ───────────
-  // Returns a snapshot { lifetime, monthly } so callers can decide
+  // Returns sale details plus resolvedProductIds so callers can decide
   // whether the SKU they're about to buy has details ready.
   const fetchProductDetails = useCallback(async () => {
     if (!IAPModule) return {};
@@ -331,17 +368,8 @@ export function useIAP() {
 
     const run = (async () => {
       try {
-        if (IAPModule.initConnection && !initConnectedRef.current) {
-          let initTimer;
-          await Promise.race([
-            IAPModule.initConnection(),
-            new Promise((_, reject) => {
-              initTimer = setTimeout(() => reject(new Error('Init timeout')), 4000);
-            })
-          ]).finally(() => { if (initTimer) clearTimeout(initTimer); });
-          initConnectedRef.current = true;
-          if (mounted.current) setIapReady(true);
-        }
+        await ensureConnection();
+        if (mounted.current) setIapReady(true);
 
         const tasks = [];
         if (IAPModule.getProducts) {
@@ -381,10 +409,10 @@ export function useIAP() {
         const [inappList, subList] = await Promise.all(tasks);
 
         const map = {};
-        for (const p of (inappList || [])) {
+        for (const p of (Array.isArray(inappList) ? inappList : [])) {
           if (p?.id === PRO_PRODUCT_ID) { map.lifetime = p; }
         }
-        for (const p of (subList || [])) {
+        for (const p of (Array.isArray(subList) ? subList : [])) {
           if (p?.id === SUB_MONTHLY_ID) map.monthly = p;
         }
 
@@ -394,7 +422,11 @@ export function useIAP() {
             setProducts((prev) => ({ ...prev, ...map }));
           }
         }
-        return map;
+        // Annual stays off the sale map; resolve it only for entitlement checks.
+        const resolvedProductIds = [inappList, subList]
+          .flatMap(list => Array.isArray(list) ? list : [])
+          .map(p => p?.id).filter(id => ALL_PRODUCT_IDS.includes(id));
+        return { ...map, resolvedProductIds };
       } catch {
         return {};
       }
@@ -407,7 +439,7 @@ export function useIAP() {
       // Allow retries on next call by clearing the cached promise once it settles.
       fetchPromiseRef.current = null;
     }
-  }, []);
+  }, [ensureConnection]);
 
   // Publish for the entitlement effect, which is declared above this callback.
   fetchProductDetailsRef.current = fetchProductDetails;
@@ -444,11 +476,8 @@ export function useIAP() {
         }
         let purchases = [];
         try {
-          if (IAPModule.initConnection && !initConnectedRef.current) {
-            await IAPModule.initConnection().catch(() => {});
-            initConnectedRef.current = true;
-            if (mounted.current) setIapReady(true);
-          }
+          await ensureConnection();
+          if (mounted.current) setIapReady(true);
           // Eligibility must consider EXPIRED subscriptions too —
           // getAvailablePurchases returns only ACTIVE items, which would show
           // a lapsed subscriber "no charge today" and then bill them the full
@@ -474,32 +503,35 @@ export function useIAP() {
       }
     })();
     return () => { cancelled = true; };
-  }, [products.monthly]);
+  }, [products.monthly, ensureConnection]);
 
   // ── Persist Pro unlock ─────────────────────────────────────────────────────
   // Records WHICH product unlocked Pro (drives subscription re-verification)
   // and stamps the verification clock.
   const persistPro = useCallback(async (receipt = '', productSku = '') => {
+    entitlementRevision.current += 1;
     if (mounted.current) setIsPro(true);
 
     try {
       if (!AsyncStorage) return;
 
-      const ops = [];
-      ops.push(AsyncStorage.setItem(PRO_KEY, 'true').catch(() => {}));
-      ops.push(AsyncStorage.setItem(PRO_VALIDATED, 'true').catch(() => {}));
-      ops.push(AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {}));
-      if (productSku) {
-        ops.push(AsyncStorage.setItem(PRO_PRODUCT_KEY, String(productSku)).catch(() => {}));
-      }
-      if (receipt) {
-        ops.push(AsyncStorage.setItem(PRO_RECEIPT_KEY, receipt).catch(() => {}));
-      }
-      await Promise.all(ops);
+      await writeEntitlement(async () => {
+        const ops = [];
+        ops.push(AsyncStorage.setItem(PRO_KEY, 'true').catch(() => {}));
+        ops.push(AsyncStorage.setItem(PRO_VALIDATED, 'true').catch(() => {}));
+        ops.push(AsyncStorage.setItem(PRO_VERIFIED_AT, String(Date.now())).catch(() => {}));
+        if (productSku) {
+          ops.push(AsyncStorage.setItem(PRO_PRODUCT_KEY, String(productSku)).catch(() => {}));
+        }
+        if (receipt) {
+          ops.push(AsyncStorage.setItem(PRO_RECEIPT_KEY, receipt).catch(() => {}));
+        }
+        await Promise.all(ops);
+      });
     } catch {
       // Storage failed — isPro is still true in memory for this session
     }
-  }, []);
+  }, [writeEntitlement]);
 
   // ── Connect BEFORE subscribing to purchase events ─────────────────────────
   // initConnection tears down StoreKit's Transaction.updates observer
@@ -517,24 +549,15 @@ export function useIAP() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (IAPModule && typeof IAPModule.initConnection === 'function' && !initConnectedRef.current) {
-        let initTimer;
-        try {
-          await Promise.race([
-            IAPModule.initConnection(),
-            new Promise((_, r) => { initTimer = setTimeout(() => r(new Error('timeout')), 3000); }),
-          ]);
-          initConnectedRef.current = true;
-        } catch {
-          // Degrade gracefully; subscribe anyway.
-        } finally {
-          if (initTimer) clearTimeout(initTimer);
-        }
+      try {
+        await ensureConnection();
+      } catch {
+        // Degrade gracefully; subscribe anyway.
       }
       if (!cancelled && mounted.current) setIapReady(true);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [ensureConnection]);
 
   // ── Purchase event listener ────────────────────────────────────────────────
   // requestPurchase's promise can miss deliveries: payment sheets that outlive
@@ -855,7 +878,7 @@ export function useIAP() {
       // never fetched is invisible to getAvailablePurchases, which is exactly
       // how RESTORE came to report "nothing to restore" to a paying annual
       // subscriber.
-      await fetchProductDetails().catch(() => {});
+      const cache = await fetchProductDetails().catch(() => null);
 
       const purchases = await Promise.race([
         IAPModule.getAvailablePurchases(),
@@ -880,6 +903,10 @@ export function useIAP() {
         await persistPro('restored', entitlingSku(best, ALL_PRODUCT_IDS) || 'unknown');
         try {
           Alert.alert(i18n.t('iap.restoredTitle'), i18n.t('iap.restoredBody'));
+        } catch {}
+      } else if (!Array.isArray(purchases) || !canConfirmNoEntitlement(Platform.OS, cache?.resolvedProductIds, ALL_PRODUCT_IDS)) {
+        try {
+          Alert.alert(i18n.t('iap.restoreUnavailableTitle'), i18n.t('iap.restoreUnavailableBody'));
         } catch {}
       } else {
         try {

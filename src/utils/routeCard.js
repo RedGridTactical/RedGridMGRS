@@ -4,6 +4,7 @@
  */
 import { getRouteLegs } from './routePlanner';
 import { formatDistance } from './mgrs';
+import { formatBearing } from './tactical';
 
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
@@ -39,10 +40,10 @@ export function buildRouteCardText(list, legs, totalDistance, dtg) {
   const first = list.waypoints[0];
   lines.push(`START  ${first.label}  ${first.mgrs}`);
   legs.forEach((leg, i) => {
-    const brg = String(Math.round(leg.bearing)).padStart(3, '0');
-    lines.push(`${String(i + 1).padStart(2, '0')}  ${leg.to.name || 'WP'}  ${brg}° / ${leg.distanceFormatted}  ${leg.mgrs}`);
+    const brg = formatBearing(leg.bearing, 'true', true);
+    lines.push(`${String(i + 1).padStart(2, '0')}  ${leg.to.name || 'WP'}  ${brg} / ${leg.distanceFormatted}  ${leg.mgrs}`);
   });
   lines.push('');
-  lines.push('Red Grid MGRS · offline · no network');
+  lines.push('Red Grid MGRS · straight-line route plan');
   return lines.join('\n');
 }

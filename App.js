@@ -47,7 +47,8 @@ import { WaypointModal }  from './src/components/WaypointModal';
 import { ProGate }        from './src/components/ProGate';
 import { WhatsNewModal }  from './src/components/WhatsNewModal';
 import { TeamRosterSheet } from './src/components/TeamRosterSheet';
-import { extractTokenFromUrl, redeemShareToken, getTrialStatus } from './src/utils/referral';
+import { extractTokenFromUrl, redeemShareToken } from './src/utils/referral';
+import { useReferralTrial } from './src/hooks/useReferralTrial';
 import { ToolsScreen }    from './src/screens/ToolsScreen';
 import { ReportScreen }   from './src/screens/ReportScreen';
 import { WaypointListsScreen } from './src/screens/WaypointListsScreen';
@@ -65,6 +66,8 @@ import {
 import { tapLight, tapHeavy, tapMedium, notifySuccess } from './src/utils/haptics';
 import { speakMGRS, stopSpeaking } from './src/utils/voice';
 import { trackSession, trackEvent } from './src/utils/analytics';
+import { formatBearing, relativeWaypointBearing } from './src/utils/tactical';
+import { isFreshPosition } from './src/utils/position';
 
 // ─── TEXT SCALING ───────────────────────────────────────────────────────────
 // React 19 removed function-component defaultProps, so the old global
@@ -144,35 +147,29 @@ function App() {
   // Lift external GPS to app scope so the connected receiver overrides phone
   // GPS everywhere (grid, map, tools, mesh, reports). Falls back to internal
   // GPS when no receiver is connected.
-  const { location, source: gpsSource, deviceName: gpsDeviceName } = useGPSSource(internalLocation, externalGPS);
+  const { location, source: gpsSource, deviceName: gpsDeviceName, status: fixStatus, ageSeconds, sourceFallback, lastKnownLocation } = useGPSSource(internalLocation, externalGPS);
+  const positionStatus = { status: fixStatus, ageSeconds, sourceFallback, fix: lastKnownLocation };
+  const displayError = location ? null : error;
   const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, tacticalMode, setTacticalMode, loaded: settingsLoaded, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing, gridScale, setGridScale } = useSettings();
   const { isPro: iapIsPro, isPurchasing, product, products, selectedTier, setSelectedTier, trialEligible, purchase, restore } = useIAP();
 
-  // Trial state from referral system — treated as Pro for feature gating.
-  const [trialActive, setTrialActive] = useState(false);
-  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
+  // Gift access is independent of paid access, with a live expiry deadline.
+  const { active: trialActive, daysLeft: trialDaysLeft, refresh: refreshTrial } = useReferralTrial();
   const isPro = iapIsPro || trialActive;
 
-  // Check trial status on mount and whenever we return from background
-  useEffect(() => {
-    let cancelled = false;
-    const refresh = async () => {
-      const status = await getTrialStatus();
-      if (cancelled) return;
-      setTrialActive(status.active);
-      setTrialDaysLeft(status.daysLeft);
-    };
-    refresh();
-    return () => { cancelled = true; };
-  }, []);
-
+  // Keep alert language current without replaying the cold-start URL on locale changes.
+  const trialTranslation = useRef(t);
+  trialTranslation.current = t;
   // Deep link handler — redeem trial when user opens redgrid://share/<token>
   useEffect(() => {
+    let cancelled = false;
     const handleUrl = async (url) => {
+      const t = trialTranslation.current;
       if (!url) return;
       const token = extractTokenFromUrl(url);
       if (!token) return;
       const result = await redeemShareToken(token);
+      if (cancelled) return;
       if (result.ok) {
         // Kill-switch path: token is valid but the entitlement flag is off,
         // so we don't grant Pro. Welcome the user without unlocking features.
@@ -185,16 +182,19 @@ function App() {
           } catch {}
           return;
         }
-        const status = await getTrialStatus();
-        setTrialActive(status.active);
-        setTrialDaysLeft(status.daysLeft);
+        const status = await refreshTrial();
+        if (cancelled) return;
         try {
           Alert.alert(
             t('trial.receivedTitle'),
             t('trial.receivedBody', { days: status.daysLeft })
           );
         } catch {}
+      } else if (result.reason === 'storage') {
+        try { Alert.alert(t('trial.storageFailedTitle'), t('trial.storageFailedBody')); } catch {}
       } else if (result.reason === 'already_received') {
+        await refreshTrial();
+        if (cancelled) return;
         try { Alert.alert(t('trial.alreadyUsedTitle'), t('trial.alreadyUsedBody')); } catch {}
       } else if (result.reason === 'expired') {
         try { Alert.alert(t('trial.linkExpiredTitle'), t('trial.linkExpiredBody')); } catch {}
@@ -205,9 +205,9 @@ function App() {
     // Handle cold-start deep link
     Linking.getInitialURL().then(handleUrl).catch(() => {});
     // Handle warm deep links while running
-    const sub = Linking.addEventListener('url', (ev) => handleUrl(ev?.url));
-    return () => { try { sub?.remove?.(); } catch {} };
-  }, []);
+    const sub = Linking.addEventListener('url', (ev) => { handleUrl(ev?.url).catch(() => {}); });
+    return () => { cancelled = true; try { sub?.remove?.(); } catch {} };
+  }, [refreshTrial]);
 
   const themeData = useTheme(theme);
   const { checkAndPromptReview, promptReviewOnPositiveMoment, openStoreReview } = useStoreReview();
@@ -237,10 +237,8 @@ function App() {
   // broadcast. Without this, auto-share runs every 30s but sends nothing.
   // Source is the active GPS (external receiver if connected, else phone).
   useEffect(() => {
-    if (location?.lat != null && location?.lon != null) {
-      mesh.setLastPosition(location.lat, location.lon, location.altitude ?? 0);
-    }
-  }, [location?.lat, location?.lon, location?.altitude, mesh]);
+    mesh.setLastPosition(location?.lat, location?.lon, location?.altitude ?? 0, location?.timestamp);
+  }, [location?.lat, location?.lon, location?.altitude, location?.timestamp, mesh]);
 
   const [tab, setTab]               = useState('grid');
   const fieldNavigation = useFieldNavigation();
@@ -307,7 +305,7 @@ function App() {
   // Mark Position — one-tap save of current GPS fix as active nav target
   const [markToast, setMarkToast] = useState(null);
   const handleMarkPosition = useCallback(() => {
-    if (!Number.isFinite(location?.lat) || !Number.isFinite(location?.lon)) {
+    if (!isFreshPosition(location)) {
       try { Alert.alert(t('alerts.noGpsFixTitle'), t('alerts.noGpsFixBody')); } catch {}
       return;
     }
@@ -315,6 +313,10 @@ function App() {
     const hhmm = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
     const newWaypoint = { lat: location.lat, lon: location.lon, label: `MARK ${hhmm}` };
     const commit = () => {
+      if (!isFreshPosition(location)) {
+        Alert.alert(t('alerts.noGpsFixTitle'), t('alerts.noGpsFixBody'));
+        return;
+      }
       tapHeavy();
       setWaypoint(newWaypoint);
       notifySuccess();
@@ -379,13 +381,10 @@ function App() {
     }
   }, [location, waypoint]);
 
-  // Arrow angle: subtract device heading so arrow points toward waypoint
-  // Falls back to absolute bearing when compass unavailable
-  const arrowAngle = useMemo(() => {
-    if (bearing === null) return null;
-    if (compassHeading === null) return bearing;
-    return ((bearing - compassHeading) + 360) % 360;
-  }, [bearing, compassHeading]);
+  // Absolute target is true north; only a validated TRUE device heading can
+  // orient a relative arrow. Magnetic/unknown headings never become north-up.
+  const arrowAngle = useMemo(() => relativeWaypointBearing(bearing, compassHeading, compassReference),
+    [bearing, compassHeading, compassReference]);
 
   const waypointMGRS = useMemo(() => { try { return waypoint ? formatMGRS(toMGRS(waypoint.lat, waypoint.lon, 5)) : null; } catch { return null; } }, [waypoint]);
   const arrowSize    = isLandscape ? Math.min(height * 0.52, 190) : 200;
@@ -401,7 +400,7 @@ function App() {
 
   const gridContent = isLandscape ? (
     <LandscapeGrid
-      isLoading={isLoading} location={location} error={error} retry={retry}
+      isLoading={isLoading} location={location} error={displayError} retry={retry} positionStatus={positionStatus}
       mgrsFormatted={mgrsFormatted} waypoint={waypoint} waypointMGRS={waypointMGRS}
       bearing={bearing} arrowAngle={arrowAngle} distance={distance} arrowSize={arrowSize}
       onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
@@ -409,7 +408,7 @@ function App() {
       isPro={isPro} onShowProGate={showProGate}
       onCopyGrid={copyGrid} copyToast={copyToast}
       coordFormat={coordFormat} altDisplay={altDisplay}
-      compassHeading={compassHeading}
+      compassHeading={compassHeading} compassReference={compassReference}
       onRateApp={async () => { if (await allowSystemDisplay()) openStoreReview(); }}
       onEnterHud={onEnterHud}
       onShowSupport={() => setShowSupport(true)}
@@ -417,7 +416,7 @@ function App() {
     />
   ) : (
     <PortraitGrid
-      isLoading={isLoading} location={location} error={error} retry={retry}
+      isLoading={isLoading} location={location} error={displayError} retry={retry} positionStatus={positionStatus}
       mgrsFormatted={mgrsFormatted} waypoint={waypoint} waypointMGRS={waypointMGRS}
       bearing={bearing} arrowAngle={arrowAngle} distance={distance} arrowSize={arrowSize}
       onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
@@ -425,7 +424,7 @@ function App() {
       isPro={isPro} onShowProGate={showProGate}
       onCopyGrid={copyGrid} copyToast={copyToast}
       coordFormat={coordFormat} altDisplay={altDisplay}
-      compassHeading={compassHeading}
+      compassHeading={compassHeading} compassReference={compassReference}
       onRateApp={async () => { if (await allowSystemDisplay()) openStoreReview(); }}
       onEnterHud={onEnterHud}
       onShowSupport={() => setShowSupport(true)}
@@ -481,6 +480,7 @@ function App() {
         statusBarStyle={statusBarStyle}
         waypoint={waypoint}
         fieldNavigation={fieldNavigation}
+        positionStatus={positionStatus}
         coordFormat={coordFormat}
         setCoordFormat={setCoordFormat}
         compassHeading={compassHeading}
@@ -522,7 +522,7 @@ function AppContent({
   showModal, setShowModal, proGateVisible, setProGateVisible,
   proGateFeature, product, products, isPurchasing, purchase, restore,
   selectedTier, setSelectedTier, trialEligible,
-  statusBarStyle, waypoint, fieldNavigation, coordFormat, setCoordFormat,
+  statusBarStyle, waypoint, fieldNavigation, positionStatus, coordFormat, setCoordFormat,
   compassHeading, compassReference,
   shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing,
   gridScale, setGridScale,
@@ -741,6 +741,8 @@ function AppContent({
       <SupportScreen
         visible={showSupport}
         onClose={() => setShowSupport(false)}
+        onRestore={async () => { if (storeAction.current) return; storeAction.current = true; try { if (await allowSystemDisplay()) await restore(); } finally { storeAction.current = false; } }}
+        isRestoring={isPurchasing}
       />
 
       {/* What's new in this version — first launch post-update only. For free
@@ -756,7 +758,7 @@ function AppContent({
       />
 
       <WhatsNewModal
-        currentVersion="4.0.5"
+        currentVersion="4.0.6"
         showTrialCta={!isPro}
         onStartTrial={() => showProGate('Red Grid Pro')}
       />
@@ -773,6 +775,9 @@ function AppContent({
         arrowAngle={arrowAngle}
         distance={distance}
         compassHeading={compassHeading}
+        compassReference={compassReference}
+        positionStatus={positionStatus}
+        location={location}
         waypoint={waypoint}
         onExit={() => { stopSpeaking(); tapMedium(); setHudMode(false); }}
       />
@@ -818,7 +823,7 @@ function UpsellScreen({ onUpgrade }) {
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport, gridScale }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, compassReference, positionStatus, onRateApp, onEnterHud, onShowSupport, gridScale }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -826,10 +831,11 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
       <View style={staticStyles.header}>
         <Text style={[staticStyles.appTitle, { color: colors.text }]} suppressHighlighting={true} maxFontSizeMultiplier={1.2}>RED GRID MGRS</Text>
         <View style={staticStyles.headerRight}>
-          {compassHeading !== null && <Text style={[staticStyles.headingText, { color: colors.text2 }]}>HDG {Math.round(compassHeading)}°</Text>}
-          <SignalBadge isLoading={isLoading} location={location} />
+          <Text style={[staticStyles.headingText, { color: colors.text2 }]}>HDG {formatBearing(compassHeading, compassReference)}</Text>
+          <SignalBadge isLoading={isLoading} location={location} status={positionStatus?.status} />
         </View>
       </View>
+      <FixDetails positionStatus={positionStatus} />
       <Div />
       {error
         ? <ErrBlock error={error} retry={retry} />
@@ -863,10 +869,10 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
         </View>
       ) : (
         <View style={staticStyles.wpBlock}>
-          {arrowAngle !== null && (
+          {bearing !== null && (
             <View style={staticStyles.arrowWrap}>
-              <WayfinderArrow bearing={arrowAngle} size={arrowSize} />
-              <Text style={[staticStyles.bearingText, { color: colors.text }]}>{Math.round(bearing)}°</Text>
+              {arrowAngle !== null ? <WayfinderArrow bearing={arrowAngle} size={arrowSize} /> : <HeadingUnavailable />}
+              <Text style={[staticStyles.bearingText, { color: colors.text }]}>{formatBearing(bearing, 'true')}</Text>
             </View>
           )}
           <View style={staticStyles.wpInfo}>
@@ -909,7 +915,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport, gridScale }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, compassReference, positionStatus, onRateApp, onEnterHud, onShowSupport, gridScale }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -918,10 +924,11 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
         <View style={staticStyles.lsHeader}>
           <Text style={[staticStyles.lsTitle, { color: colors.text }]} suppressHighlighting={true}>RED GRID MGRS</Text>
           <View style={staticStyles.headerRight}>
-            {compassHeading !== null && <Text style={[staticStyles.headingText, { color: colors.text2 }]}>HDG {Math.round(compassHeading)}°</Text>}
-            <SignalBadge isLoading={isLoading} location={location} />
+            <Text style={[staticStyles.headingText, { color: colors.text2 }]}>HDG {formatBearing(compassHeading, compassReference)}</Text>
+            <SignalBadge isLoading={isLoading} location={location} status={positionStatus?.status} />
           </View>
         </View>
+        <FixDetails positionStatus={positionStatus} />
         <Div />
         {error ? <ErrBlock error={error} retry={retry} compact /> : (
           <TouchableOpacity onPress={onCopyGrid} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Current MGRS grid. Tap to copy">
@@ -986,10 +993,10 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
       </ScrollView>
       <View style={[staticStyles.lsVDiv, { backgroundColor: colors.border2 }]} />
       <View style={staticStyles.lsRight}>
-        {waypoint && arrowAngle !== null ? (
+        {waypoint ? (
           <View style={staticStyles.lsArrow}>
-            <WayfinderArrow bearing={arrowAngle} size={arrowSize} />
-            <Text style={[staticStyles.lsBearing, { color: colors.text }]}>{Math.round(bearing)}°</Text>
+            {arrowAngle !== null ? <WayfinderArrow bearing={arrowAngle} size={arrowSize} /> : bearing !== null ? <HeadingUnavailable /> : <Text style={[staticStyles.headingUnavailable, { color: colors.text3 }]}>{t('gps.noFix')}</Text>}
+            <Text style={[staticStyles.lsBearing, { color: colors.text }]}>{formatBearing(bearing, 'true')}</Text>
           </View>
         ) : (
           <View style={staticStyles.lsNoWp}>
@@ -1005,17 +1012,40 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
 }
 
 // ─── ATOMS ───────────────────────────────────────────────────────────────────
-function SignalBadge({ isLoading, location }) {
+function SignalBadge({ isLoading, location, status }) {
   const colors = useColors();
   const { t } = useTranslation();
-  const color = isLoading ? colors.border : location ? colors.text : colors.border;
-  const label = isLoading ? t('gps.acquiring') : location ? t('gps.gpsFix') : t('gps.noSignal');
+  const color = location ? colors.text : colors.border;
+  const label = status === 'stale' ? t('gps.staleFix', { defaultValue: 'STALE FIX' })
+    : location ? t('gps.gpsFix') : isLoading ? t('gps.acquiring') : t('gps.noSignal');
   return (
     <View style={staticStyles.signal} accessibilityLiveRegion="polite" accessibilityLabel={`GPS status: ${label}`}>
       <View style={[staticStyles.signalDot, { backgroundColor: color }]} />
       <Text style={[staticStyles.signalText, { color: colors.text3 }]}>{label}</Text>
     </View>
   );
+}
+function FixDetails({ positionStatus }) {
+  const colors = useColors();
+  const { t } = useTranslation();
+  const { fix, ageSeconds, sourceFallback, status } = positionStatus || {};
+  if (!fix) return null;
+  const source = fix.source === 'external'
+    ? t('gps.sourceExternal', { defaultValue: 'EXTERNAL GPS' })
+    : t('gps.sourcePhone', { defaultValue: 'PHONE GPS' });
+  const age = fix.timestampSource === 'received'
+    ? t('gps.receivedAge', { seconds: ageSeconds, defaultValue: 'Received {{seconds}}s ago' })
+    : t('gps.observedAge', { seconds: ageSeconds, defaultValue: 'Observed {{seconds}}s ago' });
+  const accuracy = Number.isFinite(fix.accuracy) ? `±${fix.accuracy}m` : t('gps.accuracyUnknown', { defaultValue: 'Accuracy unknown' });
+  return <View style={staticStyles.fixDetails}>
+    <Text style={[staticStyles.fixDetailsText, { color: colors.text3 }]}>{source} · {age} · {accuracy}</Text>
+    {sourceFallback && status === 'fresh' && <Text style={[staticStyles.fixDetailsText, { color: colors.text3 }]}>{t('gps.phoneFallback', { defaultValue: 'External fix unavailable · using phone GPS' })}</Text>}
+  </View>;
+}
+function HeadingUnavailable() {
+  const colors = useColors();
+  const { t } = useTranslation();
+  return <Text style={[staticStyles.headingUnavailable, { color: colors.text3 }]}>{t('navigation.trueHeadingUnavailable', { defaultValue: 'True heading unavailable. Use the numeric true bearing with a map or compass.' })}</Text>;
 }
 function Div() {
   const colors = useColors();
@@ -1046,7 +1076,7 @@ function Crosshair({ size = 50 }) {
 // ─── HUD OVERLAY ────────────────────────────────────────────────────────────
 // Full-screen simplified display: large MGRS + optional waypoint arrow.
 // Tap anywhere to exit. Black background for maximum contrast.
-function HUDOverlay({ mgrsFormatted, bearing, arrowAngle, distance, compassHeading, waypoint, onExit }) {
+function HUDOverlay({ mgrsFormatted, bearing, arrowAngle, distance, compassHeading, compassReference, positionStatus, location, waypoint, onExit }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -1058,21 +1088,21 @@ function HUDOverlay({ mgrsFormatted, bearing, arrowAngle, distance, compassHeadi
       accessibilityLabel={t('grid.tapToExit')}
     >
       <View style={staticStyles.hudContent}>
-        {compassHeading !== null && (
-          <Text style={[staticStyles.hudHeading, { color: colors.text2 }]}>HDG {Math.round(compassHeading)}°</Text>
-        )}
+        <Text style={[staticStyles.hudHeading, { color: colors.text2 }]}>HDG {formatBearing(compassHeading, compassReference)}</Text>
+        <SignalBadge location={location} status={positionStatus?.status} />
+        <FixDetails positionStatus={positionStatus} />
         <Text
           style={[staticStyles.hudMgrs, { color: colors.text }]}
           numberOfLines={2}
           adjustsFontSizeToFit
           minimumFontScale={0.5}
         >
-          {mgrsFormatted || '\u2014'}
+          {mgrsFormatted || t('gps.noFix')}
         </Text>
-        {waypoint && arrowAngle !== null && (
+        {waypoint && (
           <View style={staticStyles.hudWpSection}>
-            <WayfinderArrow bearing={arrowAngle} size={120} />
-            {bearing !== null && <Text style={[staticStyles.hudBearing, { color: colors.text }]}>{Math.round(bearing)}°</Text>}
+            {arrowAngle !== null ? <WayfinderArrow bearing={arrowAngle} size={120} /> : bearing !== null && <HeadingUnavailable />}
+            <Text style={[staticStyles.hudBearing, { color: colors.text }]}>{formatBearing(bearing, 'true')}</Text>
             {distance !== null && (
               <Text style={[staticStyles.hudDist, { color: colors.text2 }]}>{formatDistance(distance)}</Text>
             )}
@@ -1088,6 +1118,9 @@ function HUDOverlay({ mgrsFormatted, bearing, arrowAngle, distance, compassHeadi
 // ─── STYLES ──────────────────────────────────────────────────────────────────
 // Structural styles only — colours applied inline via useColors()
 const staticStyles = StyleSheet.create({
+  fixDetails: { paddingVertical: 4, gap: 3 },
+  fixDetailsText: { ...TYPE.body, fontSize: 12, textAlign: 'center' },
+  headingUnavailable: { ...TYPE.body, fontSize: 13, lineHeight: 18, textAlign: 'center', maxWidth: 300, padding: 12 },
   root: { flex:1 },
   // Error boundary fallback (hardcoded red — class component, no hooks)
   errorRoot: { flex:1, backgroundColor:'#000000' },
