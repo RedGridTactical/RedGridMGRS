@@ -14,7 +14,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { shareTrialLink } from '../utils/referral';
 import { useReferralTrial } from '../hooks/useReferralTrial';
 
-const APP_VERSION = '4.0.6';
+const APP_VERSION = '4.0.7';
 const SUPPORT_EMAIL = 'support@redgridtactical.com';
 const GITHUB_URL = 'https://github.com/RedGridTactical/RedGridMGRS';
 const PRIVACY_URL = 'https://redgridtactical.com/privacy';

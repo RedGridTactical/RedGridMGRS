@@ -13,7 +13,7 @@
  * Privacy: no tracking, no analytics. Location is ephemeral.
  */
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Platform, ScrollView, Linking } from 'react-native';
 import { Modal } from '../components/FieldModal';
 import { TextInput } from '../components/FieldInput';
 import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
@@ -29,7 +29,8 @@ import { TeamMarkers } from '../components/TeamMarkers';
 import { calculateRoute, optimizeRoute, moveRoutePoint } from '../utils/routePlanner';
 import {
   checkTilesForRegion, clearTileCache, getLocalTilePathTemplate, recoverOfflineTileCache, getOfflineMapMetadata,
-  OSM_TILE_URL, DARK_TILE_URL, TOPO_TILE_URL,
+
+  ONLINE_MAP_STYLES, DEFAULT_MAP_STYLE, ONLINE_TILE_CACHE_MAX_AGE_SECONDS, getOnlineMapStyle, resolveMapStyle, getOnlineTileCachePath,
 } from '../utils/tileManager';
 import { importRasterMBTiles } from '../utils/offlineMaps';
 import * as DocumentPicker from 'expo-document-picker';
@@ -88,7 +89,7 @@ function timeSince(ts) {
 
 // Tile sources — Standard (OSM), Dark (CartoDB), Topo (OpenTopoMap).
 // URLs come from tileManager so the offline cache and the live map agree.
-const MAP_STYLES = ['standard', 'dark', 'topo'];
+const MAP_STYLES = ONLINE_MAP_STYLES.map(s => s.id);
 const MAP_STYLE_KEY = 'rg_map_style';
 
 export function MapScreen({
@@ -138,8 +139,8 @@ export function MapScreen({
   const isDark = colors.bg === '#000000' || colors.bg === '#0A0A0A' || colors.bg === '#000';
   const localTilePath = getLocalTilePathTemplate();
 
-  // Map style: standard, dark, topo
-  const [mapStyle, setMapStyle] = useState(isDark ? 'dark' : 'standard');
+  // Map style: one of the offered online layers
+  const [mapStyle, setMapStyle] = useState(DEFAULT_MAP_STYLE);
 
   // Throttled clock for the team layer. Peer decay is time-based, so the
   // markers need a moving `now` — but reading Date.now() inline made every
@@ -157,7 +158,7 @@ export function MapScreen({
 
   // Load persisted map style preference
   useEffect(() => {
-    AsyncStorage.getItem(MAP_STYLE_KEY).then(v => { if (v && MAP_STYLES.includes(v)) setMapStyle(v); }).catch(() => {});
+    AsyncStorage.getItem(MAP_STYLE_KEY).then(v => { if (v) setMapStyle(resolveMapStyle(v)); }).catch(() => {});
   }, []);
 
   // Waypoint creation menu state
@@ -451,8 +452,17 @@ export function MapScreen({
   }, [cachedCount, localTilePath]);
 
   // Tile source — online uses remote URL, offline uses LocalTile with cached files
-  const remoteTileUrl = mapStyle === 'dark' ? DARK_TILE_URL : mapStyle === 'topo' ? TOPO_TILE_URL : OSM_TILE_URL;
-  const mapStyleLabel = mapStyle === 'dark' ? 'DRK' : mapStyle === 'topo' ? 'TOPO' : 'STD';
+  // Android scales provider tiles above maxNativeZoom through the app-owned
+  // fetch path. iOS stays on the plain MapKit overlay (its cached-overlay
+  // variant has no response validation), so it simply stops requesting
+  // above the provider's native zoom and the Apple basemap shows beneath.
+  const onlineStyle = getOnlineMapStyle(mapStyle);
+  const remoteTileUrl = onlineStyle.url;
+  const mapStyleLabel = onlineStyle.label;
+  // Android fetches through the app-owned identified tile path; the per-provider
+  // cache lets the viewport be revisited without a second request for a week.
+  const onlineTileCachePath = Platform.OS === 'android' ? getOnlineTileCachePath(mapStyle) : null;
+  const openAttribution = useCallback(() => { Linking.openURL(onlineStyle.attributionUrl).catch(() => {}); }, [onlineStyle.attributionUrl]);
 
   if (tacticalMode) {
     return <View style={[styles.fallback, { backgroundColor: '#000000', padding: 24 }]}>
@@ -501,10 +511,13 @@ export function MapScreen({
           />
         ) : (
           <UrlTile
+            key={`online-${mapStyle}`}
             urlTemplate={remoteTileUrl}
-            maximumZ={19}
+            maximumZ={Platform.OS === 'android' ? 19 : onlineStyle.maxNativeZoom}
+            {...(Platform.OS === 'android' ? { maximumNativeZ: onlineStyle.maxNativeZoom } : {})}
             flipY={false}
             tileSize={256}
+            {...(onlineTileCachePath ? { tileCachePath: onlineTileCachePath, tileCacheMaxAge: ONLINE_TILE_CACHE_MAX_AGE_SECONDS } : {})}
           />
         )}
 
@@ -656,6 +669,18 @@ export function MapScreen({
         <Text style={{ ...TYPE.label, color: colors.text, fontSize: 12 }} numberOfLines={2}>{offlineMetadata.name} · Z{offlineMetadata.minZoom}–{offlineMetadata.maxZoom}</Text>
         {!!offlineMetadata.attribution && <Text style={{ ...TYPE.body, color: colors.text2, fontSize: 10 }}>{offlineMetadata.attribution.replace(/<[^>]*>/g, '')}</Text>}
       </View>}
+
+      {/* Provider attribution — required to stay visible over online layers. */}
+      {!(offlineMode && localTilePath) && (
+        <TouchableOpacity
+          style={[styles.attribution, { backgroundColor: colors.card + 'E6', borderColor: colors.border }]}
+          onPress={openAttribution}
+          accessibilityRole="link"
+          accessibilityLabel={`${onlineStyle.attribution}. Opens licence page.`}
+        >
+          <Text style={[styles.attributionText, { color: colors.text2 }]}>{onlineStyle.attribution}</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Download progress overlay */}
       {downloading && (
@@ -1028,6 +1053,11 @@ const styles = StyleSheet.create({
   reticle: { position: 'absolute', top: '50%', left: '50%', width: 20, height: 20, marginLeft: -10, marginTop: -10 },
   reticleH: { position: 'absolute', top: 9, left: 0, right: 0, height: 1 },
   reticleV: { position: 'absolute', left: 9, top: 0, bottom: 0, width: 1 },
+  attribution: {
+    position: 'absolute', bottom: 70, left: 12, maxWidth: '62%',
+    paddingHorizontal: 6, paddingVertical: 3, borderWidth: StyleSheet.hairlineWidth,
+  },
+  attributionText: { ...TYPE.body, fontSize: 10, lineHeight: 12 },
 
   // Selected-marker info card (top-anchored so it never collides with bottom MGRS bar)
   markerCard: {

@@ -24,6 +24,10 @@ jest.mock('../src/screens/PreflightScreen', () => ({ PreflightScreen: 'Preflight
 jest.mock('../src/utils/haptics', () => ({ tapLight: jest.fn(), tapMedium: jest.fn(), notifySuccess: jest.fn(), notifyError: jest.fn(), notifyWarning: jest.fn() }));
 jest.mock('../src/utils/tileManager', () => ({
   getLocalTilePathTemplate: () => null, recoverOfflineTileCache: () => Promise.resolve(), getOfflineMapMetadata: () => Promise.resolve(null), checkTilesForRegion: () => Promise.resolve({ missing: [] }),
+  ONLINE_MAP_STYLES: [{ id: 'standard', label: 'STD', url: 'https://tile.example/{z}/{x}/{y}.png', maxNativeZoom: 19, attribution: '© OpenStreetMap contributors', attributionUrl: 'https://www.openstreetmap.org/copyright' }],
+  DEFAULT_MAP_STYLE: 'standard', ONLINE_TILE_CACHE_MAX_AGE_SECONDS: 604800,
+  getOnlineMapStyle: () => ({ id: 'standard', label: 'STD', url: 'https://tile.example/{z}/{x}/{y}.png', maxNativeZoom: 19, attribution: '© OpenStreetMap contributors', attributionUrl: 'https://www.openstreetmap.org/copyright' }),
+  resolveMapStyle: v => v === 'topo' ? 'topo' : 'standard', getOnlineTileCachePath: () => null,
 }));
 jest.mock('../src/utils/offlineMaps', () => ({ importRasterMBTiles: jest.fn() }));
 jest.mock('expo-document-picker', () => ({ getDocumentAsync: jest.fn() }));

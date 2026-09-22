@@ -17,10 +17,15 @@ const SEEN_KEY = 'rg_whatsnew_seen_version';
 // The release whose bullets are translated under `whatsNew.current` in i18n.
 // Bump this in lockstep with the entry added to FEATURES_BY_VERSION below, or
 // the modal silently falls back to English.
-const LOCALIZED_VERSION = '4.0.6';
+const LOCALIZED_VERSION = '4.0.7';
 
 // Features to showcase for a given version. Keep terse — this is a glance screen.
 const FEATURES_BY_VERSION = {
+  '4.0.7': [
+    {"icon":"◉","title":"MAP ATTRIBUTION","body":"Online layers show the provider credit. Tap it to open the licence page."},
+    {"icon":"◆","title":"ONLINE LAYERS","body":"Standard and Topo remain. Dark is no longer offered: its provider now requires an API key."},
+    {"icon":"✓","title":"BATTERY READINESS","body":"Preflight reports battery as unknown instead of an inconsistent reading on unsupported devices."},
+  ],
   '4.0.6': [
     {"icon":"◉","title":"SAVED ROUTE PLANS","body":"Name and save map routes, reorder points, add notes and review route cards before navigating."},
     {"icon":"◆","title":"SESSION DRAFTS","body":"Keep report and calculator drafts across tabs. Insert report references deliberately and copy with confirmed feedback."},

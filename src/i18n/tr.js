@@ -340,20 +340,16 @@ export default {
     startTrial: "7 GÜNLÜK ÜCRETSİZ DENEMEYİ BAŞLAT",
     current: {
       "f1": {
-        "title": "KAYITLI ROTA PLANLARI",
-        "body": "Harita rotalarını adlandırıp kaydedin, noktaları sıralayın, not ekleyin ve navigasyondan önce rota kartlarını inceleyin."
+        "title": "HARİTA ATFI",
+        "body": "Çevrimiçi katmanlar sağlayıcı bilgisini gösterir. Lisans sayfası için dokunun."
       },
       "f2": {
-        "title": "OTURUM TASLAKLARI",
-        "body": "Sekmeler arasında rapor ve hesaplama taslaklarını koruyun. Referansları bilinçli ekleyin ve onaylı geri bildirimle kopyalayın."
+        "title": "ÇEVRİMİÇİ KATMANLAR",
+        "body": "Standart ve Topo kalıyor. Koyu artık sunulmuyor: sağlayıcısı artık API anahtarı istiyor."
       },
       "f3": {
-        "title": "SABİTLENMİŞ REFERANSLAR",
-        "body": "Parakete seyri için başlangıç seçip tahmini noktaları kaydedin. Konum zamanı ve dışa aktarma boyutu açık fotoğraf açıklamalarını sabitleyin."
-      },
-      "f4": {
-        "title": "HAZIRLIK VE KURTARMA",
-        "body": "Daha açık kerterizler, güncel konum ve içe aktarılan harita kontrolleri, satın alma kurtarma, onaylı kayıtlar ve ekran denetimleri."
+        "title": "PİL HAZIRLIĞI",
+        "body": "Ön kontrol, desteklenmeyen cihazlarda tutarsız bir okuma yerine pili bilinmiyor olarak bildirir."
       }
     },
   },

@@ -338,20 +338,16 @@ export default {
     startTrial: "INIZIA LA PROVA GRATUITA DI 7 GIORNI",
     current: {
       "f1": {
-        "title": "PIANI DI ROTTA SALVATI",
-        "body": "Nomina e salva rotte sulla mappa, riordina punti, aggiungi note e verifica le schede prima di navigare."
+        "title": "ATTRIBUZIONE MAPPA",
+        "body": "I livelli online mostrano il credito del fornitore. Toccalo per aprire la pagina della licenza."
       },
       "f2": {
-        "title": "BOZZE DELLA SESSIONE",
-        "body": "Conserva bozze di rapporti e calcoli tra le schede. Inserisci i riferimenti deliberatamente e copia con conferma."
+        "title": "LIVELLI ONLINE",
+        "body": "Standard e Topo restano. Scuro non è più offerto: il fornitore ora richiede una chiave API."
       },
       "f3": {
-        "title": "RIFERIMENTI FISSATI",
-        "body": "Scegli un’origine di navigazione stimata e salva punti stimati. Fissa annotazioni foto con ora della posizione e dimensioni di esportazione chiare."
-      },
-      "f4": {
-        "title": "PREPARAZIONE E RECUPERO",
-        "body": "Rilevamenti più chiari, verifica di posizioni recenti e mappe importate, ripristino acquisti, salvataggi confermati e controlli dello schermo."
+        "title": "STATO BATTERIA",
+        "body": "Il preflight indica batteria sconosciuta invece di una lettura incoerente sui dispositivi non supportati."
       }
     },
   },

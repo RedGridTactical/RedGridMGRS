@@ -338,20 +338,16 @@ export default {
     startTrial: "INICIAR PRUEBA GRATIS DE 7 DÍAS",
     current: {
       "f1": {
-        "title": "PLANES DE RUTA GUARDADOS",
-        "body": "Nombra y guarda rutas del mapa, reordena puntos, añade notas y revisa las tarjetas antes de navegar."
+        "title": "ATRIBUCIÓN DEL MAPA",
+        "body": "Las capas en línea muestran el crédito del proveedor. Tócalo para abrir la página de licencia."
       },
       "f2": {
-        "title": "BORRADORES DE SESIÓN",
-        "body": "Conserva borradores de informes y cálculos entre pestañas. Inserta referencias deliberadamente y copia con confirmación."
+        "title": "CAPAS EN LÍNEA",
+        "body": "Estándar y Topo se mantienen. Oscura ya no se ofrece: su proveedor ahora exige una clave API."
       },
       "f3": {
-        "title": "REFERENCIAS FIJADAS",
-        "body": "Elige un origen de estima y guarda puntos estimados. Fija anotaciones de fotos con hora de posición y tamaño de exportación claros."
-      },
-      "f4": {
-        "title": "PREPARACIÓN Y RECUPERACIÓN",
-        "body": "Rumbos más claros, comprobaciones de posición reciente y mapas importados, recuperación de compras, guardado confirmado y controles de pantalla."
+        "title": "ESTADO DE BATERÍA",
+        "body": "La comprobación previa indica batería desconocida en lugar de una lectura incoherente en dispositivos no compatibles."
       }
     },
   },

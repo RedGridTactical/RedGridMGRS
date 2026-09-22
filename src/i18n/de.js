@@ -339,20 +339,16 @@ export default {
     startTrial: "7-TAGE-TESTPHASE STARTEN",
     current: {
       "f1": {
-        "title": "GESPEICHERTE ROUTENPLÄNE",
-        "body": "Kartenrouten benennen und speichern, Punkte umordnen, Notizen ergänzen und Routenkarten vor der Navigation prüfen."
+        "title": "KARTENATTRIBUTION",
+        "body": "Online-Ebenen zeigen den Anbieterhinweis. Antippen öffnet die Lizenzseite."
       },
       "f2": {
-        "title": "ENTWÜRFE DER SITZUNG",
-        "body": "Berichts- und Rechnerentwürfe bleiben beim Tabwechsel erhalten. Referenzen bewusst einfügen und mit bestätigter Rückmeldung kopieren."
+        "title": "ONLINE-EBENEN",
+        "body": "Standard und Topo bleiben. Dunkel wird nicht mehr angeboten: Der Anbieter verlangt jetzt einen API-Schlüssel."
       },
       "f3": {
-        "title": "FESTGELEGTE REFERENZEN",
-        "body": "Koppelnavigation von einem gewählten Ursprung und geschätzte Punkte speichern. Fotoanmerkungen mit klarer Positionszeit und Exportgröße festlegen."
-      },
-      "f4": {
-        "title": "BEREITSCHAFT UND WIEDERHERSTELLUNG",
-        "body": "Klarere Peilungen, Prüfung frischer Positionen und importierter Karten, Kaufwiederherstellung, bestätigtes Speichern und Anzeigeregler."
+        "title": "AKKUBEREITSCHAFT",
+        "body": "Der Preflight meldet den Akku als unbekannt statt einer widersprüchlichen Anzeige auf nicht unterstützten Geräten."
       }
     },
   },

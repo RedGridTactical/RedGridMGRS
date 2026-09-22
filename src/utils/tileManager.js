@@ -115,8 +115,51 @@ export async function checkImportedMapCoverage(region) {
 // Shared endpoints for interactive map viewing. Imported map packages carry
 // their own provider attribution in local metadata.
 export const OSM_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+// CARTO basemaps now require an API key the app does not hold; the layer is
+// not offered for viewing. The URL stays only so bulk-download policy checks
+// keep rejecting it.
 export const DARK_TILE_URL = 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png';
 export const TOPO_TILE_URL = 'https://tile.opentopomap.org/{z}/{x}/{y}.png';
+
+// Online layers offered for interactive viewing, each with the provider's
+// required visible attribution. Viewport tiles only; no prefetch.
+export const ONLINE_MAP_STYLES = [
+  {
+    id: 'standard',
+    label: 'STD',
+    url: OSM_TILE_URL,
+    maxNativeZoom: 19,
+    attribution: '© OpenStreetMap contributors',
+    attributionUrl: 'https://www.openstreetmap.org/copyright',
+  },
+  {
+    id: 'topo',
+    label: 'TOPO',
+    url: TOPO_TILE_URL,
+    // OpenTopoMap renders up to z17; higher zooms are scaled from z17 tiles.
+    maxNativeZoom: 17,
+    attribution: 'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
+    attributionUrl: 'https://opentopomap.org/about',
+  },
+];
+export const DEFAULT_MAP_STYLE = 'standard';
+// OSM tile policy: cache at least seven days when response headers are not interpreted.
+export const ONLINE_TILE_CACHE_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+
+export function getOnlineMapStyle(id) {
+  return ONLINE_MAP_STYLES.find(s => s.id === id) || ONLINE_MAP_STYLES[0];
+}
+
+/** Map a stored preference to an offered style; retired layers fall back to Standard. */
+export function resolveMapStyle(stored) {
+  return ONLINE_MAP_STYLES.some(s => s.id === stored) ? stored : DEFAULT_MAP_STYLE;
+}
+
+/** Per-provider cache directory for viewport tiles, separate from imported map packages. */
+export function getOnlineTileCachePath(styleId) {
+  if (!FileSystem?.cacheDirectory) return null;
+  return `${FileSystem.cacheDirectory}online-tiles/${resolveMapStyle(styleId)}`;
+}
 
 /**
  * Convert lat/lon to tile coordinates at a given zoom level.

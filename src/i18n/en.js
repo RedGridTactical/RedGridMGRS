@@ -976,20 +976,16 @@ export default {
     startTrial: 'START 7-DAY FREE TRIAL',
     current: {
       "f1": {
-        "title": "SAVED ROUTE PLANS",
-        "body": "Name and save map routes, reorder points, add notes and review route cards before navigating."
+        "title": "MAP ATTRIBUTION",
+        "body": "Online layers show the provider credit. Tap it to open the licence page."
       },
       "f2": {
-        "title": "SESSION DRAFTS",
-        "body": "Keep report and calculator drafts across tabs. Insert report references deliberately and copy with confirmed feedback."
+        "title": "ONLINE LAYERS",
+        "body": "Standard and Topo remain. Dark is no longer offered: its provider now requires an API key."
       },
       "f3": {
-        "title": "PINNED FIELD REFERENCES",
-        "body": "Choose a dead-reckoning origin and save estimated points. Pin photo annotations with clear fix time and export size."
-      },
-      "f4": {
-        "title": "READINESS & RECOVERY",
-        "body": "Clearer bearings, fresh-position checks, imported-map readiness, purchase recovery, confirmed saves and display controls."
+        "title": "BATTERY READINESS",
+        "body": "Preflight reports battery as unknown instead of an inconsistent reading on unsupported devices."
       }
     },
   },

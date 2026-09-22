@@ -24,6 +24,7 @@ try { ImagePickerModule = require('expo-image-picker'); } catch {}
 try { MediaLibraryModule = require('expo-media-library'); } catch {}
 try { BatteryModule = require('expo-battery'); } catch {}
 try { NetworkModule = require('expo-network'); } catch {}
+import { normalizePowerState } from '../utils/batteryReading';
 
 /**
  * @param {object} props
@@ -560,24 +561,26 @@ async function buildDeviceHealth(t) {
 async function readPowerState() {
   if (!BatteryModule || typeof BatteryModule.getPowerStateAsync !== 'function') return null;
   try {
-    return await BatteryModule.getPowerStateAsync();
+    const supported = typeof BatteryModule.isAvailableAsync === 'function'
+      ? await BatteryModule.isAvailableAsync()
+      : true;
+    const power = await BatteryModule.getPowerStateAsync();
+    return { ...power, supported: supported !== false };
   } catch {
     return null;
   }
 }
 
 function formatBatteryPart(t, power) {
-  const batteryLevel = Number.isFinite(power?.batteryLevel) ? power.batteryLevel : -1;
-  const batteryState = power?.batteryState;
-  const charging =
-    batteryState === BatteryModule?.BatteryState?.CHARGING ||
-    batteryState === BatteryModule?.BatteryState?.FULL;
+  const reading = normalizePowerState(power, BatteryModule?.BatteryState, { supported: power?.supported !== false });
 
-  if (batteryLevel < 0) {
-    return { status: power?.lowPowerMode ? 'warn' : 'idle', value: t('preflight.device.batteryUnknown') };
+  // Unsupported or inconsistent hosts report unknown rather than a fabricated charge.
+  if (reading.level == null) {
+    return { status: reading.lowPowerMode ? 'warn' : 'idle', value: t('preflight.device.batteryUnknown') };
   }
 
-  const pct = Math.round(batteryLevel * 100);
+  const charging = reading.state === 'charging' || reading.state === 'full';
+  const pct = Math.round(reading.level * 100);
   let status = 'ok';
   if (!charging && pct <= 10) status = 'fail';
   else if (!charging && pct <= 25) status = 'warn';
@@ -586,16 +589,9 @@ function formatBatteryPart(t, power) {
     status,
     value: t('preflight.device.batteryPct', {
       pct,
-      state: t(`preflight.device.batteryState.${batteryStateName(batteryState)}`),
+      state: t(`preflight.device.batteryState.${reading.state}`),
     }),
   };
-}
-
-function batteryStateName(state) {
-  if (state === BatteryModule?.BatteryState?.CHARGING) return 'charging';
-  if (state === BatteryModule?.BatteryState?.FULL) return 'full';
-  if (state === BatteryModule?.BatteryState?.UNPLUGGED) return 'unplugged';
-  return 'unknown';
 }
 
 async function readNetworkState() {

@@ -340,20 +340,16 @@ export default {
     startTrial: "ROZPOCZNIJ 7-DNIOWY BEZPŁATNY OKRES PRÓBNY",
     current: {
       "f1": {
-        "title": "ZAPISANE PLANY TRAS",
-        "body": "Nazywaj i zapisuj trasy na mapie, zmieniaj kolejność punktów, dodawaj notatki i sprawdzaj karty przed nawigacją."
+        "title": "ATRYBUCJA MAPY",
+        "body": "Warstwy online pokazują źródło danych. Dotknij, aby otworzyć stronę licencji."
       },
       "f2": {
-        "title": "SZKICE SESJI",
-        "body": "Zachowuj szkice raportów i obliczeń przy zmianie kart. Świadomie wstawiaj dane odniesienia i kopiuj z potwierdzeniem."
+        "title": "WARSTWY ONLINE",
+        "body": "Standard i Topo pozostają. Ciemna nie jest już oferowana: dostawca wymaga teraz klucza API."
       },
       "f3": {
-        "title": "USTALONE PUNKTY ODNIESIENIA",
-        "body": "Wybierz początek nawigacji zliczeniowej i zapisuj szacowane punkty. Ustalaj adnotacje zdjęć z jawnym czasem pozycji i rozmiarem eksportu."
-      },
-      "f4": {
-        "title": "GOTOWOŚĆ I ODZYSKIWANIE",
-        "body": "Czytelniejsze azymuty, kontrola świeżych pozycji i importowanych map, przywracanie zakupów, potwierdzony zapis i ustawienia ekranu."
+        "title": "STAN BATERII",
+        "body": "Preflight zgłasza baterię jako nieznaną zamiast niespójnego odczytu na nieobsługiwanych urządzeniach."
       }
     },
   },

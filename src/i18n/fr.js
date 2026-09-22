@@ -338,20 +338,16 @@ export default {
     startTrial: "DÉMARRER L'ESSAI GRATUIT DE 7 JOURS",
     current: {
       "f1": {
-        "title": "PLANS D’ITINÉRAIRE ENREGISTRÉS",
-        "body": "Nommez et enregistrez des itinéraires sur la carte, réordonnez les points, ajoutez des notes et vérifiez les fiches avant de partir."
+        "title": "ATTRIBUTION CARTE",
+        "body": "Les couches en ligne affichent le crédit du fournisseur. Touchez-le pour ouvrir la page de licence."
       },
       "f2": {
-        "title": "BROUILLONS DE SESSION",
-        "body": "Conservez les brouillons de rapports et de calculs entre les onglets. Insérez volontairement les références et copiez avec confirmation."
+        "title": "COUCHES EN LIGNE",
+        "body": "Standard et Topo restent. Sombre n’est plus proposée : son fournisseur exige désormais une clé API."
       },
       "f3": {
-        "title": "RÉFÉRENCES FIGÉES",
-        "body": "Choisissez une origine d’estime et enregistrez des points estimés. Figez les annotations photo avec heure de position et taille d’export explicites."
-      },
-      "f4": {
-        "title": "PRÉPARATION ET RÉCUPÉRATION",
-        "body": "Relèvements clarifiés, contrôle des positions récentes et cartes importées, restauration des achats, enregistrements confirmés et réglages d’affichage."
+        "title": "ÉTAT BATTERIE",
+        "body": "Le préflight indique une batterie inconnue au lieu d’une lecture incohérente sur les appareils non pris en charge."
       }
     },
   },

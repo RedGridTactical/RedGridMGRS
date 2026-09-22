@@ -340,20 +340,16 @@ export default {
     startTrial: "START GRATIS PROEFPERIODE VAN 7 DAGEN",
     current: {
       "f1": {
-        "title": "OPGESLAGEN ROUTEPLANNEN",
-        "body": "Geef kaartroutes een naam, sla ze op, wijzig de puntvolgorde, voeg notities toe en bekijk routekaarten vóór navigatie."
+        "title": "KAARTATTRIBUTIE",
+        "body": "Onlinelagen tonen de bronvermelding. Tik erop om de licentiepagina te openen."
       },
       "f2": {
-        "title": "CONCEPTEN PER SESSIE",
-        "body": "Bewaar rapport- en rekenconcepten bij het wisselen van tabblad. Voeg referenties bewust in en kopieer met bevestiging."
+        "title": "ONLINELAGEN",
+        "body": "Standaard en Topo blijven. Donker wordt niet meer aangeboden: de aanbieder vereist nu een API-sleutel."
       },
       "f3": {
-        "title": "VASTGEZETTE REFERENTIES",
-        "body": "Kies een oorsprong voor gegist bestek en sla geschatte punten op. Zet fotoannotaties vast met duidelijke positietijd en exportgrootte."
-      },
-      "f4": {
-        "title": "GEREEDHEID EN HERSTEL",
-        "body": "Duidelijkere peilingen, controle van recente posities en geïmporteerde kaarten, aankoopherstel, bevestigd opslaan en scherminstellingen."
+        "title": "BATTERIJSTATUS",
+        "body": "Preflight meldt de batterij als onbekend in plaats van een inconsistente meting op niet-ondersteunde apparaten."
       }
     },
   },

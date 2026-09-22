@@ -339,20 +339,16 @@ export default {
     startTrial: "INICIAR TESTE GRÁTIS DE 7 DIAS",
     current: {
       "f1": {
-        "title": "PLANOS DE ROTA SALVOS",
-        "body": "Nomeie e salve rotas do mapa, reordene pontos, adicione notas e revise os cartões antes de navegar."
+        "title": "ATRIBUIÇÃO DO MAPA",
+        "body": "As camadas on-line mostram o crédito do provedor. Toque para abrir a página de licença."
       },
       "f2": {
-        "title": "RASCUNHOS DA SESSÃO",
-        "body": "Mantenha rascunhos de relatórios e cálculos entre as abas. Insira referências deliberadamente e copie com confirmação."
+        "title": "CAMADAS ON-LINE",
+        "body": "Padrão e Topo continuam. Escura não é mais oferecida: o provedor agora exige uma chave de API."
       },
       "f3": {
-        "title": "REFERÊNCIAS FIXADAS",
-        "body": "Escolha uma origem de navegação estimada e salve pontos estimados. Fixe anotações de fotos com hora da posição e tamanho de exportação claros."
-      },
-      "f4": {
-        "title": "PREPARAÇÃO E RECUPERAÇÃO",
-        "body": "Rumos mais claros, verificação de posições recentes e mapas importados, restauração de compras, salvamentos confirmados e controles de tela."
+        "title": "ESTADO DA BATERIA",
+        "body": "O preflight informa bateria desconhecida em vez de uma leitura inconsistente em dispositivos não compatíveis."
       }
     },
   },
