@@ -455,9 +455,22 @@ export default {
     pro: 'ᴾᴿᴼ',
   },
   upsell: {
-    title: 'RED GRID PRO',
-    subtitle: 'Ontgrendel de volledige ervaring',
-    button: 'PRO ONTGRENDELEN',
+    button: "PRO-OPTIES BEKIJKEN",
+    lists: {
+      title: "BEREID JE ROUTE VOOR",
+      body: "Sla tot 10 lijsten van 20 punten op. Maak routekaarten en wissel GPX/KML-bestanden uit. Gratis bevat één actief navigatiepunt. Pro voegt opgeslagen lijsten en de routeworkflow toe.",
+      note: "Alleen op pad? Geen radio nodig.",
+    },
+    coords: {
+      title: "LEES HET GRID OP JOUW MANIER",
+      body: "Toon UTM, decimale graden en DMS op het hoofdgrid en gebruik alle 12 veldtools. Gratis bevat 10-cijferig MGRS, peiling, afstand en 4 tools. Pro voegt de overige formaten en 8 extra tools toe.",
+      note: "De 10-cijferige precisie blijft gratis voor iedereen.",
+    },
+    mesh: {
+      title: "ZIE JE TEAM OP DE KAART",
+      body: "Toon teamposities en stuur korte berichten via een compatibele Meshtastic-radio. Gratis dekt solonavigatie zonder radio. Pro voegt de teamlaag toe; radio’s worden apart verkocht.",
+      note: "Stel de radioverbinding in en test hem voordat je erop vertrouwt.",
+    },
   },
   error: {
     title: 'RED GRID FOUT',
@@ -790,6 +803,12 @@ export default {
     coordFormatsSub: 'UTM, decimale graden, DMS, op de hoofd-griddisplay',
     displayThemes: 'Weergavethema\'s',
     displayThemesSub: "Groene, witte en blauwe paletten; geen NVG-certificering",
+    offlineMaps: "Offline tactische kaarten",
+    meshAwareness: "Meshtastic-mesh",
+    meshAwarenessSub: "Zie mesh-nodes op de kaart, zonder mobiel netwerk",
+    allTools: "Alle 12 tactische tools",
+    allToolsSub: "Gegist bestek, resectie, zon/maan, geostempel en meer",
+    reportsThemes: "Alle rapporten en thema's",
   },
   mesh: {
     pairing: {

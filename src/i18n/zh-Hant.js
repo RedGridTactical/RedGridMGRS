@@ -454,9 +454,22 @@ export default {
     pro: 'ᴾᴿᴼ',
   },
   upsell: {
-    title: 'RED GRID PRO',
-    subtitle: '解鎖完整體驗',
-    button: '解鎖 PRO',
+    button: "查看 PRO 選項",
+    lists: {
+      title: "準備你的路線",
+      body: "最多儲存 10 個清單，每個 20 個點。建立路線卡並交換 GPX/KML 檔案。免費版包含 1 個使用中的導航點。Pro 新增已儲存清單與路線流程。",
+      note: "獨自出行？無需無線電。",
+    },
+    coords: {
+      title: "以你的方式讀取網格",
+      body: "在主網格上顯示 UTM、十進位度與 DMS，並使用全部 12 種野外工具。免費版包含 10 位 MGRS、方位、距離與 4 種工具。Pro 新增其他格式與另外 8 種工具。",
+      note: "10 位精度對所有人維持免費。",
+    },
+    mesh: {
+      title: "在地圖上查看隊伍",
+      body: "透過相容的 Meshtastic 無線電顯示隊伍位置並傳送簡短訊息。免費版支援無無線電的單人導航。Pro 新增隊伍圖層；無線電需另行購買。",
+      note: "在依賴之前，請先設定並驗證無線電連結。",
+    },
   },
   error: {
     title: 'RED GRID 錯誤',
@@ -789,6 +802,12 @@ export default {
     coordFormatsSub: 'UTM、十進位度、DMS, 在主網格顯示上',
     displayThemes: '顯示主題',
     displayThemesSub: "綠色、白色和藍色顯示配色；無NVG認證",
+    offlineMaps: "離線戰術地圖",
+    meshAwareness: "Meshtastic 網路",
+    meshAwarenessSub: "在地圖上查看網路節點，無需行動訊號",
+    allTools: "全部 12 種戰術工具",
+    allToolsSub: "航位推算、後方交會、日月、地理標記等",
+    reportsThemes: "全部報告與主題",
   },
   mesh: {
     pairing: {

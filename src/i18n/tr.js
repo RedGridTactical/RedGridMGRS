@@ -455,9 +455,22 @@ export default {
     pro: 'ᴾᴿᴼ',
   },
   upsell: {
-    title: 'RED GRID PRO',
-    subtitle: 'Tam deneyimin kilidini açın',
-    button: 'PRO\'YU AÇ',
+    button: "PRO SEÇENEKLERİNİ GÖR",
+    lists: {
+      title: "ROTANI HAZIRLA",
+      body: "20 noktalık en fazla 10 liste kaydet. Rota kartları oluştur ve GPX/KML dosyaları paylaş. Ücretsiz sürümde bir etkin seyir noktası bulunur. Pro, kayıtlı listeleri ve rota akışını ekler.",
+      note: "Tek başına mı gidiyorsun? Telsiz gerekmez.",
+    },
+    coords: {
+      title: "GRİDİ KENDİ TARZINDA OKU",
+      body: "Ana gridde UTM, ondalık derece ve DMS göster ve 12 saha aracının tamamını kullan. Ücretsiz sürümde 10 haneli MGRS, kerteriz, mesafe ve 4 araç bulunur. Pro, diğer biçimleri ve 8 aracı daha ekler.",
+      note: "10 haneli hassasiyet herkes için ücretsiz kalır.",
+    },
+    mesh: {
+      title: "EKİBİNİ HARİTADA GÖR",
+      body: "Uyumlu bir Meshtastic telsizi üzerinden ekip konumlarını göster ve kısa mesajlar gönder. Ücretsiz sürüm telsizsiz tek başına seyri kapsar. Pro ekip katmanını ekler; telsizler ayrı satılır.",
+      note: "Güvenmeden önce telsiz bağlantısını kur ve doğrula.",
+    },
   },
   error: {
     title: 'RED GRID HATASI',
@@ -790,6 +803,12 @@ export default {
     coordFormatsSub: 'UTM, ondalık dereceler, DMS, ana ızgara ekranında',
     displayThemes: 'Görünüm Temaları',
     displayThemesSub: "Yeşil, beyaz ve mavi paletler; NVG sertifikası yok",
+    offlineMaps: "Çevrimdışı taktik haritalar",
+    meshAwareness: "Meshtastic ağı",
+    meshAwarenessSub: "Ağ düğümlerini haritada gör, hücresel şebeke gerekmez",
+    allTools: "12 taktik aracın tamamı",
+    allToolsSub: "Parakete hesabı, geriden kestirme, güneş/ay, coğrafi damga ve daha fazlası",
+    reportsThemes: "Tüm raporlar ve temalar",
   },
   mesh: {
     pairing: {

@@ -455,9 +455,22 @@ export default {
     pro: 'ᴾᴿᴼ',
   },
   upsell: {
-    title: 'RED GRID PRO',
-    subtitle: 'Odblokuj pełne doświadczenie',
-    button: 'ODBLOKUJ PRO',
+    button: "ZOBACZ OPCJE PRO",
+    lists: {
+      title: "PRZYGOTUJ TRASĘ",
+      body: "Zapisuj do 10 list po 20 punktów. Twórz karty trasy i wymieniaj pliki GPX/KML. Wersja bezpłatna zawiera jeden aktywny punkt nawigacji. Pro dodaje zapisane listy i przebieg trasy.",
+      note: "Idziesz sam? Radio nie jest potrzebne.",
+    },
+    coords: {
+      title: "CZYTAJ SIATKĘ PO SWOJEMU",
+      body: "Wyświetlaj UTM, stopnie dziesiętne i DMS na głównej siatce i korzystaj ze wszystkich 12 narzędzi terenowych. Wersja bezpłatna zawiera 10-cyfrowy MGRS, azymut, odległość i 4 narzędzia. Pro dodaje pozostałe formaty i 8 kolejnych narzędzi.",
+      note: "10-cyfrowa precyzja pozostaje bezpłatna dla wszystkich.",
+    },
+    mesh: {
+      title: "ZOBACZ ZESPÓŁ NA MAPIE",
+      body: "Wyświetlaj pozycje zespołu i wysyłaj krótkie wiadomości przez zgodne radio Meshtastic. Wersja bezpłatna obejmuje nawigację solo bez radia. Pro dodaje warstwę zespołu; radia są sprzedawane osobno.",
+      note: "Skonfiguruj i sprawdź łącze radiowe, zanim na nim polegasz.",
+    },
   },
   error: {
     title: 'BŁĄD RED GRID',
@@ -790,6 +803,12 @@ export default {
     coordFormatsSub: 'UTM, stopnie dziesiętne, DMS, na głównym wyświetlaczu',
     displayThemes: 'Motywy wyświetlania',
     displayThemesSub: "Zielona, biała i niebieska paleta; bez certyfikacji NVG",
+    offlineMaps: "Taktyczne mapy offline",
+    meshAwareness: "Sieć Meshtastic",
+    meshAwarenessSub: "Węzły sieci na mapie, bez zasięgu komórkowego",
+    allTools: "Wszystkie 12 narzędzi taktycznych",
+    allToolsSub: "Nawigacja zliczeniowa, wcięcie wstecz, słońce/księżyc, geostempel i więcej",
+    reportsThemes: "Wszystkie raporty i motywy",
   },
   mesh: {
     pairing: {

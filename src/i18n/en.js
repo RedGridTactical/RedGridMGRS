@@ -431,9 +431,22 @@ export default {
 
   // ─── Upsell ───────────────────────────────────────────────────────────
   upsell: {
-    title: 'RED GRID PRO',
-    subtitle: 'Unlock the full experience',
-    button: 'UNLOCK PRO',
+    button: "VIEW PRO OPTIONS",
+    lists: {
+      title: "PREPARE YOUR ROUTE",
+      body: "Save up to 10 lists of 20 points. Build route cards and exchange GPX/KML files. Free includes one active navigation waypoint. Pro adds saved lists and the route workflow.",
+      note: "Planning solo? No radio required.",
+    },
+    coords: {
+      title: "READ THE GRID YOUR WAY",
+      body: "Show UTM, decimal degrees and DMS on the main grid and use all 12 field tools. Free includes 10-digit MGRS, bearing and distance, and 4 tools. Pro adds the other formats and 8 more tools.",
+      note: "10-digit precision stays free for everyone.",
+    },
+    mesh: {
+      title: "SEE YOUR TEAM ON THE MAP",
+      body: "Show team positions and send short messages through a compatible Meshtastic radio. Free covers solo navigation without any radio. Pro adds the team layer; radios are sold separately.",
+      note: "Set up and verify the radio link before relying on it.",
+    },
   },
 
   // ─── Error boundary ───────────────────────────────────────────────────

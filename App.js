@@ -743,7 +743,10 @@ function AppContent({
 
         {/* Upsell tab for non-Pro */}
         {(safeTab === 'lists' || safeTab === 'coords' || safeTab === 'mesh') && !isPro && (
-          <UpsellScreen onUpgrade={() => showProGate(TABS.find(item => item.id === safeTab)?.label, { lists: 'routes', coords: 'tools', mesh: 'radio' }[safeTab])} />
+          <UpsellScreen
+            tabId={safeTab}
+            onUpgrade={() => showProGate(t(UPSELL_GATE_FEATURE[safeTab]), UPSELL_GATE_CONTEXT[safeTab])}
+          />
         )}
       </Animated.View>
 
@@ -825,7 +828,7 @@ function AppContent({
       <WhatsNewModal
         currentVersion="4.0.7"
         showTrialCta={!isPro}
-        onStartTrial={() => showProGate('Red Grid Pro')}
+        onStartTrial={() => showProGate('')}
       />
 
       <FieldAlertHost />
@@ -873,17 +876,26 @@ function FontReadyApp() {
   return <App />;
 }
 
-function UpsellScreen({ onUpgrade }) {
+// Locked-tab upsell. Each tab states what it does, what Free already
+// includes and what Pro adds before the paywall is offered. The paywall then
+// opens on the matching capability, not on the raw tab label.
+const UPSELL_GATE_FEATURE = { lists: 'proGate.waypointsRoutes', coords: 'proGate.coordFormats', mesh: 'proGate.meshAwareness' };
+const UPSELL_GATE_CONTEXT = { lists: 'routes', coords: 'tools', mesh: 'radio' };
+
+function UpsellScreen({ tabId, onUpgrade }) {
   const colors = useColors();
   const { t } = useTranslation();
+  const tabLabel = t(`tabs.${tabId}`);
   return (
-    <View style={staticStyles.upsellRoot}>
-      <Text style={[staticStyles.upsellTitle, { color: colors.text }]}>{t('upsell.title')}</Text>
-      <Text style={[staticStyles.upsellSub, { color: colors.text3 }]}>{t('upsell.subtitle')}</Text>
+    <ScrollView style={staticStyles.root} contentContainerStyle={staticStyles.upsellRoot}>
+      <Text style={[staticStyles.upsellEyebrow, { color: colors.text3 }]}>{`${tabLabel} / PRO`}</Text>
+      <Text style={[staticStyles.upsellTitle, { color: colors.text }]} accessibilityRole="header">{t(`upsell.${tabId}.title`)}</Text>
+      <Text style={[staticStyles.upsellBody, { color: colors.text2 }]}>{t(`upsell.${tabId}.body`)}</Text>
       <TouchableOpacity style={[staticStyles.upsellBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]} onPress={onUpgrade} accessibilityRole="button" accessibilityLabel={t('upsell.button')}>
         <Text style={[staticStyles.upsellBtnText, { color: colors.text }]}>{t('upsell.button')}</Text>
       </TouchableOpacity>
-    </View>
+      <Text style={[staticStyles.upsellNote, { color: colors.text3 }]}>{t(`upsell.${tabId}.note`)}</Text>
+    </ScrollView>
   );
 }
 
@@ -1269,11 +1281,13 @@ const staticStyles = StyleSheet.create({
   rateLink: { ...TYPE.label, fontSize:12, letterSpacing:0.8, paddingVertical:6 },
   footerRow: { flexWrap:'wrap', flexDirection:'row', justifyContent:'center', gap:20, marginBottom:2 },
   // Upsell
-  upsellRoot: { flex:1, alignItems:'center', justifyContent:'center', gap:16, padding:40 },
-  upsellTitle: { ...TYPE.heading, fontSize:24, letterSpacing:0.8 },
-  upsellSub: { ...TYPE.body, fontSize:12, letterSpacing:0.8 },
-  upsellBtn: { borderWidth:1, paddingHorizontal:32, paddingVertical:14 },
+  upsellRoot: { flexGrow:1, alignItems:'center', justifyContent:'center', gap:16, paddingHorizontal:28, paddingVertical:40 },
+  upsellEyebrow: { ...TYPE.label, fontSize:11, letterSpacing:1.2 },
+  upsellTitle: { ...TYPE.heading, fontSize:24, letterSpacing:0.8, textAlign:'center' },
+  upsellBody: { ...TYPE.body, fontSize:14, lineHeight:21, letterSpacing:0.3, textAlign:'center', maxWidth:340 },
+  upsellBtn: { borderWidth:1, paddingHorizontal:32, paddingVertical:14, minHeight:44, justifyContent:'center' },
   upsellBtnText: { ...TYPE.label, fontSize:12, letterSpacing:0.8 },
+  upsellNote: { ...TYPE.body, fontSize:12, letterSpacing:0.3, textAlign:'center', maxWidth:340 },
   // HUD overlay
   hudRoot: { ...StyleSheet.absoluteFillObject, backgroundColor:'#000000', zIndex:100, justifyContent:'center', alignItems:'center', padding:24 },
   hudContent: { flex:1, justifyContent:'center', alignItems:'center', width:'100%' },

@@ -454,9 +454,22 @@ export default {
     pro: 'ᴾᴿᴼ',
   },
   upsell: {
-    title: 'RED GRID PRO',
-    subtitle: 'Desbloqueie a experiência completa',
-    button: 'DESBLOQUEAR PRO',
+    button: "VER OPÇÕES PRO",
+    lists: {
+      title: "PREPARE SUA ROTA",
+      body: "Salve até 10 listas de 20 pontos. Crie cartões de rota e troque arquivos GPX/KML. A versão gratuita inclui um ponto de navegação ativo. O Pro adiciona listas salvas e o fluxo de rota.",
+      note: "Navegando sozinho? Não precisa de rádio.",
+    },
+    coords: {
+      title: "LEIA A GRADE DO SEU JEITO",
+      body: "Mostre UTM, graus decimais e DMS na grade principal e use todas as 12 ferramentas de campo. A versão gratuita inclui MGRS de 10 dígitos, azimute, distância e 4 ferramentas. O Pro adiciona os outros formatos e mais 8 ferramentas.",
+      note: "A precisão de 10 dígitos continua gratuita para todos.",
+    },
+    mesh: {
+      title: "VEJA SUA EQUIPE NO MAPA",
+      body: "Mostre posições da equipe e envie mensagens curtas por um rádio Meshtastic compatível. A versão gratuita cobre a navegação solo sem rádio. O Pro adiciona a camada de equipe; os rádios são vendidos separadamente.",
+      note: "Configure e verifique o enlace de rádio antes de depender dele.",
+    },
   },
   error: {
     title: 'ERRO RED GRID',
@@ -789,6 +802,12 @@ export default {
     coordFormatsSub: 'UTM, graus decimais, DMS, na tela principal',
     displayThemes: 'Temas de exibição',
     displayThemesSub: "Paletas verde, branca e azul; sem certificação NVG",
+    offlineMaps: "Mapas táticos off-line",
+    meshAwareness: "Malha Meshtastic",
+    meshAwarenessSub: "Veja os nós da malha no mapa, sem sinal de celular",
+    allTools: "Todas as 12 ferramentas táticas",
+    allToolsSub: "Navegação estimada, ressecção, sol/lua, geostamp e mais",
+    reportsThemes: "Todos os relatórios e temas",
   },
   mesh: {
     pairing: {

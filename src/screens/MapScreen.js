@@ -212,7 +212,7 @@ export function MapScreen({
   // Import a user-selected, locally licensed map; no public-provider prefetch.
   const handleImportMap = useCallback(() => {
     if (downloadingRef.current) return;
-    if (!isPro) { onShowProGate('Offline Maps'); return; }
+    if (!isPro) { onShowProGate(t('proGate.offlineMaps'), 'offline'); return; }
     Alert.alert(t('nightDisplay.importMap'), t('nightDisplay.importDescription', { defaultValue: 'Choose a local raster MBTiles map you have permission to use. This version accepts 256-pixel PNG tiles, up to 5,000 tiles and 256 MB. A valid import replaces the current saved map.' }), [
       { text: t('common.cancel'), style: 'cancel' },
       { text: t('nightDisplay.importMap'), onPress: async () => {

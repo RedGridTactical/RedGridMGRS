@@ -475,9 +475,22 @@ export default {
     pro: '\u1d3e\u1d3f\u1d3c',
   },
   upsell: {
-    title: 'RED GRID PRO',
-    subtitle: 'Das volle Erlebnis freischalten',
-    button: 'PRO FREISCHALTEN',
+    button: "PRO-OPTIONEN ANSEHEN",
+    lists: {
+      title: "ROUTE VORBEREITEN",
+      body: "Speichere bis zu 10 Listen mit je 20 Punkten. Erstelle Routenkarten und tausche GPX/KML-Dateien aus. Kostenlos enthält einen aktiven Navigationspunkt. Pro ergänzt gespeicherte Listen und den Routenablauf.",
+      note: "Allein unterwegs? Kein Funkgerät nötig.",
+    },
+    coords: {
+      title: "DAS GITTER NACH DEINER ART",
+      body: "Zeige UTM, Dezimalgrad und DMS im Hauptgitter und nutze alle 12 Feldwerkzeuge. Kostenlos enthält 10-stelliges MGRS, Peilung, Entfernung und 4 Werkzeuge. Pro ergänzt die übrigen Formate und 8 weitere Werkzeuge.",
+      note: "Die 10-stellige MGRS-Anzeige bleibt für alle kostenlos.",
+    },
+    mesh: {
+      title: "DEIN TEAM AUF DER KARTE",
+      body: "Zeige Teampositionen und sende kurze Nachrichten über ein kompatibles Meshtastic-Funkgerät. Kostenlos deckt die Solo-Navigation ohne Funkgerät ab. Pro ergänzt die Teamebene; Funkgeräte werden separat verkauft.",
+      note: "Richte die Funkverbindung ein und prüfe sie, bevor du dich darauf verlässt.",
+    },
   },
   error: {
     title: 'RED GRID FEHLER',

@@ -473,9 +473,22 @@ export default {
     pro: '\u1d3e\u1d3f\u1d3c',
   },
   upsell: {
-    title: 'RED GRID PRO',
-    subtitle: 'D\u00e9bloquez l\'exp\u00e9rience compl\u00e8te',
-    button: 'D\u00c9BLOQUER PRO',
+    button: "VOIR LES OPTIONS PRO",
+    lists: {
+      title: "PRÉPAREZ VOTRE ITINÉRAIRE",
+      body: "Enregistrez jusqu’à 10 listes de 20 points. Créez des fiches d’itinéraire et échangez des fichiers GPX/KML. La version gratuite inclut un point de navigation actif. Pro ajoute les listes enregistrées et le flux d’itinéraire.",
+      note: "Vous naviguez seul ? Aucune radio n’est nécessaire.",
+    },
+    coords: {
+      title: "LISEZ LA GRILLE À VOTRE FAÇON",
+      body: "Affichez UTM, degrés décimaux et DMS sur la grille principale et utilisez les 12 outils de terrain. La version gratuite inclut le MGRS à 10 chiffres, le relèvement, la distance et 4 outils. Pro ajoute les autres formats et 8 outils de plus.",
+      note: "La précision à 10 chiffres reste gratuite pour tous.",
+    },
+    mesh: {
+      title: "VOYEZ VOTRE ÉQUIPE SUR LA CARTE",
+      body: "Affichez les positions de l’équipe et envoyez de courts messages via une radio Meshtastic compatible. La version gratuite couvre la navigation en solo sans radio. Pro ajoute la couche équipe ; les radios sont vendues séparément.",
+      note: "Configurez et vérifiez la liaison radio avant de vous y fier.",
+    },
   },
   error: {
     title: 'ERREUR RED GRID',

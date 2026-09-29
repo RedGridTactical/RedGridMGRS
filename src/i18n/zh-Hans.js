@@ -454,9 +454,22 @@ export default {
     pro: 'ᴾᴿᴼ',
   },
   upsell: {
-    title: 'RED GRID PRO',
-    subtitle: '解锁完整体验',
-    button: '解锁 PRO',
+    button: "查看 PRO 选项",
+    lists: {
+      title: "准备你的路线",
+      body: "最多保存 10 个列表，每个 20 个点。创建路线卡并交换 GPX/KML 文件。免费版包含 1 个活动导航点。Pro 增加已保存列表和路线流程。",
+      note: "独自出行？无需电台。",
+    },
+    coords: {
+      title: "按你的方式读网格",
+      body: "在主网格上显示 UTM、十进制度和 DMS，并使用全部 12 种野外工具。免费版包含 10 位 MGRS、方位、距离和 4 种工具。Pro 增加其他格式和另外 8 种工具。",
+      note: "10 位精度对所有人保持免费。",
+    },
+    mesh: {
+      title: "在地图上查看队伍",
+      body: "通过兼容的 Meshtastic 电台显示队伍位置并发送简短消息。免费版支持无电台的单人导航。Pro 增加队伍图层；电台需另行购买。",
+      note: "在依赖之前，请先设置并验证电台链路。",
+    },
   },
   error: {
     title: 'RED GRID 错误',
@@ -789,6 +802,12 @@ export default {
     coordFormatsSub: 'UTM、十进制度、DMS, 在主网格显示上',
     displayThemes: '显示主题',
     displayThemesSub: "绿色、白色和蓝色显示配色；无NVG认证",
+    offlineMaps: "离线战术地图",
+    meshAwareness: "Meshtastic 网络",
+    meshAwarenessSub: "在地图上查看网络节点，无需蜂窝信号",
+    allTools: "全部 12 种战术工具",
+    allToolsSub: "航位推算、后方交会、日月、地理标记等",
+    reportsThemes: "全部报告与主题",
   },
   mesh: {
     pairing: {

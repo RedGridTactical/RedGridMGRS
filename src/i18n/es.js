@@ -474,9 +474,22 @@ export default {
     pro: '\u1d3e\u1d3f\u1d3c',
   },
   upsell: {
-    title: 'RED GRID PRO',
-    subtitle: 'Desbloquea la experiencia completa',
-    button: 'DESBLOQUEAR PRO',
+    button: "VER OPCIONES PRO",
+    lists: {
+      title: "PREPARA TU RUTA",
+      body: "Guarda hasta 10 listas de 20 puntos. Crea tarjetas de ruta e intercambia archivos GPX/KML. La versión gratuita incluye un punto de navegación activo. Pro añade listas guardadas y el flujo de ruta.",
+      note: "¿Navegas solo? No necesitas radio.",
+    },
+    coords: {
+      title: "LEE LA CUADRÍCULA A TU MANERA",
+      body: "Muestra UTM, grados decimales y DMS en la cuadrícula principal y usa las 12 herramientas de campo. La versión gratuita incluye MGRS de 10 dígitos, rumbo, distancia y 4 herramientas. Pro añade los demás formatos y 8 herramientas más.",
+      note: "La precisión de 10 dígitos sigue siendo gratuita para todos.",
+    },
+    mesh: {
+      title: "VE A TU EQUIPO EN EL MAPA",
+      body: "Muestra posiciones del equipo y envía mensajes cortos mediante una radio Meshtastic compatible. La versión gratuita cubre la navegación en solitario sin radio. Pro añade la capa de equipo; las radios se venden por separado.",
+      note: "Configura y verifica el enlace de radio antes de confiar en él.",
+    },
   },
   error: {
     title: 'ERROR RED GRID',

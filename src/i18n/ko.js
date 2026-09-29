@@ -474,9 +474,22 @@ export default {
     pro: '\u1d3e\u1d3f\u1d3c',
   },
   upsell: {
-    title: 'RED GRID PRO',
-    subtitle: '\uc804\uccb4 \uacbd\ud5d8 \uc7a0\uae08 \ud574\uc81c',
-    button: 'PRO \uc7a0\uae08 \ud574\uc81c',
+    button: "PRO 옵션 보기",
+    lists: {
+      title: "경로를 준비하세요",
+      body: "20개 지점 목록을 최대 10개 저장합니다. 경로 카드를 만들고 GPX/KML 파일을 주고받습니다. 무료 버전에는 활성 항법 지점 1개가 포함됩니다. Pro는 저장된 목록과 경로 워크플로를 추가합니다.",
+      note: "혼자 이동하나요? 무전기는 필요 없습니다.",
+    },
+    coords: {
+      title: "원하는 방식으로 그리드 읽기",
+      body: "메인 그리드에 UTM, 십진도, DMS를 표시하고 현장 도구 12종을 모두 사용합니다. 무료 버전에는 10자리 MGRS, 방위, 거리와 도구 4종이 포함됩니다. Pro는 나머지 형식과 도구 8종을 추가합니다.",
+      note: "10자리 정밀도는 모두에게 무료입니다.",
+    },
+    mesh: {
+      title: "지도에서 팀 확인",
+      body: "호환되는 Meshtastic 무전기로 팀 위치를 표시하고 짧은 메시지를 보냅니다. 무료 버전은 무전기 없는 단독 항법을 지원합니다. Pro는 팀 레이어를 추가하며, 무전기는 별도로 구매합니다.",
+      note: "의존하기 전에 무선 연결을 설정하고 확인하세요.",
+    },
   },
   error: {
     title: 'RED GRID \uc624\ub958',
