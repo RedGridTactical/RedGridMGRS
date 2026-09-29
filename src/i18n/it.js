@@ -338,16 +338,12 @@ export default {
     startTrial: "INIZIA LA PROVA GRATUITA DI 7 GIORNI",
     current: {
       "f1": {
-        "title": "ATTRIBUZIONE MAPPA",
-        "body": "I livelli online mostrano il credito del fornitore. Toccalo per aprire la pagina della licenza."
+        "title": "SCHEDE PRO PIÙ CHIARE",
+        "body": "LISTE, COORD e MESH ora spiegano cosa fa ogni scheda e cosa include già la versione gratuita prima di proporre Pro."
       },
       "f2": {
-        "title": "LIVELLI ONLINE",
-        "body": "Standard e Topo restano. Scuro non è più offerto: il fornitore ora richiede una chiave API."
-      },
-      "f3": {
-        "title": "STATO BATTERIA",
-        "body": "Il preflight indica batteria sconosciuta invece di una lettura incoerente sui dispositivi non supportati."
+        "title": "PAYWALL LOCALIZZATO",
+        "body": "L’importazione mappe e le schede bloccate usano nomi di funzioni tradotti, e l’elenco delle funzioni Pro è ora tradotto in tutte le lingue."
       }
     },
   },

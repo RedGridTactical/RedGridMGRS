@@ -340,16 +340,12 @@ export default {
     startTrial: "7 GÜNLÜK ÜCRETSİZ DENEMEYİ BAŞLAT",
     current: {
       "f1": {
-        "title": "HARİTA ATFI",
-        "body": "Çevrimiçi katmanlar sağlayıcı bilgisini gösterir. Lisans sayfası için dokunun."
+        "title": "DAHA NET PRO SEKMELERİ",
+        "body": "LİSTELER, KOORD ve MESH artık Pro sunmadan önce sekmenin ne yaptığını ve ücretsiz sürümde nelerin bulunduğunu açıklıyor."
       },
       "f2": {
-        "title": "ÇEVRİMİÇİ KATMANLAR",
-        "body": "Standart ve Topo kalıyor. Koyu artık sunulmuyor: sağlayıcısı artık API anahtarı istiyor."
-      },
-      "f3": {
-        "title": "PİL HAZIRLIĞI",
-        "body": "Ön kontrol, desteklenmeyen cihazlarda tutarsız bir okuma yerine pili bilinmiyor olarak bildirir."
+        "title": "YERELLEŞTİRİLMİŞ SATIN ALMA EKRANI",
+        "body": "Harita içe aktarma ve kilitli sekmeler çevrilmiş özellik adları kullanıyor; Pro özellik listesi artık tüm dillerde çevrildi."
       }
     },
   },

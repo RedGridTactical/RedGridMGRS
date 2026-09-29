@@ -340,16 +340,12 @@ export default {
     startTrial: "START GRATIS PROEFPERIODE VAN 7 DAGEN",
     current: {
       "f1": {
-        "title": "KAARTATTRIBUTIE",
-        "body": "Onlinelagen tonen de bronvermelding. Tik erop om de licentiepagina te openen."
+        "title": "DUIDELIJKERE PRO-TABS",
+        "body": "LIJSTEN, COÖRD en MESH leggen nu uit wat elk tabblad doet en wat Gratis al bevat voordat Pro wordt aangeboden."
       },
       "f2": {
-        "title": "ONLINELAGEN",
-        "body": "Standaard en Topo blijven. Donker wordt niet meer aangeboden: de aanbieder vereist nu een API-sleutel."
-      },
-      "f3": {
-        "title": "BATTERIJSTATUS",
-        "body": "Preflight meldt de batterij als onbekend in plaats van een inconsistente meting op niet-ondersteunde apparaten."
+        "title": "GELOKALISEERDE PAYWALL",
+        "body": "Kaartimport en vergrendelde tabbladen gebruiken vertaalde functienamen, en de Pro-functielijst is nu in elke taal vertaald."
       }
     },
   },

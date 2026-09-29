@@ -338,16 +338,12 @@ export default {
     startTrial: "INICIAR PRUEBA GRATIS DE 7 DÍAS",
     current: {
       "f1": {
-        "title": "ATRIBUCIÓN DEL MAPA",
-        "body": "Las capas en línea muestran el crédito del proveedor. Tócalo para abrir la página de licencia."
+        "title": "PESTAÑAS PRO MÁS CLARAS",
+        "body": "LISTAS, COORD y MESH ahora explican qué hace cada pestaña y qué incluye ya la versión gratuita antes de ofrecer Pro."
       },
       "f2": {
-        "title": "CAPAS EN LÍNEA",
-        "body": "Estándar y Topo se mantienen. Oscura ya no se ofrece: su proveedor ahora exige una clave API."
-      },
-      "f3": {
-        "title": "ESTADO DE BATERÍA",
-        "body": "La comprobación previa indica batería desconocida en lugar de una lectura incoherente en dispositivos no compatibles."
+        "title": "PAYWALL LOCALIZADO",
+        "body": "La importación de mapas y las pestañas bloqueadas usan nombres de funciones traducidos, y la lista de funciones Pro ya está traducida en todos los idiomas."
       }
     },
   },

@@ -989,16 +989,12 @@ export default {
     startTrial: 'START 7-DAY FREE TRIAL',
     current: {
       "f1": {
-        "title": "MAP ATTRIBUTION",
-        "body": "Online layers show the provider credit. Tap it to open the licence page."
+        "title": "CLEARER PRO TABS",
+        "body": "LISTS, COORDS and MESH now explain what each tab does and what Free already includes before offering Pro."
       },
       "f2": {
-        "title": "ONLINE LAYERS",
-        "body": "Standard and Topo remain. Dark is no longer offered: its provider now requires an API key."
-      },
-      "f3": {
-        "title": "BATTERY READINESS",
-        "body": "Preflight reports battery as unknown instead of an inconsistent reading on unsupported devices."
+        "title": "LOCALIZED PAYWALL",
+        "body": "Map import and locked-tab prompts use translated feature names, and the Pro feature list is now localized in every language."
       }
     },
   },

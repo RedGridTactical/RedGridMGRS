@@ -340,16 +340,12 @@ export default {
     startTrial: "ROZPOCZNIJ 7-DNIOWY BEZPŁATNY OKRES PRÓBNY",
     current: {
       "f1": {
-        "title": "ATRYBUCJA MAPY",
-        "body": "Warstwy online pokazują źródło danych. Dotknij, aby otworzyć stronę licencji."
+        "title": "CZYTELNIEJSZE KARTY PRO",
+        "body": "LISTY, WSPÓŁRZ. i MESH wyjaśniają teraz, co robi dana karta i co zawiera już wersja bezpłatna, zanim zaproponują Pro."
       },
       "f2": {
-        "title": "WARSTWY ONLINE",
-        "body": "Standard i Topo pozostają. Ciemna nie jest już oferowana: dostawca wymaga teraz klucza API."
-      },
-      "f3": {
-        "title": "STAN BATERII",
-        "body": "Preflight zgłasza baterię jako nieznaną zamiast niespójnego odczytu na nieobsługiwanych urządzeniach."
+        "title": "ZLOKALIZOWANY EKRAN ZAKUPU",
+        "body": "Import map i zablokowane karty używają przetłumaczonych nazw funkcji, a lista funkcji Pro jest teraz przetłumaczona na wszystkie języki."
       }
     },
   },

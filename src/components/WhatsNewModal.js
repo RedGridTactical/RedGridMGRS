@@ -17,10 +17,14 @@ const SEEN_KEY = 'rg_whatsnew_seen_version';
 // The release whose bullets are translated under `whatsNew.current` in i18n.
 // Bump this in lockstep with the entry added to FEATURES_BY_VERSION below, or
 // the modal silently falls back to English.
-const LOCALIZED_VERSION = '4.0.7';
+const LOCALIZED_VERSION = '4.0.8';
 
 // Features to showcase for a given version. Keep terse — this is a glance screen.
 const FEATURES_BY_VERSION = {
+  '4.0.8': [
+    {"icon":"◉","title":"CLEARER PRO TABS","body":"LISTS, COORDS and MESH now explain what each tab does and what Free already includes before offering Pro."},
+    {"icon":"◆","title":"LOCALIZED PAYWALL","body":"Map import and locked-tab prompts use translated feature names, and the Pro feature list is now localized in every language."},
+  ],
   '4.0.7': [
     {"icon":"◉","title":"MAP ATTRIBUTION","body":"Online layers show the provider credit. Tap it to open the licence page."},
     {"icon":"◆","title":"ONLINE LAYERS","body":"Standard and Topo remain. Dark is no longer offered: its provider now requires an API key."},

@@ -339,16 +339,12 @@ export default {
     startTrial: "INICIAR TESTE GRÁTIS DE 7 DIAS",
     current: {
       "f1": {
-        "title": "ATRIBUIÇÃO DO MAPA",
-        "body": "As camadas on-line mostram o crédito do provedor. Toque para abrir a página de licença."
+        "title": "ABAS PRO MAIS CLARAS",
+        "body": "LISTAS, COORD e MESH agora explicam o que cada aba faz e o que a versão gratuita já inclui antes de oferecer o Pro."
       },
       "f2": {
-        "title": "CAMADAS ON-LINE",
-        "body": "Padrão e Topo continuam. Escura não é mais oferecida: o provedor agora exige uma chave de API."
-      },
-      "f3": {
-        "title": "ESTADO DA BATERIA",
-        "body": "O preflight informa bateria desconhecida em vez de uma leitura inconsistente em dispositivos não compatíveis."
+        "title": "PAYWALL LOCALIZADO",
+        "body": "A importação de mapas e as abas bloqueadas usam nomes de recursos traduzidos, e a lista de recursos Pro agora está traduzida em todos os idiomas."
       }
     },
   },

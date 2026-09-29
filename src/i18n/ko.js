@@ -338,16 +338,12 @@ export default {
     startTrial: "7일 무료 체험 시작",
     current: {
       "f1": {
-        "title": "지도 출처 표시",
-        "body": "온라인 레이어에 제공업체 출처를 표시합니다. 탭하면 라이선스 페이지가 열립니다."
+        "title": "더 명확한 PRO 탭",
+        "body": "목록, 좌표, 메시 탭은 Pro를 안내하기 전에 각 탭의 기능과 무료 버전에 이미 포함된 내용을 설명합니다."
       },
       "f2": {
-        "title": "온라인 레이어",
-        "body": "표준과 지형은 유지됩니다. 다크는 제공업체가 API 키를 요구하여 더 이상 제공하지 않습니다."
-      },
-      "f3": {
-        "title": "배터리 준비 상태",
-        "body": "프리플라이트는 지원되지 않는 기기에서 일관성 없는 값 대신 배터리를 알 수 없음으로 표시합니다."
+        "title": "현지화된 구매 화면",
+        "body": "지도 가져오기와 잠긴 탭은 번역된 기능 이름을 사용하며, Pro 기능 목록이 이제 모든 언어로 번역되었습니다."
       }
     },
   },
@@ -804,7 +800,7 @@ export default {
   proGate: {
     badge: 'PRO',
     title: 'RED GRID PRO',
-    subtitleFeature: '{{feature}}\uc740(\ub294) Pro \uae30\ub2a5\uc785\ub2c8\ub2e4',
+    subtitleFeature: '{{feature}} 기능은 Pro에서 사용할 수 있습니다',
     subtitleGeneric: 'Red Grid\uc758 \uc804\uccb4 \uacbd\ud5d8\uc744 \uc7a0\uae08 \ud574\uc81c',
     unlockButton: 'RED GRID PRO \uc7a0\uae08 \ud574\uc81c',
     startTrial: '7일 무료 체험',

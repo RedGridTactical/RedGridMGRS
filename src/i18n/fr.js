@@ -338,16 +338,12 @@ export default {
     startTrial: "DÉMARRER L'ESSAI GRATUIT DE 7 JOURS",
     current: {
       "f1": {
-        "title": "ATTRIBUTION CARTE",
-        "body": "Les couches en ligne affichent le crédit du fournisseur. Touchez-le pour ouvrir la page de licence."
+        "title": "ONGLETS PRO PLUS CLAIRS",
+        "body": "LISTES, COORD et MESH expliquent désormais ce que fait chaque onglet et ce que la version gratuite inclut déjà avant de proposer Pro."
       },
       "f2": {
-        "title": "COUCHES EN LIGNE",
-        "body": "Standard et Topo restent. Sombre n’est plus proposée : son fournisseur exige désormais une clé API."
-      },
-      "f3": {
-        "title": "ÉTAT BATTERIE",
-        "body": "Le préflight indique une batterie inconnue au lieu d’une lecture incohérente sur les appareils non pris en charge."
+        "title": "PAYWALL LOCALISÉ",
+        "body": "L’import de carte et les onglets verrouillés utilisent des noms de fonctions traduits, et la liste des fonctions Pro est désormais traduite dans toutes les langues."
       }
     },
   },

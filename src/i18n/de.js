@@ -339,16 +339,12 @@ export default {
     startTrial: "7-TAGE-TESTPHASE STARTEN",
     current: {
       "f1": {
-        "title": "KARTENATTRIBUTION",
-        "body": "Online-Ebenen zeigen den Anbieterhinweis. Antippen öffnet die Lizenzseite."
+        "title": "KLARERE PRO-TABS",
+        "body": "LISTEN, KOORD und MESH erklären jetzt, was der Tab tut und was Kostenlos bereits enthält, bevor Pro angeboten wird."
       },
       "f2": {
-        "title": "ONLINE-EBENEN",
-        "body": "Standard und Topo bleiben. Dunkel wird nicht mehr angeboten: Der Anbieter verlangt jetzt einen API-Schlüssel."
-      },
-      "f3": {
-        "title": "AKKUBEREITSCHAFT",
-        "body": "Der Preflight meldet den Akku als unbekannt statt einer widersprüchlichen Anzeige auf nicht unterstützten Geräten."
+        "title": "LOKALISIERTE PAYWALL",
+        "body": "Kartenimport und gesperrte Tabs verwenden übersetzte Funktionsnamen, und die Pro-Funktionsliste ist jetzt in allen Sprachen übersetzt."
       }
     },
   },
