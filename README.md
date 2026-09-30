@@ -74,6 +74,8 @@ Team encryption does not hide radio identifiers, packet timing or all radio traf
 
 ## Project and support
 
-Red Grid Link has merged into Red Grid MGRS. Link's former phone-to-phone transport is not part of MGRS; MGRS radio features require Meshtastic hardware. [Link's archived source](https://github.com/RedGridTactical/RedGridLink) remains available.
+**Red Grid Link was retired on September 27, 2026.** It has been removed from sale on the App Store and unpublished on Google Play; new Link subscriptions and lifetime purchases are no longer offered. Its final release is v1.7.0, and its [source remains available for reference](https://github.com/RedGridTactical/RedGridLink). Existing installations retain local data; back up important exports before uninstalling or changing devices.
+
+Development continues in MGRS. Link's phone-to-phone Bluetooth/Multipeer/Nearby transport is not part of MGRS: MGRS team radio features require compatible Meshtastic hardware. Link data and purchases do not automatically transfer. See the [Link retirement information](https://redgridtactical.com/link) for details.
 
 The coordinate library lives in [packages/mgrs](packages/mgrs). See the [roadmap](https://redgridtactical.com/roadmap), [report an issue](https://github.com/RedGridTactical/RedGridMGRS/issues), or contact support@redgridtactical.com.
