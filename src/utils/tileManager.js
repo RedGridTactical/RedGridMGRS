@@ -402,4 +402,17 @@ export function estimateTilesForRegion(region, zoomLevels = [10, 12, 14], bytesP
 }
 
 // Export helpers for testing
+/** Snapshot used by multi-step coverage checks to detect a map change mid-check. */
+export function getTileCacheState() {
+  return { mutating: tileCacheMutation, generation: tileCacheGeneration };
+}
+
+/** Strict local read for readiness: IO failures must remain unknown to callers. */
+export async function importedTileExists(z, x, y) {
+  const path = tilePath(z, x, y);
+  if (!FileSystem || !path) throw new Error('Map storage unavailable');
+  const info = await FileSystem.getInfoAsync(path);
+  return info.exists && !info.isDirectory;
+}
+
 export { latLonToTile, getTilesForRegion, countTilesForRegion, TILE_DIR };
