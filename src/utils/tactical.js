@@ -4,7 +4,7 @@
  */
 
 import { toMGRS, formatMGRS } from './mgrs';
-import { geodesicDestination, gridToTrue, trueToGrid } from './geodesy';
+import { geodesicDestination, gridToTrue, trueToGrid, vincentyInverse } from './geodesy';
 
 const DEG = Math.PI / 180;
 const RAD = 180 / Math.PI;
@@ -14,7 +14,25 @@ const RAD = 180 / Math.PI;
  * Returns the back azimuth (reciprocal bearing) in degrees 0–360.
  */
 export function backAzimuth(bearing) {
-  return (bearing + 180) % 360;
+  return isBearing(bearing) ? (bearing + 180) % 360 : null;
+}
+
+export function isBearing(value) {
+  return Number.isFinite(value) && value >= 0 && value <= 360;
+}
+
+/** Every displayed absolute bearing names its north reference. */
+export function formatBearing(value, reference, pad = false) {
+  const suffix = { true: 'T', magnetic: 'M', grid: 'G' }[reference];
+  if (!isBearing(value) || !suffix) return '—';
+  const degrees = String(Math.round(value) % 360);
+  return `${pad ? degrees.padStart(3, '0') : degrees}°${suffix}`;
+}
+
+/** No north-up fallback: an arrow relative to the phone needs TRUE heading. */
+export function relativeWaypointBearing(trueBearing, heading, reference) {
+  if (!isBearing(trueBearing) || !isBearing(heading) || reference !== 'true') return null;
+  return (trueBearing - heading + 360) % 360;
 }
 
 // ─── DEAD RECKONING ──────────────────────────────────────────────────────────
@@ -44,69 +62,77 @@ export function deadReckoning(startLat, startLon, headingDeg, distanceM, heading
 
 /** A magnetic fallback cannot fill a grid azimuth without known declination. */
 export function compassToGridHeading(headingDeg, headingReference, lat, lon) {
-  if (headingReference !== 'true') return null;
+  if (headingReference !== 'true' || !isBearing(headingDeg)
+    || !Number.isFinite(lat) || lat < -80 || lat > 84
+    || !Number.isFinite(lon) || lon < -180 || lon > 180) return null;
   return trueToGrid(headingDeg, lat, lon);
 }
 
 // ─── RESECTION ───────────────────────────────────────────────────────────────
 /**
- * Two-point resection: given two known points (lat/lon) and the magnetic
- * bearing FROM your position TO each, compute your position.
+ * Two-point local resection from TRUE initial bearings FROM the observer TO
+ * each landmark. Magnetic input must be explicitly corrected by the caller.
  *
- * Uses intersection of two bearing lines (forward intersection geometry).
- * Returns { lat, lon, mgrs, mgrsFormatted } or null if lines are parallel/coincident.
+ * A planar intersection provides a nearby seed only. Newton refinement solves
+ * the two observer-to-landmark WGS84 inverse azimuths, avoiding both the
+ * antipodal intersection and the erroneous assumption that a geodesic's back
+ * bearing is its initial bearing +180 at the other endpoint.
+ *
+ * Bounded to MGRS latitudes, landmarks within 100 km of the result and crossing
+ * angles 5–175 degrees. Returns null for invalid, weak or inconsistent geometry.
  */
 export function resection(lat1, lon1, bearing1Deg, lat2, lon2, bearing2Deg) {
-  // Convert to radians
-  const φ1 = lat1 * DEG, λ1 = lon1 * DEG;
-  const φ2 = lat2 * DEG, λ2 = lon2 * DEG;
-  const θ13 = bearing1Deg * DEG; // bearing from pt1 toward unknown
-  const θ23 = bearing2Deg * DEG; // bearing from pt2 toward unknown
+  const validPoint = (lat, lon) => Number.isFinite(lat) && Number.isFinite(lon)
+    && lat >= -80 && lat <= 84 && lon >= -180 && lon <= 180;
+  if (!validPoint(lat1, lon1) || !validPoint(lat2, lon2)
+    || !isBearing(bearing1Deg) || !isBearing(bearing2Deg)) return null;
+  const wrapDifference = (a, b) => ((a - b + 540) % 360) - 180;
+  const separation = Math.abs(wrapDifference(bearing1Deg, bearing2Deg));
+  if (separation < 5 || separation > 175) return null;
+  const baseline = vincentyInverse(lat1, lon1, lat2, lon2);
+  if (!baseline || baseline.distance < 1 || baseline.distance > 200000) return null;
 
-  const Δφ = φ2 - φ1;
-  const Δλ = λ2 - λ1;
+  const east2 = baseline.distance * Math.sin(baseline.initialBearing * DEG);
+  const north2 = baseline.distance * Math.cos(baseline.initialBearing * DEG);
+  const u1 = [Math.sin(bearing1Deg * DEG), Math.cos(bearing1Deg * DEG)];
+  const u2 = [Math.sin(bearing2Deg * DEG), Math.cos(bearing2Deg * DEG)];
+  const cross = (a, b) => a[0] * b[1] - a[1] * b[0];
+  const range1 = -cross([east2, north2], u2) / cross(u1, u2);
+  if (!(range1 > 0) || range1 > 120000) return null;
+  let east = -range1 * u1[0], north = -range1 * u1[1];
 
-  const δ12 = 2 * Math.asin(Math.sqrt(
-    Math.sin(Δφ / 2) ** 2 +
-    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2
-  ));
+  const evaluate = (e, n) => {
+    const range = Math.hypot(e, n);
+    if (!Number.isFinite(range) || range > 120000) return null;
+    const point = geodesicDestination(lat1, lon1, Math.atan2(e, n) * RAD, range);
+    if (!point || !validPoint(point.lat, point.lon)) return null;
+    const a = vincentyInverse(point.lat, point.lon, lat1, lon1);
+    const b = vincentyInverse(point.lat, point.lon, lat2, lon2);
+    if (!a || !b || a.distance < 1 || b.distance < 1) return null;
+    return { point, a, b, errors: [wrapDifference(a.initialBearing, bearing1Deg), wrapDifference(b.initialBearing, bearing2Deg)] };
+  };
 
-  if (Math.abs(δ12) < 1e-6) return null; // same point
-
-  // Initial/final bearings between the two known points
-  const θa = Math.acos(Math.max(-1, Math.min(1, (Math.sin(φ2) - Math.sin(φ1) * Math.cos(δ12)) /
-    (Math.sin(δ12) * Math.cos(φ1)))));
-  const θb = Math.acos(Math.max(-1, Math.min(1, (Math.sin(φ1) - Math.sin(φ2) * Math.cos(δ12)) /
-    (Math.sin(δ12) * Math.cos(φ2)))));
-
-  const θ12 = Math.sin(λ2 - λ1) > 0 ? θa : (2 * Math.PI - θa);
-  const θ21 = Math.sin(λ2 - λ1) > 0 ? (2 * Math.PI - θb) : θb;
-
-  const α1 = θ13 - θ12; // angle at pt1
-  const α2 = θ21 - θ23; // angle at pt2
-  const α3 = Math.acos(Math.max(-1, Math.min(1, -Math.cos(α1) * Math.cos(α2) + Math.sin(α1) * Math.sin(α2) * Math.cos(δ12))));
-
-  const δ13 = Math.atan2(
-    Math.sin(δ12) * Math.sin(α1) * Math.sin(α2),
-    Math.cos(α2) + Math.cos(α1) * Math.cos(α3)
-  );
-
-  const φ3 = Math.asin(
-    Math.sin(φ1) * Math.cos(δ13) +
-    Math.cos(φ1) * Math.sin(δ13) * Math.cos(θ13)
-  );
-  const λ3 = λ1 + Math.atan2(
-    Math.sin(θ13) * Math.sin(δ13) * Math.cos(φ1),
-    Math.cos(δ13) - Math.sin(φ1) * Math.sin(φ3)
-  );
-
-  const lat = φ3 * RAD;
-  const lon = ((λ3 * RAD) + 540) % 360 - 180;
-
-  if (isNaN(lat) || isNaN(lon)) return null;
-
-  const mgrs = toMGRS(lat, lon, 5);
-  return { lat, lon, mgrs, mgrsFormatted: formatMGRS(mgrs) };
+  for (let iteration = 0; iteration < 15; iteration += 1) {
+    const current = evaluate(east, north);
+    if (!current) return null;
+    const [a, b] = current.errors;
+    if (Math.max(Math.abs(a), Math.abs(b)) < 1e-7) {
+      if (current.a.distance > 100000 || current.b.distance > 100000) return null;
+      const { lat, lon } = current.point;
+      const mgrs = toMGRS(lat, lon, 5);
+      return { lat, lon, mgrs, mgrsFormatted: formatMGRS(mgrs) };
+    }
+    // One-metre finite differences in the seed's local east/north coordinates.
+    const e = evaluate(east + 1, north), n = evaluate(east, north + 1);
+    if (!e || !n) return null;
+    const j11 = wrapDifference(e.errors[0], a), j12 = wrapDifference(n.errors[0], a);
+    const j21 = wrapDifference(e.errors[1], b), j22 = wrapDifference(n.errors[1], b);
+    const determinant = j11 * j22 - j12 * j21;
+    if (!Number.isFinite(determinant) || Math.abs(determinant) < 1e-12) return null;
+    east -= (j22 * a - j12 * b) / determinant;
+    north -= (j11 * b - j21 * a) / determinant;
+  }
+  return null;
 }
 
 // ─── PACE COUNT ──────────────────────────────────────────────────────────────
@@ -130,13 +156,15 @@ export function distanceToPaces(meters, pacesPerHundredMeters) {
 /**
  * Apply declination correction to a magnetic bearing.
  * declinationDeg: positive = east, negative = west.
- * Returns grid/true bearing (0–360).
+ * Returns TRUE bearing (0–360); grid conversion additionally needs convergence.
  */
 export function applyDeclination(magneticBearing, declinationDeg) {
+  if (!isBearing(magneticBearing) || !Number.isFinite(declinationDeg) || Math.abs(declinationDeg) > 180) return null;
   return ((magneticBearing + declinationDeg) + 360) % 360;
 }
 
 export function removeDeclination(trueBearing, declinationDeg) {
+  if (!isBearing(trueBearing) || !Number.isFinite(declinationDeg) || Math.abs(declinationDeg) > 180) return null;
   return ((trueBearing - declinationDeg) + 360) % 360;
 }
 

@@ -89,43 +89,42 @@ export function mgrsToNATO(mgrs) {
   return segments.join('. ... ');
 }
 
-/**
- * Speak MGRS coordinate using NATO phonetics.
- * Returns true if speech started, false otherwise.
- */
-export function speakMGRS(mgrs) {
-  if (!Speech) return false;
-
+// Serialize native stop/start calls so a delayed stop can never cut off a newer
+// readout. A generation invalidates queued speech when the app is backgrounded.
+let generation = 0;
+let queue = Promise.resolve();
+let speaking = false;
+const listeners = new Set();
+function publish(value) {
+  speaking = value;
+  listeners.forEach(listener => listener(value));
+}
+export function onSpeechStateChange(listener) {
+  listeners.add(listener);
+  listener(speaking);
+  return () => listeners.delete(listener);
+}
+export async function speakMGRS(mgrs) {
   const text = mgrsToNATO(mgrs);
-  if (!text) return false;
-
-  try {
-    // Stop any current speech first
-    Speech.stop();
-
+  if (!Speech?.speak || !Speech?.stop || !text) return false;
+  const request = ++generation;
+  publish(true);
+  const finish = () => { if (request === generation) publish(false); };
+  queue = queue.catch(() => {}).then(async () => {
+    await Speech.stop();
+    if (request !== generation) return false;
     Speech.speak(text, {
-      language: 'en-US',
-      pitch: 0.92,
-      rate: 0.72,
+      language: 'en-US', pitch: 0.92, rate: 0.72,
+      onDone: finish, onStopped: finish, onError: finish,
     });
     return true;
-  } catch {
-    return false;
-  }
+  }).catch(() => { finish(); return false; });
+  return queue;
 }
-
-/** Stop any ongoing speech */
 export function stopSpeaking() {
-  try {
-    Speech?.stop?.();
-  } catch {}
+  ++generation;
+  publish(false);
+  queue = queue.catch(() => {}).then(() => Speech?.stop?.()).catch(() => {});
+  return queue;
 }
-
-/** Check if speech is currently active */
-export async function isSpeaking() {
-  try {
-    return await Speech?.isSpeakingAsync?.() ?? false;
-  } catch {
-    return false;
-  }
-}
+export async function isSpeaking() { return speaking; }

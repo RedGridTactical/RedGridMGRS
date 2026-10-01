@@ -6,6 +6,8 @@
  * Privacy: no data stored, no network. BLE data is ephemeral.
  */
 
+import { validCoordinates } from './position';
+
 // BLE UUIDs for Location and Navigation Service (LNS)
 const LNS_SERVICE_UUID = '00001819-0000-1000-8000-00805f9b34fb';
 const LN_FEATURE_CHAR  = '00002a6a-0000-1000-8000-00805f9b34fb';
@@ -25,12 +27,21 @@ export const ConnectionState = {
   CONNECTED:    'connected',
 };
 
+function validNMEA(sentence, type) {
+  if (typeof sentence !== 'string') return false;
+  const match = sentence.match(/^\$([A-Z]{2}(?:GGA|RMC),[^*\r\n]*)\*([0-9a-fA-F]{2})$/);
+  if (!match || !match[1].startsWith(match[1].slice(0, 2) + type + ',')) return false;
+  let checksum = 0;
+  for (const char of match[1]) checksum ^= char.charCodeAt(0);
+  return checksum === parseInt(match[2], 16);
+}
+
 /**
  * Parse NMEA GGA sentence to extract position data.
  * $GPGGA,123456.00,4807.038,N,01131.000,E,1,08,0.9,545.4,M,47.0,M,,*47
  */
 export function parseGGA(sentence) {
-  if (!sentence || typeof sentence !== 'string') return null;
+  if (!validNMEA(sentence, 'GGA')) return null;
   const parts = sentence.split(',');
   if (parts.length < 15) return null;
   if (!parts[0].endsWith('GGA')) return null;
@@ -39,12 +50,12 @@ export function parseGGA(sentence) {
   const latDir = parts[3];
   const rawLon = parts[4];
   const lonDir = parts[5];
-  const fixQuality = parseInt(parts[6], 10);
   const satellites = parseInt(parts[7], 10);
   const hdop = parseFloat(parts[8]);
   const altitude = parseFloat(parts[9]);
 
-  if (!rawLat || !rawLon || fixQuality === 0) return null;
+  // Quality 6/7/8 denotes estimated, manual or simulated coordinates, not a GNSS fix.
+  if (!rawLat || !rawLon || !/^[1-5]$/.test(parts[6])) return null;
 
   const lat = nmeaToDecimal(rawLat, latDir);
   const lon = nmeaToDecimal(rawLon, lonDir);
@@ -57,7 +68,7 @@ export function parseGGA(sentence) {
     altitude: isNaN(altitude) ? null : Math.round(altitude),
     satellites: isNaN(satellites) ? null : satellites,
     hdop: isNaN(hdop) ? null : hdop,
-    accuracy: isNaN(hdop) ? null : Math.round(hdop * 5), // rough CEP estimate
+    accuracy: null, // HDOP is dimensionless; it is not a measured error in meters.
   };
 }
 
@@ -66,20 +77,24 @@ export function parseGGA(sentence) {
  * $GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A
  */
 export function parseRMC(sentence) {
-  if (!sentence || typeof sentence !== 'string') return null;
+  if (!validNMEA(sentence, 'RMC')) return null;
   const parts = sentence.split(',');
   if (parts.length < 12) return null;
   if (!parts[0].endsWith('RMC')) return null;
 
   const status = parts[2];
   if (status !== 'A') return null; // V = void/invalid
+  // NMEA 2.3+ adds mode after variation direction. Older sentences omit it.
+  // Refuse explicit estimated/manual/simulated/invalid modes even with status A.
+  const mode = parts[12]?.split('*')[0];
+  if (mode && !/^[ADFRP]$/.test(mode)) return null;
 
   const rawLat = parts[3];
   const latDir = parts[4];
   const rawLon = parts[5];
   const lonDir = parts[6];
-  const speedKnots = parseFloat(parts[7]);
-  const heading = parseFloat(parts[8]);
+  const speedKnots = /^\d+(?:\.\d+)?$/.test(parts[7]) ? Number(parts[7]) : NaN;
+  const heading = /^\d+(?:\.\d+)?$/.test(parts[8]) ? Number(parts[8]) : NaN;
 
   const lat = nmeaToDecimal(rawLat, latDir);
   const lon = nmeaToDecimal(rawLon, lonDir);
@@ -98,19 +113,15 @@ export function parseRMC(sentence) {
  * Convert NMEA coordinate (DDDMM.MMM or DDMM.MMM) to decimal degrees.
  */
 export function nmeaToDecimal(raw, dir) {
-  if (!raw || !dir) return null;
-  const num = parseFloat(raw);
-  if (isNaN(num)) return null;
-
-  // Latitude: DDMM.MMMM (2-digit degrees), Longitude: DDDMM.MMMM (3-digit degrees)
+  if (typeof raw !== 'string' || !['N', 'S', 'E', 'W'].includes(dir)) return null;
   const isLon = dir === 'E' || dir === 'W';
   const degLen = isLon ? 3 : 2;
-  const degrees = parseInt(raw.substring(0, degLen), 10);
-  const minutes = parseFloat(raw.substring(degLen));
-
-  if (isNaN(degrees) || isNaN(minutes)) return null;
-
-  let decimal = degrees + (minutes / 60);
+  if (!(isLon ? /^\d{5}(?:\.\d+)?$/ : /^\d{4}(?:\.\d+)?$/).test(raw)) return null;
+  const degrees = Number(raw.substring(0, degLen));
+  const minutes = Number(raw.substring(degLen));
+  const maxDegrees = isLon ? 180 : 90;
+  if (minutes >= 60 || degrees > maxDegrees || (degrees === maxDegrees && minutes !== 0)) return null;
+  let decimal = degrees + minutes / 60;
   if (dir === 'S' || dir === 'W') decimal = -decimal;
 
   return decimal;
@@ -170,6 +181,7 @@ export function parseLNSPosition(base64Data) {
       offset += 2;
     }
 
+    if ('lat' in result && !validCoordinates(result)) return null;
     return Object.keys(result).length > 0 ? result : null;
   } catch {
     return null;
@@ -210,7 +222,7 @@ export function parseLNSQuality(base64Data) {
     // Bit 3: EHPE (Estimated Horizontal Position Error)
     if (flags & 0x0008) {
       if (offset + 4 > bytes.length) return null;
-      const ehpe = bytes[offset] | (bytes[offset + 1] << 8) | (bytes[offset + 2] << 16) | (bytes[offset + 3] << 24);
+      const ehpe = (bytes[offset] | (bytes[offset + 1] << 8) | (bytes[offset + 2] << 16) | (bytes[offset + 3] << 24)) >>> 0;
       result.accuracy = Math.round(ehpe / 100); // cm -> m
       offset += 4;
     }
@@ -419,7 +431,7 @@ export class ExternalGPSManager {
           if (error || !char?.value) return;
           const parsed = parseLNSPosition(char.value);
           if (parsed && parsed.lat !== undefined) {
-            this._position = { ...this._position, ...parsed };
+            this._position = { ...parsed, timestamp: Date.now(), timestampSource: 'received' };
             this._notify();
           }
         }
@@ -434,7 +446,11 @@ export class ExternalGPSManager {
           if (error || !char?.value) return;
           const parsed = parseLNSQuality(char.value);
           if (parsed) {
-            this._quality = { ...this._quality, ...parsed };
+            this._quality = { ...parsed, timestamp: Date.now() };
+            // Quality changes never refresh the age of an old coordinate.
+            if (this._position && Date.now() - this._position.timestamp <= 30000) {
+              this._position = { ...this._position, accuracy: parsed.accuracy ?? null };
+            }
             this._notify();
           }
         }
@@ -470,20 +486,21 @@ export class ExternalGPSManager {
       if (trimmed.includes('GGA')) {
         const parsed = parseGGA(trimmed);
         if (parsed) {
-          this._position = { ...this._position, ...parsed };
+          this._position = { ...parsed, timestamp: Date.now(), timestampSource: 'received' };
           this._quality.satellites = parsed.satellites ?? this._quality.satellites;
-          this._quality.accuracy = parsed.accuracy ?? this._quality.accuracy;
+          this._quality.accuracy = parsed.accuracy;
           this._notify();
         }
       } else if (trimmed.includes('RMC')) {
         const parsed = parseRMC(trimmed);
         if (parsed) {
           this._position = {
-            ...this._position,
+            timestamp: Date.now(),
+            timestampSource: 'received',
             lat: parsed.lat,
             lon: parsed.lon,
             speed: parsed.speed,
-            heading: parsed.heading ?? this._position?.heading,
+            heading: parsed.heading,
           };
           this._notify();
         }

@@ -12,3 +12,14 @@
 -keep class com.facebook.react.turbomodule.** { *; }
 
 # Add any project specific keep options here:
+
+# expo-modules-core converts JS argument maps into Kotlin Records through
+# kotlin-reflect at runtime (RecordTypeConverter: memberProperties -> javaField).
+# With R8 optimization enabled, shrinking/merging inside expo.modules.* and
+# kotlin-reflect makes that lookup return null and every location watch fails
+# before the first fix. Keeping the Expo module layer and kotlin-reflect intact
+# restores it; optimization still applies to the rest of the app.
+-keep class kotlin.Metadata { *; }
+-keep class kotlin.reflect.** { *; }
+-dontwarn kotlin.reflect.**
+-keep class expo.modules.** { *; }

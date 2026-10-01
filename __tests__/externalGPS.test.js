@@ -54,7 +54,7 @@ describe('externalGPS.js - External GPS Utilities', () => {
   describe('parseGGA(sentence)', () => {
 
     test('parses valid GGA sentence', () => {
-      const gga = '$GPGGA,123456.00,4807.038,N,01131.000,E,1,08,0.9,545.4,M,47.0,M,,*47';
+      const gga = '$GPGGA,123456.00,4807.038,N,01131.000,E,1,08,0.9,545.4,M,47.0,M,,*6B';
       const result = parseGGA(gga);
       expect(result).not.toBeNull();
       expect(result.lat).toBeCloseTo(48.1173, 3);
@@ -62,16 +62,16 @@ describe('externalGPS.js - External GPS Utilities', () => {
       expect(result.satellites).toBe(8);
       expect(result.altitude).toBe(545);
       expect(result.hdop).toBeCloseTo(0.9, 1);
-      expect(result.accuracy).toBe(5); // 0.9 * 5 = 4.5, rounded to 5
+      expect(result.accuracy).toBeNull(); // HDOP is not horizontal error in meters.
     });
 
     test('rejects GGA with no fix (quality 0)', () => {
-      const gga = '$GPGGA,123456.00,4807.038,N,01131.000,E,0,00,99.9,0.0,M,0.0,M,,*00';
+      const gga = '$GPGGA,123456.00,4807.038,N,01131.000,E,0,00,99.9,0.0,M,0.0,M,,*61';
       expect(parseGGA(gga)).toBeNull();
     });
 
     test('parses GLONASS GGA ($GNGGA)', () => {
-      const gga = '$GNGGA,123456.00,3723.046,N,12159.074,W,1,12,0.7,30.0,M,-34.0,M,,*4E';
+      const gga = '$GNGGA,123456.00,3723.046,N,12159.074,W,1,12,0.7,30.0,M,-34.0,M,,*70';
       const result = parseGGA(gga);
       expect(result).not.toBeNull();
       expect(result.lat).toBeCloseTo(37.38410, 3);
@@ -107,12 +107,12 @@ describe('externalGPS.js - External GPS Utilities', () => {
     });
 
     test('rejects void RMC (status V)', () => {
-      const rmc = '$GPRMC,123519,V,,,,,,,230394,,,N*53';
+      const rmc = '$GPRMC,123519,V,,,,,,,230394,,,N*51';
       expect(parseRMC(rmc)).toBeNull();
     });
 
     test('returns null for non-RMC sentence', () => {
-      expect(parseRMC('$GPGGA,123456.00,4807.038,N,01131.000,E,1,08,0.9,545.4,M,47.0,M,,*47')).toBeNull();
+      expect(parseRMC('$GPGGA,123456.00,4807.038,N,01131.000,E,1,08,0.9,545.4,M,47.0,M,,*6B')).toBeNull();
     });
 
     test('returns null for null/empty', () => {
@@ -220,3 +220,31 @@ function bytesToBase64(bytes) {
   }
   return result;
 }
+
+
+test('corrupted or absent NMEA checksums cannot refresh position', () => {
+  const valid = '$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47';
+  expect(parseGGA(valid)).not.toBeNull();
+  expect(parseGGA(valid.replace('4807.038', '4907.038'))).toBeNull();
+  expect(parseGGA(valid.split('*')[0])).toBeNull();
+});
+
+describe('external GNSS fix modes', () => {
+  const nmea = payload => {
+    const checksum = [...payload].reduce((value, char) => value ^ char.charCodeAt(0), 0);
+    return `$${payload}*${checksum.toString(16).padStart(2, '0').toUpperCase()}`;
+  };
+  test.each([0, 6, 7, 8])('GGA quality %i cannot masquerade as a live GNSS fix', quality => {
+    expect(parseGGA(nmea(`GPGGA,123456.00,4807.038,N,01131.000,E,${quality},08,0.9,545.4,M,47.0,M,,`))).toBeNull();
+  });
+  test.each([1, 2, 3, 4, 5])('GGA measured fix quality %i stays supported', quality => {
+    expect(parseGGA(nmea(`GPGGA,123456.00,4807.038,N,01131.000,E,${quality},08,0.9,545.4,M,47.0,M,,`))).not.toBeNull();
+  });
+  test.each(['E', 'M', 'N', 'S', 'X'])('RMC mode %s cannot masquerade as GNSS even with status A', mode => {
+    expect(parseRMC(nmea(`GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W,${mode}`))).toBeNull();
+  });
+  test.each(['A', 'D', 'F', 'R', 'P', ''])('RMC mode %s and older absent-mode sentences remain readable', mode => {
+    const suffix = mode ? `,${mode}` : '';
+    expect(parseRMC(nmea(`GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W${suffix}`))).not.toBeNull();
+  });
+});

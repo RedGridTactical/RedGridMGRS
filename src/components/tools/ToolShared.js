@@ -2,14 +2,16 @@
  * Shared UI primitives for all tool components.
  * Keeps styling consistent across every tool card.
  */
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, AccessibilityInfo } from 'react-native';
 import { TextInput } from '../FieldInput';
 import { useColors } from '../../utils/ThemeContext';
 import { tapLight, notifySuccess } from '../../utils/haptics';
+import { copyTextToClipboard } from '../../utils/clipboard';
+import { useTranslation } from '../../hooks/useTranslation';
 import { TYPE } from '../../utils/typography';
 
-export function ToolInput({ label, value, onChangeText, placeholder, keyboardType = 'default', autoCapitalize = 'characters' }) {
+export function ToolInput({ label, value, onChangeText, placeholder, keyboardType = 'default', autoCapitalize = 'characters', maxLength = 128 }) {
   const colors = useColors();
   return (
     <View style={ts.inputWrap}>
@@ -24,6 +26,7 @@ export function ToolInput({ label, value, onChangeText, placeholder, keyboardTyp
         autoCapitalize={autoCapitalize}
         autoCorrect={false}
         accessibilityLabel={label}
+        maxLength={maxLength}
       />
     </View>
   );
@@ -32,40 +35,45 @@ export function ToolInput({ label, value, onChangeText, placeholder, keyboardTyp
 export function ToolResult({ label, value, primary = false }) {
   const colors = useColors();
 
-  const handleLongPress = useCallback(async () => {
-    if (!value) return;
+  const { t } = useTranslation();
+  const busy = useRef(false);
+  const [feedback, setFeedback] = useState(null);
+  const handleCopy = useCallback(async () => {
+    if (value === null || value === undefined || value === '' || busy.current) return;
+    busy.current = true;
     tapLight();
-    let ExpoClipboard = null;
-    try { ExpoClipboard = require('expo-clipboard'); } catch {}
-    if (ExpoClipboard?.setStringAsync) {
-      await ExpoClipboard.setStringAsync(String(value)).catch(() => {});
-    }
-    notifySuccess();
-    AccessibilityInfo.announceForAccessibility(`${label} copied`);
-  }, [value, label]);
+    try {
+      await copyTextToClipboard(String(value));
+      notifySuccess();
+      const message = t('workflow.copied', { label });
+      setFeedback({ message, value: String(value), label });
+      AccessibilityInfo.announceForAccessibility(message);
+    } catch {
+      const message = t('workflow.copyFailed');
+      setFeedback({ message, value: String(value), label });
+      AccessibilityInfo.announceForAccessibility(message);
+    } finally { busy.current = false; }
+  }, [value, label, t]);
 
   return (
     <TouchableOpacity
-      onLongPress={handleLongPress}
-      delayLongPress={400}
+      onPress={handleCopy}
       activeOpacity={0.8}
-      accessibilityRole="text"
-      accessibilityLabel={`${label}: ${value}. Long press to copy`}
+      accessibilityRole="button"
+      accessibilityLabel={t('workflow.copyResult', { label, value })}
       accessibilityLiveRegion="polite"
     >
       <View
         style={[ts.result, { borderColor: colors.border2, backgroundColor: colors.text5 }, primary && { borderColor: colors.text2, backgroundColor: colors.card }]}
       >
-        <Text style={[ts.resultLabel, { color: colors.text3 }, primary && { color: colors.text2 }]}>{label}</Text>
+        <Text style={[ts.resultLabel, { color: colors.text3 }, primary && { color: colors.text2 }]}>{label} · {t('workflow.copy')}</Text>
         <Text
           style={[ts.resultValue, { color: colors.text2 }, primary && { fontSize: 22, color: colors.text }]}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.7}
         >
           {value}
         </Text>
       </View>
+      {feedback?.value === String(value) && feedback?.label === label && <Text style={[ts.hint, { color: colors.text2 }]} accessibilityLiveRegion="polite">{feedback.message}</Text>}
     </TouchableOpacity>
   );
 }

@@ -1,3 +1,419 @@
+diff --git a/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapTileProvider.java b/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapTileProvider.java
+index a974311..3d6f4dc 100644
+--- a/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapTileProvider.java
++++ b/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapTileProvider.java
+@@ -37,10 +37,14 @@ import java.io.InputStream;
+ import java.io.OutputStream;
+ import java.io.IOException;
+ 
++import java.net.HttpURLConnection;
+ import java.net.MalformedURLException;
+ import java.net.URL;
+ import java.net.URLConnection;
+ 
++import android.content.pm.PackageInfo;
++import android.content.pm.PackageManager;
++
+ public class MapTileProvider implements TileProvider {
+ 
+ 	class AIRMapUrlTileProvider extends UrlTileProvider {
+@@ -85,6 +89,122 @@ public class MapTileProvider implements TileProvider {
+     }
+   }
+ 
++
++	// Public tile services require a stable, app-identifying User-Agent and reject
++	// generic client identities. Derived from the installed package, never a browser UA.
++	private static volatile String userAgent;
++	static final int CONNECT_TIMEOUT_MS = 10000;
++	static final int READ_TIMEOUT_MS = 15000;
++
++	public static String userAgentFor(Context context) {
++		String cached = userAgent;
++		if (cached != null) return cached;
++		String label = "RedGridMGRS";
++		String version = "unknown";
++		try {
++			Context app = context.getApplicationContext();
++			PackageManager pm = app.getPackageManager();
++			CharSequence l = app.getApplicationInfo().loadLabel(pm);
++			if (l != null && l.length() > 0) label = l.toString().replaceAll("[^A-Za-z0-9._-]", "");
++			PackageInfo info = pm.getPackageInfo(app.getPackageName(), 0);
++			if (info != null && info.versionName != null) version = info.versionName;
++		} catch (Exception ignored) {}
++		cached = label + "/" + version + " (Android; +https://redgridtactical.com)";
++		userAgent = cached;
++		return cached;
++	}
++
++	// Raster tiles are small; anything larger is not a tile we want to keep or decode.
++	static final int MAX_TILE_BYTES = 2 * 1024 * 1024;
++	static final int MAX_TILE_DIMENSION = 1024;
++
++	/**
++	 * Fetch one tile with an identifying User-Agent and accept the body only when it is
++	 * an HTTP 200 raster image, within size bounds, without a provider block marker,
++	 * and fully decodable. Anything else returns null so a block page, error body or
++	 * truncated image is never cached or drawn as map content. Logs stay generic:
++	 * no URL or tile coordinates, which would reveal the viewed area.
++	 */
++	static byte[] fetchValidatedTile(URL url, String ua) {
++		HttpURLConnection conn = null;
++		InputStream in = null;
++		ByteArrayOutputStream buffer = null;
++		try {
++			conn = (HttpURLConnection) url.openConnection();
++			conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
++			conn.setReadTimeout(READ_TIMEOUT_MS);
++			conn.setRequestProperty("User-Agent", ua);
++			conn.setRequestProperty("Accept", "image/png,image/jpeg,image/webp,image/*;q=0.8");
++			conn.setInstanceFollowRedirects(true);
++			int code = conn.getResponseCode();
++			String type = conn.getContentType();
++			String blocked = conn.getHeaderField("x-blocked");
++			long declared = conn.getContentLengthLong();
++			if (code != HttpURLConnection.HTTP_OK || blocked != null || type == null
++					|| !type.toLowerCase().startsWith("image/") || declared > MAX_TILE_BYTES) {
++				Log.w("urlTile", "rejected tile response status=" + code + " type=" + type
++					+ (blocked != null ? " blocked" : "") + (declared > MAX_TILE_BYTES ? " oversize" : ""));
++				return null;
++			}
++			in = conn.getInputStream();
++			buffer = new ByteArrayOutputStream();
++			int nRead;
++			int total = 0;
++			byte[] data = new byte[BUFFER_SIZE];
++			while ((nRead = in.read(data, 0, BUFFER_SIZE)) != -1) {
++				total += nRead;
++				if (total > MAX_TILE_BYTES) {
++					Log.w("urlTile", "rejected tile response: body exceeds size bound");
++					return null;
++				}
++				buffer.write(data, 0, nRead);
++			}
++			buffer.flush();
++			byte[] out = buffer.toByteArray();
++			if (!isValidTileImage(out)) {
++				Log.w("urlTile", "rejected tile response: body is not a decodable raster tile");
++				return null;
++			}
++			return out;
++		} catch (IOException e) {
++			Log.w("urlTile", "tile fetch failed: " + e.getClass().getSimpleName());
++			return null;
++		} finally {
++			if (in != null) try { in.close(); } catch (Exception ignored) {}
++			if (buffer != null) try { buffer.close(); } catch (Exception ignored) {}
++			if (conn != null) try { conn.disconnect(); } catch (Exception ignored) {}
++		}
++	}
++
++	/** Magic bytes, bounded dimensions and a full decode; a truncated body fails here. */
++	static boolean isValidTileImage(byte[] b) {
++		if (!looksLikeRasterImage(b) || b.length > MAX_TILE_BYTES) return false;
++		try {
++			BitmapFactory.Options bounds = new BitmapFactory.Options();
++			bounds.inJustDecodeBounds = true;
++			BitmapFactory.decodeByteArray(b, 0, b.length, bounds);
++			if (bounds.outWidth <= 0 || bounds.outHeight <= 0
++					|| bounds.outWidth > MAX_TILE_DIMENSION || bounds.outHeight > MAX_TILE_DIMENSION) return false;
++			Bitmap decoded = BitmapFactory.decodeByteArray(b, 0, b.length);
++			if (decoded == null) return false;
++			decoded.recycle();
++			return true;
++		} catch (Exception | OutOfMemoryError e) {
++			return false;
++		}
++	}
++
++	static boolean looksLikeRasterImage(byte[] b) {
++		if (b == null || b.length < 12) return false;
++		// PNG
++		if ((b[0] & 0xFF) == 0x89 && b[1] == 'P' && b[2] == 'N' && b[3] == 'G') return true;
++		// JPEG
++		if ((b[0] & 0xFF) == 0xFF && (b[1] & 0xFF) == 0xD8) return true;
++		// WebP (RIFF....WEBP)
++		if (b[0] == 'R' && b[1] == 'I' && b[2] == 'F' && b[3] == 'F' && b[8] == 'W' && b[9] == 'E' && b[10] == 'B' && b[11] == 'P') return true;
++		return false;
++	}
++
+ 	protected static final int BUFFER_SIZE = 16 * 1024;
+ 	protected static final int TARGET_TILE_SIZE = 512;
+ 	protected UrlTileProvider tileProvider;
+@@ -117,7 +237,9 @@ public class MapTileProvider implements TileProvider {
+ 		this.tileCacheMaxAge = tileCacheMaxAge;
+     this.offlineMode = offlineMode;
+ 		this.context = context;
+-		this.customMode = customMode;
++		// Always use the app-owned fetch path: Google's UrlTileProvider cannot send headers.
++		this.customMode = true;
++		userAgentFor(context);
+ 	}
+ 
+ 	@Override
+@@ -158,71 +280,43 @@ public class MapTileProvider implements TileProvider {
+ 	}
+ 
+ 	byte[] getTileImage(int x, int y, int zoom) {
+-		byte[] image = null;
+-
+-		if (this.tileCachePath != null) {
+-			image = readTileImage(x, y, zoom);
+-			if (image != null) {
+-				Log.d("urlTile", "tile cache HIT for " + zoom +
+-					"/" + x + "/" + y);
+-			} else {
+-				Log.d("urlTile", "tile cache MISS for " + zoom +
+-        	"/" + x + "/" + y);
+-			}
+-			if (image != null && !this.offlineMode) {
+-				checkForRefresh(x, y, zoom);
+-			}
++		if (this.tileCachePath == null) {
++			return this.offlineMode ? null : fetchTile(x, y, zoom);
+ 		}
+ 
+-		if (image == null && !this.offlineMode && this.tileCachePath != null) {
++		byte[] cached = readTileImage(x, y, zoom);
++		if (cached != null && !isValidTileImage(cached)) {
++			// A partial or corrupt cache entry must not be served or refreshed from.
++			Log.w("urlTile", "discarding undecodable cached tile");
+ 			String fileName = getTileFilename(x, y, zoom);
+-			Constraints constraints = new Constraints.Builder()
+-				.setRequiredNetworkType(NetworkType.CONNECTED)
+-				.build();
+-			OneTimeWorkRequest tileRefreshWorkRequest = new OneTimeWorkRequest.Builder(MapTileWorker.class)
+-				.setConstraints(constraints)
+-				.addTag(fileName)
+-				.setInputData(
+-					new Data.Builder()
+-						.putString("url", getTileUrl(x, y, zoom).toString())
+-						.putString("filename", fileName)
+-						.putInt("maxAge", -1)
+-						.build()
+-					)
+-				.build();
+-			WorkManager workManager = WorkManager.getInstance(this.context.getApplicationContext());
+-			Operation fetchOperation = workManager
+-				.enqueueUniqueWork(fileName, ExistingWorkPolicy.KEEP, tileRefreshWorkRequest);
+-			Future<Operation.State.SUCCESS> operationFuture = fetchOperation.getResult();
+-			try {
+-				operationFuture.get(1L, TimeUnit.SECONDS);
+-				Thread.sleep(500);
+-				Future<List<WorkInfo>> fetchFuture = workManager.getWorkInfosByTag(fileName);
+-				List<WorkInfo> workInfo = fetchFuture.get(1L, TimeUnit.SECONDS);
+-				Log.d("urlTile: ", workInfo.get(0).toString());
+-				if (this.tileCachePath != null) {
+-					image = readTileImage(x, y, zoom);
+-					if (image != null) {
+-						Log.d("urlTile","tile cache fetch HIT for " + zoom +
+-							"/" + x + "/" + y);
+-					} else {
+-							Log.d("urlTile","tile cache fetch MISS for " + zoom +
+-								"/" + x + "/" + y);
+-					}
+-				}
+-			} catch (Exception e) {
+-			  e.printStackTrace();
+-			}
+-		} else if (image == null && !this.offlineMode) {
+-			Log.d("urlTile", "Normal fetch");
+-			image = fetchTile(x, y, zoom);
+-			if (image == null) {
+-				Log.d("urlTile", "tile fetch TIMEOUT / FAIL for " + zoom +
+-					"/" + x + "/" + y);
+-			}
++			if (fileName != null) new File(fileName).delete();
++			cached = null;
++		}
++		if (this.offlineMode) return cached;
++
++		if (cached != null && !isCacheStale(x, y, zoom)) {
++			Log.d("urlTile", "tile cache hit");
++			return cached;
++		}
++
++		// Viewport-only fetch of the single requested tile. No region enumeration,
++		// no prefetch; a failed refresh keeps serving the stale copy.
++		byte[] fresh = fetchTile(x, y, zoom);
++		if (fresh != null) {
++			writeTileImage(fresh, x, y, zoom);
++			return fresh;
+ 		}
++		if (cached != null) Log.d("urlTile", "serving stale cached tile after failed refresh");
++		return cached;
++	}
+ 
+-		return image;
++	boolean isCacheStale(int x, int y, int zoom) {
++		String fileName = getTileFilename(x, y, zoom);
++		if (fileName == null) return true;
++		long lastModified = new File(fileName).lastModified();
++		if (lastModified <= 0) return true;
++		if (this.tileCacheMaxAge <= 0) return false;
++		return (System.currentTimeMillis() - lastModified) / 1000 > this.tileCacheMaxAge;
+ 	}
+ 
+ 	byte[] pullTilesFromHigherZoom(int x, int y, int zoom) {
+@@ -346,30 +440,8 @@ public class MapTileProvider implements TileProvider {
+ 
+ 	byte[] fetchTile(int x, int y, int zoom) {
+ 		URL url = getTileUrl(x, y, zoom);
+-		ByteArrayOutputStream buffer = null;
+-		InputStream in = null;
+-
+-		try {
+-			URLConnection conn = url.openConnection();
+-			in = conn.getInputStream();
+-			buffer = new ByteArrayOutputStream();
+-
+-			int nRead;
+-			byte[] data = new byte[BUFFER_SIZE];
+-
+-			while ((nRead = in.read(data, 0, BUFFER_SIZE)) != -1) {
+-				buffer.write(data, 0, nRead);
+-			}
+-			buffer.flush();
+-
+-			return buffer.toByteArray();
+-		} catch (IOException | OutOfMemoryError e) {
+-			e.printStackTrace();
+-			return null;
+-		} finally {
+-			if (in != null) try { in.close(); } catch (Exception ignored) {}
+-			if (buffer != null) try { buffer.close(); } catch (Exception ignored) {}
+-		}
++		if (url == null) return null;
++		return fetchValidatedTile(url, userAgentFor(this.context));
+ 	}
+ 
+ 	byte[] readTileImage(int x, int y, int zoom) {
+@@ -381,6 +453,7 @@ public class MapTileProvider implements TileProvider {
+ 		}
+ 
+ 		File file = new File(fileName);
++		if (!file.isFile() || file.length() > MAX_TILE_BYTES) return null;
+ 
+ 		try {
+ 			in = new FileInputStream(file);
+@@ -394,10 +467,6 @@ public class MapTileProvider implements TileProvider {
+ 			}
+ 			buffer.flush();
+ 
+-			if (this.tileCacheMaxAge == 0) {
+-				file.setLastModified(System.currentTimeMillis());
+-			}
+-
+ 			return buffer.toByteArray();
+ 		} catch (IOException | OutOfMemoryError e) {
+ 			e.printStackTrace();
+@@ -409,21 +478,29 @@ public class MapTileProvider implements TileProvider {
+ 	}
+ 
+ 	boolean writeTileImage(byte[] image, int x, int y, int zoom) {
+-		OutputStream out = null;
+ 		String fileName = getTileFilename(x, y, zoom);
+ 		if (fileName == null) {
+ 			return false;
+ 		}
+-
++		// Write to a sibling temp file and rename so a reader never sees a partial tile.
++		File file = new File(fileName);
++		File temp = new File(fileName + ".part");
++		OutputStream out = null;
+ 		try {
+-			File file = new File(fileName);
+ 			file.getParentFile().mkdirs();
+-			out = new FileOutputStream(file);
++			out = new FileOutputStream(temp);
+ 			out.write(image);
+-
++			out.flush();
++			out.close();
++			out = null;
++			if (!temp.renameTo(file)) {
++				file.delete();
++				if (!temp.renameTo(file)) { temp.delete(); return false; }
++			}
+ 			return true;
+ 		} catch (IOException | OutOfMemoryError e) {
+-			e.printStackTrace();
++			Log.w("urlTile", "tile cache write failed: " + e.getClass().getSimpleName());
++			temp.delete();
+ 			return false;
+ 		} finally {
+ 			if (out != null) try { out.close(); } catch (Exception ignored) {}
+diff --git a/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapTileWorker.java b/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapTileWorker.java
+index ed94cb5..9e97406 100644
+--- a/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapTileWorker.java
++++ b/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapTileWorker.java
+@@ -8,10 +8,8 @@ import androidx.annotation.NonNull;
+ import androidx.work.Worker;
+ import androidx.work.WorkerParameters;
+ 
+-import java.io.ByteArrayOutputStream;
+ import java.io.File;
+ import java.io.FileOutputStream;
+-import java.io.InputStream;
+ import java.io.OutputStream;
+ import java.io.IOException;
+ 
+@@ -51,7 +49,7 @@ public class MapTileWorker extends Worker {
+       throw new AssertionError(e);
+     }
+ 
+-		image = fetchTile(url);
++		image = MapTileProvider.fetchValidatedTile(url, MapTileProvider.userAgentFor(getApplicationContext()));
+ 		if (image != null) {
+ 			boolean success = writeTileImage(image, fileName);
+ 			if (!success) {
+@@ -66,32 +64,6 @@ public class MapTileWorker extends Worker {
+ 		return Result.success();
+ 	}
+ 
+-	private byte[] fetchTile(URL url) {
+-      ByteArrayOutputStream buffer = null;
+-      InputStream in = null;
+-
+-      try {
+-        in = url.openStream();
+-        buffer = new ByteArrayOutputStream();
+-
+-        int nRead;
+-        byte[] data = new byte[BUFFER_SIZE];
+-
+-        while ((nRead = in.read(data, 0, BUFFER_SIZE)) != -1) {
+-          buffer.write(data, 0, nRead);
+-        }
+-        buffer.flush();
+-
+-        return buffer.toByteArray();
+-      } catch (IOException | OutOfMemoryError e) {
+-        e.printStackTrace();
+-        return null;
+-      } finally {
+-        if (in != null) try { in.close(); } catch (Exception ignored) {}
+-        if (buffer != null) try { buffer.close(); } catch (Exception ignored) {}
+-      }
+-    }
+-
+ 	private boolean writeTileImage(byte[] image, String fileName) {
+       OutputStream out = null;
+       if (fileName == null) {
+diff --git a/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapUrlTile.java b/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapUrlTile.java
+index 968d58a..863856f 100644
+--- a/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapUrlTile.java
++++ b/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapUrlTile.java
+@@ -128,7 +128,8 @@ public class MapUrlTile extends MapFeature {
+     }
+ 
+     if (tileProvider != null) {
+-      tileProvider.setTileCachePath(tileCachePath);
++      // Hand the provider the normalized filesystem path, not the raw file: URI.
++      tileProvider.setTileCachePath(this.tileCachePath);
+     }
+     setCustomTileProviderMode();
+     if (tileOverlay != null) {
 diff --git a/node_modules/react-native-maps/ios/AirMaps/AIRMap.m b/node_modules/react-native-maps/ios/AirMaps/AIRMap.m
 index 07a4638..2511868 100644
 --- a/node_modules/react-native-maps/ios/AirMaps/AIRMap.m

@@ -91,8 +91,8 @@ android {
         applicationId 'com.redgrid.redgridtactical'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 33
-        versionName "4.0.5"
+        versionCode 38
+        versionName "4.0.8"
 
         // Google Maps Android API key — read from secrets/google-maps-key.txt (gitignored).
         // Falls back to empty string if the file is missing; the app still launches but
@@ -128,7 +128,9 @@ android {
             signingConfig signingConfigs.release
             shrinkResources (findProperty('android.enableShrinkResourcesInReleaseBuilds')?.toBoolean() ?: false)
             minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            // Optimizing rules need the expo.modules/kotlin-reflect keeps in proguard-rules.pro,
+            // or every location watch fails before the first fix.
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             crunchPngs (findProperty('android.enablePngCrunchInReleaseBuilds')?.toBoolean() ?: true)
         }
     }

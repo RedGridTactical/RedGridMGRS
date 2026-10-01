@@ -10,12 +10,18 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
 }));
 
+const { normalizeWaypointLists } = require('../src/utils/waypoints');
 const AsyncStorage = require('@react-native-async-storage/async-storage');
 const {
   loadSettings,
   saveDeclination,
   savePaceCount,
   saveTheme,
+  saveCoordFormat,
+  saveShakeToSpeak,
+  saveTacticalSound,
+  saveGridCrossing,
+  saveGridScale,
   loadWaypointLists,
   saveWaypointLists,
 } = require('../src/utils/storage');
@@ -135,6 +141,71 @@ describe('storage.js - Persistent Storage Wrapper', () => {
     });
   });
 
+  describe('settings native bridge contract', () => {
+    const validKey = key => typeof key === 'string' && key.length > 0;
+
+    test('passes only nonempty string keys to native multiGet on startup', async () => {
+      AsyncStorage.multiGet.mockImplementation(async keys => {
+        if (!keys.every(validKey)) throw new TypeError('Invalid native storage key');
+        return keys.map(key => [key, null]);
+      });
+      const settings = await loadSettings();
+      expect(AsyncStorage.multiGet).toHaveBeenCalledTimes(1);
+      const [keys] = AsyncStorage.multiGet.mock.calls[0];
+      expect(keys.every(validKey)).toBe(true);
+      expect(keys).toContain('rg_tactical_sound');
+      expect(new Set(keys).size).toBe(keys.length);
+      expect(settings.tacticalSound).toBe(false);
+      expect(settings.shakeToSpeak).toBe(false);
+    });
+
+    test('every settings writer uses its stable string key', async () => {
+      AsyncStorage.setItem.mockImplementation(async (key, value) => {
+        if (!validKey(key) || typeof value !== 'string') throw new TypeError('Invalid native storage arguments');
+      });
+      const cases = [
+        [saveDeclination, 0, 'rg_declination', '0'],
+        [savePaceCount, 62, 'rg_pace_count', '62'],
+        [saveTheme, 'standard', 'rg_theme', 'standard'],
+        [saveCoordFormat, 'mgrs', 'rg_coord_format', 'mgrs'],
+        [saveShakeToSpeak, false, 'rg_shake_to_speak', 'false'],
+        [saveTacticalSound, true, 'rg_tactical_sound', 'true'],
+        [saveGridCrossing, false, 'rg_grid_crossing', 'false'],
+        [saveGridScale, 1, 'rg_grid_scale', '1'],
+      ];
+      for (const [save, value, key, serialized] of cases) {
+        await save(value);
+        expect(AsyncStorage.setItem).toHaveBeenLastCalledWith(key, serialized);
+      }
+    });
+
+    test('sound and shake remain off by default and sound survives a fresh settings read', async () => {
+      const disk = new Map();
+      AsyncStorage.setItem.mockImplementation(async (key, value) => {
+        if (!validKey(key) || typeof value !== 'string') throw new TypeError('Invalid native storage arguments');
+        disk.set(key, value);
+      });
+      AsyncStorage.multiGet.mockImplementation(async keys => {
+        if (!keys.every(validKey)) throw new TypeError('Invalid native storage key');
+        return keys.map(key => [key, disk.get(key) ?? null]);
+      });
+      expect(await loadSettings()).toMatchObject({ tacticalSound: false, shakeToSpeak: false });
+      await saveTacticalSound(true);
+      expect(await loadSettings()).toMatchObject({ tacticalSound: true, shakeToSpeak: false });
+      await saveTacticalSound(false);
+      expect(await loadSettings()).toMatchObject({ tacticalSound: false, shakeToSpeak: false });
+      await saveShakeToSpeak(true);
+      expect(await loadSettings()).toMatchObject({ tacticalSound: false, shakeToSpeak: true });
+    });
+
+    test('sound save failure rejects and a subsequent retry can persist', async () => {
+      AsyncStorage.setItem.mockRejectedValueOnce(new Error('Disk unavailable')).mockResolvedValue(undefined);
+      await expect(saveTacticalSound(true)).rejects.toThrow('Disk unavailable');
+      await expect(saveTacticalSound(true)).resolves.toBeUndefined();
+      expect(AsyncStorage.setItem).toHaveBeenLastCalledWith('rg_tactical_sound', 'true');
+    });
+  });
+
   // ─── saveDeclination ──────────────────────────────────────────────────
   describe('saveDeclination(value)', () => {
 
@@ -160,12 +231,12 @@ describe('storage.js - Persistent Storage Wrapper', () => {
 
     test('Handles AsyncStorage unavailable', async () => {
       AsyncStorage.setItem = null;
-      await expect(saveDeclination(15)).resolves.toBeUndefined();
+      await expect(saveDeclination(15)).rejects.toThrow();
     });
 
-    test('Handles error silently', async () => {
+    test('Reports native write failure', async () => {
       AsyncStorage.setItem.mockRejectedValue(new Error('Save failed'));
-      await expect(saveDeclination(15)).resolves.toBeUndefined();
+      await expect(saveDeclination(15)).rejects.toThrow();
     });
   });
 
@@ -187,9 +258,9 @@ describe('storage.js - Persistent Storage Wrapper', () => {
       expect(AsyncStorage.setItem).toHaveBeenCalledWith('rg_pace_count', '62');
     });
 
-    test('Handles error silently', async () => {
+    test('Reports native write failure', async () => {
       AsyncStorage.setItem.mockRejectedValue(new Error('Save failed'));
-      await expect(savePaceCount(70)).resolves.toBeUndefined();
+      await expect(savePaceCount(70)).rejects.toThrow();
     });
   });
 
@@ -203,12 +274,12 @@ describe('storage.js - Persistent Storage Wrapper', () => {
 
     test('Handles null gracefully', async () => {
       await saveTheme(null);
-      expect(AsyncStorage.setItem).toHaveBeenCalledWith('rg_theme', 'red');
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith('rg_theme', 'standard');
     });
 
-    test('Handles error silently', async () => {
+    test('Reports native write failure', async () => {
       AsyncStorage.setItem.mockRejectedValue(new Error('Save failed'));
-      await expect(saveTheme('green')).resolves.toBeUndefined();
+      await expect(saveTheme('green')).rejects.toThrow();
     });
   });
 
@@ -230,36 +301,36 @@ describe('storage.js - Persistent Storage Wrapper', () => {
       AsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockLists));
 
       const result = await loadWaypointLists();
-      expect(result).toEqual(mockLists);
+      expect(result).toEqual(normalizeWaypointLists(mockLists));
       expect(result.length).toBe(2);
     });
 
-    test('Returns empty array on JSON parse error', async () => {
+    test('Reports corrupted JSON without replacing it', async () => {
       AsyncStorage.getItem.mockResolvedValue('INVALID_JSON');
 
-      const result = await loadWaypointLists();
-      expect(result).toEqual([]);
+      await expect(loadWaypointLists()).rejects.toThrow();
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
-    test('Returns empty array when data is not an array', async () => {
+    test('Reports invalid saved shape', async () => {
       AsyncStorage.getItem.mockResolvedValue(JSON.stringify({ id: 'wl_1' }));
 
-      const result = await loadWaypointLists();
-      expect(result).toEqual([]);
+      await expect(loadWaypointLists()).rejects.toThrow();
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
-    test('Returns empty array on AsyncStorage error', async () => {
+    test('Reports failed storage read', async () => {
       AsyncStorage.getItem.mockRejectedValue(new Error('Load failed'));
 
-      const result = await loadWaypointLists();
-      expect(result).toEqual([]);
+      await expect(loadWaypointLists()).rejects.toThrow();
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
-    test('Returns empty array when AsyncStorage is unavailable', async () => {
+    test('Reports unavailable storage', async () => {
       AsyncStorage.getItem = null;
 
-      const result = await loadWaypointLists();
-      expect(result).toEqual([]);
+      await expect(loadWaypointLists()).rejects.toThrow();
+      expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
   });
 
@@ -272,7 +343,7 @@ describe('storage.js - Persistent Storage Wrapper', () => {
 
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
         'rg_waypoint_lists',
-        JSON.stringify(lists)
+        JSON.stringify(normalizeWaypointLists(lists))
       );
     });
 
@@ -282,18 +353,18 @@ describe('storage.js - Persistent Storage Wrapper', () => {
     });
 
     test('Ignores non-array input', async () => {
-      await saveWaypointLists({ id: 'wl_1' });
+      await expect(saveWaypointLists({ id: 'wl_1' })).rejects.toThrow();
       expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
     test('Handles null gracefully', async () => {
-      await saveWaypointLists(null);
+      await expect(saveWaypointLists(null)).rejects.toThrow();
       expect(AsyncStorage.setItem).not.toHaveBeenCalled();
     });
 
-    test('Handles error silently', async () => {
+    test('Reports native write failure', async () => {
       AsyncStorage.setItem.mockRejectedValue(new Error('Save failed'));
-      await expect(saveWaypointLists([{ id: 'wl_1', waypoints: [] }])).resolves.toBeUndefined();
+      await expect(saveWaypointLists([{ id: 'wl_1', waypoints: [] }])).rejects.toThrow();
     });
   });
 

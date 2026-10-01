@@ -20,6 +20,11 @@ jest.mock('react', () => {
       if (!equal(slots[i]?.deps, deps)) slots[i] = { deps, callback };
       return slots[i].callback;
     },
+    useMemo(factory, deps) {
+      const i = cursor++;
+      if (!equal(slots[i]?.deps, deps)) slots[i] = { deps, value: factory() };
+      return slots[i].value;
+    },
     useEffect(effect, deps) {
       const i = cursor++;
       const previous = slots[i];
@@ -38,6 +43,7 @@ jest.mock('react', () => {
     __reset() { slots.forEach(slot => slot?.cleanup?.()); slots.length = 0; cursor = 0; pending = []; },
   };
 });
+jest.mock('react-native', () => ({ AppState: { currentState: 'active', addEventListener: jest.fn(() => ({ remove: jest.fn() })) } }));
 jest.mock('expo-location', () => ({
   Accuracy: { BestForNavigation: 6 },
   requestForegroundPermissionsAsync: jest.fn(),
@@ -51,7 +57,7 @@ const Location = require('expo-location');
 const { useLocation } = require('../src/hooks/useLocation');
 const render = () => React.__render(useLocation);
 const flush = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
-const fix = { coords: { latitude: 37.7749, longitude: -122.4194, accuracy: 5, altitude: 12, heading: 90, speed: 0 } };
+const fix = { timestamp: Date.now(), coords: { latitude: 37.7749, longitude: -122.4194, accuracy: 5, altitude: 12, heading: 90, speed: 0 } };
 let positionSubscription;
 let headingSubscription;
 
@@ -60,6 +66,7 @@ beforeEach(() => {
   React.__reset();
   jest.useFakeTimers();
   jest.resetAllMocks();
+  require('react-native').AppState.addEventListener.mockImplementation(() => ({ remove: jest.fn() }));
   positionSubscription = { remove: jest.fn() };
   headingSubscription = { remove: jest.fn() };
   Location.requestForegroundPermissionsAsync.mockResolvedValue({ status: 'granted' });
@@ -107,7 +114,10 @@ test('the fifteen-second GPS deadline begins after the permission decision', asy
   expect(render()).toMatchObject({ permissionStatus: 'granted', error: null, isLoading: true });
   await jest.advanceTimersByTimeAsync(1);
   expect(render()).toMatchObject({ error: 'GPS Error: Position timeout', isLoading: false });
-  expect(Location.watchPositionAsync).not.toHaveBeenCalled();
+  expect(Location.watchPositionAsync).toHaveBeenCalledTimes(1);
+  const callback = Location.watchPositionAsync.mock.calls[0][1];
+  callback({ ...fix, timestamp: Date.now() });
+  expect(render()).toMatchObject({ error: null, isLoading: false, location: { lat: fix.coords.latitude } });
 });
 
 test('retry after a denial can grant without leaving old watchers', async () => {
@@ -146,8 +156,75 @@ test('effect replay reuses a pending OS prompt and only the current request star
 test('true versus magnetic compass reference is preserved', async () => {
   await mount();
   const headingCallback = Location.watchHeadingAsync.mock.calls[0][0];
-  headingCallback({ trueHeading: 91, magHeading: 80 });
+  headingCallback({ trueHeading: 91, magHeading: 80, accuracy: 3 });
   expect(render()).toMatchObject({ compassHeading: 91, compassReference: 'true' });
-  headingCallback({ trueHeading: -1, magHeading: 80 });
+  headingCallback({ trueHeading: -1, magHeading: 80, accuracy: 3 });
   expect(render()).toMatchObject({ compassHeading: 80, compassReference: 'magnetic' });
+});
+
+
+test('stationary fixes keep new accuracy, altitude, speed and native timestamps', async () => {
+  await mount();
+  const callback = Location.watchPositionAsync.mock.calls[0][1];
+  callback({ timestamp: Date.now() + 1000, coords: { ...fix.coords, accuracy: 250, altitude: 30, speed: 2 } });
+  expect(render().location).toMatchObject({ accuracy: 250, altitude: 30, speed: 2, timestamp: Date.now() + 1000 });
+  callback({ timestamp: Date.now() + 2000, coords: { ...fix.coords, accuracy: null, altitude: null, speed: -1 } });
+  expect(render().location).toMatchObject({ accuracy: null, altitude: null, speed: null });
+});
+
+test('invalid and out-of-order observations cannot replace the latest fix', async () => {
+  await mount();
+  const before = render().location;
+  const callback = Location.watchPositionAsync.mock.calls[0][1];
+  callback({ timestamp: Date.now(), coords: { ...fix.coords, latitude: 100 } });
+  callback({ timestamp: before.timestamp - 1000, coords: { ...fix.coords, accuracy: 999 } });
+  callback({ coords: fix.coords });
+  expect(render().location).toEqual(before);
+});
+
+test('invalid and silent heading streams clear both value and reference', async () => {
+  await mount();
+  const callback = Location.watchHeadingAsync.mock.calls[0][0];
+  callback({ trueHeading: 91, magHeading: 80, accuracy: 3 });
+  callback({ trueHeading: -1, magHeading: NaN });
+  expect(render()).toMatchObject({ compassHeading: null, compassReference: null });
+  callback({ trueHeading: -1, magHeading: 80, accuracy: 3 });
+  await jest.advanceTimersByTimeAsync(10001);
+  expect(render()).toMatchObject({ compassHeading: null, compassReference: null });
+});
+
+
+test('an uncalibrated compass is unavailable even when its numeric angle is finite', async () => {
+  await mount();
+  const callback = Location.watchHeadingAsync.mock.calls[0][0];
+  callback({ trueHeading: 30, magHeading: 40, accuracy: 0 });
+  expect(render()).toMatchObject({ compassHeading: null, compassReference: null });
+});
+
+
+test('backgrounding clears heading and ignores paused-app heading callbacks', async () => {
+  await mount();
+  const callback = Location.watchHeadingAsync.mock.calls[0][0];
+  callback({ trueHeading: 30, magHeading: 40, accuracy: 3 });
+  const stateChange = require('react-native').AppState.addEventListener.mock.calls[0][1];
+  stateChange('background');
+  callback({ trueHeading: 35, magHeading: 45, accuracy: 3 });
+  expect(render()).toMatchObject({ compassHeading: null, compassReference: null });
+  stateChange('active');
+  expect(render()).toMatchObject({ compassHeading: null, compassReference: null });
+  callback({ trueHeading: 36, magHeading: 46, accuracy: 3 });
+  expect(render()).toMatchObject({ compassHeading: 36, compassReference: 'true' });
+});
+
+
+test('the GPS-source hook expires a silent fix and refreshes age on foreground', async () => {
+  const { useGPSSource } = require('../src/hooks/useExternalGPS');
+  let phone = { lat: 38, lon: -77, timestamp: Date.now(), accuracy: 5 };
+  const renderSource = () => React.__render(() => useGPSSource(phone, null));
+  expect(renderSource().status).toBe('fresh'); React.__effects();
+  await jest.advanceTimersByTimeAsync(31000);
+  expect(renderSource()).toMatchObject({ status: 'stale', location: null, ageSeconds: 31 });
+  phone = { ...phone, timestamp: Date.now() };
+  require('react-native').AppState.addEventListener.mock.calls[0][1]('active');
+  expect(renderSource()).toMatchObject({ status: 'fresh', location: { lat: 38 } });
 });

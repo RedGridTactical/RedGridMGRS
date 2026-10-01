@@ -10,8 +10,9 @@
  * does not require opening a separate screen.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert } from '../utils/fieldAlert';
 import { Modal } from './FieldModal';
 import { TextInput } from './FieldInput';
 import { useColors } from '../utils/ThemeContext';
@@ -29,24 +30,43 @@ const QUICK = [
   { type: MESSAGE_TYPES.RALLY_ON_ME, key: 'team.msgRally', fallback: 'RALLY' },
 ];
 
-export function TeamMessageBar({ onSend, disabled = false, lastInbound, onDismissInbound }) {
+export function TeamMessageBar({ onSend, disabled = false, lastInbound, onDismissInbound, draft: sharedDraft, onDraftChange, status }) {
   const colors = useColors();
   const { t } = useTranslation();
   const [composerOpen, setComposerOpen] = useState(false);
-  const [draft, setDraft] = useState('');
-
-  const sendCanned = useCallback((type) => {
-    if (disabled || !onSend) return;
-    onSend({ type });
+  const [localDraft, setLocalDraft] = useState('');
+  const [localStatus, setLocalStatus] = useState(null);
+  const [sending, setSending] = useState(false);
+  const busy = useRef(false);
+  const draft = sharedDraft ?? localDraft;
+  const setDraft = onDraftChange || setLocalDraft;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const send = useCallback(async payload => {
+    if (disabled || !onSend || busy.current) return false;
+    busy.current = true; setSending(true); setLocalStatus('writing');
+    let ok = false;
+    try { ok = await onSend(payload) === true; } catch {}
+    finally { busy.current = false; setSending(false); }
+    setLocalStatus(ok ? 'radioAccepted' : 'failed');
+    return ok;
   }, [disabled, onSend]);
-
-  const sendFree = useCallback(() => {
-    const body = draft.trim();
-    if (!body || !onSend) return;
-    onSend({ text: body });
-    setDraft('');
-    setComposerOpen(false);
-  }, [draft, onSend]);
+  const sendCanned = useCallback(type => send({ type }), [send]);
+  const sendFree = useCallback(async () => {
+    const snapshot = draftRef.current;
+    const body = snapshot.trim();
+    if (!body) return;
+    if (await send({ text: body })) {
+      if (draftRef.current === snapshot) setDraft('');
+      setComposerOpen(false);
+    }
+  }, [send, setDraft]);
+  const discard = () => Alert.alert(t('workflow.radio.discardTitle'), t('workflow.radio.discardBody'), [
+    { text: t('common.cancel'), style: 'cancel' },
+    { text: t('workflow.radio.discard'), style: 'destructive', onPress: () => { setDraft(''); setComposerOpen(false); } },
+  ]);
+  const sendStatus = localStatus || status?.status;
+  const blocked = disabled || sending || sendStatus === 'writing';
 
   return (
     <View style={styles.root} pointerEvents="box-none">
@@ -56,7 +76,7 @@ export function TeamMessageBar({ onSend, disabled = false, lastInbound, onDismis
           style={[styles.banner, { backgroundColor: colors.card, borderColor: colors.accent }]}
           onPress={onDismissInbound}
           accessibilityRole="button"
-          accessibilityLabel={`Message from ${lastInbound.from}: ${lastInbound.text}`}
+          accessibilityLabel={t('workflow.radio.inbound', { from: lastInbound.from, text: lastInbound.text })}
         >
           <Text style={[styles.bannerFrom, { color: colors.accentText }]} numberOfLines={1}>
             {lastInbound.from}
@@ -71,28 +91,29 @@ export function TeamMessageBar({ onSend, disabled = false, lastInbound, onDismis
         {QUICK.map(q => (
           <TouchableOpacity
             key={q.type}
-            style={[styles.chip, { borderColor: colors.border }, disabled && styles.chipDisabled]}
+            style={[styles.chip, { borderColor: colors.border }, blocked && styles.chipDisabled]}
             onPress={() => sendCanned(q.type)}
-            disabled={disabled}
+            disabled={blocked}
             accessibilityRole="button"
             accessibilityLabel={t(q.key, q.fallback)}
           >
-            <Text style={[styles.chipText, { color: disabled ? colors.text4 : colors.text2 }]}>
+            <Text style={[styles.chipText, { color: blocked ? colors.text4 : colors.text2 }]}>
               {t(q.key, q.fallback)}
             </Text>
           </TouchableOpacity>
         ))}
         <TouchableOpacity
-          style={[styles.chip, { borderColor: colors.border }, disabled && styles.chipDisabled]}
+          style={[styles.chip, { borderColor: colors.border }, blocked && styles.chipDisabled]}
           onPress={() => setComposerOpen(true)}
-          disabled={disabled}
           accessibilityRole="button"
           accessibilityLabel={t('team.msgCustom', 'Custom message')}
         >
-          <Text style={[styles.chipIcon, { color: disabled ? colors.text4 : colors.text2 }]}>+</Text>
+          <Text style={[styles.chipIcon, { color: blocked ? colors.text4 : colors.text2 }]}>+</Text>
         </TouchableOpacity>
       </View>
 
+      {sendStatus && <Text style={[styles.counter, { color: colors.text }]} accessibilityLiveRegion="polite">{t(`workflow.radio.${sendStatus}`)}</Text>}
+      {disabled && <Text style={[styles.counter, { color: colors.text3 }]}>{t('workflow.radio.disconnected')}</Text>}
       {/* Free-text composer */}
       <Modal visible={composerOpen} transparent animationType="fade" onRequestClose={() => setComposerOpen(false)}>
         <View style={styles.modalBackdrop}>
@@ -102,6 +123,7 @@ export function TeamMessageBar({ onSend, disabled = false, lastInbound, onDismis
             </Text>
             <TextInput
               style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+              accessibilityLabel={t('team.msgCustom')}
               value={draft}
               onChangeText={setDraft}
               maxLength={MAX_FREE_TEXT}
@@ -113,20 +135,23 @@ export function TeamMessageBar({ onSend, disabled = false, lastInbound, onDismis
             <Text style={[styles.counter, { color: colors.text3 }]}>
               {draft.length}/{MAX_FREE_TEXT}
             </Text>
+            {sendStatus && <Text style={[styles.counter, { color: colors.text }]} accessibilityLiveRegion="polite">{t(`workflow.radio.${sendStatus}`)}</Text>}
+            {disabled && <Text style={[styles.counter, { color: colors.text3 }]}>{t('workflow.radio.disconnected')}</Text>}
+            <TouchableOpacity onPress={discard} style={styles.action} accessibilityRole="button"><Text style={[styles.actionText, { color: colors.text3 }]}>{t('workflow.radio.discard')}</Text></TouchableOpacity>
             <View style={styles.composerActions}>
               <TouchableOpacity
                 style={[styles.action, { borderColor: colors.border }]}
-                onPress={() => { setComposerOpen(false); setDraft(''); }}
+                onPress={() => setComposerOpen(false)}
                 accessibilityRole="button"
               >
                 <Text style={[styles.actionText, { color: colors.text3 }]}>
-                  {t('common.cancel', 'CANCEL')}
+                  {t('workflow.radio.keepDraft')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.action, { borderColor: colors.accent }]}
                 onPress={sendFree}
-                disabled={!draft.trim()}
+                disabled={!draft.trim() || blocked}
                 accessibilityRole="button"
               >
                 <Text style={[styles.actionText, { color: draft.trim() ? colors.accentText : colors.text3 }]}>
@@ -153,7 +178,7 @@ const styles = StyleSheet.create({
     minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center',
   },
   chipDisabled: { opacity: 0.4 },
-  chipIcon: { fontFamily: 'monospace', fontSize: 10, letterSpacing: 2, fontWeight: '700' },
+  chipIcon: { ...TYPE.data, fontSize: 10, letterSpacing: 2 },
   chipText: {
     ...TYPE.heading, fontSize: 12, letterSpacing: 0.8 },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', justifyContent: 'center', padding: 24 },

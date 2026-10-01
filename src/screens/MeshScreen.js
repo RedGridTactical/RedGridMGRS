@@ -2,7 +2,7 @@
  * MeshScreen — Meshtastic mesh radio integration (Pro feature).
  * Scan, connect, share position, view other nodes on the mesh.
  */
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
@@ -42,9 +42,12 @@ export function MeshScreen({
   lastInboundMessage,
   onDismissInbound,
   sealedUndecryptable = 0,
+  messageDraft, onMessageDraftChange, messageStatus, lastPositionSend, sharingState = 'off',
 }) {
   const colors = useColors();
   const { t } = useTranslation();
+  const [clock, setClock] = useState(Date.now());
+  useEffect(() => { const id = setInterval(() => setClock(Date.now()), 15000); return () => clearInterval(id); }, []);
 
   // scanError carries a stable code from the transport plus the raw English
   // message. Translate the code; fall back to the message for an untranslated
@@ -67,13 +70,13 @@ export function MeshScreen({
       let bearing = null;
       let distance = null;
       try { mgrs = formatMGRS(toMGRS(pos.lat, pos.lon, 5)); } catch {}
-      if (location) {
+      if (location && clock - pos.timestamp <= 300000) {
         try { bearing = calculateBearing(location.lat, location.lon, pos.lat, pos.lon); } catch {}
         try { distance = calculateDistance(location.lat, location.lon, pos.lat, pos.lon); } catch {}
       }
       return { ...pos, mgrs, bearing, distance };
     });
-  }, [meshPositions, location]);
+  }, [meshPositions, location, clock]);
 
   const statusColor = isConnected ? colors.text : isConnecting || isScanning ? colors.text2 : colors.border;
   const statusLabel = isConnected
@@ -115,9 +118,9 @@ export function MeshScreen({
       {isConnected && (
         <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }]}>
           <View style={styles.toggleRow}>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.text }]}>{t('mesh.autoShare')}</Text>
-              <Text style={[styles.cardSub, { color: colors.text3 }]}>{t('mesh.autoShareSub')}</Text>
+              <Text style={[styles.cardSub, { color: colors.text3 }]}>{t('workflow.radio.sharingSub')}</Text>
             </View>
             <TouchableOpacity
               style={[styles.toggleBtn, { borderColor: autoShare ? colors.text : colors.border, backgroundColor: autoShare ? colors.border2 : 'transparent' }]}
@@ -134,6 +137,8 @@ export function MeshScreen({
         </View>
       )}
 
+      <Text style={[styles.cardSub, { color: colors.text3, marginBottom: 12 }]}>{t(`workflow.radio.sharing_${sharingState}`)}</Text>
+      {lastPositionSend && <Text style={[styles.cardSub, { color: colors.text }]} accessibilityLiveRegion="polite">{t('workflow.radio.positionStatus', { status: t(`workflow.radio.${lastPositionSend.status}`) })}</Text>}
       {/* Team key — set up before a radio is even connected, so a team can be
           keyed indoors and then take the radios outside. */}
       <TeamKeyPanel sealedUndecryptable={sealedUndecryptable} />
@@ -148,7 +153,7 @@ export function MeshScreen({
           accessibilityLabel={t('team.rosterTitle', 'TEAM')}
         >
           <View style={styles.toggleRow}>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={[styles.cardTitle, { color: colors.text }]}>{t('team.rosterTitle', 'TEAM')}</Text>
               <Text style={[styles.cardSub, { color: colors.text3 }]}>
                 {teamCount > 0 ? String(teamCount) : t('team.emptyTitle', 'NO PEERS ON MESH')}
@@ -160,10 +165,12 @@ export function MeshScreen({
       )}
 
       {/* Tactical message bar — one-tap canned calls to the mesh. */}
-      {isConnected && onSendTeamMessage && (
+      {onSendTeamMessage && (
         <View style={styles.card}>
           <TeamMessageBar
             onSend={onSendTeamMessage}
+            disabled={!isConnected}
+            draft={messageDraft} onDraftChange={onMessageDraftChange} status={messageStatus}
             lastInbound={lastInboundMessage}
             onDismissInbound={onDismissInbound}
           />
@@ -230,7 +237,7 @@ export function MeshScreen({
                 <Text style={[styles.nodeId, { color: colors.text2 }]}>
                   {t('mesh.node')} {pos.nodeId ? `#${pos.nodeId.toString(16).toUpperCase()}` : `#${idx + 1}`}
                 </Text>
-                <Text style={[styles.nodeTime, { color: colors.text3 }]}>{timeSince(pos.timestamp)} {t('mesh.ago')}</Text>
+                <Text style={[styles.nodeTime, { color: colors.text3 }]}>{t('workflow.radio.lastHeard', { age: timeSince(pos.timestamp) })}{clock - pos.timestamp > 300000 ? ` · ${t('workflow.radio.stale')}` : ''} {t('mesh.ago')}</Text>
               </View>
               {pos.mgrs && (
                 <Text style={[styles.nodeMgrs, { color: colors.text }]}>{pos.mgrs}</Text>

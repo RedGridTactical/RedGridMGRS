@@ -5,7 +5,9 @@
  * When connected, externalPosition overrides the internal GPS.
  * Falls back to internal GPS when disconnected.
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { AppState } from 'react-native';
+import { selectPositionSource } from '../utils/position';
 import { getExternalGPSManager, ConnectionState } from '../utils/externalGPS';
 
 export { ConnectionState } from '../utils/externalGPS';
@@ -74,29 +76,13 @@ export function useExternalGPS() {
  * @returns {object} The active position (external if connected, else internal)
  */
 export function useGPSSource(internalLocation, externalGPS) {
-  if (
-    externalGPS &&
-    externalGPS.connectionState === ConnectionState.CONNECTED &&
-    externalGPS.externalPosition &&
-    externalGPS.externalPosition.lat !== undefined
-  ) {
-    return {
-      location: {
-        lat: externalGPS.externalPosition.lat,
-        lon: externalGPS.externalPosition.lon,
-        accuracy: externalGPS.accuracy ?? externalGPS.externalPosition.accuracy,
-        heading: externalGPS.externalPosition.heading,
-        altitude: externalGPS.externalPosition.altitude,
-        speed: externalGPS.externalPosition.speed,
-      },
-      source: 'external',
-      deviceName: externalGPS.deviceName,
-    };
-  }
-
-  return {
-    location: internalLocation,
-    source: 'internal',
-    deviceName: null,
-  };
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const refresh = () => setNow(Date.now());
+    const timer = setInterval(refresh, 1000);
+    const sub = AppState.addEventListener('change', state => { if (state === 'active') refresh(); });
+    return () => { clearInterval(timer); sub.remove(); };
+  }, []);
+  return useMemo(() => selectPositionSource(internalLocation, externalGPS, Math.max(now, Date.now())),
+    [internalLocation, externalGPS?.externalPosition, externalGPS?.connectionState, externalGPS?.deviceName, now]);
 }

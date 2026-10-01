@@ -160,6 +160,7 @@ export async function importRasterMBTiles(uri, { onProgress, shouldCancel } = {}
     cancelled(shouldCancel);
     const seen = new Set();
     const directories = new Set();
+    const zoomInventory = new Map();
     let imported = 0, bytes = 0, minZoom = 19, maxZoom = 0;
     let west = 180, south = 90, east = -180, north = -90;
     for await (const row of db.getEachAsync(`SELECT zoom_level, tile_column, tile_row, tile_data FROM tiles LIMIT ${OFFLINE_MAP_LIMITS.tiles + 1}`)) {
@@ -186,6 +187,7 @@ export async function importRasterMBTiles(uri, { onProgress, shouldCancel } = {}
       await FileSystem.writeAsStringAsync(tileUri, toBase64(data), { encoding: FileSystem.EncodingType.Base64 });
       await verifyDecodedTile(tileUri);
       minZoom = Math.min(minZoom, z); maxZoom = Math.max(maxZoom, z);
+      zoomInventory.set(z, (zoomInventory.get(z) || 0) + 1);
       west = Math.min(west, x / n * 360 - 180); east = Math.max(east, (x + 1) / n * 360 - 180);
       north = Math.max(north, latitudeAtTile(y, n)); south = Math.min(south, latitudeAtTile(y + 1, n));
       imported++;
@@ -196,6 +198,8 @@ export async function importRasterMBTiles(uri, { onProgress, shouldCancel } = {}
       name: plainText(values.name, 120) || 'Imported map',
       attribution: plainText(values.attribution, 2048),
       minZoom, maxZoom, bounds: [west, south, east, north], tileCount: imported,
+      zoomLevels: [...zoomInventory.keys()].sort((a, b) => a - b),
+      tilesByZoom: Object.fromEntries(zoomInventory),
       importedAt: new Date().toISOString(), format: 'png', tileSize: 256,
     };
     await FileSystem.writeAsStringAsync(`${extracted}metadata.json`, JSON.stringify(metadata));

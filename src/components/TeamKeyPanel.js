@@ -22,18 +22,11 @@ import { TYPE } from '../utils/typography';
 import { useTranslation } from '../hooks/useTranslation';
 import { tapLight, tapMedium } from '../utils/haptics';
 import { useTeamKey } from '../hooks/useTeamAwareness';
+import { copyTextToClipboard } from '../utils/clipboard';
 import { formatPairingCode } from '../utils/teamCrypto';
 import { getSealedUndecryptableCount } from '../utils/meshtastic';
 
 const DROP_POLL_MS = 5000;
-
-let ExpoClipboard = null;
-try {
-  // eslint-disable-next-line global-require
-  ExpoClipboard = require('expo-clipboard');
-} catch {
-  // Clipboard is a convenience — the code is still readable and shareable.
-}
 
 export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
   const colors = useColors();
@@ -54,7 +47,7 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
   const dropCount = Math.max(dropped, sealedUndecryptable);
   const { t } = useTranslation();
   const {
-    hasTeamKey, fingerprint, pairingPayload,
+    hasTeamKey, fingerprint, pairingPayload, keyLoaded,
     createTeamKey, joinTeam, leaveTeam,
   } = useTeamKey();
 
@@ -62,19 +55,30 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
   const [showJoin, setShowJoin] = useState(false);
   const [joinText, setJoinText] = useState('');
   const [joinError, setJoinError] = useState(false);
+  const [actionError, setActionError] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  const run = useCallback(async action => {
+    if (busyRef.current || !keyLoaded) return false;
+    busyRef.current = true; setBusy(true); setActionError(false);
+    let ok = false;
+    try { ok = await action() === true; } catch {}
+    finally { busyRef.current = false; if (mounted.current) setBusy(false); }
+    if (mounted.current) setActionError(!ok);
+    return ok;
+  }, [keyLoaded]);
 
   const onCreate = useCallback(async () => {
     tapMedium();
-    await createTeamKey();
-    setShowCode(true);
-  }, [createTeamKey]);
+    if (await run(createTeamKey)) setShowCode(true);
+  }, [createTeamKey, run]);
 
-  const onCopy = useCallback(() => {
-    tapLight();
-    if (ExpoClipboard && typeof ExpoClipboard.setStringAsync === 'function' && pairingPayload) {
-      ExpoClipboard.setStringAsync(pairingPayload).catch(() => {});
-    }
-  }, [pairingPayload]);
+  const onCopy = useCallback(async () => {
+    try {
+      await copyTextToClipboard(pairingPayload);
+      Alert.alert(t('workflow.radio.copiedTitle'), t('workflow.radio.copiedBody'));
+    } catch { Alert.alert(t('workflow.copyFailed')); }
+  }, [pairingPayload, t]);
 
   const onShare = useCallback(async () => {
     if (!(await allowSystemDisplay())) return;
@@ -85,7 +89,7 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
 
   const onJoin = useCallback(async () => {
     tapMedium();
-    const ok = await joinTeam(joinText);
+    const ok = await run(() => joinTeam(joinText));
     if (ok) {
       setJoinText('');
       setJoinError(false);
@@ -93,7 +97,7 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
     } else {
       setJoinError(true);
     }
-  }, [joinTeam, joinText]);
+  }, [joinTeam, joinText, run]);
 
   const onLeave = useCallback(() => {
     tapMedium();
@@ -105,14 +109,13 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
         {
           text: t('mesh.pairing.leave', 'LEAVE TEAM'),
           style: 'destructive',
-          onPress: () => {
-            leaveTeam();
-            setShowCode(false);
+          onPress: async () => {
+            if (await run(leaveTeam)) setShowCode(false);
           },
         },
       ]
     );
-  }, [leaveTeam, t]);
+  }, [leaveTeam, t, run]);
 
   return (
     <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.card }]}>
@@ -129,7 +132,7 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
 
       <Text style={[styles.cardSub, { color: colors.text3 }]}>
         {hasTeamKey
-          ? t('mesh.pairing.subActive', 'Team traffic is sealed end to end.')
+          ? t('workflow.radio.keyScope')
           : t('mesh.pairing.subNone', 'Team traffic is sent unencrypted. Create a team key or join one.')}
       </Text>
 
@@ -145,12 +148,14 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
         </Text>
       )}
 
+      {actionError && <Text style={[styles.warn, { color: colors.text }]} accessibilityRole="alert">{t('workflow.radio.keyFailed')}</Text>}
+      {!keyLoaded && <Text style={[styles.warn, { color: colors.text3 }]}>{t('workflow.radio.loadingKey')}</Text>}
       {/* Actions */}
       {!hasTeamKey && (
         <View style={styles.actions}>
           <TouchableOpacity
             style={[styles.btn, { borderColor: colors.text2 }]}
-            onPress={onCreate}
+            onPress={onCreate} disabled={busy || !keyLoaded}
             accessibilityRole="button"
             accessibilityLabel={t('mesh.pairing.create', 'CREATE TEAM KEY')}
           >
@@ -187,7 +192,7 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.btn, { borderColor: colors.border }]}
-            onPress={onLeave}
+            onPress={onLeave} disabled={busy || !keyLoaded}
             accessibilityRole="button"
             accessibilityLabel={t('mesh.pairing.leave', 'LEAVE TEAM')}
           >
@@ -243,7 +248,7 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
             {t('mesh.pairing.joinHint', 'Enter the pairing code from your team lead.')}
           </Text>
           <TextInput
-            style={[styles.input, { color: colors.text, borderColor: joinError ? '#ff3b30' : colors.border }]}
+            style={[styles.input, { color: colors.text, borderColor: joinError ? colors.text : colors.border }]}
             value={joinText}
             onChangeText={(v) => { setJoinText(v); setJoinError(false); }}
             placeholder={t('mesh.pairing.joinPlaceholder', 'redgrid://team?...')}
@@ -254,14 +259,14 @@ export function TeamKeyPanel({ sealedUndecryptable = 0 }) {
             accessibilityLabel={t('mesh.pairing.joinPlaceholder', 'redgrid://team?...')}
           />
           {joinError && (
-            <Text style={[styles.warn, { color: '#ff3b30' }]}>
-              {t('mesh.pairing.joinError', 'That code is not valid.')}
+            <Text style={[styles.warn, { color: colors.text }]}>
+              {t('workflow.radio.joinFailed')}
             </Text>
           )}
           <TouchableOpacity
             style={[styles.btn, { borderColor: colors.text2 }]}
             onPress={onJoin}
-            disabled={!joinText.trim()}
+            disabled={!joinText.trim() || busy || !keyLoaded}
             accessibilityRole="button"
             accessibilityLabel={t('mesh.pairing.joinConfirm', 'JOIN')}
           >

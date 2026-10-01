@@ -10,20 +10,21 @@ import {
 } from 'react-native';
 import { TextInput } from '../components/FieldInput';
 import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
-import { loadWaypointLists, saveWaypointLists } from '../utils/storage';
+import { isFreshPosition } from '../utils/position';
+import { Modal } from '../components/FieldModal';
 import { toMGRS, formatMGRS, parseMGRSToLatLon } from '../utils/mgrs';
 import { exportAsGPX, exportAsKML } from '../utils/gpxExport';
-import { parseGPX, parseKML } from '../utils/gpxImport';
+import { previewWaypointImport } from '../utils/gpxImport';
 import { useColors } from '../utils/ThemeContext';
 import { notifyWarning, notifySuccess, tapLight } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
 import { RouteCard } from '../components/RouteCard';
 import { PreflightScreen } from './PreflightScreen';
-import { calculateRoute } from '../utils/routePlanner';
+import { calculateRoute, moveRoutePoint, parseRoutePlanInputs } from '../utils/routePlanner';
 import { formatDistance } from '../utils/mgrs';
 import { TYPE } from '../utils/typography';
+import { copyTextToClipboard } from '../utils/clipboard';
 
-let Clipboard; try { Clipboard = require('expo-clipboard'); } catch {}
 let FileSystem; try { FileSystem = require('expo-file-system'); } catch {}
 let Sharing; try { Sharing = require('expo-sharing'); } catch {}
 let DocumentPicker; try { DocumentPicker = require('expo-document-picker'); } catch {}
@@ -33,10 +34,11 @@ function uid() { return Date.now().toString(36) + Math.random().toString(36).sli
 export function WaypointListsScreen({
   location, onSelectWaypoint, onStartRoute, activeRoute, navigationHistory = [],
   onClearNavigationHistory, onResumeNavigation, gpsSource, gpsDeviceName, mesh,
+  savedLists = [], listsLoading = false, listsLoadError = false, listsSaveError = false, listsSaving = false,
+  onRetryListsLoad, onRetryListsSave, onSaveList, onUpdateList, onDeleteList, selectedListId, onListRequestHandled, onSaveReviewNotes,
 }) {
   const colors = useColors();
   const { t } = useTranslation();
-  const [lists,       setLists]       = useState([]);
   const [activeList,  setActiveList]  = useState(null); // list id
   const [newListName, setNewListName] = useState('');
   const [addingList,  setAddingList]  = useState(false);
@@ -52,126 +54,126 @@ export function WaypointListsScreen({
   const [preparedRoute, setPreparedRoute] = useState(null);
   const [reviewRoute, setReviewRoute] = useState(null);
 
+  const [saveFailed, setSaveFailed] = useState(false);
+  const writeBusy = useRef(false);
+  const newListId = useRef(null);
+  const [editLabel, setEditLabel] = useState('');
+  const [editNote, setEditNote] = useState('');
+  const [editingPlan, setEditingPlan] = useState(false);
+  const [planName, setPlanName] = useState('');
+  const [planPace, setPlanPace] = useState('');
+  const [planStart, setPlanStart] = useState('');
+  const [planNotes, setPlanNotes] = useState('');
+  const [planError, setPlanError] = useState('');
+  const [importPreview, setImportPreview] = useState(null);
+  const lists = savedLists;
+
   useEffect(() => {
-    loadWaypointLists().then(setLists).catch(() => {});
-  }, []);
+    if (selectedListId && lists.some(list => list.id === selectedListId)) {
+      setActiveList(selectedListId);
+      onListRequestHandled?.();
+      return;
+    }
+    // One effect decides selection so the default cannot overwrite a Map request
+    // in the same commit before the parent clears that consumed request.
+    if (!lists.some(list => list.id === activeList)) setActiveList(lists[0]?.id ?? null);
+  }, [selectedListId, activeList, lists, onListRequestHandled]);
+  useEffect(() => () => { if (copiedTimer.current) clearTimeout(copiedTimer.current); }, []);
 
-  const persist = useCallback(async (updated) => {
-    await saveWaypointLists(updated).catch(() => {});
-    setLists(updated);
-  }, []);
+  const write = async operation => {
+    if (writeBusy.current || listsLoading || listsLoadError) return false;
+    writeBusy.current = true; setSaveFailed(false);
+    try { await operation(); return true; }
+    catch { setSaveFailed(true); notifyWarning(); return false; }
+    finally { writeBusy.current = false; }
+  };
 
-  // ── Create list ──
-  const createList = () => {
+  const createList = async () => {
     if (!newListName.trim()) return;
     if (lists.length >= 10) { Alert.alert(t('waypoints.limitReached'), t('waypoints.maxLists')); return; }
-    const newList = { id: uid(), name: newListName.trim().toUpperCase(), waypoints: [] };
-    const updated = [...lists, newList];
-    persist(updated).catch(() => {});
-    setNewListName('');
-    setAddingList(false);
-    setActiveList(newList.id);
+    if (!newListId.current) newListId.current = uid();
+    const newList = { id: newListId.current, name: newListName.trim().toUpperCase(), waypoints: [], createdAt: Date.now() };
+    if (await write(() => onSaveList(newList))) {
+      setNewListName(''); setAddingList(false); setActiveList(newList.id);
+      newListId.current = null;
+    }
   };
-
-  // ── Delete list ──
-  const deleteList = (id) => {
-    Alert.alert(t('waypoints.deleteList'), t('waypoints.deleteListMsg'), [
-      { text: t('waypoints.cancel'), style: 'cancel' },
-      { text: t('waypoints.delete'), style: 'destructive', onPress: () => {
-        const updated = lists.filter(l => l.id !== id);
-        persist(updated).catch(() => {});
-        if (activeList === id) setActiveList(null);
-      }},
-    ]);
-  };
-
-  // ── Add current position as waypoint ──
-  const addCurrentPosition = (listId) => {
-    if (!location) { Alert.alert(t('gps.noGpsFix'), t('gps.acquireFirst')); return; }
-    const list = lists.find(l => l.id === listId);
+  const deleteList = id => Alert.alert(t('waypoints.deleteList'), t('waypoints.deleteListMsg'), [
+    { text: t('waypoints.cancel'), style: 'cancel' },
+    { text: t('waypoints.delete'), style: 'destructive', onPress: async () => {
+      if (await write(() => onDeleteList(id))) { if (activeList === id) setActiveList(null); }
+    } },
+  ]);
+  const appendPoint = (listId, point) => onUpdateList(listId, list => ({ ...list, waypoints: [...list.waypoints, point] }));
+  const addCurrentPosition = async listId => {
+    if (!isFreshPosition(location)) { Alert.alert(t('gps.noGpsFix'), t('gps.acquireFirst')); return; }
+    const list = lists.find(item => item.id === listId);
     if (!list) return;
     if (list.waypoints.length >= 20) { Alert.alert(t('waypoints.limitReached'), t('waypoints.maxWaypoints')); return; }
-    const mgrs = formatMGRS(toMGRS(location.lat, location.lon, 5));
-    const wp = { id: uid(), label: `WP ${list.waypoints.length + 1}`, lat: location.lat, lon: location.lon, mgrs };
-    const updated = lists.map(l => l.id === listId ? { ...l, waypoints: [...l.waypoints, wp] } : l);
-    persist(updated).catch(() => {});
+    const point = { id: uid(), label: `WP ${list.waypoints.length + 1}`, lat: location.lat, lon: location.lon,
+      mgrs: formatMGRS(toMGRS(location.lat, location.lon, 5)), source: 'gps', recordedAt: location.timestamp,
+      accuracyM: Number.isFinite(location.accuracy) ? location.accuracy : null };
+    await write(() => appendPoint(listId, point));
   };
-
-  // ── Add custom MGRS grid as waypoint ──
-  const addCustomGrid = (listId) => {
-    const cleaned = gridInput.replace(/\s+/g, '').toUpperCase();
-    if (cleaned.length < 6) { notifyWarning(); setGridError(t('waypoints.invalidMgrs')); return; }
-    const parsed = parseMGRSToLatLon(cleaned);
-    if (!parsed) { notifyWarning(); setGridError(t('waypoints.couldNotParse')); return; }
-    const list = lists.find(l => l.id === listId);
+  const addCustomGrid = async listId => {
+    const parsed = parseMGRSToLatLon(gridInput.replace(/\s+/g, '').toUpperCase());
+    if (!parsed) { notifyWarning(); setGridError(t('waypoints.invalidMgrs')); return; }
+    const list = lists.find(item => item.id === listId);
     if (!list) return;
     if (list.waypoints.length >= 20) { Alert.alert(t('waypoints.limitReached'), t('waypoints.maxWaypoints')); return; }
+    const point = { id: uid(), label: gridLabel.trim().toUpperCase() || `WP ${list.waypoints.length + 1}`,
+      lat: parsed.lat, lon: parsed.lon, mgrs: formatMGRS(toMGRS(parsed.lat, parsed.lon, 5)), source: 'manual', recordedAt: Date.now() };
+    if (await write(() => appendPoint(listId, point))) {
+      setGridInput(''); setGridLabel(''); setGridError(''); setEnteringGrid(false);
+    }
+  };
+  const deleteWaypoint = (listId, wpId) => Alert.alert(t('workflow.deletePoint'), t('workflow.deletePointBody'), [
+    { text: t('common.cancel'), style: 'cancel' },
+    { text: t('waypoints.delete'), style: 'destructive', onPress: () => write(() => onUpdateList(listId,
+      list => ({ ...list, waypoints: list.waypoints.filter(point => point.id !== wpId) }))) },
+  ]);
+  const reorderWaypoint = (listId, wpId, direction) => write(() => onUpdateList(listId,
+    list => ({ ...list, waypoints: moveRoutePoint(list.waypoints, wpId, direction) })));
+  const startEditWaypoint = wp => {
+    setEditingWpId(wp.id); setEditMgrsInput(wp.mgrs); setEditLabel(wp.label); setEditNote(wp.note || '');
+  };
+  const cancelEditWaypoint = () => { setEditingWpId(null); setEditMgrsInput(''); setGridError(''); };
+  const saveEditWaypoint = async (listId, wpId) => {
+    const parsed = parseMGRSToLatLon(editMgrsInput.replace(/\s+/g, '').toUpperCase());
+    if (!parsed || !editLabel.trim()) { setGridError(t('waypoints.invalidMgrs')); return; }
     const mgrs = formatMGRS(toMGRS(parsed.lat, parsed.lon, 5));
-    const wp = { id: uid(), label: gridLabel.trim().toUpperCase() || `WP ${list.waypoints.length + 1}`, lat: parsed.lat, lon: parsed.lon, mgrs };
-    const updated = lists.map(l => l.id === listId ? { ...l, waypoints: [...l.waypoints, wp] } : l);
-    persist(updated).catch(() => {});
-    setGridInput(''); setGridLabel(''); setGridError(''); setEnteringGrid(false);
+    const saved = await write(() => onUpdateList(listId, list => ({ ...list, waypoints: list.waypoints.map(point => {
+      if (point.id !== wpId) return point;
+      // Preserve precise GPS/import coordinates if only label/note changed.
+      const coordinateChanged = mgrs.replace(/\s/g, '') !== point.mgrs.replace(/\s/g, '');
+      return { ...point, label: editLabel.trim().toUpperCase(), note: editNote.trim(),
+        ...(coordinateChanged ? { lat: parsed.lat, lon: parsed.lon, mgrs, source: 'manual', recordedAt: Date.now(), accuracyM: null, provenance: null } : {}) };
+    }) })));
+    if (saved) { notifySuccess(); cancelEditWaypoint(); }
   };
-
-  // ── Rename waypoint ──
-  const renameWaypoint = (listId, wpId, newLabel) => {
-    const updated = lists.map(l => l.id !== listId ? l : {
-      ...l,
-      waypoints: l.waypoints.map(w => w.id === wpId ? { ...w, label: newLabel.toUpperCase() } : w),
-    });
-    persist(updated).catch(() => {});
+  const openPlanEditor = () => {
+    setPlanName(currentList.name); setPlanPace(currentList.paceMinPerKm == null ? '' : String(currentList.paceMinPerKm));
+    setPlanStart(currentList.plannedStartAt ? new Date(currentList.plannedStartAt).toISOString().slice(0, 16).replace('T', ' ') : '');
+    setPlanNotes(currentList.notes || ''); setPlanError(''); setEditingPlan(true);
   };
-
-  // ── Delete waypoint ──
-  const deleteWaypoint = (listId, wpId) => {
-    const updated = lists.map(l => l.id !== listId ? l : {
-      ...l, waypoints: l.waypoints.filter(w => w.id !== wpId),
-    });
-    persist(updated).catch(() => {});
-  };
-
-  // ── Edit waypoint MGRS ──
-  const startEditWaypoint = (wp) => {
-    setEditingWpId(wp.id);
-    setEditMgrsInput(wp.mgrs);
-  };
-
-  const cancelEditWaypoint = () => {
-    setEditingWpId(null);
-    setEditMgrsInput('');
-  };
-
-  const saveEditWaypoint = (listId, wpId) => {
+  const savePlan = async () => {
+    let fields;
     try {
-      const cleaned = editMgrsInput.replace(/\s+/g, '').toUpperCase();
-      if (!cleaned) { cancelEditWaypoint(); return; }
-      const parsed = parseMGRSToLatLon(cleaned);
-      if (!parsed) { notifyWarning(); return; }
-      const mgrs = formatMGRS(toMGRS(parsed.lat, parsed.lon, 5));
-      const updated = lists.map(l => l.id !== listId ? l : {
-        ...l,
-        waypoints: l.waypoints.map(w => w.id === wpId ? { ...w, lat: parsed.lat, lon: parsed.lon, mgrs } : w),
-      });
-      persist(updated).catch(() => {});
-      notifySuccess();
-      setEditingWpId(null);
-      setEditMgrsInput('');
-    } catch { notifyWarning(); }
+      if (!planName.trim()) throw new Error('name');
+      fields = parseRoutePlanInputs({ pace: planPace, plannedStart: planStart, notes: planNotes });
+    } catch { setPlanError(t('workflow.invalidPlan')); return; }
+    if (await write(() => onUpdateList(currentList.id, list => ({ ...list, ...fields, name: planName.trim().toUpperCase() })))) setEditingPlan(false);
   };
 
   // ── Copy waypoint MGRS ──
   const copyWaypointMgrs = async (wp) => {
     try {
-      if (Clipboard?.setStringAsync) {
-        await Clipboard.setStringAsync(wp.mgrs);
-      } else if (Clipboard?.setString) {
-        Clipboard.setString(wp.mgrs);
-      }
+      await copyTextToClipboard(wp.mgrs);
       tapLight();
       setCopiedWpId(wp.id);
       if (copiedTimer.current) clearTimeout(copiedTimer.current);
       copiedTimer.current = setTimeout(() => setCopiedWpId(null), 1500);
-    } catch {}
+    } catch { Alert.alert(t('workflow.copyFailed'), t('workflow.copyRetry')); }
   };
 
   // ── Export list as GPX or KML ──
@@ -183,8 +185,8 @@ export function WaypointListsScreen({
     }
     try {
       const xml = format === 'kml'
-        ? exportAsKML(currentList.waypoints, currentList.name)
-        : exportAsGPX(currentList.waypoints, currentList.name);
+        ? exportAsKML(currentList.waypoints, currentList.name, currentList)
+        : exportAsGPX(currentList.waypoints, currentList.name, currentList);
       const ext = format === 'kml' ? 'kml' : 'gpx';
       const mime = format === 'kml' ? 'application/vnd.google-earth.kml+xml' : 'application/gpx+xml';
 
@@ -241,50 +243,34 @@ export function WaypointListsScreen({
       const uri = file.uri;
       const name = (file.name || '').toLowerCase();
 
+      const info = await FileSystem.getInfoAsync(uri);
+      if ((file.size || info.size || 0) > 2 * 1024 * 1024) throw new Error(t('workflow.importTooLarge'));
       const content = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.UTF8 });
 
-      let parsed = [];
-      if (name.endsWith('.kml') || content.includes('<kml')) {
-        parsed = parseKML(content);
-      } else {
-        parsed = parseGPX(content);
-      }
-
-      if (parsed.length === 0) {
-        Alert.alert(t('waypoints.importEmpty'), t('waypoints.importNoWaypoints'));
-        return;
-      }
-
-      const available = 20 - currentList.waypoints.length;
-      const toImport = parsed.slice(0, available);
-
-      const newWaypoints = toImport.map((wp, i) => ({
-        id: uid(),
-        label: (wp.name || `WP ${currentList.waypoints.length + i + 1}`).toUpperCase(),
-        lat: wp.lat,
-        lon: wp.lon,
-        mgrs: formatMGRS(toMGRS(wp.lat, wp.lon, 5)),
-      }));
-
-      const updated = lists.map(l => l.id === currentList.id
-        ? { ...l, waypoints: [...l.waypoints, ...newWaypoints] }
-        : l
-      );
-      await persist(updated);
-      notifySuccess();
-
-      const msg = toImport.length < parsed.length
-        ? t('waypoints.importedTruncated', { count: toImport.length, total: parsed.length })
-        : t('waypoints.importedCount', { count: toImport.length });
-      Alert.alert(t('waypoints.importSuccess'), msg);
+      const preview = previewWaypointImport(content, {
+        format: name.endsWith('.kml') || content.includes('<kml') ? 'kml' : 'gpx',
+        limit: Math.max(0, 20 - currentList.waypoints.length), existingPoints: currentList.waypoints,
+      });
+      setImportPreview({ ...preview, listId: currentList.id, fileName: file.name || '' });
     } catch (e) {
       Alert.alert(t('waypoints.importFailed'), e.message || t('waypoints.importError'));
     }
   };
 
+  const confirmImport = async () => {
+    if (!importPreview?.points?.length) return;
+    const preview = importPreview;
+    if (await write(() => onUpdateList(preview.listId, list => ({ ...list,
+      ...(!list.waypoints.length && preview.plan ? { notes: preview.plan.notes, paceMinPerKm: preview.plan.paceMinPerKm, plannedStartAt: preview.plan.plannedStartAt } : {}),
+      waypoints: [...list.waypoints, ...preview.points] })))) {
+      setImportPreview(null); notifySuccess();
+    }
+  };
   const currentList = lists.find(l => l.id === activeList);
+  const currentReview = reviewRoute ? navigationHistory.find(item => item.id === reviewRoute.id) || reviewRoute : null;
 
   const prepareRoute = () => {
+    if (listsSaving || listsLoadError || !currentList) return;
     // Keep the prepared order stable if the underlying saved list later changes.
     const prepare = () => setPreparedRoute({ ...currentList, waypoints: currentList.waypoints.map(point => ({ ...point })) });
     if (!activeRoute) { prepare(); return; }
@@ -310,6 +296,10 @@ export function WaypointListsScreen({
       </View>
 
       <Text style={[styles.flowHint, { color: colors.text3 }]}>{t('fieldNav.flow')}</Text>
+      {(listsLoading || listsLoadError || listsSaveError || saveFailed || listsSaving) && <View style={[styles.routeAction, { borderColor: colors.border }]}>
+        <Text accessibilityRole="alert" style={[styles.flowHint, { color: colors.text }]}>{listsLoading ? t('workflow.loadingPlans') : listsLoadError ? t('workflow.loadFailed') : listsSaving ? t('workflow.saving') : t('workflow.saveFailed')}</Text>
+        {(listsLoadError || listsSaveError) && <TouchableOpacity onPress={listsLoadError ? onRetryListsLoad : onRetryListsSave} accessibilityRole="button" style={styles.clearHistory}><Text style={[styles.routeActionTitle, { color: colors.text2 }]}>{t('workflow.retry')}</Text></TouchableOpacity>}
+      </View>}
       {activeRoute && (
         <TouchableOpacity style={[styles.routeAction, { borderColor: colors.accentText, backgroundColor: colors.card }]} onPress={onResumeNavigation} accessibilityRole="button">
           <Text style={[styles.routeActionTitle, { color: colors.accentText }]}>{t('fieldNav.resume')}</Text>
@@ -354,6 +344,7 @@ export function WaypointListsScreen({
             placeholderTextColor={colors.text3}
             autoCapitalize="characters"
             autoFocus
+            maxLength={80}
             onSubmitEditing={createList}
             accessibilityLabel="New list name"
           />
@@ -378,7 +369,7 @@ export function WaypointListsScreen({
               <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.border }]} onPress={showExportMenu} accessibilityRole="button" accessibilityLabel="Export waypoint list">
                 <Text style={[styles.addWpBtnText, { color: colors.text3 }]}>{t('waypoints.export')}</Text>
               </TouchableOpacity>
-              {currentList.waypoints.length >= 2 && (
+              {currentList.waypoints.length >= 1 && (
                 <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.text2 }]} onPress={() => setRouteCardVisible(true)} accessibilityRole="button" accessibilityLabel={t('routeCard.openLabel')}>
                   <Text style={[styles.addWpBtnText, { color: colors.text2 }]}>{t('routeCard.button')}</Text>
                 </TouchableOpacity>
@@ -393,6 +384,24 @@ export function WaypointListsScreen({
               )}
             </View>
           </View>
+
+          <View style={styles.wpHeaderBtns}>
+            <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.text2 }]} onPress={openPlanEditor} accessibilityRole="button"><Text style={[styles.addWpBtnText, { color: colors.text2 }]}>{t('workflow.editPlan')}</Text></TouchableOpacity>
+            <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.border }]} onPress={() => deleteList(currentList.id)} accessibilityRole="button"><Text style={[styles.addWpBtnText, { color: colors.text3 }]}>{t('waypoints.deleteList')}</Text></TouchableOpacity>
+          </View>
+          {editingPlan && <View style={[styles.gridEntryBox, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            <Text style={[styles.flowHint, { color: colors.text2 }]}>{t('workflow.routeName')}</Text>
+            <TextInput value={planName} onChangeText={setPlanName} maxLength={80} accessibilityLabel={t('workflow.routeName')} style={[styles.gridEntryInput, { color: colors.text, borderColor: colors.border }]} />
+            <Text style={[styles.flowHint, { color: colors.text2 }]}>{t('workflow.pace')}</Text>
+            <TextInput value={planPace} onChangeText={setPlanPace} keyboardType="decimal-pad" maxLength={6} accessibilityLabel={t('workflow.pace')} placeholder={t('workflow.optional')} placeholderTextColor={colors.text3} style={[styles.gridEntryInput, { color: colors.text, borderColor: colors.border }]} />
+            <Text style={[styles.flowHint, { color: colors.text2 }]}>{t('workflow.plannedStart')}</Text>
+            <TextInput value={planStart} onChangeText={setPlanStart} maxLength={16} accessibilityLabel={t('workflow.plannedStart')} placeholder="YYYY-MM-DD HH:mm" placeholderTextColor={colors.text3} style={[styles.gridEntryInput, { color: colors.text, borderColor: colors.border }]} />
+            <Text style={[styles.flowHint, { color: colors.text2 }]}>{t('workflow.planNotes')}</Text>
+            <TextInput value={planNotes} onChangeText={setPlanNotes} multiline maxLength={500} accessibilityLabel={t('workflow.planNotes')} style={[styles.gridEntryInput, { color: colors.text, borderColor: colors.border, minHeight: 80 }]} />
+            {!!planError && <Text accessibilityRole="alert" style={[styles.flowHint, { color: colors.text }]}>{planError}</Text>}
+            <TouchableOpacity onPress={savePlan} disabled={listsSaving} accessibilityRole="button" style={[styles.gridSaveBtn, { borderColor: colors.text2 }]}><Text style={[styles.gridSaveBtnText, { color: colors.text2 }]}>{t('waypoints.save')}</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => setEditingPlan(false)} accessibilityRole="button" style={styles.gridCancelBtn}><Text style={[styles.flowHint, { color: colors.text3 }]}>{t('common.cancel')}</Text></TouchableOpacity>
+          </View>}
 
           {currentList.waypoints.length > 0 && onStartRoute && (
             <TouchableOpacity style={[styles.routeAction, { borderColor: colors.accentText, backgroundColor: colors.card }]} onPress={prepareRoute} accessibilityRole="button">
@@ -439,14 +448,14 @@ export function WaypointListsScreen({
           )}
 
           {currentList.waypoints.length === 0 && (
-            <Text style={[styles.emptyText, { color: colors.text3 }]}>{t('waypoints.noWaypoints')}</Text>
+            <Text style={[styles.emptyText, { color: colors.text3 }]}>{t('waypoints.enterGrid')} · {t('waypoints.import')}</Text>
           )}
 
           {currentList.waypoints.map((wp, i) => (
             <View key={wp.id} style={[styles.wpRow, { borderColor: colors.border2, backgroundColor: colors.card }]}>
               {editingWpId === wp.id ? (
                 <View style={styles.wpEditContainer}>
-                  <Text style={[styles.wpLabel, { color: colors.text }]}>{wp.label}</Text>
+                  <TextInput value={editLabel} onChangeText={setEditLabel} maxLength={80} accessibilityLabel={t('workflow.pointLabel')} style={[styles.wpEditInput, { color: colors.text, borderColor: colors.border }]} />
                   <TextInput
                     style={[styles.wpEditInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }]}
                     value={editMgrsInput}
@@ -458,6 +467,9 @@ export function WaypointListsScreen({
                     onSubmitEditing={() => saveEditWaypoint(currentList.id, wp.id)}
                     accessibilityLabel="Edit MGRS coordinate"
                   />
+                  <Text style={[styles.flowHint, { color: colors.text2 }]}>{t('workflow.pointNote')}</Text>
+                  <TextInput value={editNote} onChangeText={setEditNote} multiline maxLength={280} accessibilityLabel={t('workflow.pointNote')} style={[styles.wpEditInput, { color: colors.text, borderColor: colors.border }]} />
+                  {!!gridError && <Text accessibilityRole="alert" style={[styles.flowHint, { color: colors.text }]}>{gridError}</Text>}
                   <View style={styles.wpEditBtns}>
                     <TouchableOpacity style={[styles.wpEditSave, { borderColor: colors.text2 }]} onPress={() => saveEditWaypoint(currentList.id, wp.id)} accessibilityRole="button" accessibilityLabel="Save edited coordinate">
                       <Text style={[styles.wpEditSaveText, { color: colors.text2 }]}>{t('waypoints.save')}</Text>
@@ -470,14 +482,8 @@ export function WaypointListsScreen({
               ) : (
                 <>
                   <View style={styles.wpInfo}>
-                    <TextInput
-                      style={[styles.wpLabel, { color: colors.text }]}
-                      value={wp.label}
-                      onChangeText={t => renameWaypoint(currentList.id, wp.id, t)}
-                      autoCapitalize="characters"
-                      autoCorrect={false}
-                      accessibilityLabel={`Waypoint ${i + 1} label`}
-                    />
+                    <Text style={[styles.wpLabel, { color: colors.text }]}>{i + 1}. {wp.label}</Text>
+                    {!!wp.note && <Text style={[styles.flowHint, { color: colors.text3 }]}>{wp.note}</Text>}
                     <View style={styles.wpMgrsRow}>
                       <Text style={[styles.wpMgrs, { color: colors.text2 }]}>{wp.mgrs}</Text>
                       <TouchableOpacity style={[styles.wpCopyBtn, { borderColor: colors.border2 }]} onPress={() => copyWaypointMgrs(wp)} accessibilityRole="button" accessibilityLabel={`Copy ${wp.label} MGRS`}>
@@ -488,6 +494,8 @@ export function WaypointListsScreen({
                     </View>
                   </View>
                   <View style={styles.wpBtns}>
+                    <TouchableOpacity style={[styles.wpNav, { borderColor: colors.border2, opacity: i === 0 ? 0.4 : 1 }]} disabled={i === 0 || listsSaving} onPress={() => reorderWaypoint(currentList.id, wp.id, -1)} accessibilityRole="button" accessibilityLabel={t('workflow.moveUpLabel', { name: wp.label })}><Text style={[styles.wpNavText, { color: colors.text2 }]}>{t('workflow.moveUp')}</Text></TouchableOpacity>
+                    <TouchableOpacity style={[styles.wpNav, { borderColor: colors.border2, opacity: i === currentList.waypoints.length - 1 ? 0.4 : 1 }]} disabled={i === currentList.waypoints.length - 1 || listsSaving} onPress={() => reorderWaypoint(currentList.id, wp.id, 1)} accessibilityRole="button" accessibilityLabel={t('workflow.moveDownLabel', { name: wp.label })}><Text style={[styles.wpNavText, { color: colors.text2 }]}>{t('workflow.moveDown')}</Text></TouchableOpacity>
                     <TouchableOpacity style={[styles.wpNav, { borderColor: colors.border2 }]} onPress={() => startEditWaypoint(wp)} accessibilityRole="button" accessibilityLabel={`Edit ${wp.label} coordinate`}>
                       <Text style={[styles.wpNavText, { color: colors.text3 }]}>{t('waypoints.edit')}</Text>
                     </TouchableOpacity>
@@ -541,7 +549,20 @@ export function WaypointListsScreen({
       )}
 
       <RouteCard visible={routeCardVisible} list={currentList} onClose={() => setRouteCardVisible(false)} />
-      <RouteCard visible={!!reviewRoute} list={reviewRoute} onClose={() => setReviewRoute(null)} />
+      <RouteCard visible={!!reviewRoute} list={currentReview} onClose={() => setReviewRoute(null)} onSaveReviewNotes={onSaveReviewNotes} />
+      <Modal visible={!!importPreview} transparent animationType="slide" onRequestClose={() => setImportPreview(null)}>
+        <View style={[styles.importBackdrop, { backgroundColor: colors.bg + 'F2' }]}><ScrollView contentContainerStyle={styles.content}>
+          <Text style={[styles.title, { color: colors.text }]}>{t('workflow.importPreview')}</Text>
+          <Text style={[styles.flowHint, { color: colors.text2 }]}>{importPreview?.fileName}</Text>
+          <Text style={[styles.flowHint, { color: colors.text }]}>{t('workflow.importCounts', importPreview?.counts || {})}</Text>
+          {!!importPreview?.warnings?.length && <Text accessibilityRole="alert" style={[styles.flowHint, { color: colors.text }]}>{t('workflow.multiplePlans')}</Text>}
+          {importPreview?.plan && <Text style={[styles.flowHint, { color: colors.text2 }]}>{t('workflow.importPlanHint')} · {importPreview.plan.name}</Text>}
+          {(importPreview?.points || []).map((point, index) => <Text key={point.id || index} style={[styles.flowHint, { color: colors.text2 }]}>{index + 1}. {point.label} · {point.mgrs}</Text>)}
+          <TouchableOpacity disabled={!importPreview?.points?.length || listsSaving} style={[styles.routeAction, { borderColor: colors.text2 }]} onPress={confirmImport} accessibilityRole="button"><Text style={[styles.routeActionTitle, { color: colors.text }]}>{t('workflow.confirmImport')}</Text></TouchableOpacity>
+          {(saveFailed || listsSaveError) && <Text accessibilityRole="alert" style={[styles.flowHint, { color: colors.text }]}>{t('workflow.saveFailed')}</Text>}
+          <TouchableOpacity style={styles.clearHistory} onPress={() => setImportPreview(null)} accessibilityRole="button"><Text style={[styles.flowHint, { color: colors.text3 }]}>{t('common.cancel')}</Text></TouchableOpacity>
+        </ScrollView></View>
+      </Modal>
       <PreflightScreen visible={!!preparedRoute} onClose={() => setPreparedRoute(null)}
         location={location} gpsSource={gpsSource} gpsDeviceName={gpsDeviceName} mesh={mesh}
         isPro preparedRoute={preparedRoute}
@@ -556,6 +577,7 @@ export function WaypointListsScreen({
 }
 
 const styles = StyleSheet.create({
+  importBackdrop: { flex: 1, paddingTop: 60 },
   flowHint: { ...TYPE.body, fontSize: 14, lineHeight: 19 },
   routeAction: { borderWidth: 1, padding: 12, marginVertical: 12, gap: 5, minHeight: 48 },
   routeActionTitle: { ...TYPE.heading, fontSize: 15, letterSpacing: 0.7 },
@@ -590,14 +612,14 @@ const styles = StyleSheet.create({
   addPosBtn: { borderWidth: 1 },
   emptyText: { ...TYPE.body, fontSize: 12, textAlign: 'center', paddingVertical: 20, lineHeight: 17 },
 
-  wpRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, padding: 10 },
-  wpInfo: { flex: 1, gap: 3 },
+  wpRow: { gap: 10, borderWidth: 1, padding: 10 },
+  wpInfo: { gap: 3 },
   wpLabel: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2, paddingVertical: 0 },
   wpMgrs: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6 },
   wpMgrsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   wpCopyBtn: { borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2 },
   wpCopyBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1 },
-  wpBtns: { flexDirection: 'row', gap: 6 },
+  wpBtns: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   wpNav: { borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
   wpNavText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   wpDel: { paddingHorizontal: 8, paddingVertical: 6, minHeight: 44, justifyContent: 'center' },

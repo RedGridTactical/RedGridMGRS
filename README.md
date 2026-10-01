@@ -8,7 +8,7 @@
 
 Read your grid, prepare a route, and navigate between saved points. Core coordinate tools work without an internet connection when your device has a usable location fix. The app has no Red Grid accounts, advertising, analytics or cloud sync.
 
-This branch contains **4.0.5**. Store availability follows Apple and Google review; source availability does not mean a release is already available in both stores.
+This branch contains **4.0.8**. Store availability follows Apple and Google review; source availability does not mean a release is already available in both stores.
 
 ## Field workflow
 

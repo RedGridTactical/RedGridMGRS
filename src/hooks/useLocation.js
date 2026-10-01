@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { AppState } from 'react-native';
+import { normalizePositionFix, HEADING_MAX_AGE_MS } from '../utils/position';
 
 // Defensive lazy-load expo-location to prevent SIGABRT if native module unavailable
 let Location = null;
@@ -29,7 +31,9 @@ export function useLocation() {
   const [compassHeading, setCompassHeading] = useState(null);
   const [compassReference, setCompassReference] = useState(null);
   const mounted = useRef(true);
-  const prevCoords = useRef(null);
+  const latestFix = useRef(null);
+  const headingTimeout = useRef(null);
+  const foreground = useRef(AppState.currentState !== 'background' && AppState.currentState !== 'inactive');
   // Live watcher subscriptions — held in refs so a RETRY press replaces the
   // existing watchers instead of stacking a new pair on every call.
   const posSubRef = useRef(null);
@@ -41,23 +45,21 @@ export function useLocation() {
   const clearSubs = useCallback(() => {
     try { posSubRef.current?.remove?.(); } catch {}
     try { headingSubRef.current?.remove?.(); } catch {}
+    clearTimeout(headingTimeout.current);
     posSubRef.current = null;
     headingSubRef.current = null;
   }, []);
 
-  // Only update state if position changed by more than ~0.1m to prevent cascade re-renders
-  const COORD_THRESHOLD = 0.000001;
-  const updateLocationIfChanged = useCallback((newLoc) => {
-    const prev = prevCoords.current;
-    if (
-      prev &&
-      Math.abs(newLoc.lat - prev.lat) < COORD_THRESHOLD &&
-      Math.abs(newLoc.lon - prev.lon) < COORD_THRESHOLD
-    ) {
-      return; // Position unchanged, skip re-render
-    }
-    prevCoords.current = { lat: newLoc.lat, lon: newLoc.lon };
-    setLocation(newLoc);
+  // Coordinate equality is not observation equality: accuracy, altitude,
+  // speed and timestamp must still update when the receiver is stationary.
+  const acceptPosition = useCallback((raw) => {
+    const fix = normalizePositionFix(raw);
+    if (!fix || (latestFix.current && fix.timestamp < latestFix.current.timestamp)) return false;
+    latestFix.current = fix;
+    setLocation(fix);
+    setError(null);
+    setIsLoading(false);
+    return true;
   }, []);
 
   const requestAndWatch = useCallback(async () => {
@@ -70,6 +72,7 @@ export function useLocation() {
     // subscriptions never stack.
     clearSubs();
     setCompassReference(null);
+    setCompassHeading(null);
 
     try {
       if (!Location || !Location.requestForegroundPermissionsAsync) {
@@ -139,22 +142,15 @@ export function useLocation() {
           setError(`GPS Error: ${posErr?.message || 'Could not get position'}`);
           setIsLoading(false);
         }
-        return;
+        // Keep installing the watcher: a slow first fix must recover on its own.
       } finally {
         clearTimeout(positionTimeout);
       }
 
       if (!isCurrent()) return;
 
-      if (initial?.coords) {
-        updateLocationIfChanged({
-          lat: initial.coords.latitude,
-          lon: initial.coords.longitude,
-          accuracy: Math.round(initial.coords.accuracy),
-          heading: initial.coords.heading,
-          altitude: initial.coords.altitude != null ? Math.round(initial.coords.altitude) : null,
-          speed: initial.coords.speed,
-        });
+      if (initial?.coords && !acceptPosition(initial)) {
+        setError('GPS Error: Invalid position observation');
       }
 
       if (isCurrent()) {
@@ -168,20 +164,14 @@ export function useLocation() {
             accuracy: Location.Accuracy.BestForNavigation,
             mayShowUserSettingsDialog: false,
             timeInterval: 1000,
-            distanceInterval: 1,
+            distanceInterval: 0,
           },
           (pos) => {
             if (isCurrent() && pos?.coords) {
-              updateLocationIfChanged({
-                lat: pos.coords.latitude,
-                lon: pos.coords.longitude,
-                accuracy: Math.round(pos.coords.accuracy),
-                heading: pos.coords.heading,
-                altitude: pos.coords.altitude != null ? Math.round(pos.coords.altitude) : null,
-                speed: pos.coords.speed,
-              });
+              acceptPosition(pos);
             }
-          }
+          },
+          message => { if (isCurrent()) { setError(`Watch Error: ${message}`); setIsLoading(false); } }
         );
         if (!isCurrent()) {
           try { positionSubscription?.remove?.(); } catch {}
@@ -199,13 +189,18 @@ export function useLocation() {
       try {
         if (Location.watchHeadingAsync) {
           const headingSubscription = await Location.watchHeadingAsync((data) => {
-            if (isCurrent()) {
-              const hasTrueHeading = Number.isFinite(data?.trueHeading) && data.trueHeading >= 0;
+            if (isCurrent() && foreground.current) {
+              clearTimeout(headingTimeout.current);
+              const hasTrueHeading = Number.isFinite(data?.trueHeading) && data.trueHeading >= 0 && data.trueHeading < 360;
               const h = hasTrueHeading ? data.trueHeading : data?.magHeading;
-              if (Number.isFinite(h) && h >= 0) {
+              if (Number.isFinite(data?.accuracy) && data.accuracy > 0 && Number.isFinite(h) && h >= 0 && h < 360) {
                 setCompassHeading(h);
                 setCompassReference(hasTrueHeading ? 'true' : 'magnetic');
+                headingTimeout.current = setTimeout(() => {
+                  if (isCurrent()) { setCompassHeading(null); setCompassReference(null); }
+                }, HEADING_MAX_AGE_MS);
               } else {
+                setCompassHeading(null);
                 setCompassReference(null);
               }
             }
@@ -228,7 +223,19 @@ export function useLocation() {
     } finally {
       if (requestGeneration.current === generation) requestInFlight.current = false;
     }
-  }, [updateLocationIfChanged, clearSubs]);
+  }, [acceptPosition, clearSubs]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', state => {
+      foreground.current = state === 'active';
+      if (!foreground.current) {
+        clearTimeout(headingTimeout.current);
+        setCompassHeading(null);
+        setCompassReference(null);
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     mounted.current = true;

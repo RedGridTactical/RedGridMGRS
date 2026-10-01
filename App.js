@@ -36,7 +36,10 @@ import { useSettings }  from './src/hooks/useSettings';
 import { useIAP }       from './src/hooks/useIAP';
 import { useTheme }     from './src/hooks/useTheme';
 import { useStoreReview } from './src/hooks/useStoreReview';
-import { useShakeToSpeak } from './src/hooks/useShakeToSpeak';
+import { useFieldVoice } from './src/hooks/useFieldVoice';
+import { useWaypointLists } from './src/hooks/useWaypointLists';
+import { copyTextToClipboard } from './src/utils/clipboard';
+import { newFieldId } from './src/utils/waypoints';
 import { useGridCrossing } from './src/hooks/useGridCrossing';
 import { useExternalGPS, useGPSSource } from './src/hooks/useExternalGPS';
 import { ThemeProvider, useColors, DisplaySafetyProvider } from './src/utils/ThemeContext';
@@ -47,7 +50,8 @@ import { WaypointModal }  from './src/components/WaypointModal';
 import { ProGate }        from './src/components/ProGate';
 import { WhatsNewModal }  from './src/components/WhatsNewModal';
 import { TeamRosterSheet } from './src/components/TeamRosterSheet';
-import { extractTokenFromUrl, redeemShareToken, getTrialStatus } from './src/utils/referral';
+import { extractTokenFromUrl, redeemShareToken } from './src/utils/referral';
+import { useReferralTrial } from './src/hooks/useReferralTrial';
 import { ToolsScreen }    from './src/screens/ToolsScreen';
 import { ReportScreen }   from './src/screens/ReportScreen';
 import { WaypointListsScreen } from './src/screens/WaypointListsScreen';
@@ -63,8 +67,10 @@ import {
   toMGRS, formatMGRS, formatPosition, calculateBearing, calculateDistance, formatDistance, getDisplayPrecision,
 } from './src/utils/mgrs';
 import { tapLight, tapHeavy, tapMedium, notifySuccess } from './src/utils/haptics';
-import { speakMGRS, stopSpeaking } from './src/utils/voice';
+import { stopSpeaking } from './src/utils/voice';
 import { trackSession, trackEvent } from './src/utils/analytics';
+import { formatBearing, relativeWaypointBearing } from './src/utils/tactical';
+import { isFreshPosition } from './src/utils/position';
 
 // ─── TEXT SCALING ───────────────────────────────────────────────────────────
 // React 19 removed function-component defaultProps, so the old global
@@ -83,7 +89,7 @@ function useTabDefs() {
     { id: 'report', label: t('tabs.reports') },
     { id: 'lists',  label: t('tabs.lists'),  proOnly: true },
     { id: 'coords', label: t('tabs.coords'), proOnly: true },
-    { id: 'theme',  label: t('tabs.theme'),  proOnly: true },
+    { id: 'theme',  label: t('workflow.settings.tab') },
     { id: 'mesh',   label: t('tabs.mesh'),   proOnly: true },
   ]), [t]);
 }
@@ -144,35 +150,29 @@ function App() {
   // Lift external GPS to app scope so the connected receiver overrides phone
   // GPS everywhere (grid, map, tools, mesh, reports). Falls back to internal
   // GPS when no receiver is connected.
-  const { location, source: gpsSource, deviceName: gpsDeviceName } = useGPSSource(internalLocation, externalGPS);
-  const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, tacticalMode, setTacticalMode, loaded: settingsLoaded, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing, gridScale, setGridScale } = useSettings();
-  const { isPro: iapIsPro, isPurchasing, product, products, selectedTier, setSelectedTier, trialEligible, purchase, restore } = useIAP();
+  const { location, source: gpsSource, deviceName: gpsDeviceName, status: fixStatus, ageSeconds, sourceFallback, lastKnownLocation } = useGPSSource(internalLocation, externalGPS);
+  const positionStatus = { status: fixStatus, ageSeconds, sourceFallback, fix: lastKnownLocation };
+  const displayError = location ? null : error;
+  const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, tacticalMode, setTacticalMode, loaded: settingsLoaded, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing, gridScale, setGridScale, tacticalSound, setTacticalSound, saveError: settingsSaveError, retrySave: retrySettingsSave } = useSettings();
+  const { isPro: iapIsPro, isPurchasing, product, products, selectedTier, setSelectedTier, trialEligible, purchase, restore, refreshProducts } = useIAP();
 
-  // Trial state from referral system — treated as Pro for feature gating.
-  const [trialActive, setTrialActive] = useState(false);
-  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
+  // Gift access is independent of paid access, with a live expiry deadline.
+  const { active: trialActive, daysLeft: trialDaysLeft, refresh: refreshTrial } = useReferralTrial();
   const isPro = iapIsPro || trialActive;
 
-  // Check trial status on mount and whenever we return from background
-  useEffect(() => {
-    let cancelled = false;
-    const refresh = async () => {
-      const status = await getTrialStatus();
-      if (cancelled) return;
-      setTrialActive(status.active);
-      setTrialDaysLeft(status.daysLeft);
-    };
-    refresh();
-    return () => { cancelled = true; };
-  }, []);
-
+  // Keep alert language current without replaying the cold-start URL on locale changes.
+  const trialTranslation = useRef(t);
+  trialTranslation.current = t;
   // Deep link handler — redeem trial when user opens redgrid://share/<token>
   useEffect(() => {
+    let cancelled = false;
     const handleUrl = async (url) => {
+      const t = trialTranslation.current;
       if (!url) return;
       const token = extractTokenFromUrl(url);
       if (!token) return;
       const result = await redeemShareToken(token);
+      if (cancelled) return;
       if (result.ok) {
         // Kill-switch path: token is valid but the entitlement flag is off,
         // so we don't grant Pro. Welcome the user without unlocking features.
@@ -185,16 +185,19 @@ function App() {
           } catch {}
           return;
         }
-        const status = await getTrialStatus();
-        setTrialActive(status.active);
-        setTrialDaysLeft(status.daysLeft);
+        const status = await refreshTrial();
+        if (cancelled) return;
         try {
           Alert.alert(
             t('trial.receivedTitle'),
             t('trial.receivedBody', { days: status.daysLeft })
           );
         } catch {}
+      } else if (result.reason === 'storage') {
+        try { Alert.alert(t('trial.storageFailedTitle'), t('trial.storageFailedBody')); } catch {}
       } else if (result.reason === 'already_received') {
+        await refreshTrial();
+        if (cancelled) return;
         try { Alert.alert(t('trial.alreadyUsedTitle'), t('trial.alreadyUsedBody')); } catch {}
       } else if (result.reason === 'expired') {
         try { Alert.alert(t('trial.linkExpiredTitle'), t('trial.linkExpiredBody')); } catch {}
@@ -205,14 +208,15 @@ function App() {
     // Handle cold-start deep link
     Linking.getInitialURL().then(handleUrl).catch(() => {});
     // Handle warm deep links while running
-    const sub = Linking.addEventListener('url', (ev) => handleUrl(ev?.url));
-    return () => { try { sub?.remove?.(); } catch {} };
-  }, []);
+    const sub = Linking.addEventListener('url', (ev) => { handleUrl(ev?.url).catch(() => {}); });
+    return () => { cancelled = true; try { sub?.remove?.(); } catch {} };
+  }, [refreshTrial]);
 
-  const themeData = useTheme(theme);
+  const activeTheme = isPro || ['standard', 'red', 'white'].includes(theme) ? theme : 'standard';
+  const themeData = useTheme(activeTheme);
   const { checkAndPromptReview, promptReviewOnPositiveMoment, openStoreReview } = useStoreReview();
   const [showTeamRoster, setShowTeamRoster] = useState(false);
-  const mesh = useMeshtastic();
+  const mesh = useMeshtastic(isPro);
   // Team layer rides the mesh transport the app already has. Derives a roster
   // (named peers, roles, ghost decay) from the same position packets.
   const team = useTeamAwareness(mesh.meshPositions);
@@ -237,17 +241,28 @@ function App() {
   // broadcast. Without this, auto-share runs every 30s but sends nothing.
   // Source is the active GPS (external receiver if connected, else phone).
   useEffect(() => {
-    if (location?.lat != null && location?.lon != null) {
-      mesh.setLastPosition(location.lat, location.lon, location.altitude ?? 0);
-    }
-  }, [location?.lat, location?.lon, location?.altitude, mesh]);
+    mesh.setLastPosition(location?.lat, location?.lon, location?.altitude ?? 0, location?.timestamp);
+  }, [location?.lat, location?.lon, location?.altitude, location?.timestamp, mesh]);
 
   const [tab, setTab]               = useState('grid');
   const fieldNavigation = useFieldNavigation();
+  const savedPlans = useWaypointLists();
+  const [selectedListId, setSelectedListId] = useState(null);
+  const [routeDraft, setRouteDraft] = useState({ active: false, waypoints: [], name: '' });
+  const savedWaypoints = useMemo(() => savedPlans.lists.flatMap(list => list.waypoints.map(point => ({ ...point, listName: list.name }))), [savedPlans.lists]);
+  const onSaveEstimatedPoint = useCallback(async point => {
+    const waypoint = { ...point, id: newFieldId(), source: 'estimated', recordedAt: point.provenance?.calculatedAt };
+    const id = 'rg-estimated-points';
+    const list = savedPlans.lists.find(item => item.id === id);
+    if (list) await savedPlans.updateList(id, current => ({ ...current, waypoints: [...current.waypoints, waypoint] }));
+    else await savedPlans.saveList({ id, name: t('workflow.origin.estimatesList'), waypoints: [waypoint] });
+    return true;
+  }, [savedPlans, t]);
   const { waypoint, setWaypoint } = fieldNavigation;
   const [showModal, setShowModal]   = useState(false);
   const [proGateVisible, setProGateVisible] = useState(false);
   const [proGateFeature, setProGateFeature] = useState('');
+  const [proGateContext, setProGateContext] = useState(null);
   const [hudMode, setHudMode]       = useState(false);
   const [showSupport, setShowSupport] = useState(false);
 
@@ -273,7 +288,8 @@ function App() {
     return () => { try { sub?.remove?.(); } catch {} };
   }, []);
 
-  const showProGate = useCallback((featureName) => {
+  const showProGate = useCallback((featureName, context) => {
+    setProGateContext(context || null);
     setProGateFeature(featureName);
     setProGateVisible(true);
     // On-device only (AsyncStorage counters — never transmitted).
@@ -307,20 +323,25 @@ function App() {
   // Mark Position — one-tap save of current GPS fix as active nav target
   const [markToast, setMarkToast] = useState(null);
   const handleMarkPosition = useCallback(() => {
-    if (!Number.isFinite(location?.lat) || !Number.isFinite(location?.lon)) {
+    if (!isFreshPosition(location)) {
       try { Alert.alert(t('alerts.noGpsFixTitle'), t('alerts.noGpsFixBody')); } catch {}
       return;
     }
     const now = new Date();
     const hhmm = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
-    const newWaypoint = { lat: location.lat, lon: location.lon, label: `MARK ${hhmm}` };
-    const commit = () => {
+    const newWaypoint = { id: newFieldId(), lat: location.lat, lon: location.lon, label: `MARK ${hhmm}`, source: 'gps', recordedAt: location.timestamp, accuracyM: location.accuracy };
+    const commit = async () => {
+      if (!isFreshPosition(location)) {
+        Alert.alert(t('alerts.noGpsFixTitle'), t('alerts.noGpsFixBody'));
+        return;
+      }
       tapHeavy();
-      setWaypoint(newWaypoint);
+      try { await setWaypoint(newWaypoint); }
+      catch { Alert.alert(t('workflow.saveFailed'), t('workflow.settings.retryFieldSave')); return; }
       notifySuccess();
       setMarkToast(newWaypoint.label);
       setTimeout(() => setMarkToast(null), 2000);
-      AccessibilityInfo.announceForAccessibility(`Position marked as ${newWaypoint.label}`);
+      AccessibilityInfo.announceForAccessibility(t('workflow.access.savedPosition', { name: newWaypoint.label }));
       // Positive moment: user successfully marked a position. Gated inside the hook
       // (MIN_POSITIVE_MOMENTS=3, POSITIVE_COOLDOWN_DAYS=90) so this fires at most once
       // every 90 days and only after the user has done it ≥3 times.
@@ -343,7 +364,7 @@ function App() {
     } else {
       commit();
     }
-  }, [location, waypoint, t]);
+  }, [location, waypoint, t, setWaypoint, promptReviewOnPositiveMoment]);
 
   // Tap-to-copy grid — copies whatever format is displayed (MGRS, UTM, DD, or DMS)
   const [copyToast, setCopyToast] = useState(false);
@@ -351,20 +372,32 @@ function App() {
     const text = altDisplay || mgrsFormatted;
     if (!text) return;
     tapLight();
-    let ExpoClipboard = null;
-    try { ExpoClipboard = require('expo-clipboard'); } catch {}
-    if (ExpoClipboard?.setStringAsync) {
-      await ExpoClipboard.setStringAsync(text.replace(/\n/g, '  ')).catch(() => {});
-    }
+    try { await copyTextToClipboard(text.replace(/\n/g, '  ')); }
+    catch { Alert.alert(t('workflow.clipboard.failedTitle'), t('workflow.clipboard.failedBody')); return; }
     notifySuccess();
     setCopyToast(true);
-    AccessibilityInfo.announceForAccessibility('Grid copied');
+    AccessibilityInfo.announceForAccessibility(t('grid.copiedToClipboard'));
     setTimeout(() => setCopyToast(false), 1500);
-  }, [mgrsFormatted, altDisplay]);
+  }, [mgrsFormatted, altDisplay, t]);
 
-  // v2.5 Pro features: shake-to-speak and grid crossing haptics
-  useShakeToSpeak(mgrsFormatted, isPro && shakeToSpeak);
-  useGridCrossing(mgrsFormatted, isPro && gridCrossing);
+  const voice = useFieldVoice(mgrsFormatted, { enabled: isPro, shakeEnabled: shakeToSpeak, tacticalMode, tacticalSound });
+  useGridCrossing(mgrsFormatted, isPro && gridCrossing && voice.foreground, location);
+  const handleVoicePress = useCallback(() => {
+    tapMedium();
+    if (!isPro) { showProGate(t('grid.speakGrid'), 'tools'); return; }
+    if (voice.soundBlocked && !voice.speaking) {
+      Alert.alert(t('workflow.voice.mutedTitle'), t('workflow.voice.mutedBody'), [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('workflow.settings.tab'), onPress: () => setTab('theme') },
+      ]);
+      return;
+    }
+    voice.toggleSpeech();
+  }, [isPro, voice, showProGate, t]);
+  const clearWaypoint = useCallback(() => Alert.alert(t('workflow.access.clearTitle'), t('workflow.access.clearBody'), [
+    { text: t('common.cancel'), style: 'cancel' },
+    { text: t('grid.clear'), style: 'destructive', onPress: () => setWaypoint(null).catch(() => Alert.alert(t('workflow.saveFailed'), t('workflow.settings.retryFieldSave'))) },
+  ]), [setWaypoint, t]);
 
   // Wayfinder — true bearing (no declination on digital display)
   const { bearing, distance } = useMemo(() => {
@@ -379,13 +412,10 @@ function App() {
     }
   }, [location, waypoint]);
 
-  // Arrow angle: subtract device heading so arrow points toward waypoint
-  // Falls back to absolute bearing when compass unavailable
-  const arrowAngle = useMemo(() => {
-    if (bearing === null) return null;
-    if (compassHeading === null) return bearing;
-    return ((bearing - compassHeading) + 360) % 360;
-  }, [bearing, compassHeading]);
+  // Absolute target is true north; only a validated TRUE device heading can
+  // orient a relative arrow. Magnetic/unknown headings never become north-up.
+  const arrowAngle = useMemo(() => relativeWaypointBearing(bearing, compassHeading, compassReference),
+    [bearing, compassHeading, compassReference]);
 
   const waypointMGRS = useMemo(() => { try { return waypoint ? formatMGRS(toMGRS(waypoint.lat, waypoint.lon, 5)) : null; } catch { return null; } }, [waypoint]);
   const arrowSize    = isLandscape ? Math.min(height * 0.52, 190) : 200;
@@ -394,22 +424,23 @@ function App() {
   const statusBarStyle = themeData.id === 'white' ? 'dark-content' : 'light-content';
 
   const onEnterHud = useCallback(() => {
-    if (!isPro) { showProGate('HUD Mode'); return; }
+    if (!isPro) { showProGate(t('grid.hudMode'), 'display'); return; }
     tapHeavy();
     setHudMode(true);
   }, [isPro, showProGate]);
 
   const gridContent = isLandscape ? (
     <LandscapeGrid
-      isLoading={isLoading} location={location} error={error} retry={retry}
+      isLoading={isLoading} location={location} error={displayError} retry={retry} positionStatus={positionStatus}
       mgrsFormatted={mgrsFormatted} waypoint={waypoint} waypointMGRS={waypointMGRS}
       bearing={bearing} arrowAngle={arrowAngle} distance={distance} arrowSize={arrowSize}
-      onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
+      onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={clearWaypoint}
       onMarkPosition={handleMarkPosition} markToast={markToast}
       isPro={isPro} onShowProGate={showProGate}
       onCopyGrid={copyGrid} copyToast={copyToast}
+      speaking={voice.speaking} onVoicePress={handleVoicePress}
       coordFormat={coordFormat} altDisplay={altDisplay}
-      compassHeading={compassHeading}
+      compassHeading={compassHeading} compassReference={compassReference}
       onRateApp={async () => { if (await allowSystemDisplay()) openStoreReview(); }}
       onEnterHud={onEnterHud}
       onShowSupport={() => setShowSupport(true)}
@@ -417,15 +448,16 @@ function App() {
     />
   ) : (
     <PortraitGrid
-      isLoading={isLoading} location={location} error={error} retry={retry}
+      isLoading={isLoading} location={location} error={displayError} retry={retry} positionStatus={positionStatus}
       mgrsFormatted={mgrsFormatted} waypoint={waypoint} waypointMGRS={waypointMGRS}
       bearing={bearing} arrowAngle={arrowAngle} distance={distance} arrowSize={arrowSize}
-      onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={() => { tapMedium(); setWaypoint(null); }}
+      onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={clearWaypoint}
       onMarkPosition={handleMarkPosition} markToast={markToast}
       isPro={isPro} onShowProGate={showProGate}
       onCopyGrid={copyGrid} copyToast={copyToast}
+      speaking={voice.speaking} onVoicePress={handleVoicePress}
       coordFormat={coordFormat} altDisplay={altDisplay}
-      compassHeading={compassHeading}
+      compassHeading={compassHeading} compassReference={compassReference}
       onRateApp={async () => { if (await allowSystemDisplay()) openStoreReview(); }}
       onEnterHud={onEnterHud}
       onShowSupport={() => setShowSupport(true)}
@@ -459,7 +491,7 @@ function App() {
         setPaceCount={setPaceCount}
         mgrsFormatted={mgrsFormatted}
         showProGate={showProGate}
-        theme={theme}
+        theme={activeTheme}
         setTheme={setTheme}
         tacticalMode={tacticalMode}
         setTacticalMode={setTacticalMode}
@@ -481,6 +513,7 @@ function App() {
         statusBarStyle={statusBarStyle}
         waypoint={waypoint}
         fieldNavigation={fieldNavigation}
+        positionStatus={positionStatus}
         coordFormat={coordFormat}
         setCoordFormat={setCoordFormat}
         compassHeading={compassHeading}
@@ -504,6 +537,11 @@ function App() {
         setShowTeamRoster={setShowTeamRoster}
         gpsSource={gpsSource}
         gpsDeviceName={gpsDeviceName}
+        savedPlans={savedPlans} selectedListId={selectedListId} setSelectedListId={setSelectedListId}
+        routeDraft={routeDraft} setRouteDraft={setRouteDraft}
+        lastKnownLocation={lastKnownLocation} savedWaypoints={savedWaypoints} onSaveEstimatedPoint={onSaveEstimatedPoint}
+        tacticalSound={tacticalSound} setTacticalSound={setTacticalSound} settingsSaveError={settingsSaveError} retrySettingsSave={retrySettingsSave}
+        proGateContext={proGateContext} refreshProducts={refreshProducts}
       />
     </ThemeProvider>
   );
@@ -522,7 +560,7 @@ function AppContent({
   showModal, setShowModal, proGateVisible, setProGateVisible,
   proGateFeature, product, products, isPurchasing, purchase, restore,
   selectedTier, setSelectedTier, trialEligible,
-  statusBarStyle, waypoint, fieldNavigation, coordFormat, setCoordFormat,
+  statusBarStyle, waypoint, fieldNavigation, positionStatus, coordFormat, setCoordFormat,
   compassHeading, compassReference,
   shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing,
   gridScale, setGridScale,
@@ -530,10 +568,23 @@ function AppContent({
   showSupport, setShowSupport,
   mesh,
   gpsSource, gpsDeviceName,
+  savedPlans, selectedListId, setSelectedListId, routeDraft, setRouteDraft,
+  lastKnownLocation, savedWaypoints, onSaveEstimatedPoint,
+  tacticalSound, setTacticalSound, settingsSaveError, retrySettingsSave,
+  proGateContext, refreshProducts,
 }) {
   const colors = useColors();
   const { t } = useTranslation();
+  useEffect(() => { if (!isPro) setHudMode(false); }, [isPro, setHudMode]);
   const display = useTacticalBrightness(tacticalMode);
+  const { width, fontScale } = useWindowDimensions();
+  const wideTabs = fontScale > 1.2 || width < 380;
+  const listProps = {
+    savedLists: savedPlans.lists, listsLoading: savedPlans.loading, listsLoadError: savedPlans.loadError,
+    listsSaveError: savedPlans.saveError, listsSaving: savedPlans.isSaving,
+    onRetryListsLoad: savedPlans.retryLoad, onRetryListsSave: savedPlans.retrySave,
+    onSaveList: savedPlans.saveList, onUpdateList: savedPlans.updateList, onDeleteList: savedPlans.deleteList,
+  };
   const storeAction = useRef(false);
   const fieldModalVisible = useFieldModalVisibility();
   useEffect(() => registerDisplayGuard({ tacticalMode, exit: async () => {
@@ -574,7 +625,8 @@ function AppContent({
       </>}
 
       <ActiveNavigationBar waypoint={waypoint} route={fieldNavigation.route} bearing={bearing} distance={distance}
-        saveError={fieldNavigation.saveError} onOpenNavigation={() => setTab('grid')}
+        saveError={fieldNavigation.saveError} loading={fieldNavigation.loading} loadError={fieldNavigation.loadError} isSaving={fieldNavigation.isSaving}
+        onRetryLoad={fieldNavigation.retryLoad} onRetrySave={fieldNavigation.retrySave} onOpenNavigation={() => setTab('grid')}
         onConfirmPoint={fieldNavigation.confirmPoint} onStopRoute={fieldNavigation.stopRoute} onReview={() => setTab('lists')} />
 
       {/* Screen content with fade transition */}
@@ -583,6 +635,8 @@ function AppContent({
 
         {safeTab === 'map' && (
           <MapScreen
+            {...listProps} routeDraft={routeDraft} onRouteDraftChange={setRouteDraft}
+            onOpenSavedRoute={id => { setSelectedListId(id); setTab('lists'); }}
             location={location}
             tacticalMode={tacticalMode}
             activeRoute={fieldNavigation.route}
@@ -601,6 +655,7 @@ function AppContent({
 
         {safeTab === 'tools' && (
           <ToolsScreen
+            lastKnownLocation={lastKnownLocation} savedWaypoints={savedWaypoints} onSaveEstimatedPoint={onSaveEstimatedPoint}
             location={location}
             declination={declination}
             paceCount={paceCount}
@@ -616,6 +671,7 @@ function AppContent({
 
         {safeTab === 'report' && (
           <ReportScreen
+            location={location}
             mgrs={mgrsFormatted}
             isPro={isPro}
             trialEligible={trialEligible}
@@ -625,9 +681,11 @@ function AppContent({
 
         {safeTab === 'lists' && isPro && (
           <WaypointListsScreen
+            {...listProps} selectedListId={selectedListId} onListRequestHandled={() => setSelectedListId(null)}
+            onSaveReviewNotes={fieldNavigation.updateReviewNotes}
             location={location}
-            onSelectWaypoint={(wp) => { setWaypoint(wp); setTab('grid'); }}
-            onStartRoute={(list, mode) => { fieldNavigation.startRoute(list, mode); setTab('grid'); }}
+            onSelectWaypoint={async wp => { await setWaypoint(wp); setTab('grid'); }}
+            onStartRoute={async (list, mode) => { await fieldNavigation.startRoute(list, mode); setTab('grid'); }}
             activeRoute={fieldNavigation.route}
             navigationHistory={fieldNavigation.history}
             onClearNavigationHistory={fieldNavigation.clearHistory}
@@ -636,8 +694,9 @@ function AppContent({
           />
         )}
 
-        {safeTab === 'theme' && isPro && (
+        {safeTab === 'theme' && (
           <ThemeScreen
+            tacticalSound={tacticalSound} setTacticalSound={setTacticalSound} settingsSaveError={settingsSaveError} onRetrySettingsSave={retrySettingsSave}
             currentTheme={theme}
             isPro={isPro}
             onSelectTheme={setTheme}
@@ -675,43 +734,50 @@ function AppContent({
             teamCount={team.activeCount}
             onOpenTeamRoster={() => setShowTeamRoster(true)}
             onSendTeamMessage={team.sendMessage}
+            messageDraft={team.messageDraft} onMessageDraftChange={team.setMessageDraft} messageStatus={team.lastSend}
+            lastPositionSend={mesh.lastSend} sharingState={mesh.sharingState} sealedUndecryptable={team.sealedUndecryptable}
             lastInboundMessage={team.lastInbound}
             onDismissInbound={team.dismissInbound}
           />
         )}
 
         {/* Upsell tab for non-Pro */}
-        {(safeTab === 'lists' || safeTab === 'theme' || safeTab === 'coords' || safeTab === 'mesh') && !isPro && (
-          <UpsellScreen onUpgrade={() => showProGate('Red Grid Pro')} />
+        {(safeTab === 'lists' || safeTab === 'coords' || safeTab === 'mesh') && !isPro && (
+          <UpsellScreen
+            tabId={safeTab}
+            onUpgrade={() => showProGate(t(UPSELL_GATE_FEATURE[safeTab]), UPSELL_GATE_CONTEXT[safeTab])}
+          />
         )}
       </Animated.View>
 
       {/* Tab bar — bottom positioned, adaptive spacing for 5+ tabs */}
-      <View style={[staticStyles.tabBar, { borderTopColor: colors.border2, backgroundColor: colors.bg }, isLandscape && staticStyles.tabBarLandscape]} accessibilityRole="tablist">
-        {TABS && Array.isArray(TABS) && TABS.map(t => {
-          const locked = !!t?.proOnly && !isPro;
+      <View style={[staticStyles.tabBar, { borderTopColor: colors.border2, backgroundColor: colors.bg, height: Math.max(50, Math.min(fontScale, 2) * 36) }, isLandscape && staticStyles.tabBarLandscape]} accessibilityRole="tablist">
+        <ScrollView horizontal showsHorizontalScrollIndicator={wideTabs} contentContainerStyle={{ flexGrow: 1 }}>
+        {TABS && Array.isArray(TABS) && TABS.map(tabDef => {
+          const locked = !!tabDef?.proOnly && !isPro;
           return (
           <TouchableOpacity
-            key={t?.id || 'unknown'}
-            style={staticStyles.tabItem}
-            onPress={() => { if (t?.id) { tapLight(); setTab(t.id); } }}
+            key={tabDef?.id || 'unknown'}
+            style={[staticStyles.tabItem, wideTabs && { minWidth: 90 * Math.min(fontScale, 1.6), flex: 0 }]}
+            onPress={() => { if (tabDef?.id) { tapLight(); setTab(tabDef.id); } }}
             activeOpacity={0.7}
             accessibilityRole="tab"
-            accessibilityState={{ selected: safeTab === t?.id }}
-            accessibilityLabel={`${t?.label || ''} tab${locked ? '. Pro feature, locked' : ''}`}
+            accessibilityState={{ selected: safeTab === tabDef?.id }}
+            accessibilityLabel={t('workflow.access.tab', { name: tabDef?.label || '', state: locked ? t('workflow.access.locked') : '' })}
           >
-            {safeTab === t?.id && <View style={[staticStyles.tabIndicatorTop, { backgroundColor: colors.accent }]} />}
+            {safeTab === tabDef?.id && <View style={[staticStyles.tabIndicatorTop, { backgroundColor: colors.accent }]} />}
             <Text
-              maxFontSizeMultiplier={1.2}
+              maxFontSizeMultiplier={2}
               numberOfLines={1}
               adjustsFontSizeToFit
-              minimumFontScale={0.7}
-              style={[staticStyles.tabLabel, TABS.length > 4 && staticStyles.tabLabelCompact, { color: colors.text3 }, safeTab === t?.id && { color: colors.text }]}>
-              {t?.label || ''}{locked ? <Text style={[staticStyles.tabLockMark, { color: colors.text3 }]}>{'ᴾᴿᴼ'}</Text> : null}
+              minimumFontScale={1}
+              style={[staticStyles.tabLabel, TABS.length > 4 && staticStyles.tabLabelCompact, { color: colors.text3 }, safeTab === tabDef?.id && { color: colors.text }]}>
+              {tabDef?.label || ''}{locked ? <Text style={[staticStyles.tabLockMark, { color: colors.text3 }]}>{'ᴾᴿᴼ'}</Text> : null}
             </Text>
           </TouchableOpacity>
           );
         })}
+        </ScrollView>
       </View>
 
       {/* Waypoint modal */}
@@ -727,6 +793,8 @@ function AppContent({
         visible={proGateVisible}
         onClose={() => setProGateVisible(false)}
         featureName={proGateFeature}
+        context={proGateContext}
+        onRetryPrices={refreshProducts}
         product={product}
         products={products}
         trialEligible={trialEligible}
@@ -741,6 +809,8 @@ function AppContent({
       <SupportScreen
         visible={showSupport}
         onClose={() => setShowSupport(false)}
+        onRestore={async () => { if (storeAction.current) return; storeAction.current = true; try { if (await allowSystemDisplay()) await restore(); } finally { storeAction.current = false; } }}
+        isRestoring={isPurchasing}
       />
 
       {/* What's new in this version — first launch post-update only. For free
@@ -756,9 +826,9 @@ function AppContent({
       />
 
       <WhatsNewModal
-        currentVersion="4.0.5"
+        currentVersion="4.0.8"
         showTrialCta={!isPro}
-        onStartTrial={() => showProGate('Red Grid Pro')}
+        onStartTrial={() => showProGate('')}
       />
 
       <FieldAlertHost />
@@ -766,13 +836,16 @@ function AppContent({
     </View>
 
     {/* HUD Mode — full-screen simplified display (Pro), rendered above SafeAreaView for true full-screen */}
-    {hudMode && !fieldModalVisible && (
+    {isPro && hudMode && !fieldModalVisible && (
       <HUDOverlay
         mgrsFormatted={mgrsFormatted}
         bearing={bearing}
         arrowAngle={arrowAngle}
         distance={distance}
         compassHeading={compassHeading}
+        compassReference={compassReference}
+        positionStatus={positionStatus}
+        location={location}
         waypoint={waypoint}
         onExit={() => { stopSpeaking(); tapMedium(); setHudMode(false); }}
       />
@@ -803,22 +876,31 @@ function FontReadyApp() {
   return <App />;
 }
 
-function UpsellScreen({ onUpgrade }) {
+// Locked-tab upsell. Each tab states what it does, what Free already
+// includes and what Pro adds before the paywall is offered. The paywall then
+// opens on the matching capability, not on the raw tab label.
+const UPSELL_GATE_FEATURE = { lists: 'proGate.waypointsRoutes', coords: 'proGate.coordFormats', mesh: 'proGate.meshAwareness' };
+const UPSELL_GATE_CONTEXT = { lists: 'routes', coords: 'tools', mesh: 'radio' };
+
+function UpsellScreen({ tabId, onUpgrade }) {
   const colors = useColors();
   const { t } = useTranslation();
+  const tabLabel = t(`tabs.${tabId}`);
   return (
-    <View style={staticStyles.upsellRoot}>
-      <Text style={[staticStyles.upsellTitle, { color: colors.text }]}>{t('upsell.title')}</Text>
-      <Text style={[staticStyles.upsellSub, { color: colors.text3 }]}>{t('upsell.subtitle')}</Text>
+    <ScrollView style={staticStyles.root} contentContainerStyle={staticStyles.upsellRoot}>
+      <Text style={[staticStyles.upsellEyebrow, { color: colors.text3 }]}>{`${tabLabel} / PRO`}</Text>
+      <Text style={[staticStyles.upsellTitle, { color: colors.text }]} accessibilityRole="header">{t(`upsell.${tabId}.title`)}</Text>
+      <Text style={[staticStyles.upsellBody, { color: colors.text2 }]}>{t(`upsell.${tabId}.body`)}</Text>
       <TouchableOpacity style={[staticStyles.upsellBtn, { borderColor: colors.text, backgroundColor: colors.border2 }]} onPress={onUpgrade} accessibilityRole="button" accessibilityLabel={t('upsell.button')}>
         <Text style={[staticStyles.upsellBtnText, { color: colors.text }]}>{t('upsell.button')}</Text>
       </TouchableOpacity>
-    </View>
+      <Text style={[staticStyles.upsellNote, { color: colors.text3 }]}>{t(`upsell.${tabId}.note`)}</Text>
+    </ScrollView>
   );
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport, gridScale }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, compassReference, positionStatus, onRateApp, onEnterHud, onShowSupport, gridScale, speaking, onVoicePress }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -826,15 +908,16 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
       <View style={staticStyles.header}>
         <Text style={[staticStyles.appTitle, { color: colors.text }]} suppressHighlighting={true} maxFontSizeMultiplier={1.2}>RED GRID MGRS</Text>
         <View style={staticStyles.headerRight}>
-          {compassHeading !== null && <Text style={[staticStyles.headingText, { color: colors.text2 }]}>HDG {Math.round(compassHeading)}°</Text>}
-          <SignalBadge isLoading={isLoading} location={location} />
+          <Text style={[staticStyles.headingText, { color: colors.text2 }]}>HDG {formatBearing(compassHeading, compassReference)}</Text>
+          <SignalBadge isLoading={isLoading} location={location} status={positionStatus?.status} />
         </View>
       </View>
+      <FixDetails positionStatus={positionStatus} />
       <Div />
       {error
         ? <ErrBlock error={error} retry={retry} />
         : (
-          <TouchableOpacity onPress={onCopyGrid} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Current MGRS grid. Tap to copy">
+          <TouchableOpacity onPress={onCopyGrid} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={t('workflow.access.copyPosition', { value: altDisplay || mgrsFormatted || t('gps.noSignal'), accuracy: location?.accuracy != null ? `${location.accuracy}m` : t('gps.accuracyUnknown'), altitude: location?.altitude != null ? `${location.altitude}m` : '—' })}>
             <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact={false} coordFormat={coordFormat} altDisplay={altDisplay} gridScale={gridScale} />
             {copyToast && <Text style={[staticStyles.copyToast, { color: colors.text2 }]}>{t('grid.copiedToClipboard')}</Text>}
           </TouchableOpacity>
@@ -847,9 +930,9 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
           onPress={onMarkPosition}
           disabled={!Number.isFinite(location?.lat) || !Number.isFinite(location?.lon)}
           accessibilityRole="button"
-          accessibilityLabel="Mark current position as waypoint"
+          accessibilityLabel={t('workflow.access.markPosition')}
         >
-          <Text style={[staticStyles.markBtnText, { color: colors.text, opacity: location?.lat ? 1 : 0.4 }]} suppressHighlighting={true}>◉ MARK POSITION</Text>
+          <Text style={[staticStyles.markBtnText, { color: colors.text, opacity: Number.isFinite(location?.lat) ? 1 : 0.4 }]} suppressHighlighting={true}>{'◉ ' + t('workflow.access.markPosition')}</Text>
         </TouchableOpacity>
         {markToast && <Text style={[staticStyles.markToast, { color: colors.text2 }]}>✓ {markToast}</Text>}
       </View>
@@ -863,10 +946,10 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
         </View>
       ) : (
         <View style={staticStyles.wpBlock}>
-          {arrowAngle !== null && (
+          {bearing !== null && (
             <View style={staticStyles.arrowWrap}>
-              <WayfinderArrow bearing={arrowAngle} size={arrowSize} />
-              <Text style={[staticStyles.bearingText, { color: colors.text }]}>{Math.round(bearing)}°</Text>
+              {arrowAngle !== null ? <WayfinderArrow bearing={arrowAngle} size={arrowSize} /> : <HeadingUnavailable />}
+              <Text style={[staticStyles.bearingText, { color: colors.text }]}>{formatBearing(bearing, 'true')}</Text>
             </View>
           )}
           <View style={staticStyles.wpInfo}>
@@ -881,18 +964,18 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
         </View>
       )}
       <View style={staticStyles.footer}>
-        {mgrsFormatted && (
+        {(mgrsFormatted || speaking) && (
           <TouchableOpacity
             style={[staticStyles.voiceBtn, { borderColor: colors.border }, !isPro && staticStyles.voiceBtnLocked]}
-            onPress={() => { tapMedium(); isPro ? speakMGRS(mgrsFormatted) : onShowProGate('Voice Readout'); }}
+            onPress={onVoicePress}
             accessibilityRole="button"
-            accessibilityLabel={isPro ? t('grid.speakGrid') : 'Voice readout. Pro feature, locked.'}
+            accessibilityLabel={speaking ? t('workflow.voice.stop') : t('grid.speakGrid')}
           >
-            <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.text3 }]}>{t('grid.speakGrid')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
+            <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.text3 }]}>{speaking ? t('workflow.voice.stop') : t('grid.speakGrid')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
           </TouchableOpacity>
         )}
         <View style={staticStyles.footerRow}>
-          <TouchableOpacity onPress={onEnterHud} accessibilityRole="button" accessibilityLabel={isPro ? t('grid.hudMode') : 'HUD mode. Pro feature'}>
+          <TouchableOpacity onPress={onEnterHud} accessibilityRole="button" accessibilityLabel={isPro ? t('grid.hudMode') : `${t('grid.hudMode')}. ${t('workflow.access.locked')}`}>
             <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>◈ {t('grid.hudMode')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => { tapLight(); onShowSupport(); }} accessibilityRole="button" accessibilityLabel={t('grid.help')}>
@@ -909,7 +992,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, onRateApp, onEnterHud, onShowSupport, gridScale }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, compassReference, positionStatus, onRateApp, onEnterHud, onShowSupport, gridScale, speaking, onVoicePress }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -918,13 +1001,14 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
         <View style={staticStyles.lsHeader}>
           <Text style={[staticStyles.lsTitle, { color: colors.text }]} suppressHighlighting={true}>RED GRID MGRS</Text>
           <View style={staticStyles.headerRight}>
-            {compassHeading !== null && <Text style={[staticStyles.headingText, { color: colors.text2 }]}>HDG {Math.round(compassHeading)}°</Text>}
-            <SignalBadge isLoading={isLoading} location={location} />
+            <Text style={[staticStyles.headingText, { color: colors.text2 }]}>HDG {formatBearing(compassHeading, compassReference)}</Text>
+            <SignalBadge isLoading={isLoading} location={location} status={positionStatus?.status} />
           </View>
         </View>
+        <FixDetails positionStatus={positionStatus} />
         <Div />
         {error ? <ErrBlock error={error} retry={retry} compact /> : (
-          <TouchableOpacity onPress={onCopyGrid} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel="Current MGRS grid. Tap to copy">
+          <TouchableOpacity onPress={onCopyGrid} activeOpacity={0.8} accessibilityRole="button" accessibilityLabel={t('workflow.access.copyPosition', { value: altDisplay || mgrsFormatted || t('gps.noSignal'), accuracy: location?.accuracy != null ? `${location.accuracy}m` : t('gps.accuracyUnknown'), altitude: location?.altitude != null ? `${location.altitude}m` : '—' })}>
             <MGRSDisplay mgrs={mgrsFormatted} accuracy={location?.accuracy} altitude={location?.altitude} compact coordFormat={coordFormat} altDisplay={altDisplay} gridScale={gridScale} />
             {copyToast && <Text style={[staticStyles.copyToast, { color: colors.text2 }]}>{t('grid.copiedToClipboard')}</Text>}
           </TouchableOpacity>
@@ -945,9 +1029,9 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
             onPress={onMarkPosition}
             disabled={!Number.isFinite(location?.lat) || !Number.isFinite(location?.lon)}
             accessibilityRole="button"
-            accessibilityLabel="Mark current position as waypoint"
+            accessibilityLabel={t('workflow.access.markPosition')}
           >
-            <Text style={[staticStyles.lsMarkBtnText, { color: colors.text, opacity: location?.lat ? 1 : 0.4 }]} suppressHighlighting={true}>◉ MARK POSITION</Text>
+            <Text style={[staticStyles.lsMarkBtnText, { color: colors.text, opacity: Number.isFinite(location?.lat) ? 1 : 0.4 }]} suppressHighlighting={true}>{'◉ ' + t('workflow.access.markPosition')}</Text>
           </TouchableOpacity>
           {markToast && <Text style={[staticStyles.markToast, { color: colors.text2, textAlign: 'center' }]}>✓ {markToast}</Text>}
           <View style={staticStyles.lsBtns}>
@@ -960,18 +1044,18 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
               </TouchableOpacity>
             )}
           </View>
-          {mgrsFormatted && (
+          {(mgrsFormatted || speaking) && (
             <TouchableOpacity
               style={[staticStyles.voiceBtn, { borderColor: colors.border }, !isPro && staticStyles.voiceBtnLocked]}
-              onPress={() => { tapMedium(); isPro ? speakMGRS(mgrsFormatted) : onShowProGate('Voice Readout'); }}
+              onPress={onVoicePress}
               accessibilityRole="button"
-              accessibilityLabel={isPro ? t('grid.speakGrid') : 'Voice readout. Pro feature, locked.'}
+              accessibilityLabel={speaking ? t('workflow.voice.stop') : t('grid.speakGrid')}
             >
-              <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.text3 }]}>{t('grid.speakGrid')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
+              <Text style={[staticStyles.voiceBtnText, { color: isPro ? colors.text2 : colors.text3 }]}>{speaking ? t('workflow.voice.stop') : t('grid.speakGrid')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
             </TouchableOpacity>
           )}
           <View style={staticStyles.footerRow}>
-            <TouchableOpacity onPress={onEnterHud} accessibilityRole="button" accessibilityLabel={isPro ? t('grid.hud') : 'HUD mode. Pro feature'}>
+            <TouchableOpacity onPress={onEnterHud} accessibilityRole="button" accessibilityLabel={isPro ? t('grid.hud') : `${t('grid.hudMode')}. ${t('workflow.access.locked')}`}>
               <Text style={[staticStyles.rateLink, { color: colors.text3 }]}>◈ {t('grid.hud')}{!isPro ? '  ' + t('grid.pro') : ''}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => { tapLight(); onShowSupport(); }} accessibilityRole="button" accessibilityLabel={t('grid.help')}>
@@ -986,10 +1070,10 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
       </ScrollView>
       <View style={[staticStyles.lsVDiv, { backgroundColor: colors.border2 }]} />
       <View style={staticStyles.lsRight}>
-        {waypoint && arrowAngle !== null ? (
+        {waypoint ? (
           <View style={staticStyles.lsArrow}>
-            <WayfinderArrow bearing={arrowAngle} size={arrowSize} />
-            <Text style={[staticStyles.lsBearing, { color: colors.text }]}>{Math.round(bearing)}°</Text>
+            {arrowAngle !== null ? <WayfinderArrow bearing={arrowAngle} size={arrowSize} /> : bearing !== null ? <HeadingUnavailable /> : <Text style={[staticStyles.headingUnavailable, { color: colors.text3 }]}>{t('gps.noSignal')}</Text>}
+            <Text style={[staticStyles.lsBearing, { color: colors.text }]}>{formatBearing(bearing, 'true')}</Text>
           </View>
         ) : (
           <View style={staticStyles.lsNoWp}>
@@ -1005,11 +1089,12 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
 }
 
 // ─── ATOMS ───────────────────────────────────────────────────────────────────
-function SignalBadge({ isLoading, location }) {
+function SignalBadge({ isLoading, location, status }) {
   const colors = useColors();
   const { t } = useTranslation();
-  const color = isLoading ? colors.border : location ? colors.text : colors.border;
-  const label = isLoading ? t('gps.acquiring') : location ? t('gps.gpsFix') : t('gps.noSignal');
+  const color = location ? colors.text : colors.border;
+  const label = status === 'stale' ? t('gps.staleFix', { defaultValue: 'STALE FIX' })
+    : location ? t('gps.gpsFix') : isLoading ? t('gps.acquiring') : t('gps.noSignal');
   return (
     <View style={staticStyles.signal} accessibilityLiveRegion="polite" accessibilityLabel={`GPS status: ${label}`}>
       <View style={[staticStyles.signalDot, { backgroundColor: color }]} />
@@ -1017,17 +1102,40 @@ function SignalBadge({ isLoading, location }) {
     </View>
   );
 }
+function FixDetails({ positionStatus }) {
+  const colors = useColors();
+  const { t } = useTranslation();
+  const { fix, ageSeconds, sourceFallback, status } = positionStatus || {};
+  if (!fix) return null;
+  const source = fix.source === 'external'
+    ? t('gps.sourceExternal', { defaultValue: 'EXTERNAL GPS' })
+    : t('gps.sourcePhone', { defaultValue: 'PHONE GPS' });
+  const age = fix.timestampSource === 'received'
+    ? t('gps.receivedAge', { seconds: ageSeconds, defaultValue: 'Received {{seconds}}s ago' })
+    : t('gps.observedAge', { seconds: ageSeconds, defaultValue: 'Observed {{seconds}}s ago' });
+  const accuracy = Number.isFinite(fix.accuracy) ? `±${fix.accuracy}m` : t('gps.accuracyUnknown', { defaultValue: 'Accuracy unknown' });
+  return <View style={staticStyles.fixDetails}>
+    <Text style={[staticStyles.fixDetailsText, { color: colors.text3 }]}>{source} · {age} · {accuracy}</Text>
+    {sourceFallback && status === 'fresh' && <Text style={[staticStyles.fixDetailsText, { color: colors.text3 }]}>{t('gps.phoneFallback', { defaultValue: 'External fix unavailable · using phone GPS' })}</Text>}
+  </View>;
+}
+function HeadingUnavailable() {
+  const colors = useColors();
+  const { t } = useTranslation();
+  return <Text style={[staticStyles.headingUnavailable, { color: colors.text3 }]}>{t('navigation.trueHeadingUnavailable', { defaultValue: 'True heading unavailable. Use the numeric true bearing with a map or compass.' })}</Text>;
+}
 function Div() {
   const colors = useColors();
   return <View style={[staticStyles.divider, { backgroundColor: colors.border2 }]} />;
 }
 function ErrBlock({ error, retry, compact }) {
   const colors = useColors();
+  const { t } = useTranslation();
   return (
     <View style={[staticStyles.errBlock, compact && { paddingVertical: 10 }]}>
       <Text style={[staticStyles.errText, { color: colors.text2 }]} maxFontSizeMultiplier={1.3}>{error}</Text>
-      <TouchableOpacity style={[staticStyles.retryBtn, { borderColor: colors.border }]} onPress={retry} accessibilityRole="button" accessibilityLabel="Retry GPS signal acquisition">
-        <Text style={[staticStyles.retryText, { color: colors.text2 }]}>RETRY</Text>
+      <TouchableOpacity style={[staticStyles.retryBtn, { borderColor: colors.border }]} onPress={retry} accessibilityRole="button" accessibilityLabel={`${t('workflow.retry')} GPS`}>
+        <Text style={[staticStyles.retryText, { color: colors.text2 }]}>{t('workflow.retry')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -1046,33 +1154,29 @@ function Crosshair({ size = 50 }) {
 // ─── HUD OVERLAY ────────────────────────────────────────────────────────────
 // Full-screen simplified display: large MGRS + optional waypoint arrow.
 // Tap anywhere to exit. Black background for maximum contrast.
-function HUDOverlay({ mgrsFormatted, bearing, arrowAngle, distance, compassHeading, waypoint, onExit }) {
+function HUDOverlay({ mgrsFormatted, bearing, arrowAngle, distance, compassHeading, compassReference, positionStatus, location, waypoint, onExit }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
-    <TouchableOpacity
-      style={staticStyles.hudRoot}
-      activeOpacity={1}
-      onPress={onExit}
-      accessibilityRole="button"
-      accessibilityLabel={t('grid.tapToExit')}
-    >
+    <View style={[staticStyles.hudRoot, { backgroundColor: colors.bg }]} accessibilityViewIsModal>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 40 }}>
       <View style={staticStyles.hudContent}>
-        {compassHeading !== null && (
-          <Text style={[staticStyles.hudHeading, { color: colors.text2 }]}>HDG {Math.round(compassHeading)}°</Text>
-        )}
+        <Text style={[staticStyles.hudHeading, { color: colors.text2 }]}>HDG {formatBearing(compassHeading, compassReference)}</Text>
+        <SignalBadge location={location} status={positionStatus?.status} />
+        <FixDetails positionStatus={positionStatus} />
         <Text
           style={[staticStyles.hudMgrs, { color: colors.text }]}
-          numberOfLines={2}
+          accessibilityLabel={t('workflow.access.hudPosition', { value: mgrsFormatted || t('gps.noSignal') })}
+          numberOfLines={4}
           adjustsFontSizeToFit
           minimumFontScale={0.5}
         >
-          {mgrsFormatted || '\u2014'}
+          {mgrsFormatted || t('gps.noSignal')}
         </Text>
-        {waypoint && arrowAngle !== null && (
+        {waypoint && (
           <View style={staticStyles.hudWpSection}>
-            <WayfinderArrow bearing={arrowAngle} size={120} />
-            {bearing !== null && <Text style={[staticStyles.hudBearing, { color: colors.text }]}>{Math.round(bearing)}°</Text>}
+            {arrowAngle !== null ? <WayfinderArrow bearing={arrowAngle} size={120} /> : bearing !== null && <HeadingUnavailable />}
+            <Text style={[staticStyles.hudBearing, { color: colors.text }]}>{formatBearing(bearing, 'true')}</Text>
             {distance !== null && (
               <Text style={[staticStyles.hudDist, { color: colors.text2 }]}>{formatDistance(distance)}</Text>
             )}
@@ -1080,19 +1184,25 @@ function HUDOverlay({ mgrsFormatted, bearing, arrowAngle, distance, compassHeadi
           </View>
         )}
       </View>
-      <Text style={[staticStyles.hudExit, { color: colors.text3 }]}>{t('grid.tapToExit')}</Text>
-    </TouchableOpacity>
+      </ScrollView>
+      <TouchableOpacity style={{ minHeight: 56, padding: 16, alignItems: 'center', borderTopWidth: 1, borderColor: colors.border, width: '100%' }} onPress={onExit} accessibilityRole="button">
+        <Text style={{ ...TYPE.heading, color: colors.text }}>{t('workflow.access.exitHud')}</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
 // ─── STYLES ──────────────────────────────────────────────────────────────────
 // Structural styles only — colours applied inline via useColors()
 const staticStyles = StyleSheet.create({
+  fixDetails: { paddingVertical: 4, gap: 3 },
+  fixDetailsText: { ...TYPE.body, fontSize: 12, textAlign: 'center' },
+  headingUnavailable: { ...TYPE.body, fontSize: 13, lineHeight: 18, textAlign: 'center', maxWidth: 300, padding: 12 },
   root: { flex:1 },
   // Error boundary fallback (hardcoded red — class component, no hooks)
   errorRoot: { flex:1, backgroundColor:'#000000' },
   errorContainer: { flex:1, justifyContent:'center', alignItems:'center', padding:20 },
-  errorTitle: { fontFamily:'monospace', fontSize:18, fontWeight:'700', letterSpacing:4, color:'#CC0000', marginBottom:16, textAlign:'center' },
+  errorTitle: { fontSize:18, fontWeight:'700', letterSpacing:4, color:'#CC0000', marginBottom:16, textAlign:'center' },
   errorMsg: { fontSize:12, color:'#BB3333', textAlign:'center', marginBottom:12, lineHeight:18 },
   errorDetail: { fontSize:10, color:'#AA2222', textAlign:'center', marginBottom:24, lineHeight:14, fontStyle:'italic' },
   errorRetryBtn: { borderWidth:1, borderColor:'#CC0000', backgroundColor:'#330000', paddingHorizontal:32, paddingVertical:12 },
@@ -1109,14 +1219,14 @@ const staticStyles = StyleSheet.create({
   // Portrait
   portraitRoot: { flexGrow:1, paddingHorizontal:20, paddingTop:12, paddingBottom:20 },
   header: { flexWrap:'wrap', rowGap:8, flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingBottom:10 },
-  appTitle: { fontFamily:'monospace', fontSize:16, fontWeight:'700', letterSpacing:4 },
+  appTitle: { ...TYPE.heading, fontSize:16, letterSpacing:4 },
   // Landscape
   landscapeRoot: { flex:1, flexDirection:'row' },
   lsLeft: { flexGrow:1, paddingHorizontal:16, paddingVertical:8 },
   lsVDiv: { width:1, marginVertical:8 },
   lsRight: { flex:1, alignItems:'center', justifyContent:'center', paddingHorizontal:8 },
   lsHeader: { flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingBottom:6 },
-  lsTitle: { fontFamily:'monospace', fontSize:12, fontWeight:'700', letterSpacing:3 },
+  lsTitle: { ...TYPE.heading, fontSize:12, letterSpacing:3 },
   lsWpInfo: { paddingVertical:8, gap:3 },
   lsWpLabel: { ...TYPE.heading, fontSize:10, letterSpacing:0.8, },
   lsWpGrid: { ...TYPE.data, fontSize:12, letterSpacing:1.2 },
@@ -1171,11 +1281,13 @@ const staticStyles = StyleSheet.create({
   rateLink: { ...TYPE.label, fontSize:12, letterSpacing:0.8, paddingVertical:6 },
   footerRow: { flexWrap:'wrap', flexDirection:'row', justifyContent:'center', gap:20, marginBottom:2 },
   // Upsell
-  upsellRoot: { flex:1, alignItems:'center', justifyContent:'center', gap:16, padding:40 },
-  upsellTitle: { ...TYPE.heading, fontSize:24, letterSpacing:0.8 },
-  upsellSub: { ...TYPE.body, fontSize:12, letterSpacing:0.8 },
-  upsellBtn: { borderWidth:1, paddingHorizontal:32, paddingVertical:14 },
+  upsellRoot: { flexGrow:1, alignItems:'center', justifyContent:'center', gap:16, paddingHorizontal:28, paddingVertical:40 },
+  upsellEyebrow: { ...TYPE.label, fontSize:11, letterSpacing:1.2 },
+  upsellTitle: { ...TYPE.heading, fontSize:24, letterSpacing:0.8, textAlign:'center' },
+  upsellBody: { ...TYPE.body, fontSize:14, lineHeight:21, letterSpacing:0.3, textAlign:'center', maxWidth:340 },
+  upsellBtn: { borderWidth:1, paddingHorizontal:32, paddingVertical:14, minHeight:44, justifyContent:'center' },
   upsellBtnText: { ...TYPE.label, fontSize:12, letterSpacing:0.8 },
+  upsellNote: { ...TYPE.body, fontSize:12, letterSpacing:0.3, textAlign:'center', maxWidth:340 },
   // HUD overlay
   hudRoot: { ...StyleSheet.absoluteFillObject, backgroundColor:'#000000', zIndex:100, justifyContent:'center', alignItems:'center', padding:24 },
   hudContent: { flex:1, justifyContent:'center', alignItems:'center', width:'100%' },

@@ -15,6 +15,8 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Marker } from 'react-native-maps';
 import { PEER_STATUS, projectGhostPosition } from '../utils/teamAwareness';
 import { formatMGRS, toMGRS, calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
+import { formatBearing } from '../utils/tactical';
+import { TYPE } from '../utils/typography';
 
 const SOS_RED = '#ff3b30';
 
@@ -45,9 +47,9 @@ const TeamMarker = React.memo(function TeamMarker({ peer, origin, colors, now, o
   try { desc = formatMGRS(toMGRS(lat, lon, 5)); } catch {}
   if (origin && Number.isFinite(origin.lat)) {
     try {
-      const brg = Math.round(calculateBearing(origin.lat, origin.lon, lat, lon));
+      const brg = formatBearing(calculateBearing(origin.lat, origin.lon, lat, lon), 'true', true);
       const dst = formatDistance(calculateDistance(origin.lat, origin.lon, lat, lon));
-      desc += `\nBRG ${String(brg).padStart(3, '0')}° DST ${dst}`;
+      desc += `\nBRG ${brg} DST ${dst}`;
     } catch {}
   }
   desc += `\n${peer.status.toUpperCase()} · ${ageLabel(peer.ageMs)}`;
@@ -121,7 +123,7 @@ const styles = StyleSheet.create({
   dotProjected: { borderStyle: 'dashed', backgroundColor: 'transparent' },
   dotSos: { width: 20, height: 20, borderRadius: 10, borderWidth: 3 },
   label: {
-    fontFamily: 'monospace', fontSize: 9, letterSpacing: 1,
+    ...TYPE.data, fontSize: 9, letterSpacing: 1,
     marginTop: 2, fontWeight: '700', maxWidth: 90, textAlign: 'center',
     paddingHorizontal: 4, paddingVertical: 2, borderRadius: 2,
   },

@@ -6,6 +6,7 @@ import { TYPE } from '../utils/typography';
 import { useTranslation } from '../hooks/useTranslation';
 import { PEER_STATUS, TEAM_ROLES } from '../utils/teamAwareness';
 import { calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
+import { formatBearing } from '../utils/tactical';
 
 /**
  * TeamRosterSheet — who is on the mesh, where, and how fresh.
@@ -60,7 +61,7 @@ const PeerRow = React.memo(function PeerRow({ peer, origin, colors, onPress }) {
       style={[styles.row, { borderColor: colors.border, opacity: peer.sos ? 1 : peer.opacity }]}
       onPress={() => onPress && onPress(peer)}
       accessibilityRole="button"
-      accessibilityLabel={`${peer.name}, ${peer.status}${peer.sos ? ', emergency' : ''}${rel ? `, bearing ${rel.bearing} degrees, ${formatDistance(rel.distance)}` : ''}`}
+      accessibilityLabel={`${peer.name}, ${peer.status}${peer.sos ? ', emergency' : ''}${rel ? `, bearing ${rel.bearing} degrees true, ${formatDistance(rel.distance)}` : ''}`}
     >
       <View style={styles.rowMain}>
         <View style={styles.nameLine}>
@@ -74,7 +75,7 @@ const PeerRow = React.memo(function PeerRow({ peer, origin, colors, onPress }) {
         </View>
         {rel && (
           <Text style={[styles.rel, { color: colors.text2 }]}>
-            {String(rel.bearing).padStart(3, '0')}° · {formatDistance(rel.distance)}
+            {formatBearing(rel.bearing, 'true', true)} · {formatDistance(rel.distance)}
           </Text>
         )}
       </View>

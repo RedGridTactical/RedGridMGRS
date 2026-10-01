@@ -34,8 +34,8 @@ export function getRouteLegs(waypoints) {
     const bearing = calculateBearing(from.lat, from.lon, to.lat, to.lon);
     const mgrs = toMGRS(to.lat, to.lon, 5);
     legs.push({
-      from: { lat: from.lat, lon: from.lon, name: from.name || '' },
-      to: { lat: to.lat, lon: to.lon, name: to.name || '' },
+      from: { lat: from.lat, lon: from.lon, name: from.label || from.name || '' },
+      to: { lat: to.lat, lon: to.lon, name: to.label || to.name || '', note: to.note || '' },
       bearing: Math.round(bearing * 10) / 10,
       distance: Math.round(distance * 10) / 10,
       mgrs: formatMGRS(mgrs),
@@ -95,9 +95,40 @@ export function estimateTime(distanceM, paceMinPerKm) {
  * @returns {string}
  */
 export function formatTime(minutes) {
-  if (!minutes || minutes <= 0) return '0min';
-  const h = Math.floor(minutes / 60);
-  const m = Math.round(minutes % 60);
+  if (!Number.isFinite(minutes) || minutes <= 0) return '0min';
+  const rounded = Math.round(minutes);
+  const h = Math.floor(rounded / 60);
+  const m = rounded % 60;
   if (h === 0) return `${m}min`;
   return `${h}hr ${m}min`;
+}
+
+/** Move one complete point, retaining its label, notes and provenance. */
+export function moveRoutePoint(points, id, direction) {
+  if (!Array.isArray(points) || ![-1, 1].includes(direction)) return points;
+  const index = points.findIndex(point => point.id === id);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= points.length) return points;
+  const next = [...points];
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
+}
+
+/** Optional planning inputs. UTC is explicit; impossible dates never roll over. */
+export function parseRoutePlanInputs({ pace = '', plannedStart = '', notes = '' }) {
+  const paceText = String(pace).trim();
+  const paceMinPerKm = paceText ? Number(paceText) : null;
+  if (paceText && (!/^\d+(?:\.\d+)?$/.test(paceText) || !Number.isFinite(paceMinPerKm)
+    || paceMinPerKm < 1 || paceMinPerKm > 120)) throw new Error('invalid-pace');
+  const startText = String(plannedStart).trim();
+  let plannedStartAt = null;
+  if (startText) {
+    if (!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(startText)) throw new Error('invalid-start');
+    plannedStartAt = Date.parse(startText.replace(' ', 'T') + ':00.000Z');
+    if (!Number.isFinite(plannedStartAt) || plannedStartAt <= 0
+      || new Date(plannedStartAt).toISOString().slice(0, 16).replace('T', ' ') !== startText) {
+      throw new Error('invalid-start');
+    }
+  }
+  return { paceMinPerKm, plannedStartAt, notes: String(notes).trim().slice(0, 500) };
 }

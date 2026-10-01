@@ -2,9 +2,10 @@
  * ProGate — Paywall overlay with 2-tier pricing (Monthly / Lifetime).
  * Shows feature list, tier selector, and purchase/restore buttons.
  */
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { Modal } from './FieldModal';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '../utils/ThemeContext';
 import { TYPE } from '../utils/typography';
 import { tapMedium, tapLight } from '../utils/haptics';
@@ -14,11 +15,11 @@ import { detectFreeTrial } from '../utils/iapOffers';
 // Outcome-led rows matching what the gates actually sell \u2014 a user gated on
 // "Offline Maps" must land on a list that leads with offline maps.
 const PRO_FEATURES = [
-  { icon: '\ud83d\uddfa\ufe0f', labelKey: 'proGate.offlineMaps', subKey: 'proGate.offlineMapsSub' },
-  { icon: '\ud83d\udce1', labelKey: 'proGate.meshAwareness', subKey: 'proGate.meshAwarenessSub' },
-  { icon: '\ud83e\udded', labelKey: 'proGate.allTools', subKey: 'proGate.allToolsSub' },
-  { icon: '\ud83d\udccd', labelKey: 'proGate.waypointsRoutes', subKey: 'proGate.waypointsRoutesSub' },
-  { icon: '\ud83d\udccb', labelKey: 'proGate.reportsThemes', subKey: 'proGate.reportsThemesSub' },
+  { id: 'offline', icon: 'MAP', labelKey: 'proGate.offlineMaps', subKey: 'proGate.offlineMapsSub' },
+  { id: 'radio', icon: 'RF', labelKey: 'proGate.meshAwareness', subKey: 'proGate.meshAwarenessSub' },
+  { id: 'tools', icon: 'NAV', labelKey: 'proGate.allTools', subKey: 'proGate.allToolsSub' },
+  { id: 'routes', icon: 'RT', labelKey: 'proGate.waypointsRoutes', subKey: 'proGate.waypointsRoutesSub' },
+  { id: 'reports', icon: 'TXT', labelKey: 'proGate.reportsThemes', subKey: 'proGate.reportsThemesSub' },
 ];
 
 // Pricing (2026-08-01, owner): two paid SKUs. Annual sold one unit in its entire
@@ -38,10 +39,22 @@ const TIERS = [
 
 export function ProGate({
   visible, onClose, featureName, product, products, trialEligible,
-  isPurchasing, onPurchase, onRestore, selectedTier, onSelectTier,
+  isPurchasing, onPurchase, onRestore, selectedTier, onSelectTier, context, onRetryPrices,
 }) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const [retrying, setRetrying] = useState(false);
+  const retryRef = useRef(false);
+  const workflow = ['offline', 'radio', 'tools', 'routes', 'reports', 'photos', 'display', 'receiver'].includes(context) ? context : null;
+  const lead = { photos: 'tools', display: 'reports', receiver: 'radio' }[workflow] || workflow;
+  const features = [...PRO_FEATURES].sort((a, b) => Number(b.id === lead) - Number(a.id === lead));
+  const retryPrices = async () => {
+    if (retryRef.current || isPurchasing) return;
+    retryRef.current = true; setRetrying(true);
+    try { await onRetryPrices?.(); } catch { /* existing unavailable notice remains */ }
+    finally { retryRef.current = false; setRetrying(false); }
+  };
 
   // Live store prices only. When the store is unreachable (offline field use)
   // we show placeholders and disable purchase instead of hardcoded USD —
@@ -75,9 +88,10 @@ export function ProGate({
       onRequestClose={onClose}
       onShow={() => {}}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingTop: Math.max(20, insets.top), paddingBottom: Math.max(20, insets.bottom) }]}>
         <View style={[styles.modal, { backgroundColor: colors.card, borderColor: colors.text2 }]} accessibilityViewIsModal={true}>
 
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={[styles.badge, { color: colors.bg, backgroundColor: colors.text }]}>{t('proGate.badge')}</Text>
@@ -89,18 +103,19 @@ export function ProGate({
             </Text>
           </View>
 
+          {workflow && <Text style={[styles.context, { color: colors.text }]}>{t(`workflow.pro.${workflow}`)}</Text>}
           {/* Feature list */}
-          <ScrollView style={styles.features} showsVerticalScrollIndicator={false}>
-            {PRO_FEATURES.map((f, i) => (
+          <View style={styles.features}>
+            {features.map((f, i) => (
               <View key={i} style={[styles.featureRow, { borderBottomColor: colors.text5 }]}>
-                <Text style={styles.featureIcon} importantForAccessibility="no" accessibilityElementsHidden={true}>{f.icon}</Text>
+                <Text style={[styles.featureIcon, { ...TYPE.data, color: colors.text2, fontSize: 11 }]} importantForAccessibility="no" accessibilityElementsHidden={true}>{f.icon}</Text>
                 <View style={styles.featureText}>
                   <Text style={[styles.featureLabel, { color: colors.text }]}>{t(f.labelKey)}</Text>
                   <Text style={[styles.featureSub, { color: colors.text3 }]}>{t(f.subKey)}</Text>
                 </View>
               </View>
             ))}
-          </ScrollView>
+          </View>
 
           {/* Divider */}
           <View style={[styles.divider, { backgroundColor: colors.border2 }]} />
@@ -123,7 +138,7 @@ export function ProGate({
                   onPress={() => { tapLight(); onSelectTier?.(tier.id); }}
                   activeOpacity={0.7}
                   accessibilityRole="radio"
-                  accessibilityState={{ selected: isActive }}
+                  accessibilityState={{ checked: isActive, selected: isActive }}
                   accessibilityLabel={`${t(tier.labelKey)} ${getPriceForTier(tier.id) || ''}`}
                 >
                   {badgeKey && (
@@ -163,6 +178,10 @@ export function ProGate({
             </Text>
           )}
 
+          {onRetryPrices && <TouchableOpacity onPress={retryPrices} disabled={retrying || isPurchasing} style={styles.restoreBtn}
+            accessibilityRole="button" accessibilityState={{ disabled: retrying || isPurchasing }}>
+            {retrying ? <ActivityIndicator color={colors.text} /> : <Text style={[styles.restoreText, { color: colors.text }]}>{t('workflow.pro.retryPrices')}</Text>}
+          </TouchableOpacity>}
           {/* Trial terms subtext — only when the free trial is being offered */}
           {showTrial && !isPurchasing && selectedPriceLoaded && (
             <Text style={[styles.trialSub, { color: colors.text3 }]}>
@@ -185,6 +204,7 @@ export function ProGate({
             {t(activeTier === 'monthly' ? 'proGate.legal' : 'proGate.legalOneTime')}
           </Text>
 
+          </ScrollView>
         </View>
       </View>
     </Modal>
@@ -203,9 +223,12 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 380,
     maxHeight: '100%',
+    flexShrink: 1,
     borderWidth: 1,
-    padding: 24,
+    padding: 0,
   },
+  scrollContent: { padding: 24 },
+  context: { ...TYPE.body, fontSize: 15, marginBottom: 16 },
   header: { alignItems: 'center', marginBottom: 20 },
   badge: {
     ...TYPE.label,
@@ -214,7 +237,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   title: {
-    fontFamily: 'monospace', fontSize: 22, fontWeight: '700',
+    ...TYPE.heading, fontSize: 22,
     letterSpacing: 6, marginBottom: 6,
   },
   subtitle: {
@@ -222,7 +245,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center', letterSpacing: 0.3,
   },
-  features: { maxHeight: 160, flexShrink: 1, marginBottom: 12 },
+  features: { marginBottom: 12 },
   featureRow: {
     flexDirection: 'row', alignItems: 'flex-start',
     paddingVertical: 8, borderBottomWidth: 1,
@@ -274,10 +297,10 @@ const styles = StyleSheet.create({
     fontSize: 12, letterSpacing: 0.3, textAlign: 'center',
     marginTop: -2, marginBottom: 8,
   },
-  restoreBtn: { paddingVertical: 10, alignItems: 'center', marginBottom: 4, minHeight: 44 },
+  restoreBtn: { minHeight: 44, justifyContent: 'center', paddingVertical: 10, alignItems: 'center', marginBottom: 4, minHeight: 44 },
   restoreText: {
     ...TYPE.label, fontSize: 12, letterSpacing: 0.8 },
-  closeBtn: { paddingVertical: 8, alignItems: 'center', marginBottom: 12, minHeight: 44 },
+  closeBtn: { minHeight: 44, justifyContent: 'center', paddingVertical: 8, alignItems: 'center', marginBottom: 12, minHeight: 44 },
   closeText: {
     ...TYPE.label, fontSize: 12, letterSpacing: 0.8 },
   legal: { ...TYPE.body,

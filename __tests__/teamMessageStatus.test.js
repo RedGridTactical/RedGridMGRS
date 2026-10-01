@@ -1,0 +1,34 @@
+jest.mock('react/jsx-runtime', () => ({ jsx: (type, props) => ({ type, props, children: [props.children] }), jsxs: (type, props) => ({ type, props, children: [props.children] }) }));
+jest.mock('react', () => ({ ...require('./helpers/hookHarness')(), createElement: (type, props, ...children) => ({ type, props: props || {}, children }) }));
+jest.mock('react-native', () => ({ View: 'View', Text: 'Text', TouchableOpacity: 'Button', StyleSheet: { create: value => value } }));
+jest.mock('../src/utils/ThemeContext', () => ({ useColors: () => ({}) }));
+jest.mock('../src/utils/typography', () => ({ TYPE: {} }));
+jest.mock('../src/hooks/useTranslation', () => ({ useTranslation: () => ({ t: key => key }) }));
+jest.mock('../src/utils/fieldAlert', () => ({ Alert: { alert: jest.fn() } }));
+jest.mock('../src/components/FieldModal', () => ({ Modal: 'Modal' }));
+jest.mock('../src/components/FieldInput', () => ({ TextInput: 'Input' }));
+const React = require('react');
+const { TeamMessageBar } = require('../src/components/TeamMessageBar');
+const nodes = tree => !tree || typeof tree !== 'object' ? [] : [tree, ...(tree.children || []).flat(Infinity).flatMap(nodes)];
+const texts = tree => nodes(tree).filter(node => node.type === 'Text').map(node => node.children.join(''));
+const render = props => React.__render(() => TeamMessageBar(props));
+beforeEach(() => React.__reset());
+test('a failed current send supersedes an earlier parent radioAccepted status and keeps its draft', async () => {
+  const onDraftChange = jest.fn();
+  const props = { onSend: jest.fn(async () => false), draft: 'FIELD NOTE', onDraftChange, status: { status: 'radioAccepted' } };
+  let tree = render(props);
+  const send = nodes(tree).find(node => node.type === 'Button' && texts(node).includes('team.msgSend'));
+  await send.props.onPress(); tree = render(props);
+  expect(texts(tree)).toContain('workflow.radio.failed');
+  expect(texts(tree)).not.toContain('workflow.radio.radioAccepted');
+  expect(onDraftChange).not.toHaveBeenCalled();
+});
+test('radio acceptance cannot clear a newer draft typed while the native send was pending', async () => {
+  let release; const onDraftChange = jest.fn();
+  let props = { onSend: jest.fn(() => new Promise(resolve => { release=resolve; })), draft: 'FIRST', onDraftChange };
+  const tree = render(props);
+  const send = nodes(tree).find(node => node.type === 'Button' && texts(node).includes('team.msgSend'));
+  const pending = send.props.onPress();
+  props = { ...props, draft: 'NEWER' }; render(props); release(true); await pending;
+  expect(onDraftChange).not.toHaveBeenCalled();
+});

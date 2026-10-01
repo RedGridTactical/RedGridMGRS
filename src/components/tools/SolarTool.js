@@ -1,6 +1,8 @@
+import { useSessionDraft } from '../../hooks/useSessionDraft';
+import { validToolPoint } from '../../utils/toolWorkflow';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { solarBearing, lunarBearing } from '../../utils/tactical';
+import { solarBearing, lunarBearing, formatBearing } from '../../utils/tactical';
 import { ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
 import { useColors } from '../../utils/ThemeContext';
 import { useTranslation } from '../../hooks/useTranslation';
@@ -10,7 +12,7 @@ export function SolarTool({ location }) {
   const colors = useColors();
   const { t } = useTranslation();
   const [now, setNow] = useState(new Date());
-  const [body, setBody] = useState('sun');
+  const [body, setBody] = useSessionDraft('tool:solar:body', 'sun');
 
   // Refresh every minute
   useEffect(() => {
@@ -18,7 +20,7 @@ export function SolarTool({ location }) {
     return () => clearInterval(id);
   }, []);
 
-  if (!location || typeof location.lat !== 'number' || typeof location.lon !== 'number') {
+  if (!validToolPoint(location)) {
     return <ToolHint text={t('gps.noFixSolar')} />;
   }
 
@@ -35,7 +37,10 @@ export function SolarTool({ location }) {
   }
 
   const data = body === 'sun' ? sun : moon;
-  const az = Math.round(data.azimuth || 0);
+  if (!Number.isFinite(data.azimuth) || !Number.isFinite(data.altitude)) {
+    return <ToolHint text={t('toolLabels.calcError')} />;
+  }
+  const az = Math.round(data.azimuth) % 360;
   const sunAlt = typeof sun.altitude === 'number' && isFinite(sun.altitude) ? Math.round(sun.altitude) : 0;
   const moonAlt = typeof moon.altitude === 'number' && isFinite(moon.altitude) ? Math.round(moon.altitude) : 0;
   const alt = body === 'sun' ? sunAlt : moonAlt;
@@ -65,7 +70,7 @@ export function SolarTool({ location }) {
       )}
 
       <View style={styles.results}>
-        <ToolResult label={body === 'sun' ? t('toolLabels.sunBearing') : t('toolLabels.moonBearing')} value={`${az}° (${cardinal})`} primary />
+        <ToolResult label={body === 'sun' ? t('toolLabels.sunBearing') : t('toolLabels.moonBearing')} value={`${formatBearing(az, 'true')} (${cardinal})`} primary />
         <ToolResult label={t('toolLabels.elevation')} value={`${alt}°`} />
         <ToolDivider />
         <ToolHint text={body === 'sun'

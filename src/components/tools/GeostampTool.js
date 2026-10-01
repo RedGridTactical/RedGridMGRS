@@ -1,335 +1,151 @@
-/**
- * GeostampTool — Photo geostamp: burns MGRS + DTG onto a photo.
- * Pro-only feature. Takes photo via camera or picks from library,
- * overlays MGRS grid + date-time group, saves to camera roll.
- *
- * Uses react-native-view-shot to composite the overlay onto the image.
- * No photos are uploaded or transmitted. All processing is on-device.
- *
- * HARDENING:
- *   - All native modules loaded defensively
- *   - Permission requests have explicit error handling
- *   - Mounted checks on all async state updates
- *   - Never throws — graceful degradation throughout
- */
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Dimensions } from 'react-native';
+/** Device annotations are separate from original image metadata. Processing is local. */
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Alert } from '../../utils/fieldAlert';
 import { useColors } from '../../utils/ThemeContext';
-import { tapMedium, tapHeavy, notifySuccess, notifyWarning } from '../../utils/haptics';
-import { toMGRS, formatMGRS } from '../../utils/mgrs';
+import { notifySuccess } from '../../utils/haptics';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useSessionDraft } from '../../hooks/useSessionDraft';
+import { createDeviceAnnotation, photoExportSize, formatWorkflowUTC } from '../../utils/toolWorkflow';
+import { ToolHint } from './ToolShared';
 import { TYPE } from '../../utils/typography';
 
-// ─── Defensive module loading ────────────────────────────────────────────────
-let ImagePicker = null;
-let MediaLibrary = null;
-let ViewShot = null;
-
+let ImagePicker = null, MediaLibrary = null, ViewShot = null;
 try { ImagePicker = require('expo-image-picker'); } catch {}
 try { MediaLibrary = require('expo-media-library'); } catch {}
 try { ViewShot = require('react-native-view-shot'); } catch {}
-
-const captureRef = ViewShot?.captureRef || null;
-
-/**
- * Generate DTG string: DDHHMMz MON YYYY (Zulu time)
- */
-function getDTG() {
-  const n = new Date();
-  const dd = String(n.getUTCDate()).padStart(2, '0');
-  const hh = String(n.getUTCHours()).padStart(2, '0');
-  const mm = String(n.getUTCMinutes()).padStart(2, '0');
-  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  return `${dd}${hh}${mm}Z ${months[n.getUTCMonth()]} ${n.getUTCFullYear()}`;
-}
+const imageSize = uri => new Promise((resolve, reject) => Image.getSize(uri, (width, height) => resolve({ width, height }), reject));
+const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
 
 export function GeostampTool({ location }) {
   const colors = useColors();
   const { t } = useTranslation();
-  const [photoUri, setPhotoUri] = useState(null);
-  const [photoDims, setPhotoDims] = useState({ width: 1, height: 1 });
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [captureGrid, setCaptureGrid] = useState(null);
-  const [captureDTG, setCaptureDTG] = useState(null);
+  const { width: windowWidth } = useWindowDimensions();
+  const [draft, setDraft] = useSessionDraft('tool:geostamp:draft', { photo: null, annotation: null });
+  const [availableWidth, setAvailableWidth] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [readyURI, setReadyURI] = useState(null);
+  const [message, setMessage] = useState('');
+  const busyRef = useRef(false);
   const compositeRef = useRef(null);
   const mounted = useRef(true);
+  const latest = useRef({ draft, location });
+  latest.current = { draft, location };
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const { photo, annotation } = draft;
+  const size = photo ? photoExportSize(photo.width, photo.height) : null;
+  const previewWidth = Math.max(120, availableWidth || windowWidth - 64);
+  const previewHeight = size ? previewWidth * size.height / size.width : 0;
+  const modulesAvailable = !!(ImagePicker && MediaLibrary && ViewShot?.captureRef);
 
-  useEffect(() => {
-    mounted.current = true;
-    return () => { mounted.current = false; };
-  }, []);
-
-  // Compute MGRS at capture time
-  const mgrsNow = location
-    ? formatMGRS(toMGRS(location.lat, location.lon, 5))
-    : null;
-
-  const modulesAvailable = ImagePicker && MediaLibrary && captureRef;
-
-  // ─── Take photo with camera ────────────────────────────────────────────
-  const takePhoto = useCallback(async () => {
-    if (!ImagePicker) return;
+  const choosePhoto = async source => {
+    if (!ImagePicker || busyRef.current) return;
+    busyRef.current = true; setBusy(true); setMessage('');
     try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(t('toolLabels.permissionRequired'), t('toolLabels.cameraPermission'));
+      const permission = source === 'camera'
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!mounted.current) return;
+      if (permission.status !== 'granted') {
+        Alert.alert(t('toolLabels.permissionRequired'), t(source === 'camera' ? 'toolLabels.cameraPermission' : 'toolLabels.libraryPermission'));
         return;
       }
-
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ['images'],
-        quality: 0.95,
-        exif: false,
-      });
-
-      if (result.canceled || !result.assets?.[0]) return;
-
+      const options = { mediaTypes: ['images'], quality: 1, exif: false };
+      const result = source === 'camera' ? await ImagePicker.launchCameraAsync(options) : await ImagePicker.launchImageLibraryAsync(options);
+      if (!mounted.current || result.canceled || !result.assets?.[0]?.uri) return;
       const asset = result.assets[0];
-      if (mounted.current) {
-        setPhotoUri(asset.uri);
-        setPhotoDims({ width: asset.width || 1200, height: asset.height || 1600 });
-        setCaptureGrid(mgrsNow);
-        setCaptureDTG(getDTG());
-        setSaved(false);
-      }
-      tapMedium();
-    } catch (err) {
-      if (mounted.current) {
-        Alert.alert(t('toolLabels.cameraError'), err?.message || t('alerts.couldNotTakePhoto'));
-      }
-    }
-  }, [mgrsNow]);
-
-  // ─── Pick from library ─────────────────────────────────────────────────
-  const pickPhoto = useCallback(async () => {
-    if (!ImagePicker) return;
+      const dimensions = await imageSize(asset.uri);
+      if (!mounted.current) return;
+      if (!photoExportSize(dimensions.width, dimensions.height)) throw new Error('INVALID_PHOTO_SIZE');
+      setReadyURI(null);
+      setDraft({ photo: { uri: asset.uri, ...dimensions, source }, annotation: null });
+    } catch {
+      if (mounted.current) { setMessage(t('workflow.photoMissing')); Alert.alert(t('workflow.photoMissing')); }
+    } finally { busyRef.current = false; if (mounted.current) setBusy(false); }
+  };
+  const chooseLibrary = () => Alert.alert(t('workflow.libraryAnnotationTitle'), t('workflow.libraryAnnotationBody'), [
+    { text: t('reports.cancel'), style: 'cancel' },
+    { text: t('workflow.continue'), onPress: () => choosePhoto('library') },
+  ]);
+  const pinAnnotation = () => {
+    if (!photo || busyRef.current) return;
+    const snapshot = createDeviceAnnotation(latest.current.location, Date.now());
+    if (!snapshot) { Alert.alert(t('workflow.annotationNoFix')); return; }
+    setDraft(previous => ({ ...previous, annotation: snapshot }));
+    setMessage('');
+  };
+  const save = async () => {
+    if (!photo || !annotation || !size || readyURI !== photo.uri || !modulesAvailable || busyRef.current) return;
+    const capturedDraft = draft;
+    busyRef.current = true; setBusy(true); setMessage('');
+    let uri;
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(t('toolLabels.permissionRequired'), t('toolLabels.libraryPermission'));
-        return;
+      const permission = await MediaLibrary.requestPermissionsAsync(true);
+      if (!mounted.current || latest.current.draft !== capturedDraft) return;
+      if (permission.status !== 'granted') {
+        Alert.alert(t('toolLabels.permissionRequired'), t('toolLabels.libraryPermission')); return;
       }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        quality: 0.95,
-        exif: false,
-      });
-
-      if (result.canceled || !result.assets?.[0]) return;
-
-      const asset = result.assets[0];
-      if (mounted.current) {
-        setPhotoUri(asset.uri);
-        setPhotoDims({ width: asset.width || 1200, height: asset.height || 1600 });
-        setCaptureGrid(mgrsNow);
-        setCaptureDTG(getDTG());
-        setSaved(false);
-      }
-      tapMedium();
-    } catch (err) {
-      if (mounted.current) {
-        Alert.alert(t('toolLabels.libraryError'), err?.message || t('alerts.couldNotPickPhoto'));
-      }
-    }
-  }, [mgrsNow]);
-
-  // ─── Save geostamped image ─────────────────────────────────────────────
-  const saveGeostamp = useCallback(async () => {
-    if (!captureRef || !compositeRef.current || !MediaLibrary) return;
-
-    if (mounted.current) setSaving(true);
-
-    try {
-      // Request media library write permission
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(t('toolLabels.permissionRequired'), t('toolLabels.writePermission'));
-        if (mounted.current) setSaving(false);
-        return;
-      }
-
-      // Capture the composite view as a high-res image
-      const uri = await captureRef(compositeRef, {
-        format: 'jpg',
-        quality: 0.95,
-        result: 'tmpfile',
-      });
-
-      // Save to camera roll
+      // Wait for the pinned annotation to reach native layout before capture.
+      await nextFrame(); await nextFrame();
+      if (!mounted.current || latest.current.draft !== capturedDraft) return;
+      uri = await ViewShot.captureRef(compositeRef, { format: 'jpg', quality: 0.95, result: 'tmpfile', width: size.width, height: size.height });
+      const actual = await imageSize(uri);
+      if (!mounted.current || latest.current.draft !== capturedDraft) return;
       await MediaLibrary.saveToLibraryAsync(uri);
-
       if (mounted.current) {
-        setSaving(false);
-        setSaved(true);
+        notifySuccess(); setMessage(t('workflow.exportActual', { width: actual.width, height: actual.height }));
       }
-      tapHeavy();
-      notifySuccess();
-      Alert.alert(t('toolLabels.saved'), t('toolLabels.photoSaved'));
-    } catch (err) {
-      if (mounted.current) setSaving(false);
-      notifyWarning();
-      Alert.alert(t('toolLabels.saveError'), err?.message || t('alerts.couldNotSavePhoto'));
+    } catch {
+      if (mounted.current) { setMessage(t('workflow.saveFailed')); Alert.alert(t('workflow.saveFailed')); }
+    } finally {
+      if (uri && ViewShot?.releaseCapture) { try { ViewShot.releaseCapture(uri); } catch {} }
+      busyRef.current = false; if (mounted.current) setBusy(false);
     }
-  }, []);
+  };
+  const action = (label, onPress, disabled = busy) => <TouchableOpacity onPress={onPress} disabled={disabled} accessibilityRole="button" accessibilityState={{ disabled }} style={[styles.button, { borderColor: colors.border, opacity: disabled ? 0.5 : 1 }]}>
+    <Text style={[styles.buttonText, { color: colors.text2 }]}>{label}</Text>
+  </TouchableOpacity>;
 
-  // ─── Clear photo ───────────────────────────────────────────────────────
-  const clearPhoto = useCallback(() => {
-    setPhotoUri(null);
-    setCaptureGrid(null);
-    setCaptureDTG(null);
-    setSaved(false);
-  }, []);
-
-  // Module unavailable fallback
-  if (!modulesAvailable) {
-    return (
-      <View style={styles.unavailable}>
-        <Text style={[styles.unavailableText, { color: colors.text3 }]}>
-          {t('toolLabels.modulesUnavailable')}
-        </Text>
-      </View>
-    );
-  }
-
-  // No GPS fix
-  if (!location) {
-    return (
-      <View style={styles.unavailable}>
-        <Text style={[styles.unavailableText, { color: colors.text3 }]}>
-          {t('gps.waitingForFix')}
-        </Text>
-      </View>
-    );
-  }
-
-  // ─── Render ────────────────────────────────────────────────────────────
-  const screenWidth = Dimensions.get('window').width - 60; // account for padding
-  const aspectRatio = photoDims.width / photoDims.height;
-  const previewWidth = Math.min(screenWidth, 360);
-  const previewHeight = previewWidth / aspectRatio;
-  // Scale font relative to image width for consistent stamp sizing
-  const stampFontSize = Math.max(10, Math.round(previewWidth * 0.038));
-
-  return (
-    <View style={styles.root}>
-      {!photoUri ? (
-        // ─── Source selection ─────────────────────────────────────────
-        <View style={styles.sourceButtons}>
-          <TouchableOpacity
-            style={[styles.sourceBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]}
-            onPress={takePhoto}
-            accessibilityRole="button"
-            accessibilityLabel="Take photo with camera"
-          >
-            <Text style={[styles.sourceBtnText, { color: colors.text }]}>{'\ud83d\udcf7'}  {t('toolLabels.takePhoto')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.sourceBtn, { borderColor: colors.border }]}
-            onPress={pickPhoto}
-            accessibilityRole="button"
-            accessibilityLabel={t('toolLabels.fromLibrary')}
-          >
-            <Text style={[styles.sourceBtnText, { color: colors.text2 }]}>{'\ud83d\uddbc'}  {t('toolLabels.fromLibrary')}</Text>
-          </TouchableOpacity>
-          <Text style={[styles.hint, { color: colors.text3 }]}>
-            {t('toolLabels.currentGrid')}: {mgrsNow || '\u2014'}
-          </Text>
-        </View>
-      ) : (
-        // ─── Preview + save ──────────────────────────────────────────
-        <View style={styles.previewContainer}>
-          {/* Composite view — this is what gets captured */}
-          <View
-            ref={compositeRef}
-            collapsable={false}
-            style={[styles.composite, { width: previewWidth, height: previewHeight }]}
-          >
-            <Image
-              source={{ uri: photoUri }}
-              style={styles.previewImage}
-              resizeMode="cover"
-            />
-            {/* Geostamp overlay bar */}
-            <View style={styles.stampBar}>
-              <Text style={[styles.stampGrid, { fontSize: stampFontSize }]}>{captureGrid || '—'}</Text>
-              <Text style={[styles.stampDTG, { fontSize: stampFontSize * 0.8 }]}>{captureDTG || '—'}</Text>
-            </View>
-          </View>
-
-          {/* Action buttons */}
-          <View style={styles.actionRow}>
-            {saving ? (
-              <ActivityIndicator color={colors.text} />
-            ) : (
-              <>
-                <TouchableOpacity
-                  style={[styles.saveBtn, { backgroundColor: colors.text, borderColor: colors.text }, saved && { opacity: 0.5 }]}
-                  onPress={saveGeostamp}
-                  disabled={saved}
-                  accessibilityRole="button"
-                  accessibilityLabel={saved ? 'Photo already saved' : 'Save geostamped photo'}
-                >
-                  <Text style={[styles.saveBtnText, { color: colors.bg }]}>{saved ? t('toolLabels.savedCheck') : t('toolLabels.saveToPhotos')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.clearBtn, { borderColor: colors.border }]}
-                  onPress={clearPhoto}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('toolLabels.discard')}
-                >
-                  <Text style={[styles.clearBtnText, { color: colors.text3 }]}>{t('toolLabels.discard')}</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-          <Text style={[styles.hint, { color: colors.text3 }]}>
-            {t('toolLabels.photoOnDevice')}
-          </Text>
-        </View>
-      )}
+  return <View onLayout={event => { const width = event.nativeEvent.layout.width; if (Number.isFinite(width) && width > 0) setAvailableWidth(width); }}>
+    <ToolHint text={t('workflow.annotationHint')} />
+    {!modulesAvailable && <ToolHint text={t('toolLabels.modulesUnavailable')} />}
+    <View style={styles.actions}>
+      {action(t('toolLabels.takePhoto'), () => choosePhoto('camera'), busy || !modulesAvailable)}
+      {action(t('toolLabels.fromLibrary'), chooseLibrary, busy || !modulesAvailable)}
     </View>
-  );
+    {photo && size && <>
+      <View ref={compositeRef} collapsable={false} style={{ width: previewWidth, height: previewHeight, backgroundColor: '#080A09' }}>
+        <Image source={{ uri: photo.uri }} style={StyleSheet.absoluteFill} resizeMode="contain" onLoad={() => setReadyURI(photo.uri)} onError={() => { setReadyURI(null); setMessage(t('workflow.photoMissing')); }} accessible={false} />
+        {annotation && <View style={styles.overlay} pointerEvents="none">
+          <Text style={styles.overlayLabel} allowFontScaling={false}>{t('workflow.annotationLabel')}</Text>
+          <Text style={styles.overlayGrid} allowFontScaling={false}>{annotation.grid}</Text>
+          <Text style={styles.overlayTime} allowFontScaling={false}>{t('workflow.annotationFix', { time: formatWorkflowUTC(annotation.fixTimestamp) })}</Text>
+          <Text style={styles.overlayTime} allowFontScaling={false}>{t('workflow.annotationTime', { time: formatWorkflowUTC(annotation.annotatedAt) })}</Text>
+        </View>}
+      </View>
+      {readyURI !== photo.uri && <ToolHint text={t('workflow.photoLoading')} />}
+      {action(t('workflow.pinAnnotation'), pinAnnotation)}
+      {annotation && <View accessible accessibilityLabel={`${t('workflow.annotationLabel')}. ${annotation.grid}. ${t('workflow.annotationFix', { time: formatWorkflowUTC(annotation.fixTimestamp) })}. ${t('workflow.annotationTime', { time: formatWorkflowUTC(annotation.annotatedAt) })}`}>
+        <ToolHint text={t('workflow.exportSize', size)} />
+      </View>}
+      <View style={styles.actions}>
+        {action(t('toolLabels.saveToPhotos'), save, busy || !annotation || readyURI !== photo.uri || !modulesAvailable)}
+        {action(t('toolLabels.discard'), () => { setDraft({ photo: null, annotation: null }); setReadyURI(null); setMessage(''); })}
+      </View>
+    </>}
+    {busy && <ActivityIndicator color={colors.text2} />}
+    {!!message && <Text style={[styles.message, { color: colors.text2 }]} accessibilityLiveRegion="polite">{message}</Text>}
+    <ToolHint text={t('tools.photoOnDevice')} />
+  </View>;
 }
 
 const styles = StyleSheet.create({
-  root: { gap: 12 },
-  // Source selection
-  sourceButtons: { gap: 10 },
-  sourceBtn: {
-    borderWidth: 1, paddingVertical: 14, alignItems: 'center', minHeight: 44,
-  },
-  sourceBtnText: { ...TYPE.label, fontSize: 12, letterSpacing: 1.2 },
-  // Preview
-  previewContainer: { alignItems: 'center', gap: 12 },
-  composite: { overflow: 'hidden', position: 'relative' },
-  previewImage: { width: '100%', height: '100%' },
-  // Stamp overlay
-  stampBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.72)',
-    paddingHorizontal: 10, paddingVertical: 6,
-  },
-  stampGrid: {
-    ...TYPE.data, letterSpacing: 0.6, color: '#FFFFFF',
-  },
-  stampDTG: {
-    ...TYPE.data, letterSpacing: 0.6, color: '#CCCCCC', marginTop: 1,
-  },
-  // Actions
-  actionRow: { flexDirection: 'row', gap: 10, width: '100%' },
-  saveBtn: {
-    flex: 2, borderWidth: 1, paddingVertical: 12, alignItems: 'center', minHeight: 44,
-  },
-  saveBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
-  clearBtn: {
-    flex: 1, borderWidth: 1, paddingVertical: 12, alignItems: 'center', minHeight: 44,
-  },
-  clearBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
-  // Hints
-  hint: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, textAlign: 'center', marginTop: 4, lineHeight: 17 },
-  unavailable: { paddingVertical: 16, alignItems: 'center' },
-  unavailableText: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, textAlign: 'center', lineHeight: 17 },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginVertical: 12 },
+  button: { minHeight: 44, padding: 10, borderWidth: 1, justifyContent: 'center', marginTop: 8 },
+  buttonText: { ...TYPE.label, fontSize: 12, flexShrink: 1 },
+  overlay: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 10, backgroundColor: 'rgba(0,0,0,0.82)' },
+  overlayLabel: { ...TYPE.label, color: '#E1E7E0', fontSize: 10, marginBottom: 4 },
+  overlayGrid: { ...TYPE.data, color: '#FFFFFF', fontSize: 18, marginBottom: 4 },
+  overlayTime: { ...TYPE.data, color: '#E1E7E0', fontSize: 10, marginTop: 2 },
+  message: { ...TYPE.body, fontSize: 13, lineHeight: 18, marginTop: 10 },
 });

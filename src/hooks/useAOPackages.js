@@ -3,12 +3,13 @@
  *
  * Responsibilities:
  *   - Load saved AO packages from AsyncStorage on mount.
- *   - Add / refresh / delete with optimistic in-memory updates.
+ *   - Add / refresh / delete only after durable storage acknowledgment.
  *   - Enforce the free-tier cap (1 AO package). Pro-tier is unlimited.
  *
  * Storage is local-only; nothing about an AO ever leaves the device.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback } from 'react';
+import { useDurableFieldState } from './useDurableFieldState';
 import { loadAOPackages, saveAOPackages } from '../utils/storage';
 import { estimateTilesForRegion } from '../utils/tileManager';
 
@@ -30,7 +31,8 @@ function isValidRegion(region) {
     Number.isFinite(region.latitudeDelta) &&
     Number.isFinite(region.longitudeDelta) &&
     region.latitudeDelta > 0 &&
-    region.longitudeDelta > 0;
+    region.longitudeDelta > 0 && region.longitudeDelta <= 360 &&
+    region.latitudeDelta <= 180 && Math.abs(region.latitude) <= 90 && Math.abs(region.longitude) <= 180;
 }
 
 function safeZooms(zoomLevels) {
@@ -40,32 +42,9 @@ function safeZooms(zoomLevels) {
   return zooms.length > 0 ? [...new Set(zooms)].sort((a, b) => a - b) : DEFAULT_AO_ZOOMS;
 }
 
+const emptyPackages = () => [];
 export function useAOPackages() {
-  const [aoPackages, setAOPackages] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const mounted = useRef(true);
-
-  // Initial load
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const stored = await loadAOPackages();
-      if (cancelled || !mounted.current) return;
-      setAOPackages(Array.isArray(stored) ? stored : []);
-      setIsLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  // Cleanup mounted flag
-  useEffect(() => () => { mounted.current = false; }, []);
-
-  // Persist + update in-memory. Returns the new array.
-  const persist = useCallback(async (next) => {
-    setAOPackages(next);
-    await saveAOPackages(next);
-    return next;
-  }, []);
+  const { value: aoPackages, mutate, loading: isLoading, ...status } = useDurableFieldState(emptyPackages, loadAOPackages, saveAOPackages);
 
   /**
    * Add a new AO package built from the current map viewport.
@@ -101,16 +80,14 @@ export function useAOPackages() {
       createdAt: new Date().toISOString(),
     };
 
-    const next = [...aoPackages, newPkg];
-    await persist(next);
+    await mutate(current => [...current, newPkg]);
     return newPkg;
-  }, [aoPackages, persist]);
+  }, [mutate]);
 
   const deleteAOPackage = useCallback(async (id) => {
     if (!id) return;
-    const next = aoPackages.filter(p => p.id !== id);
-    await persist(next);
-  }, [aoPackages, persist]);
+    await mutate(current => current.filter(p => p.id !== id));
+  }, [mutate]);
 
   /**
    * Mark an AO as refreshed RIGHT NOW. The caller is responsible for triggering
@@ -119,11 +96,10 @@ export function useAOPackages() {
    */
   const markAOPackageRefreshed = useCallback(async (id) => {
     if (!id) return;
-    const next = aoPackages.map(p => (
+    await mutate(current => current.map(p => (
       p.id === id ? { ...p, lastRefreshed: new Date().toISOString() } : p
-    ));
-    await persist(next);
-  }, [aoPackages, persist]);
+    )));
+  }, [mutate]);
 
   /**
    * Free-tier predicate. UI callers should check this before letting a free
@@ -137,6 +113,7 @@ export function useAOPackages() {
   return {
     aoPackages,
     isLoading,
+    ...status,
     addAOPackage,
     deleteAOPackage,
     markAOPackageRefreshed,

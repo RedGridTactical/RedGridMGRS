@@ -17,10 +17,25 @@ const SEEN_KEY = 'rg_whatsnew_seen_version';
 // The release whose bullets are translated under `whatsNew.current` in i18n.
 // Bump this in lockstep with the entry added to FEATURES_BY_VERSION below, or
 // the modal silently falls back to English.
-const LOCALIZED_VERSION = '4.0.4';
+const LOCALIZED_VERSION = '4.0.8';
 
 // Features to showcase for a given version. Keep terse — this is a glance screen.
 const FEATURES_BY_VERSION = {
+  '4.0.8': [
+    {"icon":"◉","title":"CLEARER PRO TABS","body":"LISTS, COORDS and MESH now explain what each tab does and what Free already includes before offering Pro."},
+    {"icon":"◆","title":"LOCALIZED PAYWALL","body":"Map import and locked-tab prompts use translated feature names, and the Pro feature list is now localized in every language."},
+  ],
+  '4.0.7': [
+    {"icon":"◉","title":"MAP ATTRIBUTION","body":"Online layers show the provider credit. Tap it to open the licence page."},
+    {"icon":"◆","title":"ONLINE LAYERS","body":"Standard and Topo remain. Dark is no longer offered: its provider now requires an API key."},
+    {"icon":"✓","title":"BATTERY READINESS","body":"Preflight reports battery as unknown instead of an inconsistent reading on unsupported devices."},
+  ],
+  '4.0.6': [
+    {"icon":"◉","title":"SAVED ROUTE PLANS","body":"Name and save map routes, reorder points, add notes and review route cards before navigating."},
+    {"icon":"◆","title":"SESSION DRAFTS","body":"Keep report and calculator drafts across tabs. Insert report references deliberately and copy with confirmed feedback."},
+    {"icon":"✓","title":"PINNED FIELD REFERENCES","body":"Choose a dead-reckoning origin and save estimated points. Pin photo annotations with clear fix time and export size."},
+    {"icon":"⤴","title":"READINESS & RECOVERY","body":"Clearer bearings, fresh-position checks, imported-map readiness, purchase recovery, confirmed saves and display controls."},
+  ],
   '4.0.4': [
     {
       icon: '⤴',
@@ -282,7 +297,7 @@ const styles = StyleSheet.create({
   title: { ...TYPE.heading, fontSize: 20, letterSpacing: 1.2, textAlign: 'center', marginBottom: 18 },
   list: { flexGrow: 0, marginBottom: 16 },
   row: { flexDirection: 'row', gap: 14, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth },
-  icon: { fontFamily: 'monospace', fontSize: 22, width: 26, textAlign: 'center', marginTop: 2 },
+  icon: { ...TYPE.data, fontSize: 22, width: 26, textAlign: 'center', marginTop: 2 },
   rowTitle: {
     ...TYPE.heading, fontSize: 14, letterSpacing: 0.8, marginBottom: 4 },
   rowBody: { ...TYPE.body, letterSpacing: 0.3, fontSize: 14, lineHeight: 20 },

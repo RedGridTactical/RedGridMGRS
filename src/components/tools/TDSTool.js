@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import { useSessionDraft } from '../../hooks/useSessionDraft';
+import { parseToolNumber } from '../../utils/toolWorkflow';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { timeToTravel, formatMinutes } from '../../utils/tactical';
 import { ToolInput, ToolResult, ToolRow, ToolDivider, ToolHint } from './ToolShared';
@@ -16,12 +18,13 @@ const PRESETS = [
 export function TDSTool({ location }) {
   const colors = useColors();
   const { t } = useTranslation();
-  const [distance, setDistance] = useState('');
-  const [speed, setSpeed]       = useState('');
+  const [distance, setDistance] = useSessionDraft('tool:tds:distance', '');
+  const [speed, setSpeed]       = useSessionDraft('tool:tds:speed', '');
 
-  const d = parseFloat(distance);
-  const s = parseFloat(speed);
-  const time = !isNaN(d) && !isNaN(s) ? timeToTravel(d, s) : null;
+  const d = parseToolNumber(distance, { min: 0 });
+  const s = parseToolNumber(speed, { min: 0 });
+  const calculated = d !== null && s !== null && s > 0 ? timeToTravel(d, s) : null;
+  const time = Number.isFinite(calculated) && Number.isFinite(new Date(Date.now() + calculated * 60000).getTime()) ? calculated : null;
 
   // ETA from now
   const eta = time !== null ? (() => {
@@ -51,6 +54,7 @@ export function TDSTool({ location }) {
 
       <ToolInput label={t('toolLabels.orEnterSpeed')} value={speed} onChangeText={setSpeed} placeholder="e.g. 3.5" keyboardType="numeric" />
 
+      {(!!distance || !!speed) && time === null && <ToolHint text={t('workflow.speedRange')} />}
       {time !== null && (
         <View style={styles.results}>
           <ToolResult label={t('toolLabels.travelTime')} value={formatMinutes(time)} primary />
