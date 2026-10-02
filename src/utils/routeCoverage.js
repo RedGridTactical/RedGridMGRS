@@ -187,7 +187,10 @@ const stateOf = (cached, total) => (cached === total ? 'complete' : cached === 0
  * the viewport check. A budget overrun always yields `unknown`, never a guess.
  *
  * @param {Array<{lat:number, lon:number}>} waypoints
- * @param {{ zoomLevels?: number[], corridorTiles?: number, maxTiles?: number }} [options]
+ * @param {{ zoomLevels?: number[], corridorTiles?: number, maxTiles?: number,
+ *   shouldCancel?: () => boolean, onProgress?: (done: number, total: number) => void }} [options]
+ *   shouldCancel is polled before every file read; a cancelled check is `unknown`
+ *   (reason 'cancelled') and reports no partial counts.
  * @param {object} [deps] injected for tests; defaults to tileManager
  */
 export async function checkRouteCoverage(waypoints, options = {}, deps = {}) {
@@ -204,9 +207,13 @@ export async function checkRouteCoverage(waypoints, options = {}, deps = {}) {
     const before = cacheState();
     if (before.mutating) return unknown('map_changing');
     const changed = () => { const now = cacheState(); return now.mutating || now.generation !== before.generation; };
+    const cancelled = () => { try { return !!options.shouldCancel?.(); } catch { return true; } };
+    const progress = (done, total) => { try { options.onProgress?.(done, total); } catch { /* display only */ } };
+    if (cancelled()) return unknown('cancelled');
 
     const metadata = await getMetadata();
     if (changed()) return unknown('map_changing');
+    if (cancelled()) return unknown('cancelled');
     if (!metadata) return { ...UNKNOWN_BASE, state: 'missing', reason: 'no_map' };
     if (!Array.isArray(metadata.zoomLevels) || !metadata.zoomLevels.length || metadata.inventoryComplete === false) {
       return unknown('map_inventory_unverified', { metadata });
@@ -218,12 +225,18 @@ export async function checkRouteCoverage(waypoints, options = {}, deps = {}) {
     const present = new Map();
     const byZoom = Object.fromEntries(plan.zoomLevels.map(z => [z, { cached: 0, missing: 0, total: plan.byZoom[z] }]));
     let cached = 0;
+    let done = 0;
+    progress(0, plan.total);
     for (const { z, x, y } of plan.tiles) {
+      if (cancelled()) return unknown('cancelled', { metadata });
       if (changed()) return unknown('map_changing', { metadata });
       const exists = !!(await tileExists(z, x, y));
       present.set(key(z, x, y), exists);
       if (exists) { cached++; byZoom[z].cached++; } else byZoom[z].missing++;
+      done++;
+      if (done % 25 === 0 || done === plan.total) progress(done, plan.total);
     }
+    if (cancelled()) return unknown('cancelled', { metadata });
     if (changed()) return unknown('map_changing', { metadata });
 
     const legs = plan.legs.map(({ index, tileKeys }) => {
@@ -231,10 +244,78 @@ export async function checkRouteCoverage(waypoints, options = {}, deps = {}) {
       return { index, cached: legCached, total: tileKeys.length, missing: tileKeys.length - legCached, state: stateOf(legCached, tileKeys.length) };
     });
     return {
-      state: stateOf(cached, plan.total), reason: null, metadata, zoomLevels: plan.zoomLevels,
+      state: stateOf(cached, plan.total), reason: null, metadata, zoomLevels: plan.zoomLevels, generation: before.generation,
       cached, total: plan.total, missing: plan.total - cached, byZoom, legs,
     };
   } catch {
     return unknown('check_failed');
   }
+}
+
+/** Identity of what a coverage result describes: the ordered route coordinates. */
+export function routeFingerprint(waypoints) {
+  if (!Array.isArray(waypoints)) return '';
+  return waypoints.map(point => `${point?.lat},${point?.lon}`).join(';');
+}
+
+/**
+ * One coverage check at a time, with cancellation and stale-result handling.
+ * Framework-free so screens and tests share the same behaviour.
+ *
+ * Snapshot states: idle | checking | done | stale. A result is only reported
+ * as `done` for the exact route it was computed for and the map generation it
+ * read; anything else is `stale` and must be checked again.
+ */
+export function createRouteCoverageController({ check = checkRouteCoverage, cacheState = getTileCacheState, onChange } = {}) {
+  let run = 0;
+  let snapshot = { status: 'idle', result: null, progress: null };
+  let checked = null; // { fingerprint, generation }
+  const set = next => { snapshot = next; try { onChange?.(snapshot); } catch { /* display only */ } };
+  // NaN never equals itself, so an unreadable or changing map is always stale.
+  const mapGeneration = () => { try { const state = cacheState(); return state.mutating ? NaN : state.generation; } catch { return NaN; } };
+
+  let running = null; // fingerprint of the route being checked
+
+  const start = async (waypoints, options = {}) => {
+    const id = ++run;
+    const fingerprint = routeFingerprint(waypoints);
+    checked = null; running = fingerprint;
+    const startGeneration = mapGeneration();
+    set({ status: 'checking', result: null, progress: null });
+    const result = await check(waypoints, {
+      ...options,
+      shouldCancel: () => id !== run,
+      onProgress: (done, total) => { if (id === run) set({ status: 'checking', result: null, progress: { done, total } }); },
+    });
+    if (id !== run) return snapshot; // superseded or cancelled; its result is discarded
+    running = null;
+    checked = { fingerprint, generation: result.generation ?? startGeneration };
+    set({ status: 'done', result, progress: null });
+    return snapshot;
+  };
+
+  const cancel = () => {
+    if (snapshot.status !== 'checking') return;
+    run++; running = null;
+    set({ status: 'done', progress: null, result: {
+      state: 'unknown', reason: 'cancelled', cached: 0, missing: 0, total: 0, byZoom: {}, legs: [], zoomLevels: [], metadata: null } });
+    checked = null;
+  };
+
+  /** Mark the held result stale when the route or the imported map has changed. */
+  const sync = waypoints => {
+    if (snapshot.status === 'checking') {
+      // The route was edited while its check was running: that result would be for another route.
+      if (routeFingerprint(waypoints) !== running) { run++; running = null; checked = null; set({ status: 'stale', result: null, progress: null }); }
+      return snapshot;
+    }
+    if (snapshot.status !== 'done' || !checked) return snapshot;
+    if (routeFingerprint(waypoints) !== checked.fingerprint || mapGeneration() !== checked.generation) { checked = null; set({ status: 'stale', result: null, progress: null }); }
+    return snapshot;
+  };
+
+  const reset = () => { run++; running = null; checked = null; set({ status: 'idle', result: null, progress: null }); };
+  /** Stop any running check without notifying; for teardown. */
+  const dispose = () => { run++; running = null; checked = null; snapshot = { status: 'idle', result: null, progress: null }; };
+  return { start, cancel, sync, reset, dispose, getSnapshot: () => snapshot };
 }

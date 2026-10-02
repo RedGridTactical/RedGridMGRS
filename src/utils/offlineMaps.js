@@ -7,13 +7,9 @@ import {
   recoverOfflineTileCache,
 } from './tileManager';
 
-export const OFFLINE_MAP_LIMITS = Object.freeze({
-  tiles: 5000,
-  archiveBytes: 256 * 1024 * 1024,
-  extractedBytes: 128 * 1024 * 1024,
-  tileBytes: 512 * 1024,
-  reserveBytes: 32 * 1024 * 1024,
-});
+import { OFFLINE_MAP_LIMITS } from './offlineMapLimits';
+
+export { OFFLINE_MAP_LIMITS };
 const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
   let c = n;

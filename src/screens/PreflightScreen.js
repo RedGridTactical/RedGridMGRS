@@ -9,6 +9,9 @@ import { useColors } from '../utils/ThemeContext';
 import { useTranslation } from '../hooks/useTranslation';
 import { useAOPackages, FREE_AO_LIMIT } from '../hooks/useAOPackages';
 import { PreflightStatusRow } from '../components/PreflightStatusRow';
+import { RouteCoveragePanel } from '../components/RouteCoveragePanel';
+import { useRouteCoverage } from '../hooks/useRouteCoverage';
+import { describeRouteCoverage } from '../utils/routeCoverageText';
 import { checkImportedMapCoverage } from '../utils/tileManager';
 import { tapLight, tapMedium, notifySuccess } from '../utils/haptics';
 import { TYPE } from '../utils/typography';
@@ -138,6 +141,15 @@ export function PreflightScreen({
     return { status: 'warn', value: t('preflight.mesh.disconnected') };
   }, [mesh?.connectionState, mesh?.connectedDevice, mesh?.autoShare, t]);
 
+  // ── Route-wide coverage for a prepared route (all legs, not the viewport) ──
+  const routePoints = preparedRoute?.waypoints;
+  const routeCoverage = useRouteCoverage(routePoints, { active: !!visible && !!preparedRoute });
+  const checkRoute = routeCoverage.check;
+  useEffect(() => {
+    if (visible && routePoints?.length) checkRoute();
+  }, [visible, routePoints, checkRoute]);
+  const routeStatus = preparedRoute ? describeRouteCoverage(routeCoverage, routePoints, t).status : null;
+
   const tilesStatus = useMemo(() => describeCoverage(mapCoverage, t), [mapCoverage, t]);
   const missingZoomStatus = useMemo(() => {
     const zooms = mapCoverage.zoomLevels || [];
@@ -157,7 +169,9 @@ export function PreflightScreen({
     device: deviceHealth.status,
     mesh: meshStatus.status,
     mode: readinessMode,
-    mapStatuses: [tilesStatus.status],
+    // A prepared route is judged on its own legs. The viewport row still counts
+    // when preflight was opened from the map.
+    mapStatuses: preparedRoute ? [routeStatus, ...(mapRegion ? [tilesStatus.status] : [])] : [tilesStatus.status],
   });
 
   const beginNavigation = () => {
@@ -276,7 +290,7 @@ export function PreflightScreen({
             ))}
           </View>
           <Text style={[styles.modeHint, { color: colors.text3 }]}>{t(readinessMode === 'solo' ? 'fieldNav.soloHint' : 'fieldNav.teamHint')}</Text>
-          {!mapRegion && <Text style={[styles.modeHint, { color: colors.text3 }]}>{t('fieldNav.mapsNotChecked')}</Text>}
+          {!mapRegion && !preparedRoute && <Text style={[styles.modeHint, { color: colors.text3 }]}>{t('fieldNav.mapsNotChecked')}</Text>}
           {/* GPS row */}
           <SectionHeader colors={colors} label={t('preflight.section.gps')} />
           <PreflightStatusRow
@@ -293,7 +307,11 @@ export function PreflightScreen({
             status={readinessMode === 'solo' ? 'idle' : meshStatus.status}
           />
 
-          {/* Tile coverage */}
+          {preparedRoute && <RouteCoveragePanel waypoints={routePoints} coverage={routeCoverage} />}
+
+          {/* Viewport tile coverage. A route opened from LISTS has no viewport;
+              its legs are covered by the route panel above. */}
+          {(!preparedRoute || mapRegion) && <>
           <SectionHeader colors={colors} label={t('preflight.section.offline')} />
           <PreflightStatusRow
             label={t('preflight.tiles.label')}
@@ -313,6 +331,7 @@ export function PreflightScreen({
               {mapCoverage.metadata.name}{'\n'}{t('offlinePreflight.bounds', { bounds: formatBounds(mapCoverage.metadata.bounds) })}
             </Text>
           )}
+          </>}
 
           {/* Device readiness */}
           <SectionHeader colors={colors} label={t('preflight.section.device')} />

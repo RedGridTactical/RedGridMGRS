@@ -63,6 +63,10 @@ export const THEMES = {
       card2:   '#000000',
       border:  '#700000',
       border2: '#220000',
+      // Status colours must stay red-only here; without these, components fall
+      // back to amber and pink. State is carried by the wording instead.
+      warn:    '#EF0000',
+      danger:  '#FF0000',
     },
   },
   green: {

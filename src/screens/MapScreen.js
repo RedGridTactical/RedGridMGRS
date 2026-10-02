@@ -35,6 +35,7 @@ import {
 import { importRasterMBTiles } from '../utils/offlineMaps';
 import * as DocumentPicker from 'expo-document-picker';
 import { PreflightScreen } from './PreflightScreen';
+import { MapImportRequirements } from '../components/MapImportRequirements';
 import { TYPE } from '../utils/typography';
 
 // Free-tier persistent-waypoint cap. Free users get 1 saved waypoint; Pro is
@@ -210,40 +211,45 @@ export function MapScreen({
   }, [mapRegion, initialRegion, coverageZooms]);
 
   // Import a user-selected, locally licensed map; no public-provider prefetch.
+  const [importInfoVisible, setImportInfoVisible] = useState(false);
+  // Requirements are shown first; the system picker opens only from there.
   const handleImportMap = useCallback(() => {
     if (downloadingRef.current) return;
     if (!isPro) { onShowProGate(t('proGate.offlineMaps'), 'offline'); return; }
-    Alert.alert(t('nightDisplay.importMap'), t('nightDisplay.importDescription', { defaultValue: 'Choose a local raster MBTiles map you have permission to use. This version accepts 256-pixel PNG tiles, up to 5,000 tiles and 256 MB. A valid import replaces the current saved map.' }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('nightDisplay.importMap'), onPress: async () => {
-        if (!(await allowSystemDisplay())) return;
-        try {
-          const selected = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
-          if (selected.canceled || !selected.assets?.[0]?.uri || importCancelled.current) return;
-          downloadingRef.current = true;
-          setDownloading(true); setDlProgress(0);
-          const result = await importRasterMBTiles(selected.assets[0].uri, {
-            shouldCancel: () => importCancelled.current,
-            onProgress: (done, total) => { if (!importCancelled.current) setDlProgress(total ? done / total : 0); },
-          });
-          if (importCancelled.current) return;
-          setOfflineMetadata(result.metadata);
-          setCachedCount(result.total); setOfflineMode(true); setTileRevision(value => value + 1);
-          const [west, south, east, north] = result.metadata.bounds;
-          const region = { latitude: (south + north) / 2, longitude: (west + east) / 2,
-            latitudeDelta: Math.max(0.002, (north - south) * 1.1), longitudeDelta: Math.max(0.002, (east - west) * 1.1) };
-          setMapRegion(region); mapRef.current?.animateToRegion(region, 300);
-          notifySuccess();
-          Alert.alert(t('nightDisplay.importMap'), `${result.metadata.name} · ${result.total} tiles`);
-        } catch (error) {
-          if (!importCancelled.current && error.code !== 'IMPORT_CANCELLED') Alert.alert(t('nightDisplay.importMap'), error.message || t('nightDisplay.providerBody'));
-        } finally {
-          downloadingRef.current = false;
-          if (!importCancelled.current) setDownloading(false);
-        }
-      } },
-    ]);
+    setImportInfoVisible(true);
   }, [isPro, onShowProGate, t]);
+  const chooseMapFile = useCallback(async () => {
+    if (downloadingRef.current) return;
+    if (!(await allowSystemDisplay())) return;
+    try {
+      // The requirements sheet stays up while the system picker is open, so the
+      // picker is presented from the visible sheet rather than a closing one.
+      const selected = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
+      setImportInfoVisible(false);
+      if (selected.canceled || !selected.assets?.[0]?.uri || importCancelled.current) return;
+      downloadingRef.current = true;
+      setDownloading(true); setDlProgress(0);
+      const result = await importRasterMBTiles(selected.assets[0].uri, {
+        shouldCancel: () => importCancelled.current,
+        onProgress: (done, total) => { if (!importCancelled.current) setDlProgress(total ? done / total : 0); },
+      });
+      if (importCancelled.current) return;
+      setOfflineMetadata(result.metadata);
+      setCachedCount(result.total); setOfflineMode(true); setTileRevision(value => value + 1);
+      const [west, south, east, north] = result.metadata.bounds;
+      const region = { latitude: (south + north) / 2, longitude: (west + east) / 2,
+        latitudeDelta: Math.max(0.002, (north - south) * 1.1), longitudeDelta: Math.max(0.002, (east - west) * 1.1) };
+      setMapRegion(region); mapRef.current?.animateToRegion(region, 300);
+      notifySuccess();
+      Alert.alert(t('nightDisplay.importMap'), `${result.metadata.name} · ${result.total} tiles\n\n${t('mapImport.checkBody')}`);
+    } catch (error) {
+      setImportInfoVisible(false);
+      if (!importCancelled.current && error.code !== 'IMPORT_CANCELLED') Alert.alert(t('nightDisplay.importMap'), error.message || t('nightDisplay.providerBody'));
+    } finally {
+      downloadingRef.current = false;
+      if (!importCancelled.current) setDownloading(false);
+    }
+  }, [t]);
 
   // Clear tile cache
   const handleClearCache = useCallback(() => {
@@ -1017,6 +1023,7 @@ export function MapScreen({
           coverage estimates and "Save current AO" reflect what the operator
           can actually see. Mesh + GPS props are optional; the screen degrades
           gracefully when the parent hasn't lifted them yet. */}
+      <MapImportRequirements visible={importInfoVisible} onChoose={chooseMapFile} onClose={() => setImportInfoVisible(false)} />
       <PreflightScreen
         visible={preflightVisible}
         onClose={() => setPreflightVisible(false)}

@@ -56,6 +56,44 @@ export function normalizePlan(value) {
   };
 }
 
+const POINT_SOURCES = ['gps', 'map', 'manual', 'import', 'estimated', 'unknown'];
+const isoText = value => {
+  const ms = typeof value === 'string' ? Date.parse(value) : typeof value === 'number' ? value : NaN;
+  // Beyond ±8.64e15 ms a Date is invalid and toISOString throws.
+  return Number.isFinite(ms) && ms > 0 && ms <= 8.64e15 ? new Date(ms).toISOString() : null;
+};
+
+/**
+ * Where an imported field pack came from. Optional and bounded; a damaged
+ * record is dropped rather than failing the list. `mapReference` describes the
+ * sender's map at export time. It is never this device's map metadata and does
+ * not show that the same tiles are present here.
+ */
+export function normalizePackProvenance(value) {
+  if (!value || typeof value !== 'object' || typeof value.revision !== 'string' || !/^[0-9a-f]{16}$/.test(value.revision)) return null;
+  const ref = value.mapReference && typeof value.mapReference === 'object' ? value.mapReference : null;
+  const bounds = ref && Array.isArray(ref.bounds) && ref.bounds.length === 4 && ref.bounds.every(Number.isFinite) ? ref.bounds.map(Number) : null;
+  const sources = {};
+  if (value.pointSources && typeof value.pointSources === 'object') {
+    for (const key of POINT_SOURCES) {
+      const count = value.pointSources[key];
+      if (Number.isInteger(count) && count > 0 && count <= MAX_WAYPOINTS) sources[key] = count;
+    }
+  }
+  return {
+    revision: value.revision, version: Number.isInteger(value.version) && value.version > 0 ? value.version : 1,
+    app: text(value.app, 40), appVersion: text(value.appVersion, 20),
+    exportedAt: isoText(value.exportedAt), importedAt: time(value.importedAt),
+    pointSources: sources,
+    mapReference: ref ? {
+      name: text(ref.name, 120), attribution: text(ref.attribution, 2048), bounds,
+      zoomLevels: Array.isArray(ref.zoomLevels) ? ref.zoomLevels.filter(z => Number.isInteger(z) && z >= 0 && z <= 19).slice(0, 20) : [],
+      tileCount: Number.isInteger(ref.tileCount) && ref.tileCount >= 0 ? ref.tileCount : null,
+      importedAt: isoText(ref.importedAt), tilesIncluded: false,
+    } : null,
+  };
+}
+
 export function normalizeWaypointList(list, index = 0) {
   if (!list || typeof list !== 'object' || !Array.isArray(list.waypoints) || list.waypoints.length > MAX_WAYPOINTS) {
     throw fieldDataError('INVALID_LIST', 'A route may contain up to 20 valid points');
@@ -64,7 +102,8 @@ export function normalizeWaypointList(list, index = 0) {
   if (new Set(waypoints.map(point => point.id)).size !== waypoints.length) {
     throw fieldDataError('DUPLICATE_ID', 'Waypoint IDs must be unique within a route');
   }
-  return { id: text(list.id, 120, `list-${index}`) || `list-${index}`, name: text(list.name, 80, 'ROUTE') || 'ROUTE', ...normalizePlan(list), waypoints };
+  const pack = normalizePackProvenance(list.pack);
+  return { id: text(list.id, 120, `list-${index}`) || `list-${index}`, name: text(list.name, 80, 'ROUTE') || 'ROUTE', ...normalizePlan(list), waypoints, ...(pack ? { pack } : {}) };
 }
 
 export function normalizeWaypointLists(lists) {
