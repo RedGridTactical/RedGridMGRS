@@ -96,7 +96,7 @@ export function SupportScreen({ visible, onClose, onRestore, isRestoring = false
             accessibilityRole="button"
             accessibilityLabel={t('support.emailSupport')}
           >
-            <Text style={[styles.linkIcon]}>&#9993;</Text>
+            <Text style={[styles.linkIcon, { color: colors.text2 }]} importantForAccessibility="no" accessibilityElementsHidden>MAIL</Text>
             <View style={styles.linkInfo}>
               <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.emailSupport')}</Text>
               <Text style={[styles.linkSub, { color: colors.text3 }]}>{SUPPORT_EMAIL}</Text>
@@ -109,7 +109,7 @@ export function SupportScreen({ visible, onClose, onRestore, isRestoring = false
             accessibilityRole="button"
             accessibilityLabel={t('support.reportBug')}
           >
-            <Text style={[styles.linkIcon]}>&#128027;</Text>
+            <Text style={[styles.linkIcon, { color: colors.text2 }]} importantForAccessibility="no" accessibilityElementsHidden>BUG</Text>
             <View style={styles.linkInfo}>
               <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.reportBug')}</Text>
               <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('support.reportBugSub')}</Text>
@@ -122,7 +122,7 @@ export function SupportScreen({ visible, onClose, onRestore, isRestoring = false
             accessibilityRole="button"
             accessibilityLabel={t('support.sourceCode')}
           >
-            <Text style={[styles.linkIcon]}>&#128193;</Text>
+            <Text style={[styles.linkIcon, { color: colors.text2 }]} importantForAccessibility="no" accessibilityElementsHidden>SRC</Text>
             <View style={styles.linkInfo}>
               <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.sourceCode')}</Text>
               <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('support.sourceCodeSub')}</Text>
@@ -186,7 +186,7 @@ export function SupportScreen({ visible, onClose, onRestore, isRestoring = false
             accessibilityRole="button"
             accessibilityLabel={t('support.privacyPolicy')}
           >
-            <Text style={[styles.linkIcon]}>&#128274;</Text>
+            <Text style={[styles.linkIcon, { color: colors.text2 }]} importantForAccessibility="no" accessibilityElementsHidden>LEGAL</Text>
             <View style={styles.linkInfo}>
               <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.privacyPolicy')}</Text>
               <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('support.privacySub')}</Text>
@@ -246,10 +246,14 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 8,
   },
+  // Monospace text badges, not emoji: platform emoji render in colour and
+  // would break the red-only Tactical display.
   linkIcon: {
-    fontSize: 20,
-    marginRight: 12,
-    width: 28,
+    ...TYPE.data,
+    fontSize: 11,
+    letterSpacing: 0.8,
+    marginRight: 10,
+    width: 44,
     textAlign: 'center',
   },
   linkInfo: {
