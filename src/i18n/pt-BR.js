@@ -313,7 +313,26 @@ export default {
     "savedAreaOnly": "Apenas referência de área. Verifique com o mapa importado atual.",
     "checkArea": "VERIFICAR"
   },
-    "routeCard": {"footer":"Red Grid MGRS · plano de rota em linha reta"},
+    "routeCard": {
+      "title": "CARTÃO DE ROTA",
+      "button": "CARTÃO DE ROTA",
+      "openLabel": "Abrir cartão de rota",
+      "share": "COMPARTILHAR CARTÃO",
+      "save": "SALVAR IMAGEM",
+      "close": "FECHAR",
+      "start": "INÍCIO",
+      "legs": "TRECHOS",
+      "total": "TOTAL",
+      "dtg": "DTG",
+      "shareTitle": "Cartão de rota",
+      "shareFailed": "Falha ao compartilhar",
+      "saveFailed": "Falha ao salvar",
+      "saveUnavailable": "Salvar imagens não está disponível neste dispositivo.",
+      "savePermission": "É necessária permissão da biblioteca de fotos para salvar.",
+      "saved": "Salvo",
+      "savedMsg": "Cartão de rota salvo nas suas fotos.",
+      "footer": "Red Grid MGRS · plano de rota em linha reta"
+    },
     "navigation": {
     "trueHeadingUnavailable": "Rumo verdadeiro indisponível. Use o azimute verdadeiro numérico com mapa ou bússola.",
     "referenceLegend": "T = norte verdadeiro · M = norte magnético · G = norte da quadrícula",

@@ -169,6 +169,10 @@ dependencies {
     // Must stay in lockstep with expo-iap's own pin (node_modules/expo-iap/android/build.gradle).
     // Play requires Billing Library 8+ from Aug 31 2026 or updates are rejected.
     implementation "com.android.billingclient:billing-ktx:8.0.0"
+    // Jetpack WindowManager: folding-feature geometry for the adaptive GRID/MAP workspace
+    // (stable 1.5.1 per developer.android.com/jetpack/androidx/releases/window, read 2026-10-09).
+    implementation "androidx.window:window:1.5.1"
+    implementation "androidx.window:window-java:1.5.1"
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 

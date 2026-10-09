@@ -313,7 +313,26 @@ export default {
     "savedAreaOnly": "仅为已保存区域的参考信息。请与当前导入的地图核对。",
     "checkArea": "检查"
   },
-    "routeCard": {"footer":"Red Grid MGRS · 航点间直线路线计划"},
+    "routeCard": {
+      "title": "路线卡",
+      "button": "路线卡",
+      "openLabel": "打开路线卡",
+      "share": "分享路线卡",
+      "save": "保存图片",
+      "close": "关闭",
+      "start": "起点",
+      "legs": "航段",
+      "total": "总计",
+      "dtg": "DTG",
+      "shareTitle": "路线卡",
+      "shareFailed": "分享失败",
+      "saveFailed": "保存失败",
+      "saveUnavailable": "此设备不支持保存图片。",
+      "savePermission": "保存需要照片库权限。",
+      "saved": "已保存",
+      "savedMsg": "路线卡已保存到您的照片。",
+      "footer": "Red Grid MGRS · 航点间直线路线计划"
+    },
     "navigation": {
     "trueHeadingUnavailable": "无法获取真北航向。请结合地图或罗盘使用显示的真方位角数值。",
     "referenceLegend": "T = 真北 · M = 磁北 · G = 方格北",

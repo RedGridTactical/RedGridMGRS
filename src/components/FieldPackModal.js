@@ -5,6 +5,7 @@
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { useSafeInsets } from '../hooks/useSafeInsets';
 import { Modal } from './FieldModal';
 import { RouteCoveragePanel } from './RouteCoveragePanel';
 import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
@@ -25,6 +26,7 @@ const dateText = iso => { const ms = Date.parse(iso || ''); return Number.isFini
 
 export function FieldPackModal({ visible, list, appVersion, onClose, onOpenRouteCard }) {
   const colors = useColors();
+  const insets = useSafeInsets();
   const { t } = useTranslation();
   const waypoints = list?.waypoints || [];
   const coverage = useRouteCoverage(waypoints, { active: !!visible });
@@ -76,7 +78,7 @@ export function FieldPackModal({ visible, list, appVersion, onClose, onOpenRoute
   return (
     <Modal visible={!!visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={[styles.backdrop, { backgroundColor: colors.bg }]}>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 40 + insets.bottom }]} keyboardShouldPersistTaps="handled">
           <Text style={[styles.kicker, { color: colors.text3 }]}>{t('fieldPack.title')}{pack ? ` · ${t('fieldPack.revision', { rev: shortRevision(pack.revision) })}` : ''}</Text>
           <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">{list?.name}</Text>
           {!!list?.notes && <Text style={[styles.body, { color: colors.text2 }]}>{list.notes}</Text>}
@@ -119,6 +121,7 @@ export function FieldPackModal({ visible, list, appVersion, onClose, onOpenRoute
 /** Preview of an incoming pack. Confirming only ever adds a new list. */
 export function FieldPackImportModal({ preview, onConfirm, onCancel, busy, failed }) {
   const colors = useColors();
+  const insets = useSafeInsets();
   const { t } = useTranslation();
   const pack = preview?.pack;
   const reference = pack?.mapReference;
@@ -128,7 +131,7 @@ export function FieldPackImportModal({ preview, onConfirm, onCancel, busy, faile
   return (
     <Modal visible={!!preview} transparent animationType="slide" onRequestClose={busy ? () => {} : onCancel}>
       <View style={[styles.backdrop, { backgroundColor: colors.bg }]}>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 40 + insets.bottom }]} keyboardShouldPersistTaps="handled">
           <Text style={[styles.kicker, { color: colors.text3 }]}>{t('fieldPack.importTitle')}</Text>
           <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">{pack?.route.name}</Text>
           <Text style={[styles.body, { color: colors.text2 }]}>{preview?.fileName}</Text>

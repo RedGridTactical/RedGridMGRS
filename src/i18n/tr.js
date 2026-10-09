@@ -314,7 +314,26 @@ export default {
     "savedAreaOnly": "Yalnızca kayıtlı alan referansı. Mevcut içe aktarılmış haritayla kontrol edin.",
     "checkArea": "KONTROL ET"
   },
-    "routeCard": {"footer":"Red Grid MGRS · düz hat rota planı"},
+    "routeCard": {
+      "title": "ROTA KARTI",
+      "button": "ROTA KARTI",
+      "openLabel": "Rota kartını aç",
+      "share": "KARTI PAYLAŞ",
+      "save": "GÖRSELİ KAYDET",
+      "close": "KAPAT",
+      "start": "BAŞLANGIÇ",
+      "legs": "ETAPLAR",
+      "total": "TOPLAM",
+      "dtg": "DTG",
+      "shareTitle": "Rota kartı",
+      "shareFailed": "Paylaşım başarısız",
+      "saveFailed": "Kaydetme başarısız",
+      "saveUnavailable": "Bu cihazda görsel kaydetme kullanılamıyor.",
+      "savePermission": "Kaydetmek için fotoğraf kitaplığı izni gerekli.",
+      "saved": "Kaydedildi",
+      "savedMsg": "Rota kartı fotoğraflarınıza kaydedildi.",
+      "footer": "Red Grid MGRS · düz hat rota planı"
+    },
     "navigation": {
     "trueHeadingUnavailable": "Gerçek yön kullanılamıyor. Sayısal gerçek kerterizi harita veya pusulayla kullanın.",
     "referenceLegend": "T = gerçek kuzey · M = manyetik kuzey · G = ızgara kuzeyi",

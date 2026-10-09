@@ -19,6 +19,8 @@ import { TextInput } from '../components/FieldInput';
 import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '../utils/ThemeContext';
+import { restoreSelectedMarker, resolvePendingSelection } from '../utils/mapSession';
+import { useMapViewport } from '../hooks/useInitialViewport';
 import { useTranslation } from '../hooks/useTranslation';
 import { toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
 import { formatBearing } from '../utils/tactical';
@@ -108,16 +110,35 @@ export function MapScreen({
   gpsDeviceName,
   mesh,
   team,
+  // In-memory session (App-owned) so a remount after a tab round trip or a
+  // layout change starts from the last viewport, selection and unsaved form.
+  session,
+  onSessionChange,
 }) {
   const colors = useColors();
   const { t } = useTranslation();
   const mapRef = useRef(null);
-  const [mapRegion, setMapRegion] = useState(null);
+  // Initial region — captured ONCE per mount (restored session viewport, else
+  // the fix available at mount, else the default) and used to seed mapRegion,
+  // so the footer, coverage check, grid overlay AND the session all describe
+  // the viewport the native map was created with until a real region event or
+  // an explicit recenter. A fix arriving later never moves the labels alone,
+  // and an untouched map survives an unmount/remount at its own viewport.
+  const { initialRegion, mapRegion, setMapRegion } = useMapViewport(session, location, onSessionChange);
   const [centerMGRS, setCenterMGRS] = useState(null);
   const waypoints = useMemo(() => savedLists.flatMap(list => list.waypoints.map(point => ({ ...point, mapKey: `${list.id}:${point.id}`, listId: list.id, listName: list.name }))), [savedLists]);
   const mapWriteBusy = useRef(false);
   const [mapSaveError, setMapSaveError] = useState(false);
-  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [selectedMarker, setSelectedMarker] = useState(() => restoreSelectedMarker(session, waypoints));
+  // A remembered selection whose list has not loaded yet is kept pending and
+  // re-resolved as lists arrive; it is given up only once loading has ended.
+  const pendingSelectionKey = useRef(selectedMarker ? null : (session?.selectedMarkerKey || null));
+  useEffect(() => {
+    if (!pendingSelectionKey.current || selectedMarker) return;
+    const { marker, waiting } = resolvePendingSelection({ key: pendingSelectionKey.current, markers: waypoints, listsLoading });
+    if (marker) { pendingSelectionKey.current = null; setSelectedMarker(marker); }
+    else if (!waiting) { pendingSelectionKey.current = null; onSessionChange?.({ selectedMarkerKey: null }); }
+  }, [waypoints, listsLoading, selectedMarker, onSessionChange]);
   const [downloading, setDownloading] = useState(false);
   const [dlProgress, setDlProgress] = useState(0);
   const [cachedCount, setCachedCount] = useState(0);
@@ -163,11 +184,18 @@ export function MapScreen({
   }, []);
 
   // Waypoint creation menu state
-  const [wpMenuVisible, setWpMenuVisible] = useState(false);
-  const [pendingWaypoint, setPendingWaypoint] = useState(null); // { lat, lon, mgrs }
-  const [wpLabel, setWpLabel] = useState('');
+  const [wpMenuVisible, setWpMenuVisible] = useState(() => !!session?.waypointForm?.visible);
+  const [pendingWaypoint, setPendingWaypoint] = useState(() => session?.waypointForm?.pending || null); // { lat, lon, mgrs }
+  const [wpLabel, setWpLabel] = useState(() => session?.waypointForm?.label || '');
   const wpLists = savedLists;
-  const [wpSelectedList, setWpSelectedList] = useState(null);
+  const [wpSelectedList, setWpSelectedList] = useState(() => session?.waypointForm?.listId ?? null);
+
+  // Publish the session-worthy state. The App keeps it in a ref, so these
+  // effects never re-render anything; they only make the next mount cheap.
+  useEffect(() => { onSessionChange?.({ selectedMarkerKey: selectedMarker?.mapKey || pendingSelectionKey.current || null }); }, [selectedMarker, onSessionChange]);
+  useEffect(() => {
+    onSessionChange?.({ waypointForm: pendingWaypoint ? { pending: pendingWaypoint, label: wpLabel, listId: wpSelectedList, visible: wpMenuVisible } : null });
+  }, [pendingWaypoint, wpLabel, wpSelectedList, wpMenuVisible, onSessionChange]);
 
   // Route-planning mode (Pro). When enabled, tapping waypoint markers adds/
   // removes them from the route in tap order and a polyline + summary appear.
@@ -186,13 +214,6 @@ export function MapScreen({
   // the right-side stack; closes back to the map untouched.
   const [preflightVisible, setPreflightVisible] = useState(false);
 
-  // Initial region — center on user location or default to CONUS center
-  const initialRegion = useMemo(() => ({
-    latitude: location?.lat ?? 38.8895,
-    longitude: location?.lon ?? -77.0353,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
-  }), [location?.lat, location?.lon]);
 
   const coverageZooms = useMemo(() => offlineMetadata?.zoomLevels || [], [offlineMetadata]);
 
@@ -396,7 +417,7 @@ export function MapScreen({
   };
   const toggleRouteMode = () => routeMode ? finishRouteMode() : beginRouteMode();
   const handleWaypointPress = wp => {
-    if (!routeMode) { setSelectedMarker(wp); return; }
+    if (!routeMode) { pendingSelectionKey.current = null; setSelectedMarker(wp); return; }
     if (!routeWaypoints.some(point => point.originMapKey === wp.mapKey) && routeWaypoints.length >= 20) {
       Alert.alert(t('waypoints.limitReached'), t('waypoints.maxWaypoints')); return;
     }

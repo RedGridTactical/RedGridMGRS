@@ -314,7 +314,26 @@ export default {
     "savedAreaOnly": "Alleen een gebiedsreferentie. Controleer met de huidige geïmporteerde kaart.",
     "checkArea": "CONTROLEREN"
   },
-    "routeCard": {"footer":"Red Grid MGRS · routeplan met rechte lijnen"},
+    "routeCard": {
+      "title": "ROUTEKAART",
+      "button": "ROUTEKAART",
+      "openLabel": "Routekaart openen",
+      "share": "KAART DELEN",
+      "save": "AFBEELDING OPSLAAN",
+      "close": "SLUITEN",
+      "start": "START",
+      "legs": "ETAPPES",
+      "total": "TOTAAL",
+      "dtg": "DTG",
+      "shareTitle": "Routekaart",
+      "shareFailed": "Delen mislukt",
+      "saveFailed": "Opslaan mislukt",
+      "saveUnavailable": "Afbeeldingen opslaan is niet beschikbaar op dit apparaat.",
+      "savePermission": "Toegang tot de fotobibliotheek is vereist om op te slaan.",
+      "saved": "Opgeslagen",
+      "savedMsg": "Routekaart opgeslagen in je foto's.",
+      "footer": "Red Grid MGRS · routeplan met rechte lijnen"
+    },
     "navigation": {
     "trueHeadingUnavailable": "Ware koers niet beschikbaar. Gebruik de numerieke ware peiling met kaart of kompas.",
     "referenceLegend": "T = ware noorden · M = magnetische noorden · G = rasternoorden",

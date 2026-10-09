@@ -315,7 +315,26 @@ export default {
     "savedAreaOnly": "مرجع منطقة محفوظة فقط. قارنه بالخريطة المستوردة الحالية.",
     "checkArea": "فحص"
   },
-    "routeCard": {"footer":"Red Grid MGRS · خطة مسار بخطوط مستقيمة"},
+    "routeCard": {
+      "title": "بطاقة المسار",
+      "button": "بطاقة المسار",
+      "openLabel": "فتح بطاقة المسار",
+      "share": "مشاركة البطاقة",
+      "save": "حفظ الصورة",
+      "close": "إغلاق",
+      "start": "البداية",
+      "legs": "المراحل",
+      "total": "الإجمالي",
+      "dtg": "DTG",
+      "shareTitle": "بطاقة المسار",
+      "shareFailed": "فشلت المشاركة",
+      "saveFailed": "فشل الحفظ",
+      "saveUnavailable": "حفظ الصور غير متاح على هذا الجهاز.",
+      "savePermission": "يلزم إذن مكتبة الصور للحفظ.",
+      "saved": "تم الحفظ",
+      "savedMsg": "تم حفظ بطاقة المسار في صورك.",
+      "footer": "Red Grid MGRS · خطة مسار بخطوط مستقيمة"
+    },
     "navigation": {
     "trueHeadingUnavailable": "الاتجاه بالنسبة للشمال الحقيقي غير متاح. استخدم قيمة السمت الحقيقي المعروضة مع خريطة أو بوصلة.",
     "referenceLegend": "T = الشمال الحقيقي · M = الشمال المغناطيسي · G = شمال الشبكة",

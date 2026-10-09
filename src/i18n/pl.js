@@ -314,7 +314,26 @@ export default {
     "savedAreaOnly": "Tylko zapisany obszar odniesienia. Sprawdź z obecną zaimportowaną mapą.",
     "checkArea": "SPRAWDŹ"
   },
-    "routeCard": {"footer":"Red Grid MGRS · plan trasy po liniach prostych"},
+    "routeCard": {
+      "title": "KARTA TRASY",
+      "button": "KARTA TRASY",
+      "openLabel": "Otwórz kartę trasy",
+      "share": "UDOSTĘPNIJ KARTĘ",
+      "save": "ZAPISZ OBRAZ",
+      "close": "ZAMKNIJ",
+      "start": "START",
+      "legs": "ODCINKI",
+      "total": "RAZEM",
+      "dtg": "DTG",
+      "shareTitle": "Karta trasy",
+      "shareFailed": "Udostępnianie nie powiodło się",
+      "saveFailed": "Zapis nie powiódł się",
+      "saveUnavailable": "Zapisywanie obrazów jest niedostępne na tym urządzeniu.",
+      "savePermission": "Do zapisu wymagane jest uprawnienie do biblioteki zdjęć.",
+      "saved": "Zapisano",
+      "savedMsg": "Karta trasy zapisana w Twoich zdjęciach.",
+      "footer": "Red Grid MGRS · plan trasy po liniach prostych"
+    },
     "navigation": {
     "trueHeadingUnavailable": "Kierunek względem północy geograficznej niedostępny. Użyj liczbowego azymutu geograficznego z mapą lub kompasem.",
     "referenceLegend": "T = północ geograficzna · M = magnetyczna · G = siatki",
