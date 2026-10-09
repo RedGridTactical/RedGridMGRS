@@ -854,7 +854,7 @@ function AppContent({
       />
 
       <WhatsNewModal
-        currentVersion="4.0.8"
+        currentVersion="4.1.0"
         showTrialCta={!isPro}
         onStartTrial={() => showProGate('')}
       />

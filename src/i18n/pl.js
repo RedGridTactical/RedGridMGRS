@@ -443,12 +443,16 @@ export default {
     startTrial: "ROZPOCZNIJ 7-DNIOWY BEZPŁATNY OKRES PRÓBNY",
     current: {
       "f1": {
-        "title": "CZYTELNIEJSZE KARTY PRO",
-        "body": "LISTY, WSPÓŁRZ. i MESH wyjaśniają teraz, co robi dana karta i co zawiera już wersja bezpłatna, zanim zaproponują Pro."
+        "title": "PAKIETY TERENOWE",
+        "body": "Udostępnij zapisaną trasę jako mały plik. Kolega importuje go jako nową listę z punktami kontrolnymi i odniesieniem do mapy; pliki map nie są dołączane. Pro."
       },
       "f2": {
-        "title": "ZLOKALIZOWANY EKRAN ZAKUPU",
-        "body": "Import map i zablokowane karty używają przetłumaczonych nazw funkcji, a lista funkcji Pro jest teraz przetłumaczona na wszystkie języki."
+        "title": "KONTROLA MAPY TRASY",
+        "body": "Sprawdź pokrycie zaimportowanych plików map na całej trasie, odcinek po odcinku, przed wyjściem. To sprawdza pliki map, nie bezpieczeństwo. Pro."
+      },
+      "f3": {
+        "title": "SIATKA + MAPA",
+        "body": "Szerokie ekrany pokazują odczyt obok mapy; mapa zachowuje widok i wybór między kartami, a duży tekst pozostawia każdy przycisk dostępny."
       }
     },
   },

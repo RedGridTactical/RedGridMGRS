@@ -443,12 +443,16 @@ export default {
     startTrial: "START GRATIS PROEFPERIODE VAN 7 DAGEN",
     current: {
       "f1": {
-        "title": "DUIDELIJKERE PRO-TABS",
-        "body": "LIJSTEN, COÖRD en MESH leggen nu uit wat elk tabblad doet en wat Gratis al bevat voordat Pro wordt aangeboden."
+        "title": "VELDPAKKETTEN",
+        "body": "Deel een opgeslagen route als klein bestand. Een teamgenoot importeert het als nieuwe lijst met checkpoints en kaartreferentie; kaartbestanden zijn niet inbegrepen. Pro."
       },
       "f2": {
-        "title": "GELOKALISEERDE PAYWALL",
-        "body": "Kaartimport en vergrendelde tabbladen gebruiken vertaalde functienamen, en de Pro-functielijst is nu in elke taal vertaald."
+        "title": "ROUTEKAARTCONTROLE",
+        "body": "Controleer de dekking van geïmporteerde kaartbestanden langs de hele route, etappe voor etappe, vóór vertrek. Dit controleert kaartbestanden, niet de veiligheid. Pro."
+      },
+      "f3": {
+        "title": "GRID + KAART RUIMTE",
+        "body": "Brede schermen tonen de uitlezing naast de kaart; de kaart behoudt beeld en selectie tussen tabbladen, en grote tekst houdt elke knop bereikbaar."
       }
     },
   },

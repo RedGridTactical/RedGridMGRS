@@ -1073,12 +1073,16 @@ export default {
     startTrial: 'START 7-DAY FREE TRIAL',
     current: {
       "f1": {
-        "title": "CLEARER PRO TABS",
-        "body": "LISTS, COORDS and MESH now explain what each tab does and what Free already includes before offering Pro."
+        "title": "FIELD PACKS",
+        "body": "Share a saved route as a small file. A teammate imports it as a new list with its checkpoints and map reference; map files are not included. Pro."
       },
       "f2": {
-        "title": "LOCALIZED PAYWALL",
-        "body": "Map import and locked-tab prompts use translated feature names, and the Pro feature list is now localized in every language."
+        "title": "ROUTE MAP CHECK",
+        "body": "Check imported map-file coverage along the whole route, leg by leg, before you leave. This checks map files, not safety. Pro."
+      },
+      "f3": {
+        "title": "GRID + MAP SPACE",
+        "body": "Wide screens show the readout beside the map; the map keeps its viewport and selection across tabs, and large text keeps every control reachable."
       }
     },
   },

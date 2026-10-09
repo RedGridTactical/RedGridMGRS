@@ -423,12 +423,16 @@ export default {
     startTrial: "7-TAGE-TESTPHASE STARTEN",
     current: {
       "f1": {
-        "title": "KLARERE PRO-TABS",
-        "body": "LISTEN, KOORD und MESH erklären jetzt, was der Tab tut und was Kostenlos bereits enthält, bevor Pro angeboten wird."
+        "title": "FELDPAKETE",
+        "body": "Teile eine gespeicherte Route als kleine Datei. Ein Teammitglied importiert sie als neue Liste mit Kontrollpunkten und Kartenreferenz; Kartendateien sind nicht enthalten. Pro."
       },
       "f2": {
-        "title": "LOKALISIERTE PAYWALL",
-        "body": "Kartenimport und gesperrte Tabs verwenden übersetzte Funktionsnamen, und die Pro-Funktionsliste ist jetzt in allen Sprachen übersetzt."
+        "title": "ROUTEN-KARTENPRÜFUNG",
+        "body": "Prüfe die Abdeckung importierter Kartendateien entlang der ganzen Route, Abschnitt für Abschnitt, vor dem Aufbruch. Das prüft Kartendateien, nicht die Sicherheit. Pro."
+      },
+      "f3": {
+        "title": "GRID + KARTE",
+        "body": "Breite Bildschirme zeigen die Anzeige neben der Karte; die Karte behält Ausschnitt und Auswahl über Tabs hinweg, und große Schrift lässt jedes Bedienelement erreichbar."
       }
     },
   },

@@ -443,12 +443,16 @@ export default {
     startTrial: "7 GÜNLÜK ÜCRETSİZ DENEMEYİ BAŞLAT",
     current: {
       "f1": {
-        "title": "DAHA NET PRO SEKMELERİ",
-        "body": "LİSTELER, KOORD ve MESH artık Pro sunmadan önce sekmenin ne yaptığını ve ücretsiz sürümde nelerin bulunduğunu açıklıyor."
+        "title": "SAHA PAKETLERİ",
+        "body": "Kayıtlı bir rotayı küçük bir dosya olarak paylaşın. Takım arkadaşınız bunu kontrol noktaları ve harita referansıyla yeni bir liste olarak içe aktarır; harita dosyaları dahil değildir. Pro."
       },
       "f2": {
-        "title": "YERELLEŞTİRİLMİŞ SATIN ALMA EKRANI",
-        "body": "Harita içe aktarma ve kilitli sekmeler çevrilmiş özellik adları kullanıyor; Pro özellik listesi artık tüm dillerde çevrildi."
+        "title": "ROTA HARİTA KONTROLÜ",
+        "body": "Yola çıkmadan önce içe aktarılan harita dosyalarının tüm rota boyunca kapsamını etap etap kontrol edin. Bu, harita dosyalarını kontrol eder, güvenliği değil. Pro."
+      },
+      "f3": {
+        "title": "GRID + HARİTA ALANI",
+        "body": "Geniş ekranlar okumayı haritanın yanında gösterir; harita sekmeler arasında görünümünü ve seçimini korur, büyük metinde her kontrol erişilebilir kalır."
       }
     },
   },

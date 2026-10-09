@@ -422,12 +422,16 @@ export default {
     startTrial: "DÉMARRER L'ESSAI GRATUIT DE 7 JOURS",
     current: {
       "f1": {
-        "title": "ONGLETS PRO PLUS CLAIRS",
-        "body": "LISTES, COORD et MESH expliquent désormais ce que fait chaque onglet et ce que la version gratuite inclut déjà avant de proposer Pro."
+        "title": "PACKS DE TERRAIN",
+        "body": "Partagez un itinéraire enregistré dans un petit fichier. Un coéquipier l'importe comme nouvelle liste avec ses points de passage et sa référence de carte ; les fichiers de carte ne sont pas inclus. Pro."
       },
       "f2": {
-        "title": "PAYWALL LOCALISÉ",
-        "body": "L’import de carte et les onglets verrouillés utilisent des noms de fonctions traduits, et la liste des fonctions Pro est désormais traduite dans toutes les langues."
+        "title": "VÉRIFICATION CARTE",
+        "body": "Vérifiez la couverture des fichiers de carte importés sur tout l'itinéraire, étape par étape, avant de partir. Cela vérifie les fichiers de carte, pas la sécurité. Pro."
+      },
+      "f3": {
+        "title": "ESPACE GRILLE + CARTE",
+        "body": "Les grands écrans affichent la lecture à côté de la carte ; la carte garde sa vue et sa sélection d'un onglet à l'autre, et le grand texte garde chaque commande accessible."
       }
     },
   },

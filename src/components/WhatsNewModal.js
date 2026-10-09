@@ -17,10 +17,15 @@ const SEEN_KEY = 'rg_whatsnew_seen_version';
 // The release whose bullets are translated under `whatsNew.current` in i18n.
 // Bump this in lockstep with the entry added to FEATURES_BY_VERSION below, or
 // the modal silently falls back to English.
-const LOCALIZED_VERSION = '4.0.8';
+const LOCALIZED_VERSION = '4.1.0';
 
 // Features to showcase for a given version. Keep terse — this is a glance screen.
 const FEATURES_BY_VERSION = {
+  '4.1.0': [
+    {"icon":"◉","title":"FIELD PACKS","body":"Share a saved route as a small file. A teammate imports it as a new list with its checkpoints and map reference; map files are not included. Pro."},
+    {"icon":"◆","title":"ROUTE MAP CHECK","body":"Check imported map-file coverage along the whole route, leg by leg, before you leave. This checks map files, not safety. Pro."},
+    {"icon":"✓","title":"GRID + MAP SPACE","body":"Wide screens show the readout beside the map; the map keeps its viewport and selection across tabs, and large text keeps every control reachable."},
+  ],
   '4.0.8': [
     {"icon":"◉","title":"CLEARER PRO TABS","body":"LISTS, COORDS and MESH now explain what each tab does and what Free already includes before offering Pro."},
     {"icon":"◆","title":"LOCALIZED PAYWALL","body":"Map import and locked-tab prompts use translated feature names, and the Pro feature list is now localized in every language."},

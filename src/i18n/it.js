@@ -422,12 +422,16 @@ export default {
     startTrial: "INIZIA LA PROVA GRATUITA DI 7 GIORNI",
     current: {
       "f1": {
-        "title": "SCHEDE PRO PIÙ CHIARE",
-        "body": "LISTE, COORD e MESH ora spiegano cosa fa ogni scheda e cosa include già la versione gratuita prima di proporre Pro."
+        "title": "PACCHETTI DA CAMPO",
+        "body": "Condividi un percorso salvato come piccolo file. Un compagno lo importa come nuova lista con punti di controllo e riferimento mappa; i file mappa non sono inclusi. Pro."
       },
       "f2": {
-        "title": "PAYWALL LOCALIZZATO",
-        "body": "L’importazione mappe e le schede bloccate usano nomi di funzioni tradotti, e l’elenco delle funzioni Pro è ora tradotto in tutte le lingue."
+        "title": "CONTROLLO MAPPA",
+        "body": "Verifica la copertura dei file mappa importati su tutto il percorso, tratta per tratta, prima di partire. Controlla i file mappa, non la sicurezza. Pro."
+      },
+      "f3": {
+        "title": "SPAZIO GRIGLIA + MAPPA",
+        "body": "Gli schermi larghi mostrano la lettura accanto alla mappa; la mappa mantiene vista e selezione tra le schede, e il testo grande lascia ogni comando raggiungibile."
       }
     },
   },

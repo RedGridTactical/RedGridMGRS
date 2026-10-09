@@ -442,12 +442,16 @@ export default {
     startTrial: "INICIAR TESTE GRÁTIS DE 7 DIAS",
     current: {
       "f1": {
-        "title": "ABAS PRO MAIS CLARAS",
-        "body": "LISTAS, COORD e MESH agora explicam o que cada aba faz e o que a versão gratuita já inclui antes de oferecer o Pro."
+        "title": "PACOTES DE CAMPO",
+        "body": "Compartilhe uma rota salva como um arquivo pequeno. Um colega a importa como nova lista com pontos de controle e referência do mapa; arquivos de mapa não são incluídos. Pro."
       },
       "f2": {
-        "title": "PAYWALL LOCALIZADO",
-        "body": "A importação de mapas e as abas bloqueadas usam nomes de recursos traduzidos, e a lista de recursos Pro agora está traduzida em todos os idiomas."
+        "title": "VERIFICAÇÃO DO MAPA",
+        "body": "Verifique a cobertura dos arquivos de mapa importados em toda a rota, trecho a trecho, antes de sair. Isso verifica arquivos de mapa, não a segurança. Pro."
+      },
+      "f3": {
+        "title": "ESPAÇO GRADE + MAPA",
+        "body": "Telas largas mostram a leitura ao lado do mapa; o mapa mantém a vista e a seleção entre abas, e o texto grande mantém todos os controles acessíveis."
       }
     },
   },

@@ -422,12 +422,16 @@ export default {
     startTrial: "INICIAR PRUEBA GRATIS DE 7 DÍAS",
     current: {
       "f1": {
-        "title": "PESTAÑAS PRO MÁS CLARAS",
-        "body": "LISTAS, COORD y MESH ahora explican qué hace cada pestaña y qué incluye ya la versión gratuita antes de ofrecer Pro."
+        "title": "PAQUETES DE CAMPO",
+        "body": "Comparte una ruta guardada como un archivo pequeño. Un compañero la importa como lista nueva con sus puntos de control y referencia de mapa; los archivos de mapa no se incluyen. Pro."
       },
       "f2": {
-        "title": "PAYWALL LOCALIZADO",
-        "body": "La importación de mapas y las pestañas bloqueadas usan nombres de funciones traducidos, y la lista de funciones Pro ya está traducida en todos los idiomas."
+        "title": "COMPROBACIÓN DE MAPA",
+        "body": "Comprueba la cobertura de los archivos de mapa importados en toda la ruta, tramo a tramo, antes de salir. Comprueba archivos de mapa, no la seguridad. Pro."
+      },
+      "f3": {
+        "title": "ESPACIO CUADRÍCULA + MAPA",
+        "body": "Las pantallas anchas muestran la lectura junto al mapa; el mapa conserva su vista y selección entre pestañas, y el texto grande mantiene cada control accesible."
       }
     },
   },
