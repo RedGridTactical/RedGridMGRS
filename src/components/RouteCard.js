@@ -210,9 +210,10 @@ const styles = StyleSheet.create({
   backdrop: { flex: 1 },
   scroll: { padding: 16, paddingTop: 60, paddingBottom: 40 },
   card: { borderWidth: 1, padding: 18 },
-  cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  brand: { ...TYPE.data, fontSize: 10, letterSpacing: 3 },
-  cardKicker: { ...TYPE.label, fontSize: 11, letterSpacing: 0.8 },
+  // Brand and kicker wrap onto two lines at large text instead of overlapping.
+  cardHead: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', columnGap: 12, rowGap: 4 },
+  brand: { ...TYPE.data, fontSize: 10, letterSpacing: 3, flexShrink: 1 },
+  cardKicker: { ...TYPE.label, fontSize: 11, letterSpacing: 0.8, flexShrink: 1 },
   listName: { ...TYPE.heading, fontSize: 21, letterSpacing: 1, marginTop: 10 },
   divider: { height: StyleSheet.hairlineWidth, marginVertical: 12 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
