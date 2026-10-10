@@ -1,6 +1,7 @@
+jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }));
 jest.mock('react/jsx-runtime', () => ({ jsx: (type, props) => ({ type, props, children: [props.children] }), jsxs: (type, props) => ({ type, props, children: [props.children] }) }));
 jest.mock('react', () => ({ ...require('./helpers/hookHarness')(), createElement: (type, props, ...children) => ({ type, props: props || {}, children }) }));
-jest.mock('react-native', () => ({ View: 'View', Text: 'Text', TouchableOpacity: 'Button', StyleSheet: { create: value => value } }));
+jest.mock('react-native', () => ({ View: 'View', ScrollView: 'ScrollView', KeyboardAvoidingView: 'KeyboardAvoidingView', Platform: { OS: 'ios' }, Text: 'Text', TouchableOpacity: 'Button', StyleSheet: { create: value => value } }));
 jest.mock('../src/utils/ThemeContext', () => ({ useColors: () => ({}) }));
 jest.mock('../src/utils/typography', () => ({ TYPE: {} }));
 jest.mock('../src/hooks/useTranslation', () => ({ useTranslation: () => ({ t: key => key }) }));

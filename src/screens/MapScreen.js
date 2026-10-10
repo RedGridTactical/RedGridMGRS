@@ -13,7 +13,8 @@
  * Privacy: no tracking, no analytics. Location is ephemeral.
  */
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Platform, ScrollView, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Platform, ScrollView, Linking, KeyboardAvoidingView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Modal } from '../components/FieldModal';
 import { TextInput } from '../components/FieldInput';
 import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
@@ -116,6 +117,7 @@ export function MapScreen({
   onSessionChange,
 }) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const mapRef = useRef(null);
   // Initial region — captured ONCE per mount (restored session viewport, else
@@ -955,89 +957,91 @@ export function MapScreen({
 
       {/* Waypoint creation menu — themed, not native Alert */}
       <Modal visible={wpMenuVisible} transparent animationType="fade" onRequestClose={() => setWpMenuVisible(false)}>
-        <View style={styles.wpMenuOverlay}>
+        <KeyboardAvoidingView style={[styles.wpMenuOverlay, { paddingTop: Math.max(24, insets.top) }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined} enabled={Platform.OS === 'ios'}>
           <View style={[styles.wpMenuCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            {/* Header with MGRS */}
-            <Text style={[styles.wpMenuTitle, { color: colors.text }]}>
-              {t('map.addWaypoint')}
-            </Text>
-            <Text style={[styles.wpMenuMGRS, { color: colors.accentText }]}>
-              {pendingWaypoint?.mgrs || ''}
-            </Text>
+            <ScrollView contentContainerStyle={styles.wpMenuContent} keyboardShouldPersistTaps="handled">
+              {/* Header with MGRS */}
+              <Text style={[styles.wpMenuTitle, { color: colors.text }]}>
+                {t('map.addWaypoint')}
+              </Text>
+              <Text style={[styles.wpMenuMGRS, { color: colors.accentText }]}>
+                {pendingWaypoint?.mgrs || ''}
+              </Text>
 
-            {/* Rename input */}
-            <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>{t('map.label')}</Text>
-            <TextInput
-              style={[styles.wpMenuInput, { borderColor: colors.border, backgroundColor: colors.bg, color: colors.text }]}
-              value={wpLabel}
-              onChangeText={setWpLabel}
-              maxLength={24}
-              autoCapitalize="characters"
-              placeholderTextColor={colors.text3}
-              placeholder={t('map.waypointNamePlaceholder')}
-            />
+              {/* Rename input */}
+              <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>{t('map.label')}</Text>
+              <TextInput
+                style={[styles.wpMenuInput, { borderColor: colors.border, backgroundColor: colors.bg, color: colors.text }]}
+                value={wpLabel}
+                onChangeText={setWpLabel}
+                maxLength={24}
+                autoCapitalize="characters"
+                placeholderTextColor={colors.text3}
+                placeholder={t('map.waypointNamePlaceholder')}
+              />
 
-            {/* List picker */}
-            <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>{t('map.addToList')}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.wpMenuListScroll}>
-              {wpLists.map(list => (
+              {/* List picker */}
+              <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>{t('map.addToList')}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.wpMenuListScroll}>
+                {wpLists.map(list => (
+                  <TouchableOpacity
+                    key={list.id}
+                    style={[styles.wpMenuListBtn, {
+                      borderColor: wpSelectedList === list.id ? colors.accent : colors.border,
+                      backgroundColor: wpSelectedList === list.id ? colors.border2 : 'transparent',
+                    }]}
+                    onPress={() => setWpSelectedList(list.id)}
+                  >
+                    <Text style={[styles.wpMenuListText, { color: wpSelectedList === list.id ? colors.text : colors.text2 }]}>
+                      {list.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+                {wpLists.length === 0 && (
+                  <Text style={[styles.wpMenuHint, { color: colors.text3 }]}>{t('map.newListNote')}</Text>
+                )}
+              </ScrollView>
+
+              {/* Action buttons */}
+              {mapSaveError && <Text accessibilityRole="alert" style={[styles.wpMenuHint, { color: colors.text }]}>{t('workflow.saveFailed')}</Text>}
+              <View style={styles.wpMenuActions}>
                 <TouchableOpacity
-                  key={list.id}
-                  style={[styles.wpMenuListBtn, {
-                    borderColor: wpSelectedList === list.id ? colors.accent : colors.border,
-                    backgroundColor: wpSelectedList === list.id ? colors.border2 : 'transparent',
-                  }]}
-                  onPress={() => setWpSelectedList(list.id)}
-                >
-                  <Text style={[styles.wpMenuListText, { color: wpSelectedList === list.id ? colors.text : colors.text2 }]}>
-                    {list.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-              {wpLists.length === 0 && (
-                <Text style={[styles.wpMenuHint, { color: colors.text3 }]}>{t('map.newListNote')}</Text>
-              )}
-            </ScrollView>
-
-            {/* Action buttons */}
-            {mapSaveError && <Text accessibilityRole="alert" style={[styles.wpMenuHint, { color: colors.text }]}>{t('workflow.saveFailed')}</Text>}
-            <View style={styles.wpMenuActions}>
-              <TouchableOpacity
-                style={[styles.wpMenuBtn, { borderColor: colors.accent, backgroundColor: colors.border2 }]}
-                onPress={saveWaypointFromMenu}
-                disabled={listsLoading || listsLoadError || listsSaving}
-              >
-                <Text style={[styles.wpMenuBtnText, { color: colors.text }]}>{t('common.save')}</Text>
-              </TouchableOpacity>
-
-              {onSetWaypoint && (
-                <TouchableOpacity
-                  style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
-                  onPress={() => { saveWaypointFromMenu().then(saved => { if (saved) navigateToWaypoint(); }); }}
+                  style={[styles.wpMenuBtn, { borderColor: colors.accent, backgroundColor: colors.border2 }]}
+                  onPress={saveWaypointFromMenu}
                   disabled={listsLoading || listsLoadError || listsSaving}
                 >
-                  <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('map.saveNav')}</Text>
+                  <Text style={[styles.wpMenuBtnText, { color: colors.text }]}>{t('common.save')}</Text>
                 </TouchableOpacity>
-              )}
 
-              {onSetWaypoint && (
+                {onSetWaypoint && (
+                  <TouchableOpacity
+                    style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
+                    onPress={() => { saveWaypointFromMenu().then(saved => { if (saved) navigateToWaypoint(); }); }}
+                    disabled={listsLoading || listsLoadError || listsSaving}
+                  >
+                    <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('map.saveNav')}</Text>
+                  </TouchableOpacity>
+                )}
+
+                {onSetWaypoint && (
+                  <TouchableOpacity
+                    style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
+                    onPress={navigateToWaypoint}
+                  >
+                    <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('map.navOnly')}</Text>
+                  </TouchableOpacity>
+                )}
+
                 <TouchableOpacity
-                  style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
-                  onPress={navigateToWaypoint}
+                  style={[styles.wpMenuBtn, { borderColor: colors.border }]}
+                  onPress={() => { setWpMenuVisible(false); setPendingWaypoint(null); }}
                 >
-                  <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('map.navOnly')}</Text>
+                  <Text style={[styles.wpMenuBtnText, { color: colors.text3 }]}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
-              )}
-
-              <TouchableOpacity
-                style={[styles.wpMenuBtn, { borderColor: colors.border }]}
-                onPress={() => { setWpMenuVisible(false); setPendingWaypoint(null); }}
-              >
-                <Text style={[styles.wpMenuBtnText, { color: colors.text3 }]}>{t('common.cancel')}</Text>
-              </TouchableOpacity>
-            </View>
+              </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* v3.4 Mission Preflight modal. Consumes the current map viewport so its
@@ -1145,12 +1149,13 @@ const styles = StyleSheet.create({
 
   // Waypoint creation menu
   wpMenuOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 24 },
-  wpMenuCard: { width: '100%', maxWidth: 340, borderWidth: 1, padding: 16, gap: 8 },
+  wpMenuCard: { width: '100%', maxWidth: 340, borderWidth: 1, flexShrink: 1, maxHeight: '100%' },
+  wpMenuContent: { padding: 16, gap: 8 },
   wpMenuTitle: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2 },
   wpMenuMGRS: { ...TYPE.data, fontSize: 16, letterSpacing: 0.6, marginBottom: 4 },
   wpMenuLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, marginTop: 4 },
   wpMenuInput: { borderWidth: 1, ...TYPE.body, fontSize: 13, letterSpacing: 0.3, paddingHorizontal: 10, paddingVertical: 8 },
-  wpMenuListScroll: { maxHeight: 40, marginVertical: 4 },
+  wpMenuListScroll: { flexGrow: 0, flexShrink: 0, marginVertical: 4 },
   wpMenuListBtn: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6 },
   wpMenuListText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   wpMenuHint: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, alignSelf: 'center' },

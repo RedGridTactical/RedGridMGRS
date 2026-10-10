@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Modal } from './FieldModal';
 import { TextInput } from './FieldInput';
 import { parseMGRSToLatLon } from '../utils/mgrs';
@@ -11,6 +12,7 @@ import { useTranslation } from '../hooks/useTranslation';
 
 export function WaypointModal({ visible, onClose, onSetWaypoint, currentLocation }) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const [mgrsInput, setMGRSInput] = useState('');
   const [label, setLabel] = useState('');
@@ -44,7 +46,7 @@ export function WaypointModal({ visible, onClose, onSetWaypoint, currentLocation
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={close}>
       {/* Android's modal already resizes for the keyboard. Keep iOS padding only. */}
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} enabled={Platform.OS === 'ios'} style={styles.overlay}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} enabled={Platform.OS === 'ios'} style={[styles.overlay, { paddingTop: Math.max(0, insets.top) }]}>
         <View style={[styles.sheet, { backgroundColor: colors.bg, borderTopColor: colors.border }]} accessibilityViewIsModal={true}>
           <ScrollView contentContainerStyle={styles.sheetContent} keyboardShouldPersistTaps="handled" bounces={false} keyboardDismissMode="none">
             <Text style={[styles.title, { color: colors.text }]}>{t('waypointModal.title')}</Text>

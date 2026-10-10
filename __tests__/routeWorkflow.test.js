@@ -1,10 +1,11 @@
+jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }));
 jest.mock('react', () => {
   const hooks = require('./helpers/hookHarness')();
   return { ...jest.requireActual('react'), ...hooks, useMemo: (fn, deps) => hooks.useCallback(fn, deps)() };
 });
 jest.mock('react-native', () => ({
   useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }),
-  View: 'View', Text: 'Text', TouchableOpacity: 'TouchableOpacity', ScrollView: 'ScrollView',
+  View: 'View', KeyboardAvoidingView: 'KeyboardAvoidingView', Text: 'Text', TouchableOpacity: 'TouchableOpacity', ScrollView: 'ScrollView',
   StyleSheet: { create: value => value, hairlineWidth: 1 }, Platform: { OS: 'ios', select: value => value.ios },
   useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1 }),
   Animated: { Value: jest.fn(), View: 'AnimatedView' },
