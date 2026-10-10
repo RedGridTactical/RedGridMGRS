@@ -44,6 +44,15 @@ import { TYPE } from '../utils/typography';
 // Free-tier persistent-waypoint cap. Free users get 1 saved waypoint; Pro is
 // limited to 10 saved lists with 20 points each.
 const FREE_WAYPOINT_LIMIT = 1;
+// Android draws Google's vector labels above raster tile overlays. The base
+// map is already "none" (set in GoogleMapOptions at creation and re-applied on
+// map-ready through the react-native-maps patch); this style is the second
+// guard against base-map labels or POIs appearing above provider tiles.
+const ANDROID_BASEMAP_STYLE = [
+  { featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+];
 const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 let MapView = null;
@@ -120,6 +129,15 @@ export function MapScreen({
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const mapRef = useRef(null);
+  // The bottom MGRS bar overlays the map. On Android the Google logo must stay
+  // visible, so the measured bar height becomes map padding and the reticle
+  // moves to the padded camera target. iOS layout is unchanged.
+  const [bottomBarHeight, setBottomBarHeight] = useState(0);
+  const onBottomBarLayout = useCallback(event => {
+    const height = Math.round(event?.nativeEvent?.layout?.height || 0);
+    setBottomBarHeight(previous => (previous === height ? previous : height));
+  }, []);
+  const androidMapPadding = Platform.OS === 'android' && bottomBarHeight > 0 ? { top: 0, left: 0, right: 0, bottom: bottomBarHeight } : undefined;
   // Initial region — captured ONCE per mount (restored session viewport, else
   // the fix available at mount, else the default) and used to seed mapRegion,
   // so the footer, coverage check, grid overlay AND the session all describe
@@ -521,6 +539,8 @@ export function MapScreen({
         onRegionChangeComplete={onRegionChange}
         onLongPress={onLongPress}
         mapType={Platform.OS === 'ios' ? 'standard' : 'none'}
+        {...(Platform.OS === 'android' ? { customMapStyle: ANDROID_BASEMAP_STYLE } : {})}
+        {...(androidMapPadding ? { mapPadding: androidMapPadding } : {})}
         showsPointsOfInterest={false}
         showsBuildings={false}
         minZoomLevel={offlineMode && offlineMetadata ? offlineMetadata.minZoom : undefined}
@@ -636,7 +656,7 @@ export function MapScreen({
       </MapView>
 
       {/* Center reticle */}
-      <View style={styles.reticle} pointerEvents="none">
+      <View style={[styles.reticle, androidMapPadding && { marginTop: -10 - androidMapPadding.bottom / 2 }]} pointerEvents="none">
         <View style={[styles.reticleH, { backgroundColor: colors.accent + '66' }]} />
         <View style={[styles.reticleV, { backgroundColor: colors.accent + '66' }]} />
       </View>
@@ -702,7 +722,7 @@ export function MapScreen({
       {/* Provider attribution — required to stay visible over online layers. */}
       {!(offlineMode && localTilePath) && (
         <TouchableOpacity
-          style={[styles.attribution, { backgroundColor: colors.card + 'E6', borderColor: colors.border }]}
+          style={[styles.attribution, { backgroundColor: colors.card + 'E6', borderColor: colors.border }, androidMapPadding && { bottom: androidMapPadding.bottom + 40 }]}
           onPress={openAttribution}
           accessibilityRole="link"
           accessibilityLabel={`${onlineStyle.attribution}. Opens licence page.`}
@@ -943,7 +963,7 @@ export function MapScreen({
       </Modal>
 
       {/* Bottom bar — center MGRS + cache indicator */}
-      <View style={[styles.bottomBar, { backgroundColor: colors.bg, borderTopColor: colors.border2 }]}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.bg, borderTopColor: colors.border2 }]} onLayout={Platform.OS === 'android' ? onBottomBarLayout : undefined}>
         <Text style={[styles.bottomLabel, { color: colors.text3 }]}>{t('map.center')}</Text>
         <Text style={[styles.bottomMGRS, { color: colors.text }]} numberOfLines={1}>
           {centerMGRS || '\u2014'}

@@ -476,3 +476,81 @@ index 17e3882..1495cbe 100644
  }
  
  #pragma mark MKOverlay implementation
+diff --git a/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapManager.java b/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapManager.java
+index 0000000..0000000 100644
+--- a/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapManager.java
++++ b/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapManager.java
+@@ -99,6 +99,14 @@
+                     googleMapOptions.camera(position);
+                 }
+             }
++            // Base-map type is part of GoogleMapOptions so a "none" map never loads
++            // Google base tiles before the first prop update reaches the view.
++            if (initialProps.hasKey("mapType")) {
++                Integer initialType = MAP_TYPES.get(initialProps.getString("mapType"));
++                if (initialType != null) {
++                    googleMapOptions.mapType(initialType);
++                }
++            }
+             if (initialProps.hasKey("googleRenderer") && "LEGACY".equals(initialProps.getString("googleRenderer"))) {
+                 renderer = MapsInitializer.Renderer.LEGACY;
+             } else {
+@@ -157,8 +165,8 @@
+ 
+     @ReactProp(name = "mapType")
+     public void setMapType(MapView view, @Nullable String mapType) {
+-        int typeId = MAP_TYPES.get(mapType);
+-        view.map.setMapType(typeId);
++        Integer typeId = mapType == null ? null : MAP_TYPES.get(mapType);
++        view.setMapType(typeId == null ? GoogleMap.MAP_TYPE_NORMAL : typeId);
+     }
+ 
+     @ReactProp(name = "customMapStyleString")
+diff --git a/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapView.java b/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapView.java
+index 0000000..0000000 100644
+--- a/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapView.java
++++ b/node_modules/react-native-maps/android/src/main/java/com/rnmaps/maps/MapView.java
+@@ -111,6 +111,8 @@
+   private ReadableMap initialCamera;
+   private ReadableMap camera;
+   private String customMapStyleString;
++  // Kept on the view so the type survives map (re)creation; applied on map-ready.
++  private Integer mapType = null;
+   private boolean initialRegionSet = false;
+   private boolean initialCameraSet = false;
+   private LatLngBounds cameraLastIdleBounds;
+@@ -563,10 +565,20 @@
+     } else if (camera != null) {
+       moveToCamera(camera);
+     }
++    if(mapType != null) {
++      map.setMapType(mapType);
++    }
+     if(customMapStyleString != null) {
+       map.setMapStyle(new MapStyleOptions(customMapStyleString));
+     }
+     this.setPoiClickEnabled(poiClickEnabled);
++  }
++
++  public void setMapType(int mapType) {
++    this.mapType = mapType;
++    if (map != null) {
++      map.setMapType(mapType);
++    }
+   }
+ 
+   private void moveToRegion(ReadableMap region) {
+diff --git a/node_modules/react-native-maps/lib/MapView.js b/node_modules/react-native-maps/lib/MapView.js
+index 0000000..0000000 100644
+--- a/node_modules/react-native-maps/lib/MapView.js
++++ b/node_modules/react-native-maps/lib/MapView.js
+@@ -329,6 +329,9 @@
+             props = {
+                 style: this.props.style,
+                 region: null,
++                // Sent before map-ready so the native side can put it into GoogleMapOptions
++                // (Android only reaches this branch) and never load base tiles for "none".
++                mapType: this.props.mapType,
+                 liteMode: this.props.liteMode,
+                 googleMapId: this.props.googleMapId,
+                 googleRenderer: this.props.googleRenderer,
