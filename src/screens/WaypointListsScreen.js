@@ -339,7 +339,8 @@ export function WaypointListsScreen({
   };
 
   return (
-    <ScrollView style={[styles.root, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
+    <ScrollView style={styles.root} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>{t('waypoints.title')}</Text>
         <Text style={[styles.proTag, { color: colors.text2 }]}>{t('waypoints.pro')}</Text>
@@ -607,6 +608,10 @@ export function WaypointListsScreen({
         </View>
       )}
 
+    </ScrollView>
+
+      {/* Sheets must not inherit the list's scroll responder. Their native
+          windows and Tactical overlays own independent scroll gestures. */}
       <RouteCard visible={routeCardVisible} list={currentList} onClose={() => setRouteCardVisible(false)} />
       <RouteCard visible={!!reviewRoute} list={currentReview} onClose={() => setReviewRoute(null)} onSaveReviewNotes={onSaveReviewNotes} />
       <Modal visible={!!importPreview} transparent animationType="slide" onRequestClose={() => setImportPreview(null)}>
@@ -635,7 +640,7 @@ export function WaypointListsScreen({
           onStartRoute?.(routeToStart, mode);
         }}
       />
-    </ScrollView>
+    </View>
   );
 }
 

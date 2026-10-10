@@ -78,7 +78,7 @@ export function FieldPackModal({ visible, list, appVersion, onClose, onOpenRoute
   return (
     <Modal visible={!!visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={[styles.backdrop, { backgroundColor: colors.bg }]}>
-        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 40 + insets.bottom }]} keyboardShouldPersistTaps="handled">
+        <ScrollView style={styles.viewport} contentContainerStyle={[styles.content, { paddingBottom: 40 + insets.bottom }]} keyboardShouldPersistTaps="handled">
           <Text style={[styles.kicker, { color: colors.text3 }]}>{t('fieldPack.title')}{pack ? ` · ${t('fieldPack.revision', { rev: shortRevision(pack.revision) })}` : ''}</Text>
           <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">{list?.name}</Text>
           {!!list?.notes && <Text style={[styles.body, { color: colors.text2 }]}>{list.notes}</Text>}
@@ -131,7 +131,7 @@ export function FieldPackImportModal({ preview, onConfirm, onCancel, busy, faile
   return (
     <Modal visible={!!preview} transparent animationType="slide" onRequestClose={busy ? () => {} : onCancel}>
       <View style={[styles.backdrop, { backgroundColor: colors.bg }]}>
-        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 40 + insets.bottom }]} keyboardShouldPersistTaps="handled">
+        <ScrollView style={styles.viewport} contentContainerStyle={[styles.content, { paddingBottom: 40 + insets.bottom }]} keyboardShouldPersistTaps="handled">
           <Text style={[styles.kicker, { color: colors.text3 }]}>{t('fieldPack.importTitle')}</Text>
           <Text style={[styles.title, { color: colors.text }]} accessibilityRole="header">{pack?.route.name}</Text>
           <Text style={[styles.body, { color: colors.text2 }]}>{preview?.fileName}</Text>
@@ -166,6 +166,7 @@ export function FieldPackImportModal({ preview, onConfirm, onCancel, busy, faile
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, paddingTop: 60 },
+  viewport: { flex: 1 },
   content: { padding: 18, paddingBottom: 40, gap: 6 },
   kicker: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   title: { ...TYPE.heading, fontSize: 22, letterSpacing: 0.8 },

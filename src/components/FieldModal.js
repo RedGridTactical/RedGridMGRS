@@ -32,7 +32,12 @@ export function Modal(props) {
   }, [tacticalMode, visible, props.children, props.onRequestClose]);
   useEffect(() => () => { if (entries.delete(id.current)) publish(); }, []);
   if (tacticalMode) return null;
-  return <NativeModal {...props} />;
+  // Keep content within the dialog's viewport. With the legacy Android
+  // renderer, an intrinsic-height child can otherwise expand beyond the
+  // modal host and leave its ScrollView with no scrollable overflow.
+  return <NativeModal {...props}>
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">{props.children}</View>
+  </NativeModal>;
 }
 
 export function FieldModalHost() {
