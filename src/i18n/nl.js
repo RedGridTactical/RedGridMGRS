@@ -802,6 +802,12 @@ export default {
     fixphraseSub: "Coördinatenreferentie van vier woorden; verbetert de GPS-nauwkeurigheid niet",
   },
   support: {
+    supportRedGrid: "STEUN RED GRID",
+    writeReview: "Schrijf een beoordeling",
+    reviewDescription: "Deel een eerlijke beoordeling in de store.",
+    shareApp: "Deel Red Grid",
+    shareAppDescription: "Stuur de applink naar een vriend of je team.",
+    shareAppMessage: "Red Grid MGRS: MGRS-navigatie, kaarten en hulpmiddelen in het veld. {{url}}",
     "faqSourcePaid": "Waarom de broncode publiceren en Pro aanbieden?",
     "faqSourcePaidA": "De broncode is in te zien onder de repositorylicentie, met gebruiksbeperkingen. De winkelapp vereenvoudigt installatie en updates; Pro ondersteunt onderhoud en voegt geavanceerde navigatiewerkstromen toe. Zie de licentie in de gekoppelde repository.",
 

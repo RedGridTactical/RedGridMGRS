@@ -801,6 +801,12 @@ export default {
     fixphraseSub: "Repère de coordonnées en quatre mots ; n’améliore pas la précision GPS",
   },
   support: {
+    supportRedGrid: "SOUTENIR RED GRID",
+    writeReview: "Donner un avis",
+    reviewDescription: "Partagez un avis sincère sur la boutique.",
+    shareApp: "Partager Red Grid",
+    shareAppDescription: "Envoyez le lien à un ami ou à votre équipe.",
+    shareAppMessage: "Red Grid MGRS : navigation MGRS, cartes et outils de terrain. {{url}}",
     "faqSourcePaid": "Pourquoi publier le code et proposer Pro ?",
     "faqSourcePaidA": "Le code est consultable selon la licence du dépôt, qui comporte des restrictions d’utilisation. L’application en boutique simplifie l’installation et les mises à jour ; Pro finance la maintenance et ajoute des fonctions de navigation avancées. Consultez la licence du dépôt lié.",
 

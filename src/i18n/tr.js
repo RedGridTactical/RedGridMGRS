@@ -802,6 +802,12 @@ export default {
     fixphraseSub: "Dört kelimelik koordinat referansı; GPS doğruluğunu artırmaz",
   },
   support: {
+    supportRedGrid: "RED GRID’E DESTEK OL",
+    writeReview: "Yorum yaz",
+    reviewDescription: "Mağazada dürüst bir yorum paylaş.",
+    shareApp: "Red Grid’i paylaş",
+    shareAppDescription: "Uygulama bağlantısını arkadaşına veya ekibine gönder.",
+    shareAppMessage: "Red Grid MGRS: MGRS navigasyonu, haritalar ve saha araçları. {{url}}",
     "faqSourcePaid": "Neden kaynak kodu yayınlanıyor ve Pro sunuluyor?",
     "faqSourcePaidA": "Kaynak kodu, kullanım kısıtlamaları içeren depo lisansı kapsamında incelenebilir. Mağaza uygulaması kurulum ve güncellemeleri kolaylaştırır; Pro bakımı destekler ve gelişmiş navigasyon işlevleri ekler. Koşullar için bağlantılı deponun lisansına bakın.",
 

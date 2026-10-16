@@ -802,6 +802,12 @@ export default {
     fixphraseSub: "Czterowyrazowe odniesienie do współrzędnych; nie poprawia dokładności GPS",
   },
   support: {
+    supportRedGrid: "WESPRZYJ RED GRID",
+    writeReview: "Napisz opinię",
+    reviewDescription: "Podziel się szczerą opinią w sklepie.",
+    shareApp: "Udostępnij Red Grid",
+    shareAppDescription: "Wyślij link znajomemu lub swojemu zespołowi.",
+    shareAppMessage: "Red Grid MGRS: nawigacja MGRS, mapy i narzędzia terenowe. {{url}}",
     "faqSourcePaid": "Dlaczego udostępniać kod i oferować Pro?",
     "faqSourcePaidA": "Kod można przeglądać zgodnie z licencją repozytorium, która zawiera ograniczenia użycia. Aplikacja ze sklepu ułatwia instalację i aktualizacje; Pro wspiera utrzymanie i dodaje zaawansowane funkcje nawigacyjne. Warunki znajdziesz w licencji połączonego repozytorium.",
 

@@ -802,6 +802,12 @@ export default {
     fixphraseSub: "네 단어로 나타내는 좌표 참조이며 GPS 정확도를 높이지 않습니다",
   },
   support: {
+    supportRedGrid: "RED GRID 응원하기",
+    writeReview: "리뷰 작성",
+    reviewDescription: "스토어에 솔직한 후기를 남겨 주세요.",
+    shareApp: "Red Grid 공유",
+    shareAppDescription: "친구나 팀에 앱 링크를 보내세요.",
+    shareAppMessage: "Red Grid MGRS: MGRS 항법, 지도 및 야외 도구. {{url}}",
     "faqSourcePaid": "소스를 공개하면서 Pro를 제공하는 이유는 무엇인가요?",
     "faqSourcePaidA": "소스는 사용 제한이 포함된 저장소 라이선스에 따라 열람할 수 있습니다. 스토어 앱은 설치와 업데이트를 간편하게 하며, Pro는 유지보수를 지원하고 고급 항법 기능을 제공합니다. 조건은 연결된 소스 저장소의 라이선스를 확인하세요.",
 

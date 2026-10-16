@@ -36,6 +36,7 @@ import { useSettings }  from './src/hooks/useSettings';
 import { useIAP }       from './src/hooks/useIAP';
 import { useTheme }     from './src/hooks/useTheme';
 import { useStoreReview } from './src/hooks/useStoreReview';
+import { useReviewOpportunity } from './src/hooks/useReviewOpportunity';
 import { useFieldVoice } from './src/hooks/useFieldVoice';
 import { useWaypointLists } from './src/hooks/useWaypointLists';
 import { copyTextToClipboard } from './src/utils/clipboard';
@@ -217,9 +218,7 @@ function App() {
 
   const activeTheme = isPro || ['standard', 'red', 'white'].includes(theme) ? theme : 'standard';
   const themeData = useTheme(activeTheme);
-  // No automatic review request is wired in this slice: the only safe idle site
-  // has not been proven post-dismiss / no-navigation / no-modal on both platforms.
-  const { recordLaunch, openStoreReview } = useStoreReview();
+  const { recordLaunch, openStoreReview, requestReviewIfEligible } = useStoreReview();
   const [showTeamRoster, setShowTeamRoster] = useState(false);
   const mesh = useMeshtastic(isPro);
   // Team layer rides the mesh transport the app already has. Derives a roster
@@ -376,6 +375,7 @@ function App() {
     setCopyToast(true);
     AccessibilityInfo.announceForAccessibility(t('grid.copiedToClipboard'));
     setTimeout(() => setCopyToast(false), 1500);
+    return true;
   }, [mgrsFormatted, altDisplay, t]);
 
   const voice = useFieldVoice(mgrsFormatted, { enabled: isPro, shakeEnabled: shakeToSpeak, tacticalMode, tacticalSound });
@@ -470,6 +470,7 @@ function App() {
         isPro={isPro}
         isLandscape={isLandscape}
         gridProps={gridProps}
+        requestReviewIfEligible={requestReviewIfEligible}
         mapSession={mapSession}
         onMapSessionChange={onMapSessionChange}
         location={location}
@@ -542,7 +543,7 @@ function AppContent({
   // "Property 'showTeamRoster' doesn't exist" and trips the error boundary.
   team, showTeamRoster, setShowTeamRoster,
   safeTab, setTab, TABS, isPro, isLandscape,
-  gridProps, mapSession, onMapSessionChange, location, declination, paceCount,
+  gridProps, requestReviewIfEligible, mapSession, onMapSessionChange, location, declination, paceCount,
   setDeclination, setPaceCount, mgrsFormatted, showProGate,
   theme, setTheme, tacticalMode, setTacticalMode, settingsLoaded, setWaypoint,
   showModal, setShowModal, proGateVisible, setProGateVisible,
@@ -592,9 +593,6 @@ function AppContent({
   const expanded = plan.expanded;
   const [primarySlot, hingeSlot, mapSlot] = plan.slots;
   const arrowSize = arrowSizeFor({ mode: expanded ? 'expanded' : 'compact', landscape: layout.landscape, pane: layout.panes?.primary, height });
-  const gridContent = !expanded && layout.landscape
-    ? <LandscapeGrid {...gridProps} arrowSize={arrowSize} />
-    : <PortraitGrid {...gridProps} arrowSize={arrowSize} />;
   const listProps = {
     savedLists: savedPlans.lists, listsLoading: savedPlans.loading, listsLoadError: savedPlans.loadError,
     listsSaveError: savedPlans.saveError, listsSaving: savedPlans.isSaving,
@@ -603,6 +601,24 @@ function AppContent({
   };
   const storeAction = useRef(false);
   const fieldModalVisible = useFieldModalVisibility();
+  const canQueueReview = () => settingsLoaded && display.ready && display.active
+    && !tacticalMode && !hudMode && !waypoint && !fieldNavigation.route && !routeDraft.active
+    && !isPurchasing && !storeAction.current && !gridProps.speaking
+    && !mesh.autoShare && !mesh.isConnected && !team.sosPeers?.length && !team.lastInbound;
+  const { queueReview, cancelReview } = useReviewOpportunity({
+    requestReviewIfEligible, canQueue: canQueueReview, contextKey: safeTab,
+    isContextStable: () => ['grid', 'lists'].includes(safeTab)
+      && !showModal && !proGateVisible && !showSupport && !showTeamRoster && !fieldModalVisible
+      && !savedPlans.isSaving && !savedPlans.loading && !savedPlans.loadError && !savedPlans.saveError
+      && !fieldNavigation.isSaving && !fieldNavigation.loading && !fieldNavigation.loadError && !fieldNavigation.saveError,
+  });
+  const reviewGridProps = { ...gridProps,
+    onCopyGrid: async () => { if (await gridProps.onCopyGrid()) queueReview(); },
+    onRateApp: () => { cancelReview(); gridProps.onRateApp(); },
+  };
+  const gridContent = !expanded && layout.landscape
+    ? <LandscapeGrid {...reviewGridProps} arrowSize={arrowSize} />
+    : <PortraitGrid {...reviewGridProps} arrowSize={arrowSize} />;
   useEffect(() => registerDisplayGuard({ tacticalMode, exit: async () => {
     setTacticalMode(false);
     await display.restore().catch(() => {});
@@ -621,7 +637,8 @@ function AppContent({
 
   return (
     <DisplaySafetyProvider value={{ tacticalMode, onExitTactical: () => setTacticalMode(false), brightnessReady: display.ready, active: display.active }}>
-    <View style={staticStyles.root}>
+    <View style={staticStyles.root} onTouchStart={cancelReview} onTouchMove={cancelReview}
+      onFocusCapture={cancelReview} onBlurCapture={cancelReview}>
     <View style={staticStyles.root} accessibilityElementsHidden={tacticalMode && fieldModalVisible} importantForAccessibility={tacticalMode && fieldModalVisible ? 'no-hide-descendants' : 'auto'}>
     <SafeAreaView style={[staticStyles.root, { backgroundColor: colors.bg }]} accessibilityElementsHidden={tacticalMode && fieldModalVisible} importantForAccessibility={tacticalMode && fieldModalVisible ? 'no-hide-descendants' : 'auto'}>
       {/* backgroundColor is deprecated and ignored under edge-to-edge (Android 15+);
@@ -684,6 +701,7 @@ function AppContent({
         {panes.primary === 'lists' && isPro && (
           <WaypointListsScreen
             {...listProps} selectedListId={selectedListId} onListRequestHandled={() => setSelectedListId(null)}
+            onUsefulTaskComplete={queueReview}
             onSaveReviewNotes={fieldNavigation.updateReviewNotes}
             location={location}
             onSelectWaypoint={async wp => { await setWaypoint(wp); setTab('grid'); }}
@@ -836,6 +854,7 @@ function AppContent({
       {/* Help & Support */}
       <SupportScreen
         visible={showSupport}
+        onReviewApp={reviewGridProps.onRateApp}
         onClose={() => setShowSupport(false)}
         onRestore={async () => { if (storeAction.current) return; storeAction.current = true; try { if (await allowSystemDisplay()) await restore(); } finally { storeAction.current = false; } }}
         isRestoring={isPurchasing}
@@ -854,7 +873,7 @@ function AppContent({
       />
 
       <WhatsNewModal
-        currentVersion="4.1.0"
+        currentVersion="4.1.1"
         showTrialCta={!isPro}
         onStartTrial={() => showProGate('')}
       />

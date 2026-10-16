@@ -8,11 +8,10 @@
  *                               URL fallback, one shared >= 120-day cooldown that
  *                               honours both legacy timestamps, equal usage gates
  *                               for Free and Pro, serialized in flight, and a
- *                               context re-check after every await. NOT CALLED by the
- *                               app yet: it may only be wired to an idle post-task site
- *                               once that site is proven to run after the dismissing
- *                               modal has fully gone, with no active navigation and no
- *                               other modal, on both platforms. It returns what it
+ *                               context re-check after every await. Called only by the
+ *                               cancellable idle post-task opportunity in AppContent,
+ *                               after presentation settling, with no active navigation.
+ *                               It returns what it
  *                               did; the native request is an attempt, never proof
  *                               that a prompt was shown or that a review was submitted.
  *   openStoreReview()         — the manual "★ Rate This App" action: opens the store

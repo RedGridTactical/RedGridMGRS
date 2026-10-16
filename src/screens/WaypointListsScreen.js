@@ -46,7 +46,7 @@ export function WaypointListsScreen({
   location, onSelectWaypoint, onStartRoute, activeRoute, navigationHistory = [],
   onClearNavigationHistory, onResumeNavigation, gpsSource, gpsDeviceName, mesh,
   savedLists = [], listsLoading = false, listsLoadError = false, listsSaveError = false, listsSaving = false,
-  onRetryListsLoad, onRetryListsSave, onSaveList, onUpdateList, onDeleteList, selectedListId, onListRequestHandled, onSaveReviewNotes,
+  onRetryListsLoad, onRetryListsSave, onSaveList, onUpdateList, onDeleteList, selectedListId, onListRequestHandled, onSaveReviewNotes, onUsefulTaskComplete,
 }) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -176,7 +176,10 @@ export function WaypointListsScreen({
       if (!planName.trim()) throw new Error('name');
       fields = parseRoutePlanInputs({ pace: planPace, plannedStart: planStart, notes: planNotes });
     } catch { setPlanError(t('workflow.invalidPlan')); return; }
-    if (await write(() => onUpdateList(currentList.id, list => ({ ...list, ...fields, name: planName.trim().toUpperCase() })))) setEditingPlan(false);
+    if (await write(() => onUpdateList(currentList.id, list => ({ ...list, ...fields, name: planName.trim().toUpperCase() })))) {
+      setEditingPlan(false);
+      if (currentList.waypoints.length) onUsefulTaskComplete?.();
+    }
   };
 
   // ── Copy waypoint MGRS ──

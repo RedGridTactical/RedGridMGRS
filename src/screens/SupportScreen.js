@@ -11,10 +11,10 @@ import { useColors } from '../utils/ThemeContext';
 import { TYPE } from '../utils/typography';
 import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
-import { shareTrialLink } from '../utils/referral';
+import { shareTrialLink, shareApp } from '../utils/referral';
 import { useReferralTrial } from '../hooks/useReferralTrial';
 
-const APP_VERSION = '4.1.0';
+const APP_VERSION = '4.1.1';
 const SUPPORT_EMAIL = 'support@redgridtactical.com';
 const GITHUB_URL = 'https://github.com/RedGridTactical/RedGridMGRS';
 const PRIVACY_URL = 'https://redgridtactical.com/privacy';
@@ -33,7 +33,7 @@ function FAQItem({ q, a, colors }) {
   );
 }
 
-export function SupportScreen({ visible, onClose, onRestore, isRestoring = false }) {
+export function SupportScreen({ visible, onClose, onRestore, onReviewApp, isRestoring = false }) {
   const colors = useColors();
   const { t } = useTranslation();
   const [shareBusy, setShareBusy] = useState(false);
@@ -70,6 +70,17 @@ export function SupportScreen({ visible, onClose, onRestore, isRestoring = false
     }
   }, [t]);
 
+  const handleShareApp = useCallback(async () => {
+    if (sharing.current) return;
+    sharing.current = true; setShareBusy(true);
+    try {
+      if (!(await allowSystemDisplay())) return;
+      tapMedium();
+      const result = await shareApp(url => t('support.shareAppMessage', { url }));
+      if (!result.ok) Alert.alert(t('trial.shareFailedTitle'), t('trial.shareFailedBody'));
+    } finally { sharing.current = false; setShareBusy(false); }
+  }, [t]);
+
   return (
     <Modal
       visible={visible}
@@ -88,6 +99,25 @@ export function SupportScreen({ visible, onClose, onRestore, isRestoring = false
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('support.supportRedGrid')}</Text>
+          <TouchableOpacity style={[styles.linkCard, { borderColor: colors.border, backgroundColor: colors.card }]}
+            onPress={() => { tapLight(); onReviewApp?.(); }} accessibilityRole="button" accessibilityLabel={t('support.writeReview')}>
+            <Text style={[styles.linkIcon, { color: colors.text2 }]} maxFontSizeMultiplier={1} numberOfLines={1} importantForAccessibility="no" accessibilityElementsHidden>RATE</Text>
+            <View style={styles.linkInfo}>
+              <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.writeReview')}</Text>
+              <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('support.reviewDescription')}</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.linkCard, { borderColor: colors.border, backgroundColor: colors.card, opacity: shareBusy ? 0.5 : 1 }]}
+            onPress={handleShareApp} disabled={shareBusy} accessibilityState={{ disabled: shareBusy, busy: shareBusy }}
+            accessibilityRole="button" accessibilityLabel={t('support.shareApp')}>
+            <Text style={[styles.linkIcon, { color: colors.text2 }]} maxFontSizeMultiplier={1} numberOfLines={1} importantForAccessibility="no" accessibilityElementsHidden>SHARE</Text>
+            <View style={styles.linkInfo}>
+              <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.shareApp')}</Text>
+              <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('support.shareAppDescription')}</Text>
+            </View>
+          </TouchableOpacity>
+
           {/* Quick Links */}
           <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('support.contact')}</Text>
           <TouchableOpacity
@@ -96,7 +126,7 @@ export function SupportScreen({ visible, onClose, onRestore, isRestoring = false
             accessibilityRole="button"
             accessibilityLabel={t('support.emailSupport')}
           >
-            <Text style={[styles.linkIcon, { color: colors.text2 }]} importantForAccessibility="no" accessibilityElementsHidden>MAIL</Text>
+            <Text style={[styles.linkIcon, { color: colors.text2 }]} maxFontSizeMultiplier={1} numberOfLines={1} importantForAccessibility="no" accessibilityElementsHidden>MAIL</Text>
             <View style={styles.linkInfo}>
               <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.emailSupport')}</Text>
               <Text style={[styles.linkSub, { color: colors.text3 }]}>{SUPPORT_EMAIL}</Text>
@@ -109,7 +139,7 @@ export function SupportScreen({ visible, onClose, onRestore, isRestoring = false
             accessibilityRole="button"
             accessibilityLabel={t('support.reportBug')}
           >
-            <Text style={[styles.linkIcon, { color: colors.text2 }]} importantForAccessibility="no" accessibilityElementsHidden>BUG</Text>
+            <Text style={[styles.linkIcon, { color: colors.text2 }]} maxFontSizeMultiplier={1} numberOfLines={1} importantForAccessibility="no" accessibilityElementsHidden>BUG</Text>
             <View style={styles.linkInfo}>
               <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.reportBug')}</Text>
               <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('support.reportBugSub')}</Text>
@@ -122,7 +152,7 @@ export function SupportScreen({ visible, onClose, onRestore, isRestoring = false
             accessibilityRole="button"
             accessibilityLabel={t('support.sourceCode')}
           >
-            <Text style={[styles.linkIcon, { color: colors.text2 }]} importantForAccessibility="no" accessibilityElementsHidden>SRC</Text>
+            <Text style={[styles.linkIcon, { color: colors.text2 }]} maxFontSizeMultiplier={1} numberOfLines={1} importantForAccessibility="no" accessibilityElementsHidden>SRC</Text>
             <View style={styles.linkInfo}>
               <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.sourceCode')}</Text>
               <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('support.sourceCodeSub')}</Text>
@@ -186,7 +216,7 @@ export function SupportScreen({ visible, onClose, onRestore, isRestoring = false
             accessibilityRole="button"
             accessibilityLabel={t('support.privacyPolicy')}
           >
-            <Text style={[styles.linkIcon, { color: colors.text2 }]} importantForAccessibility="no" accessibilityElementsHidden>LEGAL</Text>
+            <Text style={[styles.linkIcon, { color: colors.text2 }]} maxFontSizeMultiplier={1} numberOfLines={1} importantForAccessibility="no" accessibilityElementsHidden>LEGAL</Text>
             <View style={styles.linkInfo}>
               <Text style={[styles.linkTitle, { color: colors.text }]}>{t('support.privacyPolicy')}</Text>
               <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('support.privacySub')}</Text>

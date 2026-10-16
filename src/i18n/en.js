@@ -776,6 +776,12 @@ export default {
 
   // ─── Support / Help screen ────────────────────────────────────────────
   support: {
+    supportRedGrid: "SUPPORT RED GRID",
+    writeReview: "Write a review",
+    reviewDescription: "Share an honest review on the store.",
+    shareApp: "Share Red Grid",
+    shareAppDescription: "Send the app link to a friend or team.",
+    shareAppMessage: "Red Grid MGRS: MGRS navigation, maps and field tools. {{url}}",
     "faqSourcePaid": "Why publish the source and offer Pro?",
     "faqSourcePaidA": "The source is available for inspection under the repository license, which includes use restrictions. The store app makes installation and updates simpler; Pro supports maintenance and adds advanced navigation workflows. See the license in the linked source repository for its terms.",
 

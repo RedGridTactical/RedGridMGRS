@@ -802,6 +802,12 @@ export default {
     fixphraseSub: "4語で表す座標参照。GPS精度が向上するわけではありません",
   },
   support: {
+    supportRedGrid: "RED GRIDを応援",
+    writeReview: "レビューを書く",
+    reviewDescription: "ストアで率直な感想をお寄せください。",
+    shareApp: "Red Gridを共有",
+    shareAppDescription: "アプリのリンクを友人やチームに送れます。",
+    shareAppMessage: "Red Grid MGRS：MGRSナビゲーション、地図、野外ツール。{{url}}",
     "faqSourcePaid": "ソースを公開しながらProを提供する理由は？",
     "faqSourcePaidA": "ソースはリポジトリのライセンスに従って閲覧でき、利用制限があります。ストア版はインストールと更新を簡単にし、Proは保守を支え、高度なナビゲーション機能を追加します。条件はリンク先リポジトリのライセンスを確認してください。",
 

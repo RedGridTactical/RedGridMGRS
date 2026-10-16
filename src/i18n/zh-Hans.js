@@ -801,6 +801,12 @@ export default {
     fixphraseSub: "四词坐标标识；不会提高GPS精度",
   },
   support: {
+    supportRedGrid: "支持 RED GRID",
+    writeReview: "撰写评价",
+    reviewDescription: "在应用商店分享真实体验。",
+    shareApp: "分享 Red Grid",
+    shareAppDescription: "将应用链接发送给朋友或团队。",
+    shareAppMessage: "Red Grid MGRS：MGRS 导航、地图与野外工具。{{url}}",
     "faqSourcePaid": "为什么公开源代码并提供Pro？",
     "faqSourcePaidA": "源代码可按代码库许可证查阅，许可证包含使用限制。商店版应用便于安装和更新；Pro支持维护，并提供进阶导航功能。具体条款请查看所链接代码库的许可证。",
 

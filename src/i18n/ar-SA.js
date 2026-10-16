@@ -803,6 +803,12 @@ export default {
     fixphraseSub: "مرجع إحداثيات من أربع كلمات؛ لا يحسّن دقة GPS",
   },
   support: {
+    supportRedGrid: "ادعم RED GRID",
+    writeReview: "اكتب مراجعة",
+    reviewDescription: "شارك مراجعة صادقة في المتجر.",
+    shareApp: "شارك Red Grid",
+    shareAppDescription: "أرسل رابط التطبيق إلى صديق أو فريقك.",
+    shareAppMessage: "Red Grid MGRS: ملاحة MGRS وخرائط وأدوات ميدانية. {{url}}",
     "faqSourcePaid": "لماذا يُنشر المصدر مع تقديم Pro؟",
     "faqSourcePaidA": "المصدر متاح للفحص بموجب رخصة المستودع التي تتضمن قيودًا على الاستخدام. يسهّل تطبيق المتجر التثبيت والتحديثات، ويدعم Pro الصيانة ويضيف وظائف ملاحة متقدمة. راجع شروط الرخصة في مستودع المصدر المرتبط.",
 
