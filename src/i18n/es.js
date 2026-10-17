@@ -587,16 +587,16 @@ export default {
     startTrial: "INICIAR PRUEBA GRATIS DE 7 DÍAS",
     current: {
       "f1": {
-        "title": "ESPACIO DE INCIDENTE",
-        "body": "Lleva un registro de incidente en este dispositivo: periodo operativo, recursos y actividades con hora, con las correcciones guardadas en el historial. Pro para crear o editar; los registros guardados siguen siendo legibles y exportables."
+        "title": "PRO DE POR VIDA, PERMANENTE",
+        "body": "Paga una vez y conserva todas las futuras funciones y actualizaciones de Red Grid MGRS Pro. Sin suscripción ni nueva compra. Las compras de por vida existentes están protegidas. Enlaces a Términos y Privacidad en la pantalla Pro y en Ayuda."
       },
       "f2": {
-        "title": "EXPORTACIÓN ICS 214",
-        "body": "Revisa el borrador y comparte un PDF o texto ICS 214 sin firmar, o una copia JSON que puedes volver a importar. La app no firma ni presenta el informe."
+        "title": "RECUPERACIÓN DE COMPRAS",
+        "body": "Tus compras se restauran en silencio al iniciar y al volver a la app. Una comprobación sin conexión o incompleta nunca retira el acceso guardado."
       },
       "f3": {
-        "title": "BORRADORES QUE PERMANECEN",
-        "body": "Las hojas de informe y los borradores de incidente se guardan en este dispositivo y sobreviven a los reinicios. Cada actividad registra la hora del evento, la hora de registro y el origen de la ubicación. Sin rastreo ni red añadidos."
+        "title": "PANTALLA ANDROID",
+        "body": "Diseño de borde a borde con barras del sistema más claras y coherentes tras girar y reanudar. Sin rastreo ni red añadidos."
       }
     },
   },

@@ -588,16 +588,16 @@ export default {
     startTrial: "7-TAGE-TESTPHASE STARTEN",
     current: {
       "f1": {
-        "title": "EINSATZ-ARBEITSBEREICH",
-        "body": "Führe ein Einsatzprotokoll auf diesem Gerät: Einsatzabschnitt, Ressourcen und zeitlich erfasste Aktivitäten, Korrekturen bleiben im Verlauf. Pro zum Anlegen oder Bearbeiten; gespeicherte Datensätze bleiben lesbar und exportierbar."
+        "title": "PRO AUF LEBENSZEIT, DAUERHAFT",
+        "body": "Einmal zahlen und alle künftigen Funktionen und Updates von Red Grid MGRS Pro behalten. Kein Abo, kein Neukauf. Bestehende Lebenslang-Käufe sind geschützt. Nutzungsbedingungen und Datenschutz auf dem Pro-Bildschirm und in der Hilfe."
       },
       "f2": {
-        "title": "ICS-214-EXPORT",
-        "body": "Prüfe den Entwurf und teile dann ein unsigniertes ICS 214 als PDF oder Text oder eine JSON-Sicherung zum erneuten Import. Die App unterschreibt oder reicht den Bericht nicht ein."
+        "title": "KAUFWIEDERHERSTELLUNG",
+        "body": "Käufe werden beim Start und bei der Rückkehr in die App still wiederhergestellt. Ein Offline- oder unvollständiger Store-Check entfernt gespeicherten Zugang nie."
       },
       "f3": {
-        "title": "ENTWÜRFE BLEIBEN",
-        "body": "Berichtsentwürfe und Einsatzentwürfe werden auf diesem Gerät gespeichert und überstehen Neustarts. Jede Aktivität hält Ereigniszeit, Eingabezeit und Ortsquelle fest. Kein Tracking, kein Netzwerk hinzugefügt."
+        "title": "ANDROID-ANZEIGE",
+        "body": "Randloses Layout mit klareren, konsistenten Systemleisten, auch nach Drehen und Fortsetzen. Kein Tracking, kein Netzwerk hinzugefügt."
       }
     },
   },

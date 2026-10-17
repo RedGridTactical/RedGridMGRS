@@ -608,16 +608,16 @@ export default {
     startTrial: "ROZPOCZNIJ 7-DNIOWY BEZPŁATNY OKRES PRÓBNY",
     current: {
       "f1": {
-        "title": "OBSZAR INCYDENTU",
-        "body": "Prowadź dziennik incydentu na tym urządzeniu: okres operacyjny, zasoby i działania z czasem, a poprawki pozostają w historii. Pro do tworzenia i edycji; zapisane rekordy pozostają czytelne i możliwe do eksportu."
+        "title": "PRO NA ZAWSZE, TRWALE",
+        "body": "Zapłać raz i zachowaj wszystkie przyszłe funkcje oraz aktualizacje Red Grid MGRS Pro. Bez subskrypcji i ponownego zakupu. Istniejące zakupy dożywotnie są chronione. Linki do Warunków i Prywatności na ekranie Pro i w Pomocy."
       },
       "f2": {
-        "title": "EKSPORT ICS 214",
-        "body": "Przejrzyj szkic, a następnie udostępnij niepodpisany ICS 214 jako PDF lub tekst albo kopię zapasową JSON, którą można ponownie zaimportować. Aplikacja nie podpisuje ani nie składa raportu."
+        "title": "ODZYSKIWANIE ZAKUPÓW",
+        "body": "Zakupy są cicho przywracane przy uruchomieniu i po powrocie do aplikacji. Kontrola offline lub niepełna nigdy nie odbiera zapisanego dostępu."
       },
       "f3": {
-        "title": "SZKICE ZOSTAJĄ",
-        "body": "Arkusze raportów i szkice incydentów zapisują się na tym urządzeniu i przetrwają ponowne uruchomienie. Każde działanie zapisuje czas zdarzenia, czas wpisu i źródło lokalizacji. Bez śledzenia i sieci."
+        "title": "EKRAN ANDROID",
+        "body": "Układ od krawędzi do krawędzi z czytelniejszymi, spójnymi paskami systemowymi po obrocie i wznowieniu. Bez śledzenia i sieci."
       }
     },
   },

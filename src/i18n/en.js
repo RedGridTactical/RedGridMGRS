@@ -1246,16 +1246,16 @@ export default {
     startTrial: 'START 7-DAY FREE TRIAL',
     current: {
       "f1": {
-        "title": "INCIDENT WORKSPACE",
-        "body": "Keep an incident log on this device: operational period, resources and timed activities, with corrections kept in history. Pro to create or edit; saved records stay readable and exportable."
+        "title": "LIFETIME PRO, PERMANENT",
+        "body": "Pay once and keep every future Red Grid MGRS Pro feature and update. No subscription, no repurchase. Existing Lifetime purchases are protected. Terms and Privacy links are now on the Pro screen and in Help."
       },
       "f2": {
-        "title": "ICS 214 EXPORT",
-        "body": "Review the draft, then share an unsigned ICS 214 PDF or text, or a JSON backup you can import again. The app does not sign or file the report."
+        "title": "PURCHASE RECOVERY",
+        "body": "Owned purchases restore silently on launch and when you return to the app. An offline or incomplete store check never removes saved access."
       },
       "f3": {
-        "title": "DRAFTS THAT STAY",
-        "body": "Report worksheets and incident drafts save on this device and survive restarts. Each activity records its event time, entry time and location source. No tracking or network added."
+        "title": "ANDROID DISPLAY",
+        "body": "Edge-to-edge layout with clearer, consistent system bars that stay correct after rotation and resume. No tracking or network added."
       }
     },
   },

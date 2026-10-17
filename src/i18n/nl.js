@@ -608,16 +608,16 @@ export default {
     startTrial: "START GRATIS PROEFPERIODE VAN 7 DAGEN",
     current: {
       "f1": {
-        "title": "INCIDENTWERKRUIMTE",
-        "body": "Houd een incidentlogboek bij op dit apparaat: operationele periode, middelen en activiteiten met tijd, met correcties bewaard in de geschiedenis. Pro om te maken of te bewerken; opgeslagen records blijven leesbaar en exporteerbaar."
+        "title": "PRO VOOR ALTIJD, PERMANENT",
+        "body": "Betaal één keer en houd alle toekomstige functies en updates van Red Grid MGRS Pro. Geen abonnement, geen nieuwe aankoop. Bestaande levenslange aankopen zijn beschermd. Links naar Voorwaarden en Privacy op het Pro-scherm en in Help."
       },
       "f2": {
-        "title": "ICS 214-EXPORT",
-        "body": "Controleer het concept en deel dan een niet-ondertekende ICS 214 als PDF of tekst, of een JSON-back-up die je opnieuw kunt importeren. De app ondertekent of dient het rapport niet in."
+        "title": "AANKOOPHERSTEL",
+        "body": "Aankopen worden stil hersteld bij het starten en bij terugkeer naar de app. Een offline of onvolledige storecontrole verwijdert nooit opgeslagen toegang."
       },
       "f3": {
-        "title": "CONCEPTEN DIE BLIJVEN",
-        "body": "Rapportwerkbladen en incidentconcepten worden op dit apparaat opgeslagen en overleven een herstart. Elke activiteit legt gebeurtenistijd, invoertijd en locatiebron vast. Geen tracking of netwerk toegevoegd."
+        "title": "ANDROID-WEERGAVE",
+        "body": "Randloze lay-out met duidelijkere, consistente systeembalken na draaien en hervatten. Geen tracking of netwerk toegevoegd."
       }
     },
   },

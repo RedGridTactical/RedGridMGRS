@@ -587,16 +587,16 @@ export default {
     startTrial: "DÉMARRER L'ESSAI GRATUIT DE 7 JOURS",
     current: {
       "f1": {
-        "title": "ESPACE INCIDENT",
-        "body": "Tenez un journal d'incident sur cet appareil : période opérationnelle, ressources et activités horodatées, corrections conservées dans l'historique. Pro pour créer ou modifier ; les enregistrements restent lisibles et exportables."
+        "title": "PRO À VIE, PERMANENT",
+        "body": "Payez une fois et conservez toutes les futures fonctions et mises à jour de Red Grid MGRS Pro. Ni abonnement ni nouvel achat. Les achats à vie existants sont protégés. Liens Conditions et Confidentialité sur l'écran Pro et dans l'Aide."
       },
       "f2": {
-        "title": "EXPORT ICS 214",
-        "body": "Relisez le brouillon, puis partagez un PDF ou un texte ICS 214 non signé, ou une sauvegarde JSON réimportable. L'app ne signe ni ne dépose le rapport."
+        "title": "RÉCUPÉRATION DES ACHATS",
+        "body": "Vos achats sont restaurés silencieusement au lancement et au retour dans l'app. Un contrôle hors ligne ou incomplet ne retire jamais l'accès enregistré."
       },
       "f3": {
-        "title": "DES BROUILLONS QUI RESTENT",
-        "body": "Les fiches de rapport et brouillons d'incident sont enregistrés sur cet appareil et survivent aux redémarrages. Chaque activité note l'heure de l'événement, l'heure de saisie et la source du lieu. Aucun suivi ni réseau ajouté."
+        "title": "AFFICHAGE ANDROID",
+        "body": "Mise en page bord à bord et barres système plus lisibles, cohérentes après rotation et reprise. Aucun suivi ni réseau ajouté."
       }
     },
   },

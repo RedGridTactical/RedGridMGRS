@@ -4,7 +4,7 @@
  * Tracks last seen version in AsyncStorage under `rg_whatsnew_seen_version`.
  */
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Modal } from './FieldModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '../utils/ThemeContext';
@@ -17,10 +17,28 @@ const SEEN_KEY = 'rg_whatsnew_seen_version';
 // The release whose bullets are translated under `whatsNew.current` in i18n.
 // Bump this in lockstep with the entry added to FEATURES_BY_VERSION below, or
 // the modal silently falls back to English.
-const LOCALIZED_VERSION = '4.1.2';
+const LOCALIZED_VERSION = '4.1.3';
 
 // Features to showcase for a given version. Keep terse — this is a glance screen.
 const FEATURES_BY_VERSION = {
+  '4.1.3': [
+    {
+      "icon": "◆",
+      "title": "LIFETIME PRO, PERMANENT",
+      "body": "Pay once and keep every future Red Grid MGRS Pro feature and update. No subscription, no repurchase. Existing Lifetime purchases are protected. Terms and Privacy links are now on the Pro screen and in Help."
+    },
+    {
+      "icon": "⤴",
+      "title": "PURCHASE RECOVERY",
+      "body": "Owned purchases restore silently on launch and when you return to the app. An offline or incomplete store check never removes saved access."
+    },
+    {
+      "icon": "✓",
+      "title": "ANDROID DISPLAY",
+      "body": "Edge-to-edge layout with clearer, consistent system bars that stay correct after rotation and resume. No tracking or network added.",
+      "platform": "android"
+    }
+  ],
   '4.1.2': [
     {
       "icon": "▤",
@@ -257,9 +275,9 @@ export function WhatsNewModal({ currentVersion, showTrialCta, onStartTrial }) {
   const { t } = useTranslation();
   const baseFeatures = FEATURES_BY_VERSION[currentVersion] || [];
   // Localize the current release's bullets via i18n; older versions are never displayed.
-  const features = currentVersion === LOCALIZED_VERSION
-    ? baseFeatures.map((f, i) => ({ icon: f.icon, title: t('whatsNew.current.f' + (i + 1) + '.title'), body: t('whatsNew.current.f' + (i + 1) + '.body') }))
-    : baseFeatures;
+  const features = (currentVersion === LOCALIZED_VERSION
+    ? baseFeatures.map((f, i) => ({ ...f, title: t('whatsNew.current.f' + (i + 1) + '.title'), body: t('whatsNew.current.f' + (i + 1) + '.body') }))
+    : baseFeatures).filter(f => !f.platform || f.platform === Platform.OS);
   // Every fresh install sees this modal (first launch counts as a version
   // change), so when the version notes lead with the free trial, give the
   // reader a direct path into the paywall instead of a dead-end CONTINUE.

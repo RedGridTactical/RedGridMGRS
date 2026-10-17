@@ -608,16 +608,16 @@ export default {
     startTrial: "7 GÜNLÜK ÜCRETSİZ DENEMEYİ BAŞLAT",
     current: {
       "f1": {
-        "title": "OLAY ÇALIŞMA ALANI",
-        "body": "Bu cihazda olay kaydı tutun: operasyon dönemi, kaynaklar ve saatli faaliyetler; düzeltmeler geçmişte kalır. Oluşturma ve düzenleme için Pro gerekir; kayıtlı kayıtlar okunabilir ve dışa aktarılabilir kalır."
+        "title": "ÖMÜR BOYU PRO, KALICI",
+        "body": "Bir kez ödeyin, Red Grid MGRS Pro'nun gelecekteki tüm özelliklerini ve güncellemelerini kullanın. Abonelik yok, yeniden satın alma yok. Mevcut ömür boyu satın almalar korunur. Koşullar ve Gizlilik bağlantıları Pro ekranında ve Yardım'da."
       },
       "f2": {
-        "title": "ICS 214 DIŞA AKTARMA",
-        "body": "Taslağı gözden geçirin, ardından imzasız ICS 214'ü PDF veya metin olarak ya da yeniden içe aktarılabilen JSON yedeği olarak paylaşın. Uygulama raporu imzalamaz veya dosyalamaz."
+        "title": "SATIN ALMA KURTARMA",
+        "body": "Satın almalar açılışta ve uygulamaya dönüşte sessizce geri yüklenir. Çevrimdışı veya eksik bir mağaza denetimi kayıtlı erişimi asla kaldırmaz."
       },
       "f3": {
-        "title": "KALICI TASLAKLAR",
-        "body": "Rapor çalışma sayfaları ve olay taslakları bu cihaza kaydedilir ve yeniden başlatmalarda korunur. Her faaliyet olay saatini, giriş saatini ve konum kaynağını kaydeder. Takip veya ağ eklenmedi."
+        "title": "ANDROID EKRANI",
+        "body": "Kenardan kenara düzen ve döndürme ile devam ettirme sonrasında da tutarlı, daha net sistem çubukları. İzleme veya ağ eklenmedi."
       }
     },
   },
