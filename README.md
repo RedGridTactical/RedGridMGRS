@@ -8,22 +8,24 @@
 
 Read your grid, prepare a route, and navigate between saved points. Core coordinate tools work without an internet connection when your device has a usable location fix. The app has no Red Grid accounts, advertising, analytics or cloud sync.
 
-This branch contains **4.0.8**. Store availability follows Apple and Google review; source availability does not mean a release is already available in both stores.
+This branch contains the **4.1.0 release candidate**. Store availability follows Apple and Google review; source availability does not mean a release is already available in both stores.
 
 ## Field workflow
 
 - **Read your position:** live 10-digit MGRS, compass, bearing and distance. A one-meter grid square describes coordinate resolution, not guaranteed GPS accuracy.
 - **Prepare a route:** save waypoint lists and check location, map coverage and optional radio readiness.
+- **Share a field pack:** export ordered checkpoints, notes and planning details to a file. Preview received packs before adding a new list; existing lists are preserved. Map references describe the sender's map, and map files are not included.
 - **Navigate and review:** follow the selected route, manually confirm points and resume local progress after reopening the app. The last 10 session summaries record planned points and confirmations, not a continuous movement track.
 - **Choose a display:** a standard display for everyday readability, or red-on-black Tactical display with brightness controls and blackout recovery. Phone screens and operating-system surfaces vary; this is not night-vision equipment certification.
-- **Prepare offline maps:** import a compatible local MBTiles file before leaving connectivity, then verify coverage. Maps are not bundled with the app. Public-provider bulk tile downloads are disabled.
+- **Prepare offline maps:** import a compatible local MBTiles file before leaving connectivity, then check tile coverage along the planned route. This checks map files, not terrain safety or permission to travel. Maps are not bundled with the app. Public-provider bulk tile downloads are disabled.
+- **Use the available screen space:** GRID/MAP and Pro LISTS can show a map alongside the current workflow when both panes fit. Compact layouts remain available for narrow windows and large text; the map viewport and unfinished waypoint form stay with the session across tab and layout changes.
 - **Connect a radio if needed:** optional Meshtastic support uses compatible radio hardware over Bluetooth. Phones alone do not provide this radio link.
 
 ## Free and Pro
 
 Free includes live 10-digit MGRS, a single saved waypoint, four tools (Back Azimuth, Pace Count, Declination and Distress Signalling), and three report templates (SALUTE, 9-Line MEDEVAC and SPOT).
 
-Pro adds all 12 tools and six report templates, up to 10 waypoint lists with 20 points each, saved route workflows, supported MBTiles imports, GPX/KML import and export, optional radio features, additional coordinate formats, voice readout, HUD and display controls.
+Pro adds all 12 tools and six report templates, up to 10 waypoint lists with 20 points each, saved route workflows and field packs, supported MBTiles imports and route coverage checks, GPX/KML import and export, optional radio features, additional coordinate formats, voice readout, HUD and display controls.
 
 Pro is available as a monthly subscription or a one-time lifetime purchase. Check the app for current prices in your region. Apple or Google processes purchases and manages subscription settings.
 

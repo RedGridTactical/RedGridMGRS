@@ -24,10 +24,21 @@ import { calculateRoute, moveRoutePoint, parseRoutePlanInputs } from '../utils/r
 import { formatDistance } from '../utils/mgrs';
 import { TYPE } from '../utils/typography';
 import { copyTextToClipboard } from '../utils/clipboard';
+import { FieldPackModal, FieldPackImportModal } from '../components/FieldPackModal';
+import { parseFieldPack, fieldPackToList, compareMapReference, uniqueListName, assertReadablePackFile } from '../utils/fieldPack';
+import { getOfflineMapMetadata } from '../utils/tileManager';
+import { MAX_WAYPOINT_LISTS } from '../utils/waypoints';
 
 let FileSystem; try { FileSystem = require('expo-file-system'); } catch {}
 let Sharing; try { Sharing = require('expo-sharing'); } catch {}
 let DocumentPicker; try { DocumentPicker = require('expo-document-picker'); } catch {}
+
+const APP_VERSION = require('../../app.json').expo.version;
+const PACK_ERROR_KEYS = {
+  TOO_LARGE: 'fieldPack.errors.tooLarge', NOT_A_PACK: 'fieldPack.errors.invalid', INVALID_ROUTE: 'fieldPack.errors.invalid',
+  UNSUPPORTED_VERSION: 'fieldPack.errors.version', REVISION_MISMATCH: 'fieldPack.errors.damaged',
+  INVALID_POINT: 'fieldPack.errors.point', LIST_LIMIT: 'fieldPack.errors.listLimit',
+};
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
@@ -35,7 +46,7 @@ export function WaypointListsScreen({
   location, onSelectWaypoint, onStartRoute, activeRoute, navigationHistory = [],
   onClearNavigationHistory, onResumeNavigation, gpsSource, gpsDeviceName, mesh,
   savedLists = [], listsLoading = false, listsLoadError = false, listsSaveError = false, listsSaving = false,
-  onRetryListsLoad, onRetryListsSave, onSaveList, onUpdateList, onDeleteList, selectedListId, onListRequestHandled, onSaveReviewNotes,
+  onRetryListsLoad, onRetryListsSave, onSaveList, onUpdateList, onDeleteList, selectedListId, onListRequestHandled, onSaveReviewNotes, onUsefulTaskComplete,
 }) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -66,6 +77,9 @@ export function WaypointListsScreen({
   const [planNotes, setPlanNotes] = useState('');
   const [planError, setPlanError] = useState('');
   const [importPreview, setImportPreview] = useState(null);
+  const [packVisible, setPackVisible] = useState(false);
+  const [packPreview, setPackPreview] = useState(null);
+  const [packCommitting, setPackCommitting] = useState(false);
   const lists = savedLists;
 
   useEffect(() => {
@@ -162,7 +176,10 @@ export function WaypointListsScreen({
       if (!planName.trim()) throw new Error('name');
       fields = parseRoutePlanInputs({ pace: planPace, plannedStart: planStart, notes: planNotes });
     } catch { setPlanError(t('workflow.invalidPlan')); return; }
-    if (await write(() => onUpdateList(currentList.id, list => ({ ...list, ...fields, name: planName.trim().toUpperCase() })))) setEditingPlan(false);
+    if (await write(() => onUpdateList(currentList.id, list => ({ ...list, ...fields, name: planName.trim().toUpperCase() })))) {
+      setEditingPlan(false);
+      if (currentList.waypoints.length) onUsefulTaskComplete?.();
+    }
   };
 
   // ── Copy waypoint MGRS ──
@@ -266,6 +283,42 @@ export function WaypointListsScreen({
       setImportPreview(null); notifySuccess();
     }
   };
+  // ── Field packs: import always previews first and only ever adds a new list ──
+  const packError = error => Alert.alert(t('fieldPack.importTitle'), t(PACK_ERROR_KEYS[error?.code] || 'fieldPack.errors.read'));
+  const importPack = async () => {
+    if (!(await allowSystemDisplay())) return;
+    if (lists.length >= MAX_WAYPOINT_LISTS) { packError({ code: 'LIST_LIMIT' }); return; }
+    try {
+      if (!DocumentPicker || !FileSystem) { Alert.alert(t('waypoints.importUnavailable'), t('waypoints.importRequires')); return; }
+      const result = await DocumentPicker.getDocumentAsync({ type: ['application/json', '*/*'], copyToCacheDirectory: true });
+      if (result.canceled || !result.assets || result.assets.length === 0) return;
+      const file = result.assets[0];
+      if (typeof file?.uri !== 'string' || !/^file:\/\//i.test(file.uri)) throw Object.assign(new Error('UNREADABLE'), { code: 'UNREADABLE' });
+      // Refuse before reading: only a local, regular file of known size within the limit is loaded.
+      const uri = assertReadablePackFile(file, await FileSystem.getInfoAsync(file.uri));
+      const pack = parseFieldPack(await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.UTF8 }));
+      const localMap = await getOfflineMapMetadata().catch(() => null);
+      const listName = uniqueListName(pack.route.name, lists);
+      setPackPreview({ pack, fileName: file.name || '', mapRelation: compareMapReference(pack.mapReference, localMap),
+        listName, renamed: listName !== String(pack.route.name).toUpperCase() });
+    } catch (error) { packError(error); }
+  };
+  const packCommit = useRef(false);
+  const confirmPackImport = async () => {
+    if (!packPreview || packCommit.current) return;
+    let list;
+    try { list = fieldPackToList(packPreview.pack, lists); } catch (error) { packError(error); return; }
+    // While the list is being committed the preview cannot be cancelled or
+    // confirmed again: a "cancelled" import must never end up saved.
+    packCommit.current = true; setPackCommitting(true);
+    try {
+      if (await write(() => onSaveList(list))) {
+        setPackPreview(null); setActiveList(list.id); notifySuccess();
+        Alert.alert(t('fieldPack.title'), t('fieldPack.added', { name: list.name }));
+      }
+    } finally { packCommit.current = false; setPackCommitting(false); }
+  };
+  const cancelPackImport = () => { if (!packCommit.current) setPackPreview(null); };
   const currentList = lists.find(l => l.id === activeList);
   const currentReview = reviewRoute ? navigationHistory.find(item => item.id === reviewRoute.id) || reviewRoute : null;
 
@@ -289,7 +342,8 @@ export function WaypointListsScreen({
   };
 
   return (
-    <ScrollView style={[styles.root, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
+    <ScrollView style={styles.root} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>{t('waypoints.title')}</Text>
         <Text style={[styles.proTag, { color: colors.text2 }]}>{t('waypoints.pro')}</Text>
@@ -333,6 +387,12 @@ export function WaypointListsScreen({
         )}
       </ScrollView>
 
+      <View style={styles.wpHeaderBtns}>
+        <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.border }]} onPress={importPack} accessibilityRole="button" accessibilityLabel={t('fieldPack.import')}>
+          <Text style={[styles.addWpBtnText, { color: colors.text3 }]}>{t('fieldPack.import')}</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* New list input */}
       {addingList && (
         <View style={styles.newListRow}>
@@ -374,6 +434,9 @@ export function WaypointListsScreen({
                   <Text style={[styles.addWpBtnText, { color: colors.text2 }]}>{t('routeCard.button')}</Text>
                 </TouchableOpacity>
               )}
+              <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.text2 }]} onPress={() => setPackVisible(true)} accessibilityRole="button" accessibilityLabel={t('fieldPack.button')}>
+                <Text style={[styles.addWpBtnText, { color: colors.text2 }]}>{t('fieldPack.button')}</Text>
+              </TouchableOpacity>
               <TouchableOpacity style={[styles.addWpBtn, { borderColor: colors.text2 }]} onPress={() => { setEnteringGrid(true); setGridError(''); }} accessibilityRole="button" accessibilityLabel="Enter MGRS grid manually">
                 <Text style={[styles.addWpBtnText, { color: colors.text2 }]}>{t('waypoints.enterGrid')}</Text>
               </TouchableOpacity>
@@ -548,6 +611,10 @@ export function WaypointListsScreen({
         </View>
       )}
 
+    </ScrollView>
+
+      {/* Sheets must not inherit the list's scroll responder. Their native
+          windows and Tactical overlays own independent scroll gestures. */}
       <RouteCard visible={routeCardVisible} list={currentList} onClose={() => setRouteCardVisible(false)} />
       <RouteCard visible={!!reviewRoute} list={currentReview} onClose={() => setReviewRoute(null)} onSaveReviewNotes={onSaveReviewNotes} />
       <Modal visible={!!importPreview} transparent animationType="slide" onRequestClose={() => setImportPreview(null)}>
@@ -563,6 +630,10 @@ export function WaypointListsScreen({
           <TouchableOpacity style={styles.clearHistory} onPress={() => setImportPreview(null)} accessibilityRole="button"><Text style={[styles.flowHint, { color: colors.text3 }]}>{t('common.cancel')}</Text></TouchableOpacity>
         </ScrollView></View>
       </Modal>
+      <FieldPackModal visible={packVisible && !!currentList} list={currentList} appVersion={APP_VERSION}
+        onClose={() => setPackVisible(false)} onOpenRouteCard={() => { setPackVisible(false); setRouteCardVisible(true); }} />
+      <FieldPackImportModal preview={packPreview} onConfirm={confirmPackImport} onCancel={cancelPackImport}
+        busy={listsSaving || packCommitting} failed={saveFailed || listsSaveError} />
       <PreflightScreen visible={!!preparedRoute} onClose={() => setPreparedRoute(null)}
         location={location} gpsSource={gpsSource} gpsDeviceName={gpsDeviceName} mesh={mesh}
         isPro preparedRoute={preparedRoute}
@@ -572,7 +643,7 @@ export function WaypointListsScreen({
           onStartRoute?.(routeToStart, mode);
         }}
       />
-    </ScrollView>
+    </View>
   );
 }
 

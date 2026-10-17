@@ -1,212 +1,168 @@
 /**
- * useStoreReview — Time-based, usage-based, and positive-moment review prompts (HARDENED).
+ * useStoreReview — restrained store review requests.
  *
- * Three entry points:
- *   1. checkAndPromptReview({ isPro })      — fires at app launch; gated by opens/days/cooldown.
- *                                             Pro users bypass the open/install-date gates
- *                                             (they've already demonstrated intent).
- *   2. promptReviewOnPositiveMoment({ isPro, trigger })
- *                                           — call from in-app positive moments
- *                                             (saved waypoint + name, route completed,
- *                                             report sent, etc.). Fires the Apple SKStore
- *                                             prompt if available; falls back to opening
- *                                             the write-review URL for a text review.
- *   3. openStoreReview()                    — manual "★ Rate App" button on the grid screen.
- *                                             Always opens the write-review URL directly so
- *                                             the user sees the text-review sheet (the fastest
- *                                             path to getting actual text reviews, not just
- *                                             1-5 star ratings).
+ *   recordLaunch()            — called once per app launch; only records local
+ *                               usage (first-install date, open count). Never prompts.
+ *   requestReviewIfEligible() — the ONE automatic path. Native in-app review
+ *                               (expo-store-review) on both platforms, no external
+ *                               URL fallback, one shared >= 120-day cooldown that
+ *                               honours both legacy timestamps, equal usage gates
+ *                               for Free and Pro, serialized in flight, and a
+ *                               context re-check after every await. Called only by the
+ *                               cancellable idle post-task opportunity in AppContent,
+ *                               after presentation settling, with no active navigation.
+ *                               It returns what it
+ *                               did; the native request is an attempt, never proof
+ *                               that a prompt was shown or that a review was submitted.
+ *   openStoreReview()         — the manual "★ Rate This App" action: opens the store
+ *                               write-review page. The caller keeps the Tactical
+ *                               system-display guard.
  *
- * Tuning (April 2026):
- *   - Gates lowered from 5 opens / 7 days → 3 opens / 2 days.
- *     v3.3.2 only has 2 ratings / 0 text reviews after 5 days live. The prior gates were
- *     holding the prompt back past the point where most users churn.
- *   - Pro users short-circuit opens/days gates (they've converted, they like the product).
- *   - Cooldown stays at 120 days to respect Apple's 3x/year rate limit.
- *   - Positive-moment prompt deliberately uses the write-review URL on iOS because Apple's
- *     SKStoreReviewController only asks for a rating, not text, which is why 2 ratings
- *     landed but 0 text reviews did.
+ * Fails closed: a malformed stored timestamp, a storage failure or a missing
+ * native API means no automatic request.
  *
- * AsyncStorage keys:
- *   rg_app_opens               — cumulative app open count (int)
- *   rg_install_date            — epoch ms of first launch (string)
- *   rg_last_review_request     — epoch ms of last native review prompt (string)
- *   rg_positive_moment_count   — cumulative count of tracked positive moments (int)
- *   rg_last_positive_prompt    — epoch ms of last positive-moment prompt (string)
- *
- * CRITICAL HARDENING:
- *   - All AsyncStorage calls guarded and error-swallowed
- *   - Never throws, never blocks UI
- *   - Mounted check prevents state updates after unmount
+ * AsyncStorage keys (unchanged names so existing installs keep their history):
+ *   rg_app_opens, rg_install_date, rg_last_review_request, rg_last_positive_prompt
  */
 import { useCallback, useRef, useEffect } from 'react';
-import { Linking, Platform } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const APP_STORE_ID = '6759629554';
 
-const KEYS = {
-  APP_OPENS:             'rg_app_opens',
-  INSTALL_DATE:          'rg_install_date',
-  LAST_REVIEW_REQUEST:   'rg_last_review_request',
-  POSITIVE_MOMENTS:      'rg_positive_moment_count',
-  LAST_POSITIVE_PROMPT:  'rg_last_positive_prompt',
-};
+export const REVIEW_KEYS = Object.freeze({
+  APP_OPENS: 'rg_app_opens',
+  INSTALL_DATE: 'rg_install_date',
+  LAST_REVIEW_REQUEST: 'rg_last_review_request',
+  LAST_POSITIVE_PROMPT: 'rg_last_positive_prompt', // legacy; still honoured for the cooldown
+});
 
-const MIN_OPENS = 3;
-const MIN_DAYS_INSTALLED = 2;
-const COOLDOWN_DAYS = 120;
-
-// Positive-moment prompt: after the Nth positive action, once every 90 days.
-const MIN_POSITIVE_MOMENTS = 3;
-const POSITIVE_COOLDOWN_DAYS = 90;
-
+export const REVIEW_GATES = Object.freeze({ minOpens: 3, minDaysInstalled: 2, cooldownDays: 120 });
 const DAY_MS = 86400000;
 
 function writeReviewUrl() {
   return Platform.OS === 'ios'
     ? `itms-apps://apps.apple.com/app/id${APP_STORE_ID}?action=write-review`
-    : `market://details?id=com.redgrid.redgridtactical`;
+    : 'market://details?id=com.redgrid.redgridtactical';
 }
 
-async function tryOpenWriteReview() {
-  try {
-    const url = writeReviewUrl();
-    const supported = await Linking.canOpenURL(url);
-    if (supported) await Linking.openURL(url);
-  } catch {
-    // Silent — never disrupt the user
-  }
+/** Strict epoch-ms parse: anything that is not a finite non-negative integer string is malformed. */
+export function parseTimestamp(raw) {
+  if (raw == null || raw === '') return null;
+  if (typeof raw !== 'string' || !/^\d{1,16}$/.test(raw)) return NaN;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : NaN;
+}
+
+/**
+ * Pure gate decision. `stored` holds raw AsyncStorage strings (or null).
+ * Returns 'eligible' or the reason that blocks the request.
+ */
+export function evaluateReviewGates(stored, now) {
+  const opens = parseTimestamp(stored.opens);
+  const installedAt = parseTimestamp(stored.installDate);
+  const lastRequest = parseTimestamp(stored.lastRequest);
+  const lastPositive = parseTimestamp(stored.lastPositive);
+  if ([opens, installedAt, lastRequest, lastPositive].some(Number.isNaN)) return 'malformed';
+  if (opens == null || opens < REVIEW_GATES.minOpens) return 'opens';
+  if (installedAt == null || now - installedAt < REVIEW_GATES.minDaysInstalled * DAY_MS) return 'install-age';
+  const last = Math.max(lastRequest ?? 0, lastPositive ?? 0);
+  if (last > 0 && now - last < REVIEW_GATES.cooldownDays * DAY_MS) return 'cooldown';
+  return 'eligible';
+}
+
+async function loadStoreReview() {
+  try { return require('expo-store-review'); } catch { return null; }
 }
 
 export function useStoreReview() {
   const mounted = useRef(true);
+  const launchRecorded = useRef(false);
+  const inFlight = useRef(false);
 
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
 
-  /**
-   * Launch-time review prompt.
-   * Pass { isPro: true } to short-circuit the open/install-date gates for paying users.
-   */
-  const checkAndPromptReview = useCallback(async (opts = {}) => {
+  /** Record local usage once per launch. Never prompts. */
+  const recordLaunch = useCallback(async () => {
+    if (launchRecorded.current) return false;
+    launchRecorded.current = true;
     try {
-      if (!AsyncStorage || !AsyncStorage.getItem) return;
-
-      const isPro = !!opts.isPro;
+      if (!AsyncStorage?.getItem || !AsyncStorage?.setItem) return false;
       const now = Date.now();
-
-      // ── Record install date on first ever launch ──
-      let installDate = await AsyncStorage.getItem(KEYS.INSTALL_DATE);
-      if (!installDate) {
-        await AsyncStorage.setItem(KEYS.INSTALL_DATE, String(now));
-        installDate = String(now);
-      }
-
-      // ── Increment app open count ──
-      const rawOpens = await AsyncStorage.getItem(KEYS.APP_OPENS);
-      const opens = (parseInt(rawOpens, 10) || 0) + 1;
-      await AsyncStorage.setItem(KEYS.APP_OPENS, String(opens));
-
-      // ── Gates — Pro users bypass open/install-date checks ──
-      if (!isPro) {
-        if (opens < MIN_OPENS) return;
-
-        const installedAt = parseInt(installDate, 10) || now;
-        if (now - installedAt < MIN_DAYS_INSTALLED * DAY_MS) return;
-      }
-
-      // ── Cooldown since last request — always enforced ──
-      const rawLast = await AsyncStorage.getItem(KEYS.LAST_REVIEW_REQUEST);
-      if (rawLast) {
-        const lastRequest = parseInt(rawLast, 10) || 0;
-        if (now - lastRequest < COOLDOWN_DAYS * DAY_MS) return;
-      }
-
-      // ── All gates passed — request review ──
-      if (!mounted.current) return;
-
-      let StoreReview = null;
-      try { StoreReview = require('expo-store-review'); } catch { return; }
-      if (!StoreReview?.isAvailableAsync) return;
-
-      const available = await StoreReview.isAvailableAsync();
-      if (!available) return;
-
-      await StoreReview.requestReview();
-      await AsyncStorage.setItem(KEYS.LAST_REVIEW_REQUEST, String(now));
+      const installDate = parseTimestamp(await AsyncStorage.getItem(REVIEW_KEYS.INSTALL_DATE));
+      if (installDate == null || Number.isNaN(installDate)) await AsyncStorage.setItem(REVIEW_KEYS.INSTALL_DATE, String(now));
+      const rawOpens = parseTimestamp(await AsyncStorage.getItem(REVIEW_KEYS.APP_OPENS));
+      const opens = (Number.isFinite(rawOpens) ? rawOpens : 0) + 1;
+      await AsyncStorage.setItem(REVIEW_KEYS.APP_OPENS, String(opens));
+      return true;
     } catch {
-      // Silent — never interrupt the user experience for review tracking
+      return false;
     }
   }, []);
 
   /**
-   * Call from positive in-app moments: saved waypoint with name, completed route,
-   * exported GPX, sent SALUTE/MEDEVAC report, unlocked Pro, etc.
-   *
-   * Gated separately from the launch-time prompt so a positive moment can fire
-   * a text-review ask even if the Apple 120-day rating cooldown is still active.
-   *
-   * Android: fires the native Play In-App Review API (a frictionless in-app
-   * rating flow with no context switch) — the best path to seed the ratings the
-   * Play listing needs. iOS opens the write-review URL so the user lands on the
-   * text-review sheet (Apple's SKStoreReviewController yields stars only, not text).
+   * @param {object} [opts]
+   * @param {() => boolean} [opts.isContextStable] re-evaluated after every await; return false to cancel
+   *        (Tactical display on, a different screen, a modal, etc.).
+   * @returns {Promise<string>} 'attempted' | 'busy' | 'gated:<reason>' | 'unavailable' | 'context' | 'background' | 'storage' | 'unmounted'
    */
-  const promptReviewOnPositiveMoment = useCallback(async (opts = {}) => {
+  const requestReviewIfEligible = useCallback(async (opts = {}) => {
+    if (inFlight.current) return 'busy';
+    inFlight.current = true;
+    const stable = () => {
+      if (!mounted.current) return 'unmounted';
+      if (AppState.currentState !== 'active') return 'background';
+      if (typeof opts.isContextStable === 'function' && !opts.isContextStable()) return 'context';
+      return null;
+    };
     try {
-      if (!AsyncStorage || !AsyncStorage.getItem) return;
-
+      if (!AsyncStorage?.getItem || !AsyncStorage?.setItem) return 'storage';
+      let blocked = stable(); if (blocked) return blocked;
       const now = Date.now();
+      let stored;
+      try {
+        const [opens, installDate, lastRequest, lastPositive] = await Promise.all([
+          AsyncStorage.getItem(REVIEW_KEYS.APP_OPENS), AsyncStorage.getItem(REVIEW_KEYS.INSTALL_DATE),
+          AsyncStorage.getItem(REVIEW_KEYS.LAST_REVIEW_REQUEST), AsyncStorage.getItem(REVIEW_KEYS.LAST_POSITIVE_PROMPT),
+        ]);
+        stored = { opens, installDate, lastRequest, lastPositive };
+      } catch { return 'storage'; }
+      const gate = evaluateReviewGates(stored, now);
+      if (gate !== 'eligible') return `gated:${gate}`;
+      blocked = stable(); if (blocked) return blocked;
 
-      // ── Increment positive-moment counter ──
-      const raw = await AsyncStorage.getItem(KEYS.POSITIVE_MOMENTS);
-      const count = (parseInt(raw, 10) || 0) + 1;
-      await AsyncStorage.setItem(KEYS.POSITIVE_MOMENTS, String(count));
+      const StoreReview = await loadStoreReview();
+      if (!StoreReview?.isAvailableAsync || !StoreReview?.requestReview) return 'unavailable';
+      let available = false;
+      try { available = await StoreReview.isAvailableAsync(); } catch { available = false; }
+      if (!available) return 'unavailable';
+      blocked = stable(); if (blocked) return blocked;
 
-      // ── Gate: minimum positive moments ──
-      if (count < MIN_POSITIVE_MOMENTS) return;
-
-      // ── Gate: positive-prompt cooldown ──
-      const rawLast = await AsyncStorage.getItem(KEYS.LAST_POSITIVE_PROMPT);
-      if (rawLast) {
-        const lastPrompt = parseInt(rawLast, 10) || 0;
-        if (now - lastPrompt < POSITIVE_COOLDOWN_DAYS * DAY_MS) return;
-      }
-
-      if (!mounted.current) return;
-
-      // Record before opening so an in-flight retry doesn't double-prompt.
-      await AsyncStorage.setItem(KEYS.LAST_POSITIVE_PROMPT, String(now));
-
-      // Android: native Play In-App Review API — a frictionless in-app rating
-      // (no context switch to the Play listing), which maximizes rating
-      // submissions and is the best way to seed the listing's star count.
-      // iOS keeps the write-review URL for a text review (SKStoreReviewController
-      // only yields a star rating, which is why 2 ratings / 0 text reviews landed).
-      if (Platform.OS === 'android') {
-        let StoreReview = null;
-        try { StoreReview = require('expo-store-review'); } catch { StoreReview = null; }
-        if (StoreReview?.isAvailableAsync && (await StoreReview.isAvailableAsync())) {
-          await StoreReview.requestReview();
-        } else {
-          await tryOpenWriteReview();
-        }
-      } else {
-        await tryOpenWriteReview();
-      }
+      // Record the attempt before asking so a crash or a second call cannot double-ask.
+      try { await AsyncStorage.setItem(REVIEW_KEYS.LAST_REVIEW_REQUEST, String(now)); } catch { return 'storage'; }
+      blocked = stable(); if (blocked) return blocked;
+      try { await StoreReview.requestReview(); } catch { /* the platform decides; nothing to recover */ }
+      return 'attempted';
     } catch {
-      // Silent — don't disrupt the user
+      return 'storage';
+    } finally {
+      inFlight.current = false;
     }
   }, []);
 
-  /**
-   * Manual "Rate This App" button — opens the App Store review page directly.
-   */
+  /** Manual "Rate This App": opens the store's write-review page. */
   const openStoreReview = useCallback(async () => {
-    await tryOpenWriteReview();
+    try {
+      const url = writeReviewUrl();
+      if (await Linking.canOpenURL(url)) { await Linking.openURL(url); return true; }
+    } catch {
+      // Silent: never disrupt the user
+    }
+    return false;
   }, []);
 
-  return { checkAndPromptReview, promptReviewOnPositiveMoment, openStoreReview };
+  return { recordLaunch, requestReviewIfEligible, openStoreReview };
 }

@@ -17,10 +17,49 @@ const SEEN_KEY = 'rg_whatsnew_seen_version';
 // The release whose bullets are translated under `whatsNew.current` in i18n.
 // Bump this in lockstep with the entry added to FEATURES_BY_VERSION below, or
 // the modal silently falls back to English.
-const LOCALIZED_VERSION = '4.0.8';
+const LOCALIZED_VERSION = '4.1.2';
 
 // Features to showcase for a given version. Keep terse — this is a glance screen.
 const FEATURES_BY_VERSION = {
+  '4.1.2': [
+    {
+      "icon": "▤",
+      "title": "INCIDENT WORKSPACE",
+      "body": "Keep an incident log on this device: operational period, resources and timed activities, with corrections kept in history. Pro to create or edit; saved records stay readable and exportable."
+    },
+    {
+      "icon": "⤴",
+      "title": "ICS 214 EXPORT",
+      "body": "Review the draft, then share an unsigned ICS 214 PDF or text, or a JSON backup you can import again. The app does not sign or file the report."
+    },
+    {
+      "icon": "✓",
+      "title": "DRAFTS THAT STAY",
+      "body": "Report worksheets and incident drafts save on this device and survive restarts. Each activity records its event time, entry time and location source. No tracking or network added."
+    }
+  ],
+  '4.1.1': [
+    {
+      "icon": "✓",
+      "title": "REVIEW WHEN READY",
+      "body": "Write a review from Help. Occasional store prompts follow completed tasks and a quiet pause."
+    },
+    {
+      "icon": "⤴",
+      "title": "SHARE RED GRID",
+      "body": "Share the app from Help without using your separate 7-day Pro gift."
+    },
+    {
+      "icon": "◆",
+      "title": "CLEARER HELP",
+      "body": "Help actions are clearer at large text sizes. Review timing stays on this device; no tracking added."
+    }
+  ],
+  '4.1.0': [
+    {"icon":"◉","title":"FIELD PACKS","body":"Share a saved route as a small file. A teammate imports it as a new list with its checkpoints and map reference; map files are not included. Pro."},
+    {"icon":"◆","title":"ROUTE MAP CHECK","body":"Check imported map-file coverage along the whole route, leg by leg, before you leave. This checks map files, not safety. Pro."},
+    {"icon":"✓","title":"GRID + MAP SPACE","body":"Wide screens show the readout beside the map; the map keeps its viewport and selection across tabs, and large text keeps every control reachable."},
+  ],
   '4.0.8': [
     {"icon":"◉","title":"CLEARER PRO TABS","body":"LISTS, COORDS and MESH now explain what each tab does and what Free already includes before offering Pro."},
     {"icon":"◆","title":"LOCALIZED PAYWALL","body":"Map import and locked-tab prompts use translated feature names, and the Pro feature list is now localized in every language."},
@@ -257,7 +296,7 @@ export function WhatsNewModal({ currentVersion, showTrialCta, onStartTrial }) {
           <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
             {features.map((f, i) => (
               <View key={i} style={[styles.row, { borderBottomColor: colors.border2 }]}>
-                <Text style={[styles.icon, { color: colors.text }]}>{f.icon}</Text>
+                <Text style={[styles.icon, { color: colors.text }]} maxFontSizeMultiplier={1} numberOfLines={1} accessible={false}>{f.icon}</Text>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.rowTitle, { color: colors.text }]}>{f.title}</Text>
                   <Text style={[styles.rowBody, { color: colors.text3 }]}>{f.body}</Text>
@@ -279,7 +318,7 @@ export function WhatsNewModal({ currentVersion, showTrialCta, onStartTrial }) {
             style={[styles.dismiss, { borderColor: colors.text, backgroundColor: colors.border2 }]}
             onPress={dismiss}
             accessibilityRole="button"
-            accessibilityLabel="Continue"
+            accessibilityLabel={t('whatsNew.continue')}
           >
             <Text style={[styles.dismissText, { color: colors.text }]}>{t('whatsNew.continue')}</Text>
           </TouchableOpacity>

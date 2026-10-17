@@ -92,6 +92,22 @@ describe('MapScreen wiring', () => {
   test('no hard-coded Dark/CARTO layer remains in the screen', () => {
     expect(src).not.toMatch(/DARK_TILE_URL|'DRK'|cartocdn/);
   });
+
+  test('Android base map is "none" with a label/POI-free style; iOS keeps the Apple standard map', () => {
+    expect(src).toMatch(/mapType=\{Platform\.OS === 'ios' \? 'standard' : 'none'\}/);
+    expect(src).toMatch(/Platform\.OS === 'android' \? \{ customMapStyle: ANDROID_BASEMAP_STYLE \} : \{\}/);
+    const style = src.slice(src.indexOf('const ANDROID_BASEMAP_STYLE'), src.indexOf('];', src.indexOf('const ANDROID_BASEMAP_STYLE')));
+    expect(style).toMatch(/elementType: 'labels', stylers: \[\{ visibility: 'off' \}\]/);
+    expect(style).toMatch(/featureType: 'poi', stylers: \[\{ visibility: 'off' \}\]/);
+    expect(src).not.toMatch(/googleRenderer/);
+  });
+
+  test('Android keeps the Google logo clear of the bottom bar and the reticle on the padded camera target', () => {
+    expect(src).toMatch(/const androidMapPadding = Platform\.OS === 'android' && bottomBarHeight > 0 \? \{ top: 0, left: 0, right: 0, bottom: bottomBarHeight \} : undefined;/);
+    expect(src).toMatch(/\{\.\.\.\(androidMapPadding \? \{ mapPadding: androidMapPadding \} : \{\}\)\}/);
+    expect(src).toMatch(/styles\.reticle, androidMapPadding && \{ marginTop: -10 - androidMapPadding\.bottom \/ 2 \}/);
+    expect(src).toMatch(/styles\.bottomBar, \{ backgroundColor: colors\.bg, borderTopColor: colors\.border2 \}\]\} onLayout=\{Platform\.OS === 'android' \? onBottomBarLayout : undefined\}/);
+  });
 });
 
 describe('react-native-maps Android request path (patch guard)', () => {
@@ -108,6 +124,32 @@ describe('react-native-maps Android request path (patch guard)', () => {
     expect(patch).toMatch(/renameTo\(file\)/);
     expect(patch).toMatch(/this\.customMode = true;/);
     expect(patch).toMatch(/tileProvider\.setTileCachePath\(this\.tileCachePath\)/);
+  });
+
+  test('patch makes the Android base-map type persist from creation through map-ready and recreation', () => {
+    // Creation: "none" goes into GoogleMapOptions so Google base tiles never load.
+    expect(patch).toMatch(/initialProps\.hasKey\("mapType"\)/);
+    expect(patch).toMatch(/googleMapOptions\.mapType\(initialType\)/);
+    // Prop updates no longer dereference a possibly-null GoogleMap; the view stores the type.
+    expect(patch).toMatch(/view\.setMapType\(typeId == null \? GoogleMap\.MAP_TYPE_NORMAL : typeId\)/);
+    expect(patch).not.toMatch(/\+\s*view\.map\.setMapType\(typeId\)/);
+    expect(patch).toMatch(/private Integer mapType = null;/);
+    expect(patch).toMatch(/if\(mapType != null\) \{\n\+\s*map\.setMapType\(mapType\);/);
+    // JS sends mapType with the pre-ready (Android-only) props so it is part of initialProps.
+    expect(patch).toMatch(/\+\s*mapType: this\.props\.mapType,/);
+  });
+
+  test('installed react-native-maps files carry the same base-map persistence (patch is applied)', () => {
+    const base = path.join(__dirname, '..', 'node_modules/react-native-maps');
+    const manager = fs.readFileSync(path.join(base, 'android/src/main/java/com/rnmaps/maps/MapManager.java'), 'utf8');
+    const view = fs.readFileSync(path.join(base, 'android/src/main/java/com/rnmaps/maps/MapView.java'), 'utf8');
+    const js = fs.readFileSync(path.join(base, 'lib/MapView.js'), 'utf8');
+    expect(manager).toMatch(/googleMapOptions\.mapType\(initialType\)/);
+    expect(manager).not.toMatch(/view\.map\.setMapType/);
+    expect(view).toMatch(/public void setMapType\(int mapType\)/);
+    expect(view.indexOf('map.setMapType(mapType);')).toBeLessThan(view.indexOf('map.setMapStyle(new MapStyleOptions(customMapStyleString));'));
+    const preReady = js.slice(js.indexOf('else {\n            props = {\n                style: this.props.style'), js.indexOf('const AIRMap = getNativeMapComponent'));
+    expect(preReady).toMatch(/mapType: this\.props\.mapType,/);
   });
 
   test('new native log lines carry no tile URL or coordinates', () => {

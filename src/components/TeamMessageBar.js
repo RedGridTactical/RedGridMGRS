@@ -11,8 +11,9 @@
  */
 
 import React, { useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Alert } from '../utils/fieldAlert';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Modal } from './FieldModal';
 import { TextInput } from './FieldInput';
 import { useColors } from '../utils/ThemeContext';
@@ -32,6 +33,7 @@ const QUICK = [
 
 export function TeamMessageBar({ onSend, disabled = false, lastInbound, onDismissInbound, draft: sharedDraft, onDraftChange, status }) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const [composerOpen, setComposerOpen] = useState(false);
   const [localDraft, setLocalDraft] = useState('');
@@ -116,51 +118,53 @@ export function TeamMessageBar({ onSend, disabled = false, lastInbound, onDismis
       {disabled && <Text style={[styles.counter, { color: colors.text3 }]}>{t('workflow.radio.disconnected')}</Text>}
       {/* Free-text composer */}
       <Modal visible={composerOpen} transparent animationType="fade" onRequestClose={() => setComposerOpen(false)}>
-        <View style={styles.modalBackdrop}>
+        <KeyboardAvoidingView style={[styles.modalBackdrop, { paddingTop: Math.max(24, insets.top) }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined} enabled={Platform.OS === 'ios'}>
           <View style={[styles.composer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.composerTitle, { color: colors.text }]}>
-              {t('team.msgCustom', 'CUSTOM MESSAGE')}
-            </Text>
-            <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-              accessibilityLabel={t('team.msgCustom')}
-              value={draft}
-              onChangeText={setDraft}
-              maxLength={MAX_FREE_TEXT}
-              multiline
-              autoFocus
-              placeholder={t('team.msgPlaceholder', 'Keep it short, radio bandwidth is shared')}
-              placeholderTextColor={colors.text3}
-            />
-            <Text style={[styles.counter, { color: colors.text3 }]}>
-              {draft.length}/{MAX_FREE_TEXT}
-            </Text>
-            {sendStatus && <Text style={[styles.counter, { color: colors.text }]} accessibilityLiveRegion="polite">{t(`workflow.radio.${sendStatus}`)}</Text>}
-            {disabled && <Text style={[styles.counter, { color: colors.text3 }]}>{t('workflow.radio.disconnected')}</Text>}
-            <TouchableOpacity onPress={discard} style={styles.action} accessibilityRole="button"><Text style={[styles.actionText, { color: colors.text3 }]}>{t('workflow.radio.discard')}</Text></TouchableOpacity>
-            <View style={styles.composerActions}>
-              <TouchableOpacity
-                style={[styles.action, { borderColor: colors.border }]}
-                onPress={() => setComposerOpen(false)}
-                accessibilityRole="button"
-              >
-                <Text style={[styles.actionText, { color: colors.text3 }]}>
-                  {t('workflow.radio.keepDraft')}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.action, { borderColor: colors.accent }]}
-                onPress={sendFree}
-                disabled={!draft.trim() || blocked}
-                accessibilityRole="button"
-              >
-                <Text style={[styles.actionText, { color: draft.trim() ? colors.accentText : colors.text3 }]}>
-                  {t('team.msgSend', 'SEND')}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <ScrollView contentContainerStyle={styles.composerContent} keyboardShouldPersistTaps="handled">
+              <Text style={[styles.composerTitle, { color: colors.text }]}>
+                {t('team.msgCustom', 'CUSTOM MESSAGE')}
+              </Text>
+              <TextInput
+                style={[styles.input, { color: colors.text, borderColor: colors.border }]}
+                accessibilityLabel={t('team.msgCustom')}
+                value={draft}
+                onChangeText={setDraft}
+                maxLength={MAX_FREE_TEXT}
+                multiline
+                autoFocus
+                placeholder={t('team.msgPlaceholder', 'Keep it short, radio bandwidth is shared')}
+                placeholderTextColor={colors.text3}
+              />
+              <Text style={[styles.counter, { color: colors.text3 }]}>
+                {draft.length}/{MAX_FREE_TEXT}
+              </Text>
+              {sendStatus && <Text style={[styles.counter, { color: colors.text }]} accessibilityLiveRegion="polite">{t(`workflow.radio.${sendStatus}`)}</Text>}
+              {disabled && <Text style={[styles.counter, { color: colors.text3 }]}>{t('workflow.radio.disconnected')}</Text>}
+              <TouchableOpacity onPress={discard} style={styles.action} accessibilityRole="button"><Text style={[styles.actionText, { color: colors.text3 }]}>{t('workflow.radio.discard')}</Text></TouchableOpacity>
+              <View style={styles.composerActions}>
+                <TouchableOpacity
+                  style={[styles.action, { borderColor: colors.border }]}
+                  onPress={() => setComposerOpen(false)}
+                  accessibilityRole="button"
+                >
+                  <Text style={[styles.actionText, { color: colors.text3 }]}>
+                    {t('workflow.radio.keepDraft')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.action, { borderColor: colors.accent }]}
+                  onPress={sendFree}
+                  disabled={!draft.trim() || blocked}
+                  accessibilityRole="button"
+                >
+                  <Text style={[styles.actionText, { color: draft.trim() ? colors.accentText : colors.text3 }]}>
+                    {t('team.msgSend', 'SEND')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -182,13 +186,14 @@ const styles = StyleSheet.create({
   chipText: {
     ...TYPE.heading, fontSize: 12, letterSpacing: 0.8 },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', justifyContent: 'center', padding: 24 },
-  composer: { borderWidth: 1, padding: 16 },
+  composer: { borderWidth: 1, flexShrink: 1, maxHeight: '100%' },
+  composerContent: { padding: 16 },
   composerTitle: {
     ...TYPE.heading, fontSize: 16, letterSpacing: 1, marginBottom: 12 },
   input: { ...TYPE.body, letterSpacing: 0.3, borderWidth: 1, minHeight: 88, padding: 10, fontSize: 16, textAlignVertical: 'top' },
   counter: {
     ...TYPE.data, letterSpacing: 0.5, fontSize: 11, textAlign: 'right', marginTop: 4 },
-  composerActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 14 },
+  composerActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 10, marginTop: 14 },
   action: { borderWidth: 1, paddingHorizontal: 20, paddingVertical: 12, minHeight: 44, justifyContent: 'center' },
   actionText: {
     ...TYPE.heading, fontSize: 13, letterSpacing: 0.8 },

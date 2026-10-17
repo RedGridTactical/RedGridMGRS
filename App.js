@@ -2,7 +2,7 @@
  * Red Grid MGRS — Root Application v2.1 (HARDENED)
  * Tabs: GRID · MAP · TOOLS · REPORT · LISTS (Pro) · COORDS (Pro) · THEME (Pro)
  *
- * Privacy: no location stored, no network (IAP uses Apple/Google native payment only), no analytics.
+ * Privacy: user-chosen field data stays local; no tracking or telemetry. Native store billing is separate.
  *
  * CRITICAL HARDENING:
  *   - Error boundary catches any hook or component crashes
@@ -13,7 +13,7 @@ import './src/i18n';
 import React, { useState, useMemo, useCallback, useRef, useEffect, Component } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated, ScrollView,
-  StatusBar, useWindowDimensions, AccessibilityInfo, Linking,
+  StatusBar, useWindowDimensions, AccessibilityInfo, Linking, Platform, NativeModules,
 } from 'react-native';
 // SafeAreaView MUST come from react-native-safe-area-context, not react-native:
 // RN's built-in SafeAreaView is a no-op on Android, so with edge-to-edge enforced
@@ -31,17 +31,24 @@ import { TacticalBrightnessControls, TacticalBlackout } from './src/components/T
 import { TacticalDisplaySwitch } from './src/components/TacticalDisplaySwitch';
 import { useTranslation } from './src/hooks/useTranslation';
 
+const hasAndroidSystemBars = Platform.OS === 'android'
+  && typeof NativeModules.RedGridWindowLayout?.setSystemBars === 'function';
+
 import { useLocation }  from './src/hooks/useLocation';
 import { useSettings }  from './src/hooks/useSettings';
 import { useIAP }       from './src/hooks/useIAP';
 import { useTheme }     from './src/hooks/useTheme';
 import { useStoreReview } from './src/hooks/useStoreReview';
+import { useReviewOpportunity } from './src/hooks/useReviewOpportunity';
 import { useFieldVoice } from './src/hooks/useFieldVoice';
 import { useWaypointLists } from './src/hooks/useWaypointLists';
 import { copyTextToClipboard } from './src/utils/clipboard';
 import { newFieldId } from './src/utils/waypoints';
 import { useGridCrossing } from './src/hooks/useGridCrossing';
 import { useExternalGPS, useGPSSource } from './src/hooks/useExternalGPS';
+import { useWorkspaceLayout } from './src/hooks/useWorkspaceLayout';
+import { resolvePaneContent, arrowSizeFor, planWorkspaceSlots } from './src/utils/adaptiveLayout';
+import { createMapSession, reduceMapSession } from './src/utils/mapSession';
 import { ThemeProvider, useColors, DisplaySafetyProvider } from './src/utils/ThemeContext';
 
 import { MGRSDisplay }    from './src/components/MGRSDisplay';
@@ -54,6 +61,7 @@ import { extractTokenFromUrl, redeemShareToken } from './src/utils/referral';
 import { useReferralTrial } from './src/hooks/useReferralTrial';
 import { ToolsScreen }    from './src/screens/ToolsScreen';
 import { ReportScreen }   from './src/screens/ReportScreen';
+import { IncidentShortcut } from './src/components/IncidentWorkspace';
 import { WaypointListsScreen } from './src/screens/WaypointListsScreen';
 import { ThemeScreen }    from './src/screens/ThemeScreen';
 import { CoordFormatsScreen } from './src/screens/CoordFormatsScreen';
@@ -214,24 +222,21 @@ function App() {
 
   const activeTheme = isPro || ['standard', 'red', 'white'].includes(theme) ? theme : 'standard';
   const themeData = useTheme(activeTheme);
-  const { checkAndPromptReview, promptReviewOnPositiveMoment, openStoreReview } = useStoreReview();
+  const { recordLaunch, openStoreReview, requestReviewIfEligible } = useStoreReview();
   const [showTeamRoster, setShowTeamRoster] = useState(false);
   const mesh = useMeshtastic(isPro);
   // Team layer rides the mesh transport the app already has. Derives a roster
   // (named peers, roles, ghost decay) from the same position packets.
   const team = useTeamAwareness(mesh.meshPositions);
 
-  // Prompt for App Store review once per launch (gated by open count, install
-  // age, cooldown). Pro users bypass the open/install-date gates. Runs once,
-  // slightly delayed so IAP/trial state has settled — keying on [isPro] used to
-  // double-fire (and double-count sessions) when isPro flipped after IAP load.
-  const isProRef = useRef(isPro);
-  isProRef.current = isPro;
+  // Launch only records local usage for the review gates and the on-device
+  // session counter; it never asks for a review. Runs once, slightly delayed so
+  // IAP/trial state has settled.
   const tacticalRef = useRef(tacticalMode);
   tacticalRef.current = tacticalMode;
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (!tacticalRef.current) checkAndPromptReview({ isPro: isProRef.current });
+      recordLaunch();
       trackSession();
     }, 2500);
     return () => clearTimeout(timer);
@@ -342,10 +347,6 @@ function App() {
       setMarkToast(newWaypoint.label);
       setTimeout(() => setMarkToast(null), 2000);
       AccessibilityInfo.announceForAccessibility(t('workflow.access.savedPosition', { name: newWaypoint.label }));
-      // Positive moment: user successfully marked a position. Gated inside the hook
-      // (MIN_POSITIVE_MOMENTS=3, POSITIVE_COOLDOWN_DAYS=90) so this fires at most once
-      // every 90 days and only after the user has done it ≥3 times.
-      if (!tacticalRef.current) promptReviewOnPositiveMoment();
     };
     if (waypoint) {
       try {
@@ -364,7 +365,7 @@ function App() {
     } else {
       commit();
     }
-  }, [location, waypoint, t, setWaypoint, promptReviewOnPositiveMoment]);
+  }, [location, waypoint, t, setWaypoint]);
 
   // Tap-to-copy grid — copies whatever format is displayed (MGRS, UTM, DD, or DMS)
   const [copyToast, setCopyToast] = useState(false);
@@ -378,6 +379,7 @@ function App() {
     setCopyToast(true);
     AccessibilityInfo.announceForAccessibility(t('grid.copiedToClipboard'));
     setTimeout(() => setCopyToast(false), 1500);
+    return true;
   }, [mgrsFormatted, altDisplay, t]);
 
   const voice = useFieldVoice(mgrsFormatted, { enabled: isPro, shakeEnabled: shakeToSpeak, tacticalMode, tacticalSound });
@@ -418,10 +420,18 @@ function App() {
     [bearing, compassHeading, compassReference]);
 
   const waypointMGRS = useMemo(() => { try { return waypoint ? formatMGRS(toMGRS(waypoint.lat, waypoint.lon, 5)) : null; } catch { return null; } }, [waypoint]);
-  const arrowSize    = isLandscape ? Math.min(height * 0.52, 190) : 200;
 
   // Dynamic StatusBar style: white theme uses dark content, others use light
   const statusBarStyle = themeData.id === 'white' ? 'dark-content' : 'light-content';
+  useEffect(() => {
+    if (!hasAndroidSystemBars) return;
+    // Keep Android edge-to-edge while showing/hiding system bars. The older
+    // RN StatusBar restore path switches decor fitting and cutout modes.
+    NativeModules.RedGridWindowLayout.setSystemBars(
+      isLandscape || hudMode || tacticalMode,
+      !tacticalMode && themeData.id === 'white'
+    );
+  }, [themeData.id, tacticalMode, isLandscape, hudMode]);
 
   const onEnterHud = useCallback(() => {
     if (!isPro) { showProGate(t('grid.hudMode'), 'display'); return; }
@@ -429,41 +439,30 @@ function App() {
     setHudMode(true);
   }, [isPro, showProGate]);
 
-  const gridContent = isLandscape ? (
-    <LandscapeGrid
-      isLoading={isLoading} location={location} error={displayError} retry={retry} positionStatus={positionStatus}
-      mgrsFormatted={mgrsFormatted} waypoint={waypoint} waypointMGRS={waypointMGRS}
-      bearing={bearing} arrowAngle={arrowAngle} distance={distance} arrowSize={arrowSize}
-      onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={clearWaypoint}
-      onMarkPosition={handleMarkPosition} markToast={markToast}
-      isPro={isPro} onShowProGate={showProGate}
-      onCopyGrid={copyGrid} copyToast={copyToast}
-      speaking={voice.speaking} onVoicePress={handleVoicePress}
-      coordFormat={coordFormat} altDisplay={altDisplay}
-      compassHeading={compassHeading} compassReference={compassReference}
-      onRateApp={async () => { if (await allowSystemDisplay()) openStoreReview(); }}
-      onEnterHud={onEnterHud}
-      onShowSupport={() => setShowSupport(true)}
-      gridScale={gridScale}
-    />
-  ) : (
-    <PortraitGrid
-      isLoading={isLoading} location={location} error={displayError} retry={retry} positionStatus={positionStatus}
-      mgrsFormatted={mgrsFormatted} waypoint={waypoint} waypointMGRS={waypointMGRS}
-      bearing={bearing} arrowAngle={arrowAngle} distance={distance} arrowSize={arrowSize}
-      onAddWaypoint={() => { tapHeavy(); setShowModal(true); }} onClearWaypoint={clearWaypoint}
-      onMarkPosition={handleMarkPosition} markToast={markToast}
-      isPro={isPro} onShowProGate={showProGate}
-      onCopyGrid={copyGrid} copyToast={copyToast}
-      speaking={voice.speaking} onVoicePress={handleVoicePress}
-      coordFormat={coordFormat} altDisplay={altDisplay}
-      compassHeading={compassHeading} compassReference={compassReference}
-      onRateApp={async () => { if (await allowSystemDisplay()) openStoreReview(); }}
-      onEnterHud={onEnterHud}
-      onShowSupport={() => setShowSupport(true)}
-      gridScale={gridScale}
-    />
-  );
+  // Readout props. The layout (compact portrait, compact landscape or an
+  // expanded pane beside the map) is chosen in AppContent from the real
+  // window, insets, text size and fold geometry, not from orientation alone.
+  const gridProps = {
+    isLoading, location, error: displayError, retry, positionStatus,
+    mgrsFormatted, waypoint, waypointMGRS,
+    bearing, arrowAngle, distance,
+    onAddWaypoint: () => { tapHeavy(); setShowModal(true); }, onClearWaypoint: clearWaypoint,
+    onMarkPosition: handleMarkPosition, markToast,
+    isPro, onShowProGate: showProGate,
+    onCopyGrid: copyGrid, copyToast,
+    speaking: voice.speaking, onVoicePress: handleVoicePress,
+    coordFormat, altDisplay,
+    compassHeading, compassReference,
+    onRateApp: async () => { if (await allowSystemDisplay()) openStoreReview(); },
+    onEnterHud,
+    onShowSupport: () => setShowSupport(true),
+    gridScale,
+  };
+
+  // The single map instance's in-memory session (viewport, selection,
+  // unsaved long-press form). A ref, so updates never re-render App.
+  const mapSession = useRef(createMapSession());
+  const onMapSessionChange = useCallback(patch => { mapSession.current = reduceMapSession(mapSession.current, patch); }, []);
 
   // Safely build tab list with error protection
   let safeTab = 'grid';
@@ -483,7 +482,10 @@ function App() {
         TABS={TABS}
         isPro={isPro}
         isLandscape={isLandscape}
-        gridContent={gridContent}
+        gridProps={gridProps}
+        requestReviewIfEligible={requestReviewIfEligible}
+        mapSession={mapSession}
+        onMapSessionChange={onMapSessionChange}
         location={location}
         declination={declination}
         paceCount={paceCount}
@@ -554,7 +556,7 @@ function AppContent({
   // "Property 'showTeamRoster' doesn't exist" and trips the error boundary.
   team, showTeamRoster, setShowTeamRoster,
   safeTab, setTab, TABS, isPro, isLandscape,
-  gridContent, location, declination, paceCount,
+  gridProps, requestReviewIfEligible, mapSession, onMapSessionChange, location, declination, paceCount,
   setDeclination, setPaceCount, mgrsFormatted, showProGate,
   theme, setTheme, tacticalMode, setTacticalMode, settingsLoaded, setWaypoint,
   showModal, setShowModal, proGateVisible, setProGateVisible,
@@ -576,9 +578,37 @@ function AppContent({
   const colors = useColors();
   const { t } = useTranslation();
   useEffect(() => { if (!isPro) setHudMode(false); }, [isPro, setHudMode]);
+  const [incidentRequest,setIncidentRequest]=useState(null);
+  const openIncident=useCallback(reference=>{setIncidentRequest({id:newFieldId(),reference});setTab('report');},[setTab]);
+  const incidentRequestHandled=useCallback(()=>setIncidentRequest(null),[]);
   const display = useTacticalBrightness(tacticalMode);
-  const { width, fontScale } = useWindowDimensions();
+  const { width, height, fontScale } = useWindowDimensions();
   const wideTabs = fontScale > 1.2 || width < 380;
+  const tabBarHeight = Math.max(50, Math.min(fontScale, 2) * 36);
+
+  // Workspace: compact keeps today's single screen per tab; expanded shows the
+  // readout (or the lists) beside the one map instance when the window really
+  // has room at this text size, or when the platform reports a separating fold.
+  // The workspace container is measured in window coordinates so pane sizes
+  // and fold geometry share one coordinate space with the chrome above it
+  // (display switch, brightness row, navigation bar) already excluded. Until
+  // the first measurement the hook estimates from the window and tab bar.
+  const workspaceRef = useRef(null);
+  const [workspaceFrame, setWorkspaceFrame] = useState(null);
+  const onWorkspaceLayout = useCallback(() => {
+    const node = workspaceRef.current;
+    if (!node || typeof node.measureInWindow !== 'function') return;
+    node.measureInWindow((x, y, w, h) => {
+      const next = { x: Math.round(x), y: Math.round(y), width: Math.round(w), height: Math.round(h) };
+      setWorkspaceFrame(prev => (prev && prev.x === next.x && prev.y === next.y && prev.width === next.width && prev.height === next.height) ? prev : next);
+    });
+  }, []);
+  const { layout, isRTL } = useWorkspaceLayout({ tab: safeTab, bottomChrome: tabBarHeight, frame: workspaceFrame, isPro });
+  const panes = resolvePaneContent({ layout, tab: safeTab, isPro });
+  const plan = planWorkspaceSlots({ layout, panes, isRTL });
+  const expanded = plan.expanded;
+  const [primarySlot, hingeSlot, mapSlot] = plan.slots;
+  const arrowSize = arrowSizeFor({ mode: expanded ? 'expanded' : 'compact', landscape: layout.landscape, pane: layout.panes?.primary, height });
   const listProps = {
     savedLists: savedPlans.lists, listsLoading: savedPlans.loading, listsLoadError: savedPlans.loadError,
     listsSaveError: savedPlans.saveError, listsSaving: savedPlans.isSaving,
@@ -587,6 +617,25 @@ function AppContent({
   };
   const storeAction = useRef(false);
   const fieldModalVisible = useFieldModalVisibility();
+  const canQueueReview = () => settingsLoaded && display.ready && display.active
+    && !tacticalMode && !hudMode && !waypoint && !fieldNavigation.route && !routeDraft.active
+    && !isPurchasing && !storeAction.current && !gridProps.speaking
+    && !mesh.autoShare && !mesh.isConnected && !team.sosPeers?.length && !team.lastInbound;
+  const { queueReview, cancelReview } = useReviewOpportunity({
+    requestReviewIfEligible, canQueue: canQueueReview, contextKey: safeTab,
+    isContextStable: () => ['grid', 'lists'].includes(safeTab)
+      && !showModal && !proGateVisible && !showSupport && !showTeamRoster && !fieldModalVisible
+      && !savedPlans.isSaving && !savedPlans.loading && !savedPlans.loadError && !savedPlans.saveError
+      && !fieldNavigation.isSaving && !fieldNavigation.loading && !fieldNavigation.loadError && !fieldNavigation.saveError,
+  });
+  const reviewGridProps = { ...gridProps,
+    onOpenIncident:openIncident,
+    onCopyGrid: async () => { if (await gridProps.onCopyGrid()) queueReview(); },
+    onRateApp: () => { cancelReview(); gridProps.onRateApp(); },
+  };
+  const gridContent = !expanded && layout.landscape
+    ? <LandscapeGrid {...reviewGridProps} arrowSize={arrowSize} />
+    : <PortraitGrid {...reviewGridProps} arrowSize={arrowSize} />;
   useEffect(() => registerDisplayGuard({ tacticalMode, exit: async () => {
     setTacticalMode(false);
     await display.restore().catch(() => {});
@@ -605,12 +654,13 @@ function AppContent({
 
   return (
     <DisplaySafetyProvider value={{ tacticalMode, onExitTactical: () => setTacticalMode(false), brightnessReady: display.ready, active: display.active }}>
-    <View style={staticStyles.root}>
+    <View style={staticStyles.root} onTouchStart={cancelReview} onTouchMove={cancelReview}
+      onFocusCapture={cancelReview} onBlurCapture={cancelReview}>
     <View style={staticStyles.root} accessibilityElementsHidden={tacticalMode && fieldModalVisible} importantForAccessibility={tacticalMode && fieldModalVisible ? 'no-hide-descendants' : 'auto'}>
     <SafeAreaView style={[staticStyles.root, { backgroundColor: colors.bg }]} accessibilityElementsHidden={tacticalMode && fieldModalVisible} importantForAccessibility={tacticalMode && fieldModalVisible ? 'no-hide-descendants' : 'auto'}>
       {/* backgroundColor is deprecated and ignored under edge-to-edge (Android 15+);
           the SafeAreaView background supplies the status-bar backdrop instead. */}
-      <StatusBar barStyle={statusBarStyle} translucent hidden={isLandscape || hudMode || tacticalMode} />
+      {!hasAndroidSystemBars && <StatusBar barStyle={statusBarStyle} translucent hidden={isLandscape || hudMode || tacticalMode} />}
 
       <TacticalDisplaySwitch
         theme={theme}
@@ -631,29 +681,15 @@ function AppContent({
 
       {/* Screen content with fade transition */}
       <Animated.View style={[staticStyles.screenContent, { opacity: fadeAnim }]}>
-        {safeTab === 'grid' && gridContent}
+      {/* Two fixed slots: primary content, then the one map instance. The map
+          keeps its tree position across compact/expanded changes so a resize
+          never remounts it; it is unmounted (not hidden) whenever it is not on
+          screen, so no map work runs in the background. */}
+      <View ref={workspaceRef} onLayout={onWorkspaceLayout} style={[staticStyles.workspace, plan.direction === 'row' && staticStyles.workspaceRow, plan.padding]}>
+        {primarySlot.mounted && <View key="primary" style={[staticStyles.pane, primarySlot.style]}>
+        {panes.primary === 'grid' && gridContent}
 
-        {safeTab === 'map' && (
-          <MapScreen
-            {...listProps} routeDraft={routeDraft} onRouteDraftChange={setRouteDraft}
-            onOpenSavedRoute={id => { setSelectedListId(id); setTab('lists'); }}
-            location={location}
-            tacticalMode={tacticalMode}
-            activeRoute={fieldNavigation.route}
-            onExitTactical={() => setTacticalMode(false)}
-            isPro={isPro}
-            trialEligible={trialEligible}
-            onShowProGate={showProGate}
-            onSetWaypoint={setWaypoint}
-            meshPositions={mesh.meshPositions}
-            gpsSource={gpsSource}
-            gpsDeviceName={gpsDeviceName}
-            mesh={mesh}
-            team={team}
-          />
-        )}
-
-        {safeTab === 'tools' && (
+        {panes.primary === 'tools' && (
           <ToolsScreen
             lastKnownLocation={lastKnownLocation} savedWaypoints={savedWaypoints} onSaveEstimatedPoint={onSaveEstimatedPoint}
             location={location}
@@ -669,8 +705,9 @@ function AppContent({
           />
         )}
 
-        {safeTab === 'report' && (
+        {panes.primary === 'report' && (
           <ReportScreen
+            incidentRequest={incidentRequest} onIncidentRequestHandled={incidentRequestHandled}
             location={location}
             mgrs={mgrsFormatted}
             isPro={isPro}
@@ -679,9 +716,10 @@ function AppContent({
           />
         )}
 
-        {safeTab === 'lists' && isPro && (
+        {panes.primary === 'lists' && isPro && (
           <WaypointListsScreen
             {...listProps} selectedListId={selectedListId} onListRequestHandled={() => setSelectedListId(null)}
+            onUsefulTaskComplete={queueReview}
             onSaveReviewNotes={fieldNavigation.updateReviewNotes}
             location={location}
             onSelectWaypoint={async wp => { await setWaypoint(wp); setTab('grid'); }}
@@ -694,7 +732,7 @@ function AppContent({
           />
         )}
 
-        {safeTab === 'theme' && (
+        {panes.primary === 'theme' && (
           <ThemeScreen
             tacticalSound={tacticalSound} setTacticalSound={setTacticalSound} settingsSaveError={settingsSaveError} onRetrySettingsSave={retrySettingsSave}
             currentTheme={theme}
@@ -710,7 +748,7 @@ function AppContent({
           />
         )}
 
-        {safeTab === 'coords' && isPro && (
+        {panes.primary === 'coords' && isPro && (
           <CoordFormatsScreen
             location={location}
             coordFormat={coordFormat}
@@ -718,7 +756,7 @@ function AppContent({
           />
         )}
 
-        {safeTab === 'mesh' && isPro && (
+        {panes.primary === 'mesh' && isPro && (
           <MeshScreen
             location={location}
             connectionState={mesh.connectionState}
@@ -742,12 +780,39 @@ function AppContent({
         )}
 
         {/* Upsell tab for non-Pro */}
-        {(safeTab === 'lists' || safeTab === 'coords' || safeTab === 'mesh') && !isPro && (
+        {(panes.primary === 'lists' || panes.primary === 'coords' || panes.primary === 'mesh') && !isPro && (
           <UpsellScreen
-            tabId={safeTab}
+            tabId={panes.primary}
             onUpgrade={() => showProGate(t(UPSELL_GATE_FEATURE[safeTab]), UPSELL_GATE_CONTEXT[safeTab])}
           />
         )}
+        </View>}
+        {hingeSlot.mounted && <View key="hinge" style={[hingeSlot.style, { backgroundColor: hingeSlot.physical ? colors.bg : colors.border2 }]} />}
+        {mapSlot.mounted && (
+          <View key="map" style={[staticStyles.pane, mapSlot.style]}>
+          <MapScreen
+            onLogIncident={openIncident}
+            session={mapSession.current} onSessionChange={onMapSessionChange}
+            {...listProps} routeDraft={routeDraft} onRouteDraftChange={setRouteDraft}
+            onOpenSavedRoute={id => { setSelectedListId(id); setTab('lists'); }}
+            location={location}
+            tacticalMode={tacticalMode}
+            activeRoute={fieldNavigation.route}
+            onExitTactical={() => setTacticalMode(false)}
+            isPro={isPro}
+            trialEligible={trialEligible}
+            onShowProGate={showProGate}
+            onSetWaypoint={setWaypoint}
+            meshPositions={mesh.meshPositions}
+            gpsSource={gpsSource}
+            gpsDeviceName={gpsDeviceName}
+            mesh={mesh}
+            team={team}
+          />
+          </View>
+        )}
+
+      </View>
       </Animated.View>
 
       {/* Tab bar — bottom positioned, adaptive spacing for 5+ tabs */}
@@ -808,6 +873,7 @@ function AppContent({
       {/* Help & Support */}
       <SupportScreen
         visible={showSupport}
+        onReviewApp={reviewGridProps.onRateApp}
         onClose={() => setShowSupport(false)}
         onRestore={async () => { if (storeAction.current) return; storeAction.current = true; try { if (await allowSystemDisplay()) await restore(); } finally { storeAction.current = false; } }}
         isRestoring={isPurchasing}
@@ -826,7 +892,7 @@ function AppContent({
       />
 
       <WhatsNewModal
-        currentVersion="4.0.8"
+        currentVersion="4.1.2"
         showTrialCta={!isPro}
         onStartTrial={() => showProGate('')}
       />
@@ -900,7 +966,7 @@ function UpsellScreen({ tabId, onUpgrade }) {
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, compassReference, positionStatus, onRateApp, onEnterHud, onShowSupport, gridScale, speaking, onVoicePress }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, onOpenIncident, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, compassReference, positionStatus, onRateApp, onEnterHud, onShowSupport, gridScale, speaking, onVoicePress }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -935,6 +1001,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
           <Text style={[staticStyles.markBtnText, { color: colors.text, opacity: Number.isFinite(location?.lat) ? 1 : 0.4 }]} suppressHighlighting={true}>{'◉ ' + t('workflow.access.markPosition')}</Text>
         </TouchableOpacity>
         {markToast && <Text style={[staticStyles.markToast, { color: colors.text2 }]}>✓ {markToast}</Text>}
+        <IncidentShortcut location={location} onOpen={onOpenIncident}/>
       </View>
       {!waypoint ? (
         <View style={staticStyles.noWpBlock}>
@@ -992,7 +1059,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, compassReference, positionStatus, onRateApp, onEnterHud, onShowSupport, gridScale, speaking, onVoicePress }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, onOpenIncident, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, compassReference, positionStatus, onRateApp, onEnterHud, onShowSupport, gridScale, speaking, onVoicePress }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -1034,6 +1101,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
             <Text style={[staticStyles.lsMarkBtnText, { color: colors.text, opacity: Number.isFinite(location?.lat) ? 1 : 0.4 }]} suppressHighlighting={true}>{'◉ ' + t('workflow.access.markPosition')}</Text>
           </TouchableOpacity>
           {markToast && <Text style={[staticStyles.markToast, { color: colors.text2, textAlign: 'center' }]}>✓ {markToast}</Text>}
+          <IncidentShortcut location={location} onOpen={onOpenIncident}/>
           <View style={staticStyles.lsBtns}>
             <TouchableOpacity style={[staticStyles.lsBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel={waypoint ? t('grid.edit') : t('grid.addWaypoint')}>
               <Text style={[staticStyles.lsBtnText, { color: colors.text }]}>{waypoint ? t('grid.editWp') : t('grid.plusWaypoint')}</Text>
@@ -1216,6 +1284,9 @@ const staticStyles = StyleSheet.create({
   tabLockMark: { ...TYPE.label, fontSize:7, letterSpacing:0.8 },
   tabIndicatorTop: { position:'absolute', top:0, left:'10%', right:'10%', height:2 },
   screenContent: { flex:1 },
+  workspace: { flex:1 },
+  workspaceRow: { flexDirection:'row' },
+  pane: { flex:1, minWidth:0, minHeight:0 },
   // Portrait
   portraitRoot: { flexGrow:1, paddingHorizontal:20, paddingTop:12, paddingBottom:20 },
   header: { flexWrap:'wrap', rowGap:8, flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingBottom:10 },

@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Modal } from './FieldModal';
 import { TextInput } from './FieldInput';
 import { parseMGRSToLatLon } from '../utils/mgrs';
@@ -11,6 +12,7 @@ import { useTranslation } from '../hooks/useTranslation';
 
 export function WaypointModal({ visible, onClose, onSetWaypoint, currentLocation }) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const [mgrsInput, setMGRSInput] = useState('');
   const [label, setLabel] = useState('');
@@ -43,18 +45,21 @@ export function WaypointModal({ visible, onClose, onSetWaypoint, currentLocation
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={close}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.overlay}>
+      {/* Android's modal already resizes for the keyboard. Keep iOS padding only. */}
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} enabled={Platform.OS === 'ios'} style={[styles.overlay, { paddingTop: Math.max(0, insets.top) }]}>
         <View style={[styles.sheet, { backgroundColor: colors.bg, borderTopColor: colors.border }]} accessibilityViewIsModal={true}>
-          <Text style={[styles.title, { color: colors.text }]}>{t('waypointModal.title')}</Text>
-          <View style={[styles.divider, { backgroundColor: colors.border2 }]} />
-          <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{t('waypointModal.labelOptional')}</Text>
-          <TextInput style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }]} editable={!isSaving} value={label} onChangeText={setLabel} placeholder="OBJ ALPHA" placeholderTextColor={colors.text3} autoCapitalize="characters" maxLength={16} accessibilityLabel={t('waypointModal.labelOptional')} accessibilityHint="Optional name for this waypoint" />
-          <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{t('waypointModal.mgrsCoordinate')}</Text>
-          <TextInput style={[styles.input, styles.mgrsInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }]} editable={!isSaving} value={mgrsInput} onChangeText={(v) => { setMGRSInput(v); setError(''); }} placeholder="18S UJ 12345 67890" placeholderTextColor={colors.text3} autoCapitalize="characters" autoCorrect={false} maxLength={20} accessibilityLabel={t('waypointModal.mgrsCoordinate')} accessibilityHint="Enter full MGRS grid coordinate" />
-          {error ? <Text style={[styles.error, { color: colors.text }]} accessibilityRole="alert" accessibilityLiveRegion="assertive">{error}</Text> : null}
-          <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.border, borderColor: colors.text2 }]} disabled={isSaving} accessibilityState={{ disabled: isSaving, busy: isSaving }} onPress={handleSubmit} accessibilityRole="button" accessibilityLabel={t('waypointModal.setWaypoint')}><Text style={[styles.primaryBtnText, { color: colors.text }]}>{isSaving ? t('workflow.saving') : t('waypointModal.setWaypoint')}</Text></TouchableOpacity>
-          <TouchableOpacity style={[styles.secondaryBtn, { borderColor: colors.border2 }]} disabled={isSaving} accessibilityState={{ disabled: isSaving }} onPress={handleMark} accessibilityRole="button" accessibilityLabel={t('waypointModal.markCurrentPosition')}><Text style={[styles.secondaryBtnText, { color: colors.text3 }]}>{t('waypointModal.markCurrentPosition')}</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.cancelBtn} onPress={close} accessibilityRole="button" accessibilityLabel={t('waypointModal.cancel')}><Text style={[styles.cancelBtnText, { color: colors.text3 }]}>{t('waypointModal.cancel')}</Text></TouchableOpacity>
+          <ScrollView contentContainerStyle={styles.sheetContent} keyboardShouldPersistTaps="handled" bounces={false} keyboardDismissMode="none">
+            <Text style={[styles.title, { color: colors.text }]}>{t('waypointModal.title')}</Text>
+            <View style={[styles.divider, { backgroundColor: colors.border2 }]} />
+            <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{t('waypointModal.labelOptional')}</Text>
+            <TextInput style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }]} editable={!isSaving} value={label} onChangeText={setLabel} placeholder="OBJ ALPHA" placeholderTextColor={colors.text3} autoCapitalize="characters" maxLength={16} accessibilityLabel={t('waypointModal.labelOptional')} accessibilityHint="Optional name for this waypoint" />
+            <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{t('waypointModal.mgrsCoordinate')}</Text>
+            <TextInput style={[styles.input, styles.mgrsInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }]} editable={!isSaving} value={mgrsInput} onChangeText={(v) => { setMGRSInput(v); setError(''); }} placeholder="18S UJ 12345 67890" placeholderTextColor={colors.text3} autoCapitalize="characters" autoCorrect={false} maxLength={20} accessibilityLabel={t('waypointModal.mgrsCoordinate')} accessibilityHint="Enter full MGRS grid coordinate" />
+            {error ? <Text style={[styles.error, { color: colors.text }]} accessibilityRole="alert" accessibilityLiveRegion="assertive">{error}</Text> : null}
+            <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: colors.border, borderColor: colors.text2 }]} disabled={isSaving} accessibilityState={{ disabled: isSaving, busy: isSaving }} onPress={handleSubmit} accessibilityRole="button" accessibilityLabel={t('waypointModal.setWaypoint')}><Text style={[styles.primaryBtnText, { color: colors.text }]}>{isSaving ? t('workflow.saving') : t('waypointModal.setWaypoint')}</Text></TouchableOpacity>
+            <TouchableOpacity style={[styles.secondaryBtn, { borderColor: colors.border2 }]} disabled={isSaving} accessibilityState={{ disabled: isSaving }} onPress={handleMark} accessibilityRole="button" accessibilityLabel={t('waypointModal.markCurrentPosition')}><Text style={[styles.secondaryBtnText, { color: colors.text3 }]}>{t('waypointModal.markCurrentPosition')}</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.cancelBtn} onPress={close} accessibilityRole="button" accessibilityLabel={t('waypointModal.cancel')}><Text style={[styles.cancelBtnText, { color: colors.text3 }]}>{t('waypointModal.cancel')}</Text></TouchableOpacity>
+          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -63,7 +68,9 @@ export function WaypointModal({ visible, onClose, onSetWaypoint, currentLocation
 
 const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.85)' },
-  sheet: { borderTopWidth: 1, padding: 24, paddingBottom: 40, gap: 8 },
+  // Bounded by the (keyboard-resized) modal host; content scrolls inside.
+  sheet: { borderTopWidth: 1, flexShrink: 1, maxHeight: '100%' },
+  sheetContent: { padding: 24, paddingBottom: 40, gap: 8 },
   title: {
     ...TYPE.heading, fontSize: 18, letterSpacing: 1.2, textAlign: 'center', marginBottom: 4 },
   divider: { height: 1, marginBottom: 8 },

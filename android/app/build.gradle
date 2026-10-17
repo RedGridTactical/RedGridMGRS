@@ -62,6 +62,13 @@ react {
     autolinkLibrariesWithApp()
 }
 
+// The React Native task excludes node_modules from its inputs. Rebundle when
+// dependency patches or the lockfile change so release builds contain the fix.
+tasks.withType(com.facebook.react.tasks.BundleHermesCTask).configureEach {
+    inputs.files(fileTree("$projectRoot/patches") { include "*.patch" })
+    inputs.files("$projectRoot/package-lock.json", "$projectRoot/app.json")
+}
+
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
@@ -91,8 +98,8 @@ android {
         applicationId 'com.redgrid.redgridtactical'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 38
-        versionName "4.0.8"
+        versionCode 46
+        versionName "4.1.2"
 
         // Google Maps Android API key — read from secrets/google-maps-key.txt (gitignored).
         // Falls back to empty string if the file is missing; the app still launches but
@@ -169,6 +176,10 @@ dependencies {
     // Must stay in lockstep with expo-iap's own pin (node_modules/expo-iap/android/build.gradle).
     // Play requires Billing Library 8+ from Aug 31 2026 or updates are rejected.
     implementation "com.android.billingclient:billing-ktx:8.0.0"
+    // Jetpack WindowManager: folding-feature geometry for the adaptive GRID/MAP workspace
+    // (stable 1.5.1 per developer.android.com/jetpack/androidx/releases/window, read 2026-10-09).
+    implementation "androidx.window:window:1.5.1"
+    implementation "androidx.window:window-java:1.5.1"
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 

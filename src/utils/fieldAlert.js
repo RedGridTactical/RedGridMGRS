@@ -1,9 +1,11 @@
 import { Alert as NativeAlert } from 'react-native';
 import i18n from '../i18n';
+import { setReviewBlocker } from './reviewPresentation';
 
 let host = null;
 let displayGuard = null;
 let systemDisplayPending = false;
+let alertSequence = 0;
 export function registerDisplayGuard(guard) {
   displayGuard = guard;
   return () => { if (displayGuard === guard) displayGuard = null; };
@@ -37,7 +39,16 @@ export function registerAlertHost(listener) {
 /** App-owned dialogs follow the current palette; OS purchase/permission sheets remain native. */
 export const Alert = {
   alert(title, message, buttons, options) {
-    if (host) host({ title, message, buttons, options });
-    else NativeAlert.alert(title, message, buttons, options);
+    const key = `alert:${++alertSequence}`;
+    setReviewBlocker(key, true);
+    const finish = () => setReviewBlocker(key, false);
+    const actions = (buttons?.length ? buttons : [{ text: 'OK' }]).map(button => ({
+      ...button, onPress: () => { finish(); button.onPress?.(); },
+    }));
+    const guardedOptions = { ...options, onDismiss: () => { finish(); options?.onDismiss?.(); } };
+    try {
+      if (host) host({ title, message, buttons: actions, options: guardedOptions });
+      else NativeAlert.alert(title, message, actions, guardedOptions);
+    } catch (error) { finish(); throw error; }
   },
 };

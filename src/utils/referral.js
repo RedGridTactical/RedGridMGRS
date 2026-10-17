@@ -338,6 +338,16 @@ export async function shareTrialLink(messageForUrl) {
   }
 }
 
+/** Ordinary app recommendation remains available independently of gifts or purchases. */
+export async function shareApp(messageForUrl) {
+  try {
+    const result = await Share.share({ message: messageForUrl('https://redgridtactical.com/mgrs') });
+    return { ok: true, shared: result?.action === Share.sharedAction };
+  } catch {
+    return { ok: false, reason: 'share' };
+  }
+}
+
 export function trialStatusAt(record, now = Date.now()) {
   const expiresMs = Date.parse(record?.expiresAt);
   const received = record?.received === true;
