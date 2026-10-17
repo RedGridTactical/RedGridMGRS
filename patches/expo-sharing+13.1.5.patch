@@ -1,0 +1,24 @@
+diff --git a/node_modules/expo-sharing/ios/SharingModule.swift b/node_modules/expo-sharing/ios/SharingModule.swift
+--- a/node_modules/expo-sharing/ios/SharingModule.swift
++++ b/node_modules/expo-sharing/ios/SharingModule.swift
+@@ -15,16 +15,10 @@
+       let activityController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+       activityController.title = options.dialogTitle
+ 
+-      activityController.completionWithItemsHandler = { type, completed, _, _ in
+-        // user shared an item
+-        if type != nil && completed {
+-          promise.resolve(nil)
+-        }
+-
+-        // dismissed without action
+-        if type == nil && !completed {
+-          promise.resolve(nil)
+-        }
++      // The completion callback also covers an activity that ends without
++      // reporting success. Always release the caller after the sheet dismisses.
++      activityController.completionWithItemsHandler = { _, _, _, _ in
++        promise.resolve(nil)
+       }
+ 
+       guard let currentViewcontroller = appContext?.utilities?.currentViewController() else {
