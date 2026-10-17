@@ -17,10 +17,27 @@ const SEEN_KEY = 'rg_whatsnew_seen_version';
 // The release whose bullets are translated under `whatsNew.current` in i18n.
 // Bump this in lockstep with the entry added to FEATURES_BY_VERSION below, or
 // the modal silently falls back to English.
-const LOCALIZED_VERSION = '4.1.1';
+const LOCALIZED_VERSION = '4.1.2';
 
 // Features to showcase for a given version. Keep terse — this is a glance screen.
 const FEATURES_BY_VERSION = {
+  '4.1.2': [
+    {
+      "icon": "▤",
+      "title": "INCIDENT WORKSPACE",
+      "body": "Keep an incident log on this device: operational period, resources and timed activities, with corrections kept in history. Pro to create or edit; saved records stay readable and exportable."
+    },
+    {
+      "icon": "⤴",
+      "title": "ICS 214 EXPORT",
+      "body": "Review the draft, then share an unsigned ICS 214 PDF or text, or a JSON backup you can import again. The app does not sign or file the report."
+    },
+    {
+      "icon": "✓",
+      "title": "DRAFTS THAT STAY",
+      "body": "Report worksheets and incident drafts save on this device and survive restarts. Each activity records its event time, entry time and location source. No tracking or network added."
+    }
+  ],
   '4.1.1': [
     {
       "icon": "✓",

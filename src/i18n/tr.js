@@ -605,16 +605,16 @@ export default {
     startTrial: "7 GÜNLÜK ÜCRETSİZ DENEMEYİ BAŞLAT",
     current: {
       "f1": {
-        "title": "HAZIR OLDUĞUNUZDA DEĞERLENDİRİN",
-        "body": "Yardım bölümünden yorum yazın. Ara sıra gösterilen mağaza istekleri, tamamlanan bir görev ve sakin bir aradan sonra gelir."
+        "title": "OLAY ÇALIŞMA ALANI",
+        "body": "Bu cihazda olay kaydı tutun: operasyon dönemi, kaynaklar ve saatli faaliyetler; düzeltmeler geçmişte kalır. Oluşturma ve düzenleme için Pro gerekir; kayıtlı kayıtlar okunabilir ve dışa aktarılabilir kalır."
       },
       "f2": {
-        "title": "RED GRID’İ PAYLAŞIN",
-        "body": "Ayrı tutulan 7 günlük Pro hediyenizi kullanmadan Yardım bölümünden uygulamayı paylaşın."
+        "title": "ICS 214 DIŞA AKTARMA",
+        "body": "Taslağı gözden geçirin, ardından imzasız ICS 214'ü PDF veya metin olarak ya da yeniden içe aktarılabilen JSON yedeği olarak paylaşın. Uygulama raporu imzalamaz veya dosyalamaz."
       },
       "f3": {
-        "title": "DAHA NET YARDIM",
-        "body": "Yardım işlemleri büyük metinde daha okunaklı. Yorum isteğinin zamanlaması cihazda kalır; takip eklenmedi."
+        "title": "KALICI TASLAKLAR",
+        "body": "Rapor çalışma sayfaları ve olay taslakları bu cihaza kaydedilir ve yeniden başlatmalarda korunur. Her faaliyet olay saatini, giriş saatini ve konum kaynağını kaydeder. Takip veya ağ eklenmedi."
       }
     },
   },

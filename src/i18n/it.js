@@ -584,16 +584,16 @@ export default {
     startTrial: "INIZIA LA PROVA GRATUITA DI 7 GIORNI",
     current: {
       "f1": {
-        "title": "RECENSISCI QUANDO VUOI",
-        "body": "Scrivi una recensione da Aiuto. Le richieste occasionali dello store seguono un’attività completata e una pausa tranquilla."
+        "title": "AREA INCIDENTE",
+        "body": "Tieni un registro incidente su questo dispositivo: periodo operativo, risorse e attività con orario, con le correzioni conservate nella cronologia. Pro per creare o modificare; i record salvati restano leggibili ed esportabili."
       },
       "f2": {
-        "title": "CONDIVIDI RED GRID",
-        "body": "Condividi l’app da Aiuto senza usare il tuo regalo Pro separato di 7 giorni."
+        "title": "ESPORTAZIONE ICS 214",
+        "body": "Rivedi la bozza, poi condividi un PDF o un testo ICS 214 non firmato, oppure un backup JSON reimportabile. L'app non firma né deposita il rapporto."
       },
       "f3": {
-        "title": "AIUTO PIÙ CHIARO",
-        "body": "Le azioni di Aiuto sono più leggibili con testo grande. I tempi delle recensioni restano sul dispositivo; nessun tracciamento aggiunto."
+        "title": "BOZZE CHE RESTANO",
+        "body": "Le schede dei rapporti e le bozze incidente si salvano su questo dispositivo e sopravvivono ai riavvii. Ogni attività registra ora dell'evento, ora di inserimento e origine della posizione. Nessun tracciamento o rete aggiunti."
       }
     },
   },

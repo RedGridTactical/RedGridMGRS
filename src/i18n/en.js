@@ -1241,16 +1241,16 @@ export default {
     startTrial: 'START 7-DAY FREE TRIAL',
     current: {
       "f1": {
-        "title": "REVIEW WHEN READY",
-        "body": "Write a review from Help. Occasional store prompts follow completed tasks and a quiet pause."
+        "title": "INCIDENT WORKSPACE",
+        "body": "Keep an incident log on this device: operational period, resources and timed activities, with corrections kept in history. Pro to create or edit; saved records stay readable and exportable."
       },
       "f2": {
-        "title": "SHARE RED GRID",
-        "body": "Share the app from Help without using your separate 7-day Pro gift."
+        "title": "ICS 214 EXPORT",
+        "body": "Review the draft, then share an unsigned ICS 214 PDF or text, or a JSON backup you can import again. The app does not sign or file the report."
       },
       "f3": {
-        "title": "CLEARER HELP",
-        "body": "Help actions are clearer at large text sizes. Review timing stays on this device; no tracking added."
+        "title": "DRAFTS THAT STAY",
+        "body": "Report worksheets and incident drafts save on this device and survive restarts. Each activity records its event time, entry time and location source. No tracking or network added."
       }
     },
   },

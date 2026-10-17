@@ -604,16 +604,16 @@ export default {
     startTrial: "INICIAR TESTE GRÁTIS DE 7 DIAS",
     current: {
       "f1": {
-        "title": "AVALIE QUANDO QUISER",
-        "body": "Escreva uma avaliação em Ajuda. Os pedidos ocasionais da loja aparecem após uma tarefa concluída e uma pausa tranquila."
+        "title": "ÁREA DE INCIDENTE",
+        "body": "Mantenha um registro de incidente neste dispositivo: período operacional, recursos e atividades com horário, com correções guardadas no histórico. Pro para criar ou editar; os registros salvos continuam legíveis e exportáveis."
       },
       "f2": {
-        "title": "COMPARTILHE RED GRID",
-        "body": "Compartilhe o app em Ajuda sem usar seu presente Pro de 7 dias, que continua separado."
+        "title": "EXPORTAÇÃO ICS 214",
+        "body": "Revise o rascunho e compartilhe um PDF ou texto ICS 214 não assinado, ou um backup JSON que pode ser importado de novo. O app não assina nem protocola o relatório."
       },
       "f3": {
-        "title": "AJUDA MAIS CLARA",
-        "body": "As ações de Ajuda ficam mais claras com texto grande. O momento de pedir avaliações é definido neste dispositivo; sem novo rastreamento."
+        "title": "RASCUNHOS QUE FICAM",
+        "body": "Planilhas de relatório e rascunhos de incidente são salvos neste dispositivo e sobrevivem a reinícios. Cada atividade registra hora do evento, hora de lançamento e origem da localização. Sem rastreamento ou rede adicionados."
       }
     },
   },

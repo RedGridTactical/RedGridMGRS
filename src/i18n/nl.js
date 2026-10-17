@@ -605,16 +605,16 @@ export default {
     startTrial: "START GRATIS PROEFPERIODE VAN 7 DAGEN",
     current: {
       "f1": {
-        "title": "BEOORDEEL WANNEER HET PAST",
-        "body": "Schrijf een beoordeling via Help. Af en toe volgt een winkelverzoek na een afgeronde taak en een rustige pauze."
+        "title": "INCIDENTWERKRUIMTE",
+        "body": "Houd een incidentlogboek bij op dit apparaat: operationele periode, middelen en activiteiten met tijd, met correcties bewaard in de geschiedenis. Pro om te maken of te bewerken; opgeslagen records blijven leesbaar en exporteerbaar."
       },
       "f2": {
-        "title": "RED GRID DELEN",
-        "body": "Deel de app via Help zonder je afzonderlijke Pro-cadeau van 7 dagen te gebruiken."
+        "title": "ICS 214-EXPORT",
+        "body": "Controleer het concept en deel dan een niet-ondertekende ICS 214 als PDF of tekst, of een JSON-back-up die je opnieuw kunt importeren. De app ondertekent of dient het rapport niet in."
       },
       "f3": {
-        "title": "DUIDELIJKERE HELP",
-        "body": "Help-acties zijn duidelijker bij grote tekst. Het moment van beoordelingsverzoeken blijft op dit apparaat; geen tracking toegevoegd."
+        "title": "CONCEPTEN DIE BLIJVEN",
+        "body": "Rapportwerkbladen en incidentconcepten worden op dit apparaat opgeslagen en overleven een herstart. Elke activiteit legt gebeurtenistijd, invoertijd en locatiebron vast. Geen tracking of netwerk toegevoegd."
       }
     },
   },

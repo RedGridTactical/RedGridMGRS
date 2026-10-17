@@ -605,16 +605,16 @@ export default {
     startTrial: "ROZPOCZNIJ 7-DNIOWY BEZPŁATNY OKRES PRÓBNY",
     current: {
       "f1": {
-        "title": "OCEŃ W DOGODNEJ CHWILI",
-        "body": "Napisz opinię w Pomocy. Sporadyczne prośby sklepu pojawiają się po ukończeniu zadania i spokojnej przerwie."
+        "title": "OBSZAR INCYDENTU",
+        "body": "Prowadź dziennik incydentu na tym urządzeniu: okres operacyjny, zasoby i działania z czasem, a poprawki pozostają w historii. Pro do tworzenia i edycji; zapisane rekordy pozostają czytelne i możliwe do eksportu."
       },
       "f2": {
-        "title": "UDOSTĘPNIJ RED GRID",
-        "body": "Udostępnij aplikację w Pomocy bez korzystania z osobnego prezentu Pro na 7 dni."
+        "title": "EKSPORT ICS 214",
+        "body": "Przejrzyj szkic, a następnie udostępnij niepodpisany ICS 214 jako PDF lub tekst albo kopię zapasową JSON, którą można ponownie zaimportować. Aplikacja nie podpisuje ani nie składa raportu."
       },
       "f3": {
-        "title": "CZYTELNIEJSZA POMOC",
-        "body": "Działania w Pomocy są czytelniejsze przy dużym tekście. Czas prośby o opinię ustalany jest na urządzeniu; bez nowego śledzenia."
+        "title": "SZKICE ZOSTAJĄ",
+        "body": "Arkusze raportów i szkice incydentów zapisują się na tym urządzeniu i przetrwają ponowne uruchomienie. Każde działanie zapisuje czas zdarzenia, czas wpisu i źródło lokalizacji. Bez śledzenia i sieci."
       }
     },
   },

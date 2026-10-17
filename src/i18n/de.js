@@ -585,16 +585,16 @@ export default {
     startTrial: "7-TAGE-TESTPHASE STARTEN",
     current: {
       "f1": {
-        "title": "BEWERTEN, WENN ES PASST",
-        "body": "Bewerte die App unter Hilfe. Gelegentliche Store-Anfragen folgen einer abgeschlossenen Aufgabe und einer ruhigen Pause."
+        "title": "EINSATZ-ARBEITSBEREICH",
+        "body": "Führe ein Einsatzprotokoll auf diesem Gerät: Einsatzabschnitt, Ressourcen und zeitlich erfasste Aktivitäten, Korrekturen bleiben im Verlauf. Pro zum Anlegen oder Bearbeiten; gespeicherte Datensätze bleiben lesbar und exportierbar."
       },
       "f2": {
-        "title": "RED GRID TEILEN",
-        "body": "Teile die App unter Hilfe, ohne dein separates Pro-Geschenk für 7 Tage zu verwenden."
+        "title": "ICS-214-EXPORT",
+        "body": "Prüfe den Entwurf und teile dann ein unsigniertes ICS 214 als PDF oder Text oder eine JSON-Sicherung zum erneuten Import. Die App unterschreibt oder reicht den Bericht nicht ein."
       },
       "f3": {
-        "title": "KLARERE HILFE",
-        "body": "Die Hilfe ist bei großer Schrift übersichtlicher. Der Bewertungszeitpunkt bleibt auf diesem Gerät; kein Tracking hinzugefügt."
+        "title": "ENTWÜRFE BLEIBEN",
+        "body": "Berichtsentwürfe und Einsatzentwürfe werden auf diesem Gerät gespeichert und überstehen Neustarts. Jede Aktivität hält Ereigniszeit, Eingabezeit und Ortsquelle fest. Kein Tracking, kein Netzwerk hinzugefügt."
       }
     },
   },

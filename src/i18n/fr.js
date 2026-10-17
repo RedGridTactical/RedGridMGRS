@@ -584,16 +584,16 @@ export default {
     startTrial: "DÉMARRER L'ESSAI GRATUIT DE 7 JOURS",
     current: {
       "f1": {
-        "title": "UN AVIS AU BON MOMENT",
-        "body": "Laissez un avis depuis Aide. Les demandes occasionnelles du store suivent une tâche terminée et un moment calme."
+        "title": "ESPACE INCIDENT",
+        "body": "Tenez un journal d'incident sur cet appareil : période opérationnelle, ressources et activités horodatées, corrections conservées dans l'historique. Pro pour créer ou modifier ; les enregistrements restent lisibles et exportables."
       },
       "f2": {
-        "title": "PARTAGER RED GRID",
-        "body": "Partagez l’application depuis Aide sans utiliser votre cadeau Pro de 7 jours, qui reste distinct."
+        "title": "EXPORT ICS 214",
+        "body": "Relisez le brouillon, puis partagez un PDF ou un texte ICS 214 non signé, ou une sauvegarde JSON réimportable. L'app ne signe ni ne dépose le rapport."
       },
       "f3": {
-        "title": "AIDE PLUS LISIBLE",
-        "body": "Les actions d’Aide sont plus lisibles avec du texte agrandi. Le délai des avis reste sur cet appareil ; aucun suivi ajouté."
+        "title": "DES BROUILLONS QUI RESTENT",
+        "body": "Les fiches de rapport et brouillons d'incident sont enregistrés sur cet appareil et survivent aux redémarrages. Chaque activité note l'heure de l'événement, l'heure de saisie et la source du lieu. Aucun suivi ni réseau ajouté."
       }
     },
   },

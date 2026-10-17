@@ -584,16 +584,16 @@ export default {
     startTrial: "INICIAR PRUEBA GRATIS DE 7 DÍAS",
     current: {
       "f1": {
-        "title": "VALORA CUANDO QUIERAS",
-        "body": "Deja una reseña desde Ayuda. Las solicitudes ocasionales de la tienda llegan tras completar una tarea y una pausa tranquila."
+        "title": "ESPACIO DE INCIDENTE",
+        "body": "Lleva un registro de incidente en este dispositivo: periodo operativo, recursos y actividades con hora, con las correcciones guardadas en el historial. Pro para crear o editar; los registros guardados siguen siendo legibles y exportables."
       },
       "f2": {
-        "title": "COMPARTE RED GRID",
-        "body": "Comparte la app desde Ayuda sin usar tu regalo Pro de 7 días, que sigue siendo independiente."
+        "title": "EXPORTACIÓN ICS 214",
+        "body": "Revisa el borrador y comparte un PDF o texto ICS 214 sin firmar, o una copia JSON que puedes volver a importar. La app no firma ni presenta el informe."
       },
       "f3": {
-        "title": "AYUDA MÁS CLARA",
-        "body": "Las acciones de Ayuda son más claras con texto grande. El momento de solicitar reseñas se gestiona en el dispositivo; sin nuevo rastreo."
+        "title": "BORRADORES QUE PERMANECEN",
+        "body": "Las hojas de informe y los borradores de incidente se guardan en este dispositivo y sobreviven a los reinicios. Cada actividad registra la hora del evento, la hora de registro y el origen de la ubicación. Sin rastreo ni red añadidos."
       }
     },
   },
