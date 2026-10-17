@@ -423,16 +423,16 @@ export default {
     startTrial: "7-TAGE-TESTPHASE STARTEN",
     current: {
       "f1": {
-        "title": "FELDPAKETE",
-        "body": "Teile eine gespeicherte Route als kleine Datei. Ein Teammitglied importiert sie als neue Liste mit Kontrollpunkten und Kartenreferenz; Kartendateien sind nicht enthalten. Pro."
+        "title": "BEWERTEN, WENN ES PASST",
+        "body": "Bewerte die App unter Hilfe. Gelegentliche Store-Anfragen folgen einer abgeschlossenen Aufgabe und einer ruhigen Pause."
       },
       "f2": {
-        "title": "ROUTEN-KARTENPRÜFUNG",
-        "body": "Prüfe die Abdeckung importierter Kartendateien entlang der ganzen Route, Abschnitt für Abschnitt, vor dem Aufbruch. Das prüft Kartendateien, nicht die Sicherheit. Pro."
+        "title": "RED GRID TEILEN",
+        "body": "Teile die App unter Hilfe, ohne dein separates Pro-Geschenk für 7 Tage zu verwenden."
       },
       "f3": {
-        "title": "GRID + KARTE",
-        "body": "Breite Bildschirme zeigen die Anzeige neben der Karte; die Karte behält Ausschnitt und Auswahl über Tabs hinweg, und große Schrift lässt jedes Bedienelement erreichbar."
+        "title": "KLARERE HILFE",
+        "body": "Die Hilfe ist bei großer Schrift übersichtlicher. Der Bewertungszeitpunkt bleibt auf diesem Gerät; kein Tracking hinzugefügt."
       }
     },
   },

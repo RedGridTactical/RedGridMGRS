@@ -422,16 +422,16 @@ export default {
     startTrial: "INICIAR PRUEBA GRATIS DE 7 DÍAS",
     current: {
       "f1": {
-        "title": "PAQUETES DE CAMPO",
-        "body": "Comparte una ruta guardada como un archivo pequeño. Un compañero la importa como lista nueva con sus puntos de control y referencia de mapa; los archivos de mapa no se incluyen. Pro."
+        "title": "VALORA CUANDO QUIERAS",
+        "body": "Deja una reseña desde Ayuda. Las solicitudes ocasionales de la tienda llegan tras completar una tarea y una pausa tranquila."
       },
       "f2": {
-        "title": "COMPROBACIÓN DE MAPA",
-        "body": "Comprueba la cobertura de los archivos de mapa importados en toda la ruta, tramo a tramo, antes de salir. Comprueba archivos de mapa, no la seguridad. Pro."
+        "title": "COMPARTE RED GRID",
+        "body": "Comparte la app desde Ayuda sin usar tu regalo Pro de 7 días, que sigue siendo independiente."
       },
       "f3": {
-        "title": "ESPACIO CUADRÍCULA + MAPA",
-        "body": "Las pantallas anchas muestran la lectura junto al mapa; el mapa conserva su vista y selección entre pestañas, y el texto grande mantiene cada control accesible."
+        "title": "AYUDA MÁS CLARA",
+        "body": "Las acciones de Ayuda son más claras con texto grande. El momento de solicitar reseñas se gestiona en el dispositivo; sin nuevo rastreo."
       }
     },
   },

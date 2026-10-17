@@ -422,16 +422,16 @@ export default {
     startTrial: "INIZIA LA PROVA GRATUITA DI 7 GIORNI",
     current: {
       "f1": {
-        "title": "PACCHETTI DA CAMPO",
-        "body": "Condividi un percorso salvato come piccolo file. Un compagno lo importa come nuova lista con punti di controllo e riferimento mappa; i file mappa non sono inclusi. Pro."
+        "title": "RECENSISCI QUANDO VUOI",
+        "body": "Scrivi una recensione da Aiuto. Le richieste occasionali dello store seguono un’attività completata e una pausa tranquilla."
       },
       "f2": {
-        "title": "CONTROLLO MAPPA",
-        "body": "Verifica la copertura dei file mappa importati su tutto il percorso, tratta per tratta, prima di partire. Controlla i file mappa, non la sicurezza. Pro."
+        "title": "CONDIVIDI RED GRID",
+        "body": "Condividi l’app da Aiuto senza usare il tuo regalo Pro separato di 7 giorni."
       },
       "f3": {
-        "title": "SPAZIO GRIGLIA + MAPPA",
-        "body": "Gli schermi larghi mostrano la lettura accanto alla mappa; la mappa mantiene vista e selezione tra le schede, e il testo grande lascia ogni comando raggiungibile."
+        "title": "AIUTO PIÙ CHIARO",
+        "body": "Le azioni di Aiuto sono più leggibili con testo grande. I tempi delle recensioni restano sul dispositivo; nessun tracciamento aggiunto."
       }
     },
   },

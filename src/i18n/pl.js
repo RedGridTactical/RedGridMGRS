@@ -443,16 +443,16 @@ export default {
     startTrial: "ROZPOCZNIJ 7-DNIOWY BEZPŁATNY OKRES PRÓBNY",
     current: {
       "f1": {
-        "title": "PAKIETY TERENOWE",
-        "body": "Udostępnij zapisaną trasę jako mały plik. Kolega importuje go jako nową listę z punktami kontrolnymi i odniesieniem do mapy; pliki map nie są dołączane. Pro."
+        "title": "OCEŃ W DOGODNEJ CHWILI",
+        "body": "Napisz opinię w Pomocy. Sporadyczne prośby sklepu pojawiają się po ukończeniu zadania i spokojnej przerwie."
       },
       "f2": {
-        "title": "KONTROLA MAPY TRASY",
-        "body": "Sprawdź pokrycie zaimportowanych plików map na całej trasie, odcinek po odcinku, przed wyjściem. To sprawdza pliki map, nie bezpieczeństwo. Pro."
+        "title": "UDOSTĘPNIJ RED GRID",
+        "body": "Udostępnij aplikację w Pomocy bez korzystania z osobnego prezentu Pro na 7 dni."
       },
       "f3": {
-        "title": "SIATKA + MAPA",
-        "body": "Szerokie ekrany pokazują odczyt obok mapy; mapa zachowuje widok i wybór między kartami, a duży tekst pozostawia każdy przycisk dostępny."
+        "title": "CZYTELNIEJSZA POMOC",
+        "body": "Działania w Pomocy są czytelniejsze przy dużym tekście. Czas prośby o opinię ustalany jest na urządzeniu; bez nowego śledzenia."
       }
     },
   },

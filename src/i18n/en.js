@@ -1079,16 +1079,16 @@ export default {
     startTrial: 'START 7-DAY FREE TRIAL',
     current: {
       "f1": {
-        "title": "FIELD PACKS",
-        "body": "Share a saved route as a small file. A teammate imports it as a new list with its checkpoints and map reference; map files are not included. Pro."
+        "title": "REVIEW WHEN READY",
+        "body": "Write a review from Help. Occasional store prompts follow completed tasks and a quiet pause."
       },
       "f2": {
-        "title": "ROUTE MAP CHECK",
-        "body": "Check imported map-file coverage along the whole route, leg by leg, before you leave. This checks map files, not safety. Pro."
+        "title": "SHARE RED GRID",
+        "body": "Share the app from Help without using your separate 7-day Pro gift."
       },
       "f3": {
-        "title": "GRID + MAP SPACE",
-        "body": "Wide screens show the readout beside the map; the map keeps its viewport and selection across tabs, and large text keeps every control reachable."
+        "title": "CLEARER HELP",
+        "body": "Help actions are clearer at large text sizes. Review timing stays on this device; no tracking added."
       }
     },
   },

@@ -422,16 +422,16 @@ export default {
     startTrial: "DÉMARRER L'ESSAI GRATUIT DE 7 JOURS",
     current: {
       "f1": {
-        "title": "PACKS DE TERRAIN",
-        "body": "Partagez un itinéraire enregistré dans un petit fichier. Un coéquipier l'importe comme nouvelle liste avec ses points de passage et sa référence de carte ; les fichiers de carte ne sont pas inclus. Pro."
+        "title": "UN AVIS AU BON MOMENT",
+        "body": "Laissez un avis depuis Aide. Les demandes occasionnelles du store suivent une tâche terminée et un moment calme."
       },
       "f2": {
-        "title": "VÉRIFICATION CARTE",
-        "body": "Vérifiez la couverture des fichiers de carte importés sur tout l'itinéraire, étape par étape, avant de partir. Cela vérifie les fichiers de carte, pas la sécurité. Pro."
+        "title": "PARTAGER RED GRID",
+        "body": "Partagez l’application depuis Aide sans utiliser votre cadeau Pro de 7 jours, qui reste distinct."
       },
       "f3": {
-        "title": "ESPACE GRILLE + CARTE",
-        "body": "Les grands écrans affichent la lecture à côté de la carte ; la carte garde sa vue et sa sélection d'un onglet à l'autre, et le grand texte garde chaque commande accessible."
+        "title": "AIDE PLUS LISIBLE",
+        "body": "Les actions d’Aide sont plus lisibles avec du texte agrandi. Le délai des avis reste sur cet appareil ; aucun suivi ajouté."
       }
     },
   },

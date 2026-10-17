@@ -443,16 +443,16 @@ export default {
     startTrial: "START GRATIS PROEFPERIODE VAN 7 DAGEN",
     current: {
       "f1": {
-        "title": "VELDPAKKETTEN",
-        "body": "Deel een opgeslagen route als klein bestand. Een teamgenoot importeert het als nieuwe lijst met checkpoints en kaartreferentie; kaartbestanden zijn niet inbegrepen. Pro."
+        "title": "BEOORDEEL WANNEER HET PAST",
+        "body": "Schrijf een beoordeling via Help. Af en toe volgt een winkelverzoek na een afgeronde taak en een rustige pauze."
       },
       "f2": {
-        "title": "ROUTEKAARTCONTROLE",
-        "body": "Controleer de dekking van geïmporteerde kaartbestanden langs de hele route, etappe voor etappe, vóór vertrek. Dit controleert kaartbestanden, niet de veiligheid. Pro."
+        "title": "RED GRID DELEN",
+        "body": "Deel de app via Help zonder je afzonderlijke Pro-cadeau van 7 dagen te gebruiken."
       },
       "f3": {
-        "title": "GRID + KAART RUIMTE",
-        "body": "Brede schermen tonen de uitlezing naast de kaart; de kaart behoudt beeld en selectie tussen tabbladen, en grote tekst houdt elke knop bereikbaar."
+        "title": "DUIDELIJKERE HELP",
+        "body": "Help-acties zijn duidelijker bij grote tekst. Het moment van beoordelingsverzoeken blijft op dit apparaat; geen tracking toegevoegd."
       }
     },
   },

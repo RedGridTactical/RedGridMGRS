@@ -442,16 +442,16 @@ export default {
     startTrial: "INICIAR TESTE GRÁTIS DE 7 DIAS",
     current: {
       "f1": {
-        "title": "PACOTES DE CAMPO",
-        "body": "Compartilhe uma rota salva como um arquivo pequeno. Um colega a importa como nova lista com pontos de controle e referência do mapa; arquivos de mapa não são incluídos. Pro."
+        "title": "AVALIE QUANDO QUISER",
+        "body": "Escreva uma avaliação em Ajuda. Os pedidos ocasionais da loja aparecem após uma tarefa concluída e uma pausa tranquila."
       },
       "f2": {
-        "title": "VERIFICAÇÃO DO MAPA",
-        "body": "Verifique a cobertura dos arquivos de mapa importados em toda a rota, trecho a trecho, antes de sair. Isso verifica arquivos de mapa, não a segurança. Pro."
+        "title": "COMPARTILHE RED GRID",
+        "body": "Compartilhe o app em Ajuda sem usar seu presente Pro de 7 dias, que continua separado."
       },
       "f3": {
-        "title": "ESPAÇO GRADE + MAPA",
-        "body": "Telas largas mostram a leitura ao lado do mapa; o mapa mantém a vista e a seleção entre abas, e o texto grande mantém todos os controles acessíveis."
+        "title": "AJUDA MAIS CLARA",
+        "body": "As ações de Ajuda ficam mais claras com texto grande. O momento de pedir avaliações é definido neste dispositivo; sem novo rastreamento."
       }
     },
   },

@@ -443,16 +443,16 @@ export default {
     startTrial: "7 GÜNLÜK ÜCRETSİZ DENEMEYİ BAŞLAT",
     current: {
       "f1": {
-        "title": "SAHA PAKETLERİ",
-        "body": "Kayıtlı bir rotayı küçük bir dosya olarak paylaşın. Takım arkadaşınız bunu kontrol noktaları ve harita referansıyla yeni bir liste olarak içe aktarır; harita dosyaları dahil değildir. Pro."
+        "title": "HAZIR OLDUĞUNUZDA DEĞERLENDİRİN",
+        "body": "Yardım bölümünden yorum yazın. Ara sıra gösterilen mağaza istekleri, tamamlanan bir görev ve sakin bir aradan sonra gelir."
       },
       "f2": {
-        "title": "ROTA HARİTA KONTROLÜ",
-        "body": "Yola çıkmadan önce içe aktarılan harita dosyalarının tüm rota boyunca kapsamını etap etap kontrol edin. Bu, harita dosyalarını kontrol eder, güvenliği değil. Pro."
+        "title": "RED GRID’İ PAYLAŞIN",
+        "body": "Ayrı tutulan 7 günlük Pro hediyenizi kullanmadan Yardım bölümünden uygulamayı paylaşın."
       },
       "f3": {
-        "title": "GRID + HARİTA ALANI",
-        "body": "Geniş ekranlar okumayı haritanın yanında gösterir; harita sekmeler arasında görünümünü ve seçimini korur, büyük metinde her kontrol erişilebilir kalır."
+        "title": "DAHA NET YARDIM",
+        "body": "Yardım işlemleri büyük metinde daha okunaklı. Yorum isteğinin zamanlaması cihazda kalır; takip eklenmedi."
       }
     },
   },
