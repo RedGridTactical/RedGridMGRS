@@ -115,6 +115,9 @@ export default {
     "errorDRAFT_OPEN": "Najpierw wznów lub odrzuć niedokończony szkic edytora.",
     "errorNO_ACTIVE_INCIDENT": "Najpierw wybierz aktywny incydent.",
     "errorUNSUPPORTED_SCHEMA": "Te szkice wymagają zgodnej wersji aplikacji. Dane oryginalne zostały zachowane.",
+    "errorSTORAGE_TIMEOUT": "Zapis na tym urządzeniu nadal trwa. Przed zamknięciem aplikacji poczekaj na „Zapisano na tym urządzeniu”.",
+    "errorSTORAGE_UNAVAILABLE": "Zapis trwa lub jest teraz niedostępny. Poczekaj na „Zapisano na tym urządzeniu”, a następnie powtórz ostatnią zmianę.",
+    "importCapacity": "Ta kopia zapasowa nie mieści się w lokalnym magazynie incydentów. Wyeksportuj, zarchiwizuj i usuń istniejące incydenty, a potem zaimportuj ponownie. Istniejące rekordy nie zostały zmienione.",
     "worksheetsSaved": "Szkice raportów zapisują się lokalnie i przetrwają ponowne uruchomienie aplikacji. Przed zamknięciem poczekaj na „Zapisano na tym urządzeniu”."
   },
   reportCorrections: {

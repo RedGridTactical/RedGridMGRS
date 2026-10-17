@@ -115,6 +115,9 @@ export default {
     "errorDRAFT_OPEN": "Reprenez ou abandonnez d'abord le brouillon inachevé de l'éditeur.",
     "errorNO_ACTIVE_INCIDENT": "Choisissez d'abord un incident actif.",
     "errorUNSUPPORTED_SCHEMA": "Ces brouillons nécessitent une version compatible de l'app. Les données d'origine ont été préservées.",
+    "errorSTORAGE_TIMEOUT": "Enregistrement toujours en cours sur cet appareil. Attendez « Enregistré sur cet appareil » avant de fermer l'app.",
+    "errorSTORAGE_UNAVAILABLE": "L'enregistrement est en cours ou indisponible pour l'instant. Attendez « Enregistré sur cet appareil », puis refaites votre dernière modification.",
+    "importCapacity": "Cette sauvegarde ne tient pas dans le stockage local des incidents. Exportez, archivez et supprimez des incidents existants, puis réimportez. Les enregistrements existants n'ont pas été modifiés.",
     "worksheetsSaved": "Les brouillons de rapport s'enregistrent localement et survivent aux redémarrages de l'app. Attendez « Enregistré sur cet appareil » avant de fermer."
   },
   reportCorrections: {

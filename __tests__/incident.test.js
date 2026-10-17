@@ -89,3 +89,11 @@ test('oversized printable reports fail explicitly while the full backup remains 
   expect(()=>ics214HTML(incident,NOW)).toThrow('PDF_LIMIT');
   expect(readIncidentBackup(incidentBackup(incident,NOW)).incident.activities).toHaveLength(301);
 });
+test('a parked map reference survives an imported copy and selection until an entry consumes it, and still expires after 30 minutes',()=>{
+  const state={...incidentFixture(),pendingLocation:mapIncidentReference({lat:38.9,lon:-77},NOW)};
+  const parsed=readIncidentBackup(incidentBackup(state.incidents[0],NOW));
+  const imported=importIncidentCopy(state,parsed,NOW+1000);expect(imported.pendingLocation).toEqual(state.pendingLocation);
+  expect(importIncidentCopy(imported,parsed,NOW+2000).pendingLocation).toEqual(state.pendingLocation);
+  const entered=beginIncidentEntry(imported,{now:NOW+5*60000});expect(entered.editor.location).toEqual(state.pendingLocation);expect(entered.pendingLocation).toBeNull();
+  expect(beginIncidentEntry(imported,{now:NOW+31*60000}).editor.location).toBeNull();
+});

@@ -115,6 +115,9 @@ export default {
     "errorDRAFT_OPEN": "Prima riprendi o scarta la bozza incompleta dell'editor.",
     "errorNO_ACTIVE_INCIDENT": "Scegli prima un incidente attivo.",
     "errorUNSUPPORTED_SCHEMA": "Queste bozze richiedono una versione compatibile dell'app. I dati originali sono stati preservati.",
+    "errorSTORAGE_TIMEOUT": "Salvataggio ancora in corso su questo dispositivo. Attendi «Salvato su questo dispositivo» prima di chiudere l'app.",
+    "errorSTORAGE_UNAVAILABLE": "Il salvataggio è in corso o al momento non è disponibile. Attendi «Salvato su questo dispositivo», poi ripeti l'ultima modifica.",
+    "importCapacity": "Questo backup non rientra nell'archivio locale degli incidenti. Esporta, archivia ed elimina incidenti esistenti, poi importa di nuovo. I record esistenti non sono stati modificati.",
     "worksheetsSaved": "Le bozze dei rapporti si salvano localmente e sopravvivono ai riavvii dell'app. Attendi «Salvato su questo dispositivo» prima di chiudere."
   },
   reportCorrections: {

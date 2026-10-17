@@ -25,12 +25,13 @@ export function importIncidentCopy(state, parsed, now = Date.now()) {
   validateBackupParts(parsed.incident,parsed.editor??null);
   if(state.editor)throw incidentError('DRAFT_OPEN');
   const existing=state.incidents.find(i => i.importedFrom?.digest === parsed.digest);
-  if (existing) return { ...state,activeId:existing.id,pendingLocation:null };
+  // A parked map/device reference survives import; only beginIncidentEntry consumes it.
+  if (existing) return { ...state,activeId:existing.id };
   if (parsed.incident&&state.incidents.length >= INCIDENT_LIMITS.incidents) throw incidentError('RECORD_LIMIT');
   const importedFrom={digest:parsed.digest,originalId:parsed.incident?.id||null,importedAt:new Date(now).toISOString()};
   const incident=parsed.incident?{...JSON.parse(JSON.stringify(parsed.incident)),id:newFieldId(),archived:false,importedFrom}:null;
   const editor=parsed.editor?{...JSON.parse(JSON.stringify(parsed.editor)),incidentId:incident?.id||null,importedFrom}:null;
-  return validateIncidentState({...state,pendingLocation:null,activeId:incident?.id||state.activeId,editor,incidents:incident?[...state.incidents,incident]:state.incidents});
+  return validateIncidentState({...state,activeId:incident?.id||state.activeId,editor,incidents:incident?[...state.incidents,incident]:state.incidents});
 }
 const filled = value => value?.trim() || 'NOT ENTERED';
 const formTime = value => `${value.slice(5,7)}/${value.slice(8,10)}/${value.slice(0,4)} ${value.slice(11,16)} UTC${value.slice(-6)}`;

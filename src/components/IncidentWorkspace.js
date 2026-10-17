@@ -39,7 +39,7 @@ export function ReportSaveStatus({ state }) {
     {text:t('common.cancel'),style:'cancel'}, {text:t('incident.recover'),onPress:()=>store.recoverPrevious().catch(()=>{})},
   ]);
   return <View style={[styles.saveStatus,{borderColor:colors.border2}]}>
-    <Text accessibilityRole={loadError||saveError ? 'alert' : undefined} style={[styles.note,{color:colors.text2}]}>{t(loading?'incident.loading':loadError?(loadError.code==='UNSUPPORTED_SCHEMA'?'incident.errorUNSUPPORTED_SCHEMA':'incident.loadFailed'):saveError?'incident.saveFailed':saving||locked?'incident.saving':'incident.saved')}</Text>
+    <Text accessibilityRole={loadError||saveError ? 'alert' : undefined} style={[styles.note,{color:colors.text2}]}>{t(loading?'incident.loading':loadError?(loadError.code==='UNSUPPORTED_SCHEMA'?'incident.errorUNSUPPORTED_SCHEMA':'incident.loadFailed'):(saving||locked)&&(!saveError||saveError.code==='STORAGE_TIMEOUT')?'incident.saving':saveError?'incident.saveFailed':'incident.saved')}</Text>
     {!!(loadError||saveError)&&<Action label={t('incident.retry')} colors={colors} quiet disabled={loading||locked} onPress={()=>{const action=loadError?store.load():store.retrySave();action.catch(()=>{});}}/>}
     {!!loadError?.canRecover&&<Action label={t('incident.recover')} colors={colors} quiet disabled={locked} onPress={recover}/>}
   </View>;
@@ -76,7 +76,8 @@ export function IncidentWorkspace({ location, isPro, onShowProGate, onClose, req
   const seenRequest=useRef(null);const incident=activeIncident(data);const editor=data.editor;
   const readOnly=!isPro||!!incident?.archived;const busy=locked||sharing;
   const go=next=>{Keyboard.dismiss();setError(null);setView(next);};
-  const explain=e=>setError(e.code==='PRO_REQUIRED'?t('incident.proReadOnly'):t(`incident.error${e.code}`,{defaultValue:t('incident.saveFailed')}));
+  // Local banner errors carry their code so transient storage states can clear themselves once the native save settles.
+  const explain=e=>setError({code:e?.code||null,text:e?.code==='PRO_REQUIRED'?t('incident.proReadOnly'):e?.code==='IMPORT_CAPACITY'?t('incident.importCapacity'):t(`incident.error${e?.code}`,{defaultValue:t('incident.saveFailed')})});
   const edit=fn=>{if(!isPro){onShowProGate?.(t('incident.workspace'),'reports');return;}try{store.change(fn);go('editor');}catch(e){explain(e);}};
   useEffect(()=>{setReviewBlocker('incident-workspace',true);return()=>setReviewBlocker('incident-workspace',false);},[]);
   useEffect(()=>{
@@ -85,13 +86,19 @@ export function IncidentWorkspace({ location, isPro, onShowProGate, onClose, req
     if(request.reference){
       if(!isPro){onShowProGate?.(t('incident.workspace'),'reports');}
       else if(editor){go('editor');setError(t('incident.unfinished'));}
-      else {try{store.change(current=>current.activeId?beginIncidentEntry(current,{location:request.reference}):({...current,pendingLocation:request.reference}));go(data.activeId?'editor':'list');}catch(e){explain(e);}}
+      else {
+        // Only an active, non-archived incident can take the entry directly; otherwise park the reference and let the user choose.
+        try{let next='list';store.change(current=>{const target=activeIncident(current);if(target&&!target.archived){next='editor';return beginIncidentEntry(current,{location:request.reference});}return {...current,pendingLocation:request.reference};});go(next);}catch(e){explain(e);}
+      }
     }else if(editor)go('editor');
     onRequestHandled?.();
   },[request,loading,loadError,locked,isPro]);
+  // A storage-class banner describes a transient state; clear it once the native save has really settled.
+  // Validation and Pro errors stay until the user acts.
+  useEffect(()=>{if(!saveError&&!locked&&!saving)setError(current=>current&&typeof current!=='string'&&String(current.code||'').startsWith('STORAGE')?null:current);},[saveError,locked,saving]);
   useEffect(()=>{if(!loading&&!loadError&&editor)setView('editor');},[loading,loadError]);
-  const commit=async(fn,next='workspace',options)=>{Keyboard.dismiss();setError(null);try{await store.commit(fn,options);go(next);return true;}catch(e){explain(e);return false;}};
-  const commitEdit=(fn,next)=>commit(current=>{if(!proNow.current)throw incidentError('PRO_REQUIRED');return fn(current);},next);
+  const commit=async(fn,next='workspace',options,mapError=e=>e)=>{Keyboard.dismiss();setError(null);try{await store.commit(fn,options);go(next);return true;}catch(e){explain(mapError(e));return false;}};
+  const commitEdit=(fn,next,mapError)=>commit(current=>{if(!proNow.current)throw incidentError('PRO_REQUIRED');return fn(current);},next,undefined,mapError);
   const close=async()=>{Keyboard.dismiss();try{await store.flush();onClose();}catch(e){explain(e);}};
   const discard=()=>Alert.alert(t('incident.discardTitle'),t('incident.discardBody'),[
     {text:t('common.cancel'),style:'cancel'}, {text:t('incident.discard'),style:'destructive',onPress:()=>commit(current=>({...current,editor:null}))},
@@ -103,7 +110,8 @@ export function IncidentWorkspace({ location, isPro, onShowProGate, onClose, req
   const archive=()=>Alert.alert(t('incident.archiveTitle'),t('incident.archiveBody'),[
     {text:t('common.cancel'),style:'cancel'}, {text:t('incident.archive'),onPress:()=>commitEdit(current=>archiveIncident(current,incident.id,true),'list')},
   ]);
-  const select=async id=>{if(editor){go('editor');setError(t('incident.unfinished'));return;}await commit(current=>({...current,activeId:id,pendingLocation:null}));};
+  // Selecting keeps a parked map/device reference; beginIncidentEntry consumes it (or expires it after 30 min).
+  const select=async id=>{if(editor){go('editor');setError(t('incident.unfinished'));return;}await commit(current=>({...current,activeId:id}));};
   const importBackup=async()=>{
     if(!isPro){onShowProGate?.(t('incident.workspace'),'reports');return;}
     if(editor){go('editor');setError(t('incident.unfinished'));return;}
@@ -118,7 +126,7 @@ export function IncidentWorkspace({ location, isPro, onShowProGate, onClose, req
       const existing=data.incidents.find(i=>i.importedFrom?.digest===parsed.digest);
       if(existing){await commit(current=>({...current,activeId:existing.id}));Alert.alert(t('incident.workspace'),t('incident.alreadyImported'));return;}
       Alert.alert(t('incident.importTitle'),t('incident.importBody',{name:parsed.incident?.name||parsed.editor?.value?.name||t('incident.workspace'),count:parsed.incident?.activities.length||0}),[
-        {text:t('common.cancel'),style:'cancel'}, {text:t('incident.importBackup'),onPress:()=>commitEdit(current=>importIncidentCopy(current,parsed),parsed.editor?'editor':'workspace')},
+        {text:t('common.cancel'),style:'cancel'}, {text:t('incident.importBackup'),onPress:()=>commitEdit(current=>importIncidentCopy(current,parsed),parsed.editor?'editor':'workspace',e=>e?.code==='RECORD_LIMIT'?incidentError('IMPORT_CAPACITY'):e)},
       ]);
     }catch{setError(t('incident.importFailed'));}finally{setSharing(false);shareBusy.current=false;}
   };
@@ -151,7 +159,7 @@ export function IncidentWorkspace({ location, isPro, onShowProGate, onClose, req
   const action=(key,fn,disabled=false,quiet=false)=><Action key={key} colors={colors} label={t(key)} onPress={fn} disabled={(key==='incident.backup'?sharing:busy)||disabled} quiet={quiet}/>;
   const note=(value,key)=><Text key={key} style={[styles.note,{color:colors.text3}]}>{value}</Text>;
   const title=value=><Text style={[styles.title,{color:colors.text}]} accessibilityRole="header">{value}</Text>;
-  const errorView=error?<Text style={[styles.error,{color:colors.text,borderColor:colors.accentText}]} accessibilityRole="alert">{error}</Text>:null;
+  const errorView=error?<Text style={[styles.error,{color:colors.text,borderColor:colors.accentText}]} accessibilityRole="alert">{typeof error==='string'?error:error.text}</Text>:null;
   const reference=loc=>loc&&<View style={[styles.reference,{borderColor:colors.border2}]}>
     <Text style={[styles.coordinate,{color:colors.text}]}>{loc.grid}</Text>
     {note(t('incident.locationSource',{kind:t(loc.kind==='device'?'incident.deviceSource':loc.kind==='map'?'incident.mapSource':'incident.manualSource'),grid:loc.grid}))}

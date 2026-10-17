@@ -115,6 +115,9 @@ export default {
     "errorDRAFT_OPEN": "请先继续或放弃未完成的编辑器草稿。",
     "errorNO_ACTIVE_INCIDENT": "请先选择一个活动中的事件。",
     "errorUNSUPPORTED_SCHEMA": "这些草稿需要兼容的应用版本。原始数据已保留。",
+    "errorSTORAGE_TIMEOUT": "仍在保存到此设备。关闭应用前请等待显示“已保存到此设备”。",
+    "errorSTORAGE_UNAVAILABLE": "正在保存或当前无法保存。请等待显示“已保存到此设备”，然后重新进行上一次更改。",
+    "importCapacity": "此备份超出本机事件存储容量。请导出、归档并删除现有事件，然后重新导入。现有记录未更改。",
     "worksheetsSaved": "报告草稿保存在本地，应用重启后仍然保留。关闭前请等待显示“已保存到此设备”。"
   },
   reportCorrections: {

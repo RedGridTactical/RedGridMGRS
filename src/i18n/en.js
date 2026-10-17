@@ -115,6 +115,9 @@ export default {
     "errorDRAFT_OPEN": "Resume or discard the unfinished editor draft first.",
     "errorNO_ACTIVE_INCIDENT": "Choose an active incident first.",
     "errorUNSUPPORTED_SCHEMA": "These drafts require a compatible app version. Original data has been preserved.",
+    "errorSTORAGE_TIMEOUT": "Still saving on this device. Wait for Saved on this device before closing the app.",
+    "errorSTORAGE_UNAVAILABLE": "Saving is in progress or unavailable right now. Wait for Saved on this device, then repeat your last change.",
+    "importCapacity": "This backup does not fit in the local incident store. Export, archive and delete existing incidents, then import again. Existing records were not changed.",
     "worksheetsSaved": "Report drafts save locally and survive app restarts. Wait for Saved on this device before closing."
   },
   reportCorrections: {

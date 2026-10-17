@@ -115,6 +115,9 @@ export default {
     "errorDRAFT_OPEN": "먼저 미완료 편집기 초안을 이어서 작성하거나 삭제하세요.",
     "errorNO_ACTIVE_INCIDENT": "먼저 활성 사건을 선택하세요.",
     "errorUNSUPPORTED_SCHEMA": "이 초안에는 호환되는 앱 버전이 필요합니다. 원본 데이터는 보존되었습니다.",
+    "errorSTORAGE_TIMEOUT": "아직 이 기기에 저장 중입니다. 앱을 닫기 전에 '이 기기에 저장됨' 표시를 기다리세요.",
+    "errorSTORAGE_UNAVAILABLE": "저장이 진행 중이거나 지금은 사용할 수 없습니다. '이 기기에 저장됨' 표시를 기다린 뒤 마지막 변경을 다시 입력하세요.",
+    "importCapacity": "이 백업은 로컬 사건 저장소에 들어갈 수 없습니다. 기존 사건을 내보내고 보관 처리 후 삭제한 다음 다시 가져오세요. 기존 기록은 변경되지 않았습니다.",
     "worksheetsSaved": "보고서 초안은 로컬에 저장되며 앱을 다시 시작해도 유지됩니다. 닫기 전에 '이 기기에 저장됨' 표시를 기다리세요."
   },
   reportCorrections: {

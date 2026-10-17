@@ -115,6 +115,9 @@ export default {
     "errorDRAFT_OPEN": "Hervat of verwijder eerst het onvoltooide editorconcept.",
     "errorNO_ACTIVE_INCIDENT": "Kies eerst een actief incident.",
     "errorUNSUPPORTED_SCHEMA": "Deze concepten vereisen een compatibele app-versie. De oorspronkelijke gegevens zijn bewaard.",
+    "errorSTORAGE_TIMEOUT": "Er wordt nog opgeslagen op dit apparaat. Wacht op 'Opgeslagen op dit apparaat' voordat je de app sluit.",
+    "errorSTORAGE_UNAVAILABLE": "Opslaan is bezig of nu niet beschikbaar. Wacht op 'Opgeslagen op dit apparaat' en herhaal daarna je laatste wijziging.",
+    "importCapacity": "Deze back-up past niet in de lokale incidentopslag. Exporteer, archiveer en verwijder bestaande incidenten en importeer opnieuw. Bestaande records zijn niet gewijzigd.",
     "worksheetsSaved": "Rapportconcepten worden lokaal opgeslagen en overleven het herstarten van de app. Wacht op 'Opgeslagen op dit apparaat' voordat je sluit."
   },
   reportCorrections: {

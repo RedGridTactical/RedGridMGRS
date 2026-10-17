@@ -115,6 +115,9 @@ export default {
     "errorDRAFT_OPEN": "Reanuda o descarta primero el borrador sin terminar del editor.",
     "errorNO_ACTIVE_INCIDENT": "Elige primero un incidente activo.",
     "errorUNSUPPORTED_SCHEMA": "Estos borradores requieren una versión compatible de la app. Los datos originales se han conservado.",
+    "errorSTORAGE_TIMEOUT": "Todavía se está guardando en este dispositivo. Espera a ver «Guardado en este dispositivo» antes de cerrar la app.",
+    "errorSTORAGE_UNAVAILABLE": "El guardado está en curso o no está disponible ahora. Espera a ver «Guardado en este dispositivo» y repite tu último cambio.",
+    "importCapacity": "Esta copia de seguridad no cabe en el almacén local de incidentes. Exporta, archiva y elimina incidentes existentes y vuelve a importar. Los registros existentes no se han modificado.",
     "worksheetsSaved": "Los borradores de informe se guardan localmente y sobreviven a los reinicios de la app. Espera a ver «Guardado en este dispositivo» antes de cerrar."
   },
   reportCorrections: {

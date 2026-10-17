@@ -115,6 +115,9 @@ export default {
     "errorDRAFT_OPEN": "Retome ou descarte primeiro o rascunho inacabado do editor.",
     "errorNO_ACTIVE_INCIDENT": "Escolha primeiro um incidente ativo.",
     "errorUNSUPPORTED_SCHEMA": "Estes rascunhos exigem uma versão compatível do app. Os dados originais foram preservados.",
+    "errorSTORAGE_TIMEOUT": "Ainda salvando neste dispositivo. Aguarde \"Salvo neste dispositivo\" antes de fechar o app.",
+    "errorSTORAGE_UNAVAILABLE": "O salvamento está em andamento ou indisponível no momento. Aguarde \"Salvo neste dispositivo\" e repita sua última alteração.",
+    "importCapacity": "Este backup não cabe no armazenamento local de incidentes. Exporte, arquive e exclua incidentes existentes e importe novamente. Os registros existentes não foram alterados.",
     "worksheetsSaved": "Os rascunhos de relatório são salvos localmente e sobrevivem a reinícios do app. Aguarde \"Salvo neste dispositivo\" antes de fechar."
   },
   reportCorrections: {

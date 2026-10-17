@@ -115,6 +115,9 @@ export default {
     "errorDRAFT_OPEN": "Önce tamamlanmamış düzenleyici taslağına devam edin veya silin.",
     "errorNO_ACTIVE_INCIDENT": "Önce etkin bir olay seçin.",
     "errorUNSUPPORTED_SCHEMA": "Bu taslaklar uyumlu bir uygulama sürümü gerektirir. Özgün veriler korundu.",
+    "errorSTORAGE_TIMEOUT": "Bu cihaza kaydetme sürüyor. Uygulamayı kapatmadan önce \"Bu cihaza kaydedildi\" ifadesini bekleyin.",
+    "errorSTORAGE_UNAVAILABLE": "Kaydetme sürüyor veya şu anda kullanılamıyor. \"Bu cihaza kaydedildi\" ifadesini bekleyin, sonra son değişikliğinizi yineleyin.",
+    "importCapacity": "Bu yedek yerel olay deposuna sığmıyor. Mevcut olayları dışa aktarın, arşivleyin ve silin, sonra yeniden içe aktarın. Mevcut kayıtlar değiştirilmedi.",
     "worksheetsSaved": "Rapor taslakları yerel olarak kaydedilir ve uygulama yeniden başlatmalarında korunur. Kapatmadan önce \"Bu cihaza kaydedildi\" ifadesini bekleyin."
   },
   reportCorrections: {

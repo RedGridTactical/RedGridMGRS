@@ -115,6 +115,9 @@ export default {
     "errorDRAFT_OPEN": "Zuerst den unfertigen Editor-Entwurf fortsetzen oder verwerfen.",
     "errorNO_ACTIVE_INCIDENT": "Zuerst einen aktiven Einsatz wählen.",
     "errorUNSUPPORTED_SCHEMA": "Diese Entwürfe erfordern eine kompatible App-Version. Die Originaldaten wurden bewahrt.",
+    "errorSTORAGE_TIMEOUT": "Es wird noch auf diesem Gerät gespeichert. Warte auf „Auf diesem Gerät gespeichert“, bevor du die App schließt.",
+    "errorSTORAGE_UNAVAILABLE": "Speichern läuft gerade oder ist derzeit nicht möglich. Warte auf „Auf diesem Gerät gespeichert“ und wiederhole dann deine letzte Änderung.",
+    "importCapacity": "Diese Sicherung passt nicht in den lokalen Einsatzspeicher. Exportiere, archiviere und lösche vorhandene Einsätze und importiere dann erneut. Vorhandene Datensätze wurden nicht verändert.",
     "worksheetsSaved": "Berichtsentwürfe werden lokal gespeichert und überstehen App-Neustarts. Vor dem Schließen auf „Auf diesem Gerät gespeichert“ warten."
   },
   reportCorrections: {
