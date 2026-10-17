@@ -243,7 +243,7 @@ export function useIAP() {
 
   const reverifyEntitlement = useCallback(async () => {
     await hydration.current;
-    const revision = entitlementRevision.current;
+    let revision = entitlementRevision.current;
     if (!IAPModule?.getAvailablePurchases) return;
     try {
       // The pinned native default is verified StoreKit currentEntitlements
@@ -251,6 +251,39 @@ export function useIAP() {
       // Its results are also filtered by this native product catalog.
       const cache = await fetchProductDetailsRef.current?.().catch(() => null);
       const cacheWarm = canConfirmNoEntitlement(Platform.OS, cache?.resolvedProductIds, ALL_PRODUCT_IDS);
+      if (!mounted.current || revision !== entitlementRevision.current) return;
+      const recordedIdentity = entitlementRecord.current.identity;
+      const recordedKey = identityKey(recordedIdentity);
+      // A finished refund may happen while the app is closed and never replay
+      // through Transaction.updates. The pinned iOS history API enumerates
+      // verified Transaction.all, including explicit revocation dates. Use it
+      // only as positive evidence for our exact saved transaction; historical
+      // ownership, missing rows and failed queries cannot grant or revoke Pro.
+      if (Platform.OS === 'ios' && recordedKey && !revokedTransactions.current.has(recordedKey) &&
+          typeof IAPModule.getPurchaseHistories === 'function') {
+        let historyTimer;
+        const history = await Promise.race([
+          Promise.resolve().then(() => IAPModule.getPurchaseHistories({
+            alsoPublishToEventListener: false, onlyIncludeActiveItems: false,
+          })),
+          new Promise((_, reject) => { historyTimer = setTimeout(() => reject(new Error('history timeout')), 5000); }),
+        ]).catch(() => null).finally(() => clearTimeout(historyTimer));
+        if (!mounted.current || revision !== entitlementRevision.current) return;
+        const matchingRefund = Array.isArray(history) && history.some(p =>
+          isRevokedIOS(p) && identityKey(iosTransactionIdentity(p, ALL_PRODUCT_IDS)) === recordedKey);
+        if (matchingRefund) {
+          revokedTransactions.current.add(recordedKey);
+          // Invalidate other queries begun before this positive refund proof,
+          // just as the live StoreKit listener does. Reconcile fresh below.
+          revision = ++entitlementRevision.current;
+          await writeEntitlement(async () => {
+            if (!mounted.current || revision !== entitlementRevision.current ||
+                identityKey(entitlementRecord.current.identity) !== recordedKey) return;
+            await AsyncStorage.setItem(PRO_PENDING_REVOCATION, JSON.stringify(recordedIdentity)).catch(() => {});
+          });
+          if (!mounted.current || revision !== entitlementRevision.current) return;
+        }
+      }
       let purchasesTimer;
       const result = await Promise.race([
         IAPModule.getAvailablePurchases(),
@@ -268,8 +301,8 @@ export function useIAP() {
       if (!recorded.unlocked) return;
       const explicitlyRevoked = revokedTransactions.current.has(identityKey(recorded.identity));
       // Empty/partial/offline results NEVER revoke Lifetime or old unknown
-      // unlocks. Only a verified update for their exact recorded transaction
-      // followed by a complete store check can establish revocation.
+      // unlocks. Only verified explicit revocation for their exact recorded
+      // transaction followed by a complete store check establishes revocation.
       if (!explicitlyRevoked && recorded.sku !== SUB_MONTHLY_ID && recorded.sku !== SUB_ANNUAL_ID) return;
       const verifiedAtRaw = await AsyncStorage.getItem(PRO_VERIFIED_AT).catch(() => null);
       await writeEntitlement(async () => {

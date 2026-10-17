@@ -3,7 +3,7 @@ jest.mock('react-native', () => ({ Platform: { OS: 'ios' }, AppState: { currentS
 jest.mock('@react-native-async-storage/async-storage', () => ({ getItem: jest.fn(), setItem: jest.fn(), removeItem: jest.fn() }));
 jest.mock('expo-iap', () => ({
   initConnection: jest.fn(), getProducts: jest.fn(), getSubscriptions: jest.fn(),
-  getAvailablePurchases: jest.fn(), requestPurchase: jest.fn(), finishTransaction: jest.fn(),
+  getAvailablePurchases: jest.fn(), getPurchaseHistories: jest.fn(), requestPurchase: jest.fn(), finishTransaction: jest.fn(),
   purchaseUpdatedListener: jest.fn(), purchaseErrorListener: jest.fn(),
 }));
 jest.mock('../src/utils/fieldAlert', () => ({ Alert: { alert: jest.fn() } }));
@@ -47,6 +47,7 @@ function setup(platform = 'ios') {
   };
   IAP.getProducts.mockImplementation(fetch); IAP.getSubscriptions.mockImplementation(fetch);
   IAP.getAvailablePurchases.mockImplementation(async () => owned.filter(p => platform === 'android' || catalog.has(p.productId)));
+  IAP.getPurchaseHistories.mockResolvedValue([]);
   IAP.finishTransaction.mockResolvedValue(true);
   IAP.purchaseUpdatedListener.mockReturnValue({ remove: jest.fn() });
   IAP.purchaseErrorListener.mockReturnValue({ remove: jest.fn() });
@@ -468,4 +469,140 @@ test('cached subscriber revalidation honors current-query grace after an old loc
   owned = [iosPurchase(MONTHLY, 'grace-transaction', { expirationDateIOS: Date.now() - 86400000 })];
   expect((await mount()).isPro).toBe(true);
   expect(data.get('rg_pro_verified_at_v1')).toBe(String(Date.now()));
+});
+
+test('startup recovers an exact lifetime refund completed while the app was closed', async () => {
+  cachedIdentity(); data.set('rg_saved_incidents', 'retained');
+  IAP.getPurchaseHistories.mockResolvedValue([iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() })]);
+  expect((await mount()).isPro).toBe(false);
+  expect(data.has('rg_pro_unlocked')).toBe(false);
+  expect(data.has('rg_pro_pending_revocation_v1')).toBe(false);
+  expect(data.get('rg_saved_incidents')).toBe('retained');
+  expect(IAP.getPurchaseHistories).toHaveBeenCalledWith({ alsoPublishToEventListener: false, onlyIncludeActiveItems: false });
+  expect(Alert.alert).not.toHaveBeenCalled();
+});
+
+test.each([LIFETIME, MONTHLY, ANNUAL])('closed-app refund recovery retains another valid %s purchase', async sku => {
+  cachedIdentity();
+  IAP.getPurchaseHistories.mockResolvedValue([iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() })]);
+  owned = [iosPurchase(sku, 'other-owned')];
+  expect((await mount()).isPro).toBe(true);
+  expect(data.get('rg_pro_product_v1')).toBe(sku);
+  expect(JSON.parse(data.get('rg_pro_transaction_v1')).transactionId).toBe('other-owned');
+  expect(data.has('rg_pro_pending_revocation_v1')).toBe(false);
+});
+
+test.each([LIFETIME, 'unknown'])('historical refunds cannot revoke identity-less legacy %s access', async sku => {
+  cachedPro(sku);
+  IAP.getPurchaseHistories.mockResolvedValue([iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() })]);
+  expect((await mount()).isPro).toBe(true);
+  expect(IAP.getPurchaseHistories).not.toHaveBeenCalled();
+  expect(data.get('rg_pro_product_v1')).toBe(sku);
+});
+
+test('a historical refund of original transaction 0 cannot revoke newer lifetime transaction 1', async () => {
+  cachedIdentity(LIFETIME, '1');
+  IAP.getPurchaseHistories.mockResolvedValue([
+    iosPurchase(LIFETIME, '0', { originalTransactionIdentifierIOS: '0', revocationDateIOS: Date.now() }),
+    iosPurchase(LIFETIME, '1', { originalTransactionIdentifierIOS: '0' }),
+    iosPurchase(MONTHLY, '1', { revocationDateIOS: Date.now() }),
+  ]);
+  expect((await mount()).isPro).toBe(true);
+  expect(JSON.parse(data.get('rg_pro_transaction_v1')).transactionId).toBe('1');
+  expect(data.has('rg_pro_pending_revocation_v1')).toBe(false);
+});
+
+test.each([[], undefined, {}, [iosPurchase(LIFETIME, 'tx-lifetime')]])('incomplete or non-refund history %j cannot revoke lifetime', async history => {
+  cachedIdentity(); IAP.getPurchaseHistories.mockResolvedValue(history);
+  expect((await mount()).isPro).toBe(true);
+  expect(data.has('rg_pro_pending_revocation_v1')).toBe(false);
+});
+
+test('history errors or an unavailable history API preserve lifetime and still query active ownership', async () => {
+  cachedIdentity(); IAP.getPurchaseHistories.mockRejectedValue(new Error('history unavailable'));
+  expect((await mount()).isPro).toBe(true);
+  expect(IAP.getAvailablePurchases).toHaveBeenCalledTimes(1);
+  React.__reset(); setup(); cachedIdentity(); IAP.getPurchaseHistories = undefined;
+  expect((await mount()).isPro).toBe(true);
+  expect(IAP.getAvailablePurchases).toHaveBeenCalledTimes(1);
+});
+
+test('a timed-out history query preserves access and its late refund result has no side effects', async () => {
+  cachedIdentity(); let releaseHistory;
+  IAP.getPurchaseHistories.mockImplementationOnce(() => new Promise(resolve => { releaseHistory = resolve; }));
+  expect((await mount()).isPro).toBe(true);
+  jest.advanceTimersByTime(5001); await settle();
+  expect(IAP.getAvailablePurchases).toHaveBeenCalledTimes(1);
+  releaseHistory([iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() })]); await settle();
+  expect(render().isPro).toBe(true);
+  expect(data.has('rg_pro_pending_revocation_v1')).toBe(false);
+});
+
+test('history proof survives restart when the active query is unavailable, then reconciles on foreground', async () => {
+  cachedIdentity();
+  IAP.getPurchaseHistories.mockResolvedValue([iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() })]);
+  IAP.getAvailablePurchases.mockRejectedValue(new Error('offline'));
+  expect((await mount()).isPro).toBe(true);
+  expect(JSON.parse(data.get('rg_pro_pending_revocation_v1')).transactionId).toBe('tx-lifetime');
+  React.__reset(); IAP.getPurchaseHistories.mockRejectedValue(new Error('offline'));
+  expect((await mount()).isPro).toBe(true);
+  IAP.getAvailablePurchases.mockResolvedValue([]);
+  jest.setSystemTime(Date.now() + 60001); resume(); await settle();
+  expect(render().isPro).toBe(false);
+  expect(data.has('rg_pro_pending_revocation_v1')).toBe(false);
+});
+
+test('historical refund still cannot revoke access with an incomplete current catalog', async () => {
+  cachedIdentity(); returnedIds = [LIFETIME, MONTHLY];
+  IAP.getPurchaseHistories.mockResolvedValue([iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() })]);
+  expect((await mount()).isPro).toBe(true);
+  expect(data.has('rg_pro_pending_revocation_v1')).toBe(true);
+});
+
+test('expired historical ownership is never used to grant Pro or bypass current subscription expiry', async () => {
+  cachedIdentity(MONTHLY, 'expired');
+  IAP.getPurchaseHistories.mockResolvedValue([iosPurchase(MONTHLY, 'expired', { expirationDateIOS: Date.now() - 86400000 })]);
+  expect((await mount()).isPro).toBe(false);
+  expect(data.has('rg_pro_unlocked')).toBe(false);
+});
+
+test('Android never queries historical refunds or revokes a cached lifetime from absent ownership', async () => {
+  React.__reset(); setup('android'); cachedIdentity();
+  IAP.getPurchaseHistories.mockResolvedValue([iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() })]);
+  expect((await mount()).isPro).toBe(true);
+  expect(IAP.getPurchaseHistories).not.toHaveBeenCalled();
+});
+
+test('a historical refund query cannot overwrite a newer purchase arriving while it was pending', async () => {
+  cachedIdentity(MONTHLY, 'old-monthly'); let releaseHistory;
+  IAP.getPurchaseHistories.mockImplementationOnce(() => new Promise(resolve => { releaseHistory = resolve; }));
+  await mount(); await emitPurchase(iosPurchase(LIFETIME, 'new-lifetime'));
+  releaseHistory([iosPurchase(MONTHLY, 'old-monthly', { revocationDateIOS: Date.now() })]); await settle();
+  expect(render().isPro).toBe(true);
+  expect(JSON.parse(data.get('rg_pro_transaction_v1')).transactionId).toBe('new-lifetime');
+  expect(data.has('rg_pro_pending_revocation_v1')).toBe(false);
+});
+
+test('a negative current query after historical refund cannot remove a newer lifetime grant', async () => {
+  cachedIdentity(); let releaseCurrent;
+  IAP.getPurchaseHistories.mockResolvedValue([iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() })]);
+  IAP.getAvailablePurchases.mockImplementationOnce(() => new Promise(resolve => { releaseCurrent = resolve; }));
+  await mount(); expect(releaseCurrent).toBeDefined();
+  await emitPurchase(iosPurchase(LIFETIME, 'new-lifetime'));
+  releaseCurrent([]); await settle();
+  expect(render().isPro).toBe(true);
+  expect(JSON.parse(data.get('rg_pro_transaction_v1')).transactionId).toBe('new-lifetime');
+  expect(data.has('rg_pro_pending_revocation_v1')).toBe(false);
+});
+
+test('history refund proof rejects an older Restore response for the refunded transaction', async () => {
+  cachedIdentity(); await mount(); let releaseRestore;
+  IAP.getAvailablePurchases.mockImplementationOnce(() => new Promise(resolve => { releaseRestore = resolve; }));
+  const restoring = render().restore(); await flush();
+  IAP.getPurchaseHistories.mockResolvedValue([iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() })]);
+  jest.setSystemTime(Date.now() + 60001); resume(); await settle();
+  expect(render().isPro).toBe(false);
+  releaseRestore([iosPurchase()]); await restoring; await settle();
+  expect(render().isPro).toBe(false);
+  expect(data.has('rg_pro_unlocked')).toBe(false);
 });
