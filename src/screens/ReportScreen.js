@@ -1,19 +1,22 @@
 /**
  * ReportScreen — Radio-ready report templates.
  * Free: SALUTE, 9-Line MEDEVAC, SPOT
- * Draft fields remain in process-session memory until explicitly cleared.
+ * Draft fields save in on-device SQLite until explicitly cleared.
  */
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, UIManager, Platform, AccessibilityInfo } from 'react-native';
 import { TextInput } from '../components/FieldInput';
 import { Alert } from '../utils/fieldAlert';
 import { copyTextToClipboard } from '../utils/clipboard';
 import { useSessionDraft } from '../hooks/useSessionDraft';
+import { useReportDrafts } from '../hooks/useReportDrafts';
+import { IncidentWorkspace, IncidentWorkspaceCard, ReportSaveStatus } from '../components/IncidentWorkspace';
 import { createDeviceAnnotation, formatWorkflowUTC } from '../utils/toolWorkflow';
 import { useColors } from '../utils/ThemeContext';
 import { tapMedium, notifySuccess, notifyWarning } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
 import { TYPE } from '../utils/typography';
+import { getMedevacFields, validMedevacContext, hasReportContent, formatReportTimestamp, buildReportText, MEDEVAC_REFERENCE, ICS201_REFERENCE } from '../utils/reportTemplates';
 
 if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
@@ -36,18 +39,6 @@ const SALUTE_FIELDS = [
   { key: 'equip',    label: 'E — EQUIPMENT',  placeholder: 'Weapons / Vehicles / Comms...' },
 ];
 
-const MEDEVAC_FIELDS = [
-  { key: 'grid',     label: 'LINE 1 — GRID',         placeholder: 'MGRS of pickup site', autoFill: 'grid' },
-  { key: 'callsign', label: 'LINE 2 — CALLSIGN/FREQ', placeholder: 'Callsign & freq...' },
-  { key: 'patients', label: 'LINE 3 — PATIENTS',      placeholder: 'A=Urgent, B=Priority, C=Routine' },
-  { key: 'equip',    label: 'LINE 4 — EQUIPMENT',     placeholder: 'H=Hoist, E=Extraction, N=None' },
-  { key: 'num',      label: 'LINE 5 — NUM PATIENTS',  placeholder: 'Ambulatory / Litter' },
-  { key: 'security', label: 'LINE 6 — SECURITY',      placeholder: 'N=None, P=Possible, E=Enemy, X=Armed escort' },
-  { key: 'marking',  label: 'LINE 7 — MARKING',       placeholder: 'Panels / Smoke / None / Other' },
-  { key: 'nation',   label: 'LINE 8 — NATIONALITY',   placeholder: 'US / Allied / Civilian / POW' },
-  { key: 'cbrn',     label: 'LINE 9 — CBRN',          placeholder: 'CBRN contamination or N/A' },
-];
-
 const SPOT_FIELDS = [
   { key: 'who',   label: 'WHO',   placeholder: 'Reporting callsign' },
   { key: 'what',  label: 'WHAT',  placeholder: 'What observed' },
@@ -59,7 +50,7 @@ const SPOT_FIELDS = [
 // Pro templates
 const ICS201_FIELDS = [
   { key: 'incident',  label: 'INCIDENT NAME',    placeholder: 'Operation / incident name' },
-  { key: 'date',      label: 'DATE / TIME',       placeholder: 'DTG', autoFill: 'datetime' },
+  { key: 'date',      label: 'DATE / TIME',       placeholder: 'YYYY-MM-DD HH:mm ±HH:mm', autoFill: 'datetime' },
   { key: 'location',  label: 'LOCATION',          placeholder: 'MGRS / address', autoFill: 'grid' },
   { key: 'situation', label: 'SITUATION',          placeholder: 'Current situation summary' },
   { key: 'resources', label: 'RESOURCES ASSIGNED', placeholder: 'Units / personnel / equipment' },
@@ -92,39 +83,32 @@ const CASEVAC_FIELDS = [
 
 const REPORTS = [
   { id: 'salute',   label: 'SALUTE',          labelKey: 'reports.salute',    subKey: 'reports.saluteSub',    fields: SALUTE_FIELDS,   pro: false },
-  { id: 'medevac',  label: '9-LINE MEDEVAC',  labelKey: 'reports.medevac',   subKey: 'reports.medevacSub',   fields: MEDEVAC_FIELDS,  pro: false },
-  { id: 'spot',     label: 'SPOT REPORT',     labelKey: 'reports.spotReport', subKey: 'reports.spotReportSub', fields: SPOT_FIELDS,   pro: false },
-  { id: 'ics201',   label: 'ICS 201',         labelKey: 'reports.ics201',    subKey: 'reports.ics201Sub',    fields: ICS201_FIELDS,   pro: true  },
-  { id: 'casevac',  label: 'CASEVAC',         labelKey: 'reports.casevac',   subKey: 'reports.casevacSub',   fields: CASEVAC_FIELDS, pro: true  },
-  { id: 'angus',    label: 'ANGUS / CFF',     labelKey: 'reports.angusCff',  subKey: 'reports.angusCffSub',  fields: ANGUS_FIELDS,    pro: true  },
+  { id: 'medevac',  label: '9-LINE MEDEVAC',  labelKey: 'reports.medevac',   subKey: 'reports.medevacSub',   fields: [], pro: false, scopeKey: 'medevacScope', reference: MEDEVAC_REFERENCE },
+  { id: 'spot',     label: 'SPOT REPORT',     labelKey: 'reportCorrections.spotTitle', subKey: 'reports.spotReportSub', fields: SPOT_FIELDS, pro: false, scopeKey: 'spotScope' },
+  { id: 'ics201',   label: 'ICS 201',         labelKey: 'reportCorrections.adaptedTitle', subKey: 'reports.ics201Sub', fields: ICS201_FIELDS, pro: true, scopeKey: 'icsScope', reference: ICS201_REFERENCE },
+  { id: 'casevac',  label: 'CASEVAC',         labelKey: 'reports.casevac',   subKey: 'reports.casevacSub',   fields: CASEVAC_FIELDS, pro: true, scopeKey: 'casevacScope' },
+  { id: 'angus',    label: 'ANGUS / CFF',     labelKey: 'reports.angusCff',  subKey: 'reports.angusCffSub',  fields: ANGUS_FIELDS, pro: true, scopeKey: 'unverifiedScope' },
 ];
-
-function getNowDTG(timestamp = Date.now()) {
-  const n = new Date(timestamp);
-  const dd = String(n.getUTCDate()).padStart(2,'0');
-  const hh = String(n.getUTCHours()).padStart(2,'0');
-  const mm = String(n.getUTCMinutes()).padStart(2,'0');
-  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  return `${dd}${hh}${mm}Z ${months[n.getUTCMonth()]} ${n.getUTCFullYear()}`;
-}
-
-function buildReport(reportId, fields, values) {
-  const header = `=== ${REPORTS.find(r=>r.id===reportId)?.label ?? reportId.toUpperCase()} ===`;
-  const lines = fields.map(f => `${f.label}: ${values[f.key] || '—'}`);
-  return [header, ...lines].join('\n');
-}
 
 function ReportCard({ report, mgrs, location, isPro, trialEligible, onShowProGate }) {
   const colors = useColors();
   const { t } = useTranslation();
   const [open, setOpen] = useSessionDraft(`report:${report.id}:open`, false);
-  const [draft, setDraft] = useSessionDraft(`report:${report.id}:draft`, { values: {}, sources: {} });
+  const saved = useReportDrafts();
+  const draft = saved.data.worksheets[report.id] || { values:{},sources:{} };
+  const setDraft = next => saved.store.change(current=>({...current,worksheets:{...current.worksheets,[report.id]:typeof next==='function'?next(current.worksheets[report.id]||{values:{},sources:{}}):next}}));
   const vals = draft.values;
-  const isLocked = report.pro && !isPro;
+  const fields = report.id === 'medevac' ? getMedevacFields(draft.context) : report.fields;
+  const timeBasis = report.id === 'ics201' ? 'local' : 'utc';
+  const hasTimeField = fields.some(field => field.autoFill === 'datetime');
+  const scope = report.scopeKey ? t(`reportCorrections.${report.scopeKey}`) : null;
+  const readOnly = report.pro && !isPro;
+  const isLocked = readOnly && !hasReportContent(fields,vals);
+  const editingDisabled = readOnly || saved.loading || !!saved.loadError || saved.locked;
   const copyBusy = useRef(false);
   const [copying, setCopying] = useState(false);
   const sourceLabel = source => source?.kind === 'device'
-    ? t('workflow.sourceDevice', { time: formatWorkflowUTC(source.fixTimestamp) })
+    ? t('reportCorrections.positionReference', { source: t(source.source === 'external' ? 'gps.sourceExternal' : 'gps.sourcePhone'), time: formatWorkflowUTC(source.fixTimestamp), accuracy: Number.isFinite(source.accuracy) ? `±${source.accuracy} m` : t('gps.accuracyUnknown') })
     : source?.kind === 'time' ? t('workflow.sourceTime', { time: formatWorkflowUTC(source.timestamp) })
     : t('workflow.manualValue');
   const insertReference = field => {
@@ -132,9 +116,9 @@ function ReportCard({ report, mgrs, location, isPro, trialEligible, onShowProGat
     if (field.autoFill === 'grid') {
       const annotation = createDeviceAnnotation(location, now);
       if (!annotation) { Alert.alert(t('gps.noGpsFix'), t('workflow.annotationNoFix')); return; }
-      setDraft(previous => ({ values: { ...previous.values, [field.key]: annotation.grid }, sources: { ...previous.sources, [field.key]: { kind: 'device', ...annotation } } }));
+      setDraft(previous => ({ ...previous, values: { ...previous.values, [field.key]: annotation.grid }, sources: { ...previous.sources, [field.key]: { kind: 'device', ...annotation } } }));
     } else {
-      setDraft(previous => ({ values: { ...previous.values, [field.key]: getNowDTG(now) }, sources: { ...previous.sources, [field.key]: { kind: 'time', timestamp: now } } }));
+      setDraft(previous => ({ ...previous, values: { ...previous.values, [field.key]: formatReportTimestamp(now, timeBasis) }, sources: { ...previous.sources, [field.key]: { kind: 'time', timestamp: now } } }));
     }
   };
 
@@ -152,10 +136,18 @@ function ReportCard({ report, mgrs, location, isPro, trialEligible, onShowProGat
 
   const copy = async () => {
     if (copyBusy.current) return;
+    if (report.id === 'medevac' && !validMedevacContext(draft.context)) {
+      Alert.alert(t('reportCorrections.contextMissing'), t('reportCorrections.chooseContext')); return;
+    }
+    if (!hasReportContent(fields, vals)) {
+      Alert.alert(t('reportCorrections.emptyTitle'), t('reportCorrections.emptyBody')); return;
+    }
     copyBusy.current = true; setCopying(true);
-    const references = report.fields.filter(f => draft.sources[f.key]).map(f => `${f.label} — ${sourceLabel(draft.sources[f.key])}`);
-    const text = [buildReport(report.id, report.fields, vals), ...references].join('\n');
+    const references = fields.filter(f => draft.sources[f.key]).map(f => `${f.labelKey ? t(f.labelKey) : f.label} — ${sourceLabel(draft.sources[f.key])}`);
+    const text = [buildReportText({ title: t(report.labelKey), fields, values: vals, scope, reference: report.reference,
+      context: report.id === 'medevac' ? draft.context : null, timeBasis: hasTimeField ? timeBasis : null, t }), ...references].join('\n');
     try {
+      await saved.store.flush();
       await copyTextToClipboard(text);
       notifySuccess();
       AccessibilityInfo.announceForAccessibility(t('reports.reportCopied'));
@@ -169,7 +161,10 @@ function ReportCard({ report, mgrs, location, isPro, trialEligible, onShowProGat
   const clear = () => {
     Alert.alert(t('reports.clearReport'), t('reports.clearReportMsg'), [
       { text: t('reports.cancel'), style: 'cancel' },
-      { text: t('reports.clear'), style: 'destructive', onPress: () => { notifyWarning(); setDraft({ values: {}, sources: {} }); } },
+      { text: t('reports.clear'), style: 'destructive', onPress: () => {
+        saved.store.commit(current=>({...current,worksheets:{...current.worksheets,[report.id]:{values:{},sources:{}}}}))
+          .then(notifyWarning).catch(()=>{});
+      } },
     ]);
   };
 
@@ -196,24 +191,42 @@ function ReportCard({ report, mgrs, location, isPro, trialEligible, onShowProGat
 
       {open && !isLocked && (
         <View style={[styles.cardBody, { borderTopColor: colors.border2 }]}>
-          {report.fields.map(f => {
+          {readOnly && <Text style={[styles.referenceHint,{color:colors.text2}]}>{t('incident.proReadOnly')}</Text>}
+          {scope && <Text style={[styles.referenceHint, { color: colors.text2, marginTop: 12 }]}>{scope}</Text>}
+          {report.reference && <Text style={[styles.referenceHint, { color: colors.text3, marginTop: 6 }]}>{t('reportCorrections.referenceLabel')}: {report.reference}</Text>}
+          {hasTimeField && <Text style={[styles.referenceHint, { color: colors.text3, marginTop: 6 }]}>{t('reportCorrections.insertedTimeNote', { basis: t(`reportCorrections.${timeBasis === 'local' ? 'localTime' : 'utcTime'}`) })}</Text>}
+          {report.id === 'medevac' && <View style={styles.fieldBlock}>
+            <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{t('reportCorrections.contextTitle')}</Text>
+            <View style={styles.contextRow}>{['peacetime', 'wartime'].map(context => <TouchableOpacity key={context}
+              accessibilityRole="radio" accessibilityState={{ checked: draft.context === context, disabled: copying || editingDisabled }}
+              accessibilityLabel={t(`reportCorrections.${context}`)} disabled={copying || editingDisabled}
+              onPress={() => setDraft(previous => ({ ...previous, context }))}
+              style={[styles.contextButton, { borderColor: draft.context === context ? colors.text2 : colors.border, backgroundColor: draft.context === context ? colors.card2 : colors.card }]}>
+              <Text style={[styles.copyBtnText, { color: colors.text }]}>{t(`reportCorrections.${context}`)}</Text>
+            </TouchableOpacity>)}</View>
+            {!validMedevacContext(draft.context) && <Text style={[styles.referenceHint, { color: colors.text3 }]}>{t('reportCorrections.chooseContext')}</Text>}
+          </View>}
+          {fields.map(f => {
             const hasReference = !!draft.sources[f.key];
+            const label = f.labelKey ? t(f.labelKey) : f.label;
             return (
               <View key={f.key} style={styles.fieldBlock}>
-                <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{f.label}</Text>
+                <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{label}</Text>
+                {f.hintKey && <Text style={[styles.referenceHint, { color: colors.text2, marginBottom: 6 }]}>{t(f.hintKey)}</Text>}
                 <TextInput
                   style={[styles.fieldInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }, hasReference && { borderColor: colors.text2 }]}
-                  placeholder={f.placeholder}
+                  placeholder={f.placeholder || t('reportCorrections.blank')}
                   placeholderTextColor={colors.text3}
                   value={vals[f.key] || ''}
-                  onChangeText={value => setDraft(previous => ({ values: { ...previous.values, [f.key]: value }, sources: { ...previous.sources, [f.key]: null } }))}
+                  editable={!editingDisabled}
+                  onChangeText={value => setDraft(previous => ({ ...previous, values: { ...previous.values, [f.key]: value }, sources: { ...previous.sources, [f.key]: null } }))}
                   maxLength={2000}
-                  multiline={f.key === 'situation' || f.key === 'objectives'}
-                  accessibilityLabel={f.label}
+                  multiline={f.key === 'situation' || f.key === 'objectives' || f.key === 'injuryDetails' || f.key === 'terrain'}
+                  accessibilityLabel={label}
                 />
                 {f.autoFill && <>
                   <Text style={[styles.referenceHint, { color: colors.text3 }]}>{sourceLabel(draft.sources[f.key])}</Text>
-                  <TouchableOpacity onPress={() => insertReference(f)} disabled={f.autoFill === 'grid' && !location} accessibilityRole="button" accessibilityState={{ disabled: f.autoFill === 'grid' && !location }} style={styles.referenceButton}>
+                  <TouchableOpacity onPress={() => insertReference(f)} disabled={editingDisabled || (f.autoFill === 'grid' && !location)} accessibilityRole="button" accessibilityState={{ disabled: editingDisabled || (f.autoFill === 'grid' && !location) }} style={styles.referenceButton}>
                     <Text style={[styles.referenceHint, { color: colors.text2 }]}>{t(f.autoFill === 'grid' ? 'workflow.insertDevicePosition' : 'workflow.insertCurrentTime')}</Text>
                   </TouchableOpacity>
                 </>}
@@ -221,10 +234,10 @@ function ReportCard({ report, mgrs, location, isPro, trialEligible, onShowProGat
             );
           })}
           <View style={styles.reportBtns}>
-            <TouchableOpacity style={[styles.copyBtn, { backgroundColor: colors.border }]} onPress={copy} disabled={copying} accessibilityState={{ disabled: copying }} accessibilityRole="button" accessibilityLabel={t('reports.copyReport')}>
+            <TouchableOpacity style={[styles.copyBtn, { backgroundColor: colors.border }]} onPress={copy} disabled={copying || saved.loading || !!saved.loadError || saved.locked} accessibilityState={{ disabled: copying || saved.loading || !!saved.loadError || saved.locked }} accessibilityRole="button" accessibilityLabel={t('reports.copyReport')}>
               <Text style={[styles.copyBtnText, { color: colors.text }]}>{t('reports.copyReport')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.clearBtn, { borderColor: colors.border }]} onPress={clear} accessibilityRole="button" accessibilityLabel={t('reports.clear')}>
+            <TouchableOpacity style={[styles.clearBtn, { borderColor: colors.border }]} onPress={clear} disabled={saved.loading || !!saved.loadError || saved.locked} accessibilityRole="button" accessibilityLabel={t('reports.clear')}>
               <Text style={[styles.clearBtnText, { color: colors.text3 }]}>{t('reports.clear')}</Text>
             </TouchableOpacity>
           </View>
@@ -234,15 +247,21 @@ function ReportCard({ report, mgrs, location, isPro, trialEligible, onShowProGat
   );
 }
 
-export function ReportScreen({ mgrs, location, isPro, trialEligible, onShowProGate }) {
+export function ReportScreen({ mgrs, location, isPro, trialEligible, onShowProGate, incidentRequest, onIncidentRequestHandled }) {
   const colors = useColors();
   const { t } = useTranslation();
+  const saved=useReportDrafts();
+  const [workspaceOpen,setWorkspaceOpen]=useSessionDraft('report:workspace:open',false);
+  useEffect(()=>{if(incidentRequest)setWorkspaceOpen(true);},[incidentRequest]);
+  if(workspaceOpen)return <IncidentWorkspace location={location} isPro={isPro} onShowProGate={onShowProGate} onClose={()=>setWorkspaceOpen(false)} request={incidentRequest} onRequestHandled={onIncidentRequestHandled}/>;
   return (
     <ScrollView style={[styles.root, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>{t('reports.title')}</Text>
         <Text style={[styles.subtitle, { color: colors.text3 }]}>{t('reports.subtitle')}</Text>
       </View>
+      <IncidentWorkspaceCard onPress={()=>setWorkspaceOpen(true)}/>
+      <ReportSaveStatus state={saved}/>
 
       {mgrs && (
         <View style={[styles.autoBanner, { borderColor: colors.border, backgroundColor: colors.text5 }]}>
@@ -263,7 +282,7 @@ export function ReportScreen({ mgrs, location, isPro, trialEligible, onShowProGa
         />
       ))}
 
-      <Text style={[styles.footer, { color: colors.text3 }]}>{t('workflow.sessionHint')}</Text>
+      <Text style={[styles.footer, { color: colors.text3 }]}>{t('incident.worksheetsSaved')}</Text>
     </ScrollView>
   );
 }
@@ -271,6 +290,8 @@ export function ReportScreen({ mgrs, location, isPro, trialEligible, onShowProGa
 const styles = StyleSheet.create({
   referenceHint: { ...TYPE.body, fontSize: 13, lineHeight: 18 },
   referenceButton: { minHeight: 44, justifyContent: 'center', paddingVertical: 8 },
+  contextRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
+  contextButton: { minHeight: 44, minWidth: 120, flexGrow: 1, padding: 10, borderWidth: 1, justifyContent: 'center', alignItems: 'center' },
   root: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
   header: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },

@@ -32,6 +32,7 @@
     "expo-media-library": "~17.1.7",
     "expo-navigation-bar": "~4.2.8",
     "expo-network": "~7.1.5",
+    "expo-print": "14.1.4",
     "expo-sensors": "~14.1.4",
     "expo-sharing": "~13.1.5",
     "expo-speech": "~13.1.7",

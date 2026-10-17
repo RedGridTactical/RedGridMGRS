@@ -25,6 +25,7 @@ import { useMapViewport } from '../hooks/useInitialViewport';
 import { useTranslation } from '../hooks/useTranslation';
 import { toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
 import { formatBearing } from '../utils/tactical';
+import { mapIncidentReference } from '../utils/incident';
 import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptics';
 import { MGRSGridOverlay } from '../components/MGRSGridOverlay';
 import { RouteOverlay } from '../components/RouteOverlay';
@@ -114,6 +115,7 @@ export function MapScreen({
   trialEligible,
   onShowProGate,
   onSetWaypoint,
+  onLogIncident,
   meshPositions = [],
   // v3.4 Mission Preflight pipes — optional so older callers keep working.
   gpsSource,
@@ -694,6 +696,10 @@ export function MapScreen({
             </Text>
           )}
           <View style={styles.markerCardBtnRow}>
+            {onLogIncident&&<TouchableOpacity style={[styles.markerCardBtn,{borderColor:colors.border}]} accessibilityRole="button" accessibilityLabel={t('incident.logHere')}
+              onPress={()=>onLogIncident(mapIncidentReference(selectedMarker))}>
+              <Text style={[styles.markerCardBtnText,{color:colors.text2}]}>{t('incident.logHere')}</Text>
+            </TouchableOpacity>}
             <TouchableOpacity
               style={[styles.markerCardBtn, { borderColor: colors.text2 }]}
               onPress={navigateToSelectedMarker}
@@ -1023,6 +1029,10 @@ export function MapScreen({
               </ScrollView>
 
               {/* Action buttons */}
+              {onLogIncident&&<View style={styles.wpMenuActions}><TouchableOpacity style={[styles.wpMenuBtn,{borderColor:colors.border}]} accessibilityRole="button" accessibilityLabel={t('incident.logHere')}
+                onPress={()=>{const reference=mapIncidentReference(pendingWaypoint);setWpMenuVisible(false);onLogIncident(reference);}}>
+                <Text style={[styles.wpMenuBtnText,{color:colors.text2}]}>{t('incident.logHere')}</Text>
+              </TouchableOpacity></View>}
               {mapSaveError && <Text accessibilityRole="alert" style={[styles.wpMenuHint, { color: colors.text }]}>{t('workflow.saveFailed')}</Text>}
               <View style={styles.wpMenuActions}>
                 <TouchableOpacity
@@ -1126,8 +1136,8 @@ const styles = StyleSheet.create({
   markerCardCloseText: { fontSize: 14, fontWeight: '700' },
   markerCardMgrs: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6 },
   markerCardBrg: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6 },
-  markerCardBtnRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  markerCardBtn: { flex: 1, borderWidth: 1, paddingVertical: 8, alignItems: 'center', minHeight: 44, justifyContent: 'center' },
+  markerCardBtnRow: { flexDirection: 'row', flexWrap:'wrap', gap: 8, marginTop: 8 },
+  markerCardBtn: { flex: 1, minWidth:90, borderWidth: 1, paddingVertical: 8, paddingHorizontal:5, alignItems: 'center', minHeight: 48, justifyContent: 'center' },
   markerCardBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
   // Right-side button stack

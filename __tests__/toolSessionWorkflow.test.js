@@ -22,6 +22,13 @@ jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn() }));
 jest.mock('expo-image-picker', () => ({ requestCameraPermissionsAsync: jest.fn(), requestMediaLibraryPermissionsAsync: jest.fn(), launchCameraAsync: jest.fn(), launchImageLibraryAsync: jest.fn() }));
 jest.mock('expo-media-library', () => ({ requestPermissionsAsync: jest.fn(), saveToLibraryAsync: jest.fn() }));
 jest.mock('react-native-view-shot', () => ({ captureRef: jest.fn(), releaseCapture: jest.fn() }));
+jest.mock('@react-native-async-storage/async-storage',()=>({}));
+jest.mock('../src/hooks/useReportDrafts',()=>{
+  let data;
+  const reset=()=>{data={version:1,activeId:null,pendingLocation:null,incidents:[],editor:null,worksheets:{}};};reset();
+  const change=fn=>{data=fn(data);const {sessionDrafts}=require('../src/utils/sessionDrafts');for(const [id,value] of Object.entries(data.worksheets))sessionDrafts.write(`report:${id}:draft`,value);};
+  return {__reset:reset,useReportDrafts:()=>({data,loading:false,locked:false,saving:false,loadError:null,saveError:null,store:{change,flush:()=>Promise.resolve(),commit:fn=>{change(fn);return Promise.resolve();}}})};
+});
 const React = require('react');
 const { Image } = require('react-native');
 const { Alert } = require('../src/utils/fieldAlert');
@@ -45,7 +52,7 @@ const button = (tree, label) => nodes(tree).find(n => n.type === 'TouchableOpaci
 const input = (tree, label) => nodes(tree).find(n => (n.type === ToolInput && n.props.label === label) || (n.type === 'TextInput' && n.props.accessibilityLabel === label));
 const results = tree => nodes(tree).filter(n => n.type === ToolResult).map(n => n.props);
 const fix = () => ({ lat: 38.9, lon: -77, timestamp: Date.now() - 1000, accuracy: 8, altitude: 0 });
-beforeEach(() => { React.__reset(); sessionDrafts.clearPrefix(''); jest.clearAllMocks(); global.requestAnimationFrame = fn => { fn(); return 1; }; });
+beforeEach(() => { React.__reset(); sessionDrafts.clearPrefix(''); require('../src/hooks/useReportDrafts').__reset(); jest.clearAllMocks(); global.requestAnimationFrame = fn => { fn(); return 1; }; });
 
 function reportHarness(id = 'spot') {
   const screen = React.__render(() => ReportScreen({ location: fix(), isPro: true }));
@@ -54,7 +61,7 @@ function reportHarness(id = 'spot') {
   return { render: () => React.__render(() => card.type({ ...card.props, location })), setLocation: v => { location = v; } };
 }
 it('report fields start blank; explicit references and typed text survive tab unmount with no GPS overwrite', () => {
-  const h = reportHarness(); button(h.render(), 'reports.spotReport report. reports.spotReportSub').props.onPress();
+  const h = reportHarness(); button(h.render(), 'reportCorrections.spotTitle report. reports.spotReportSub').props.onPress();
   expect(input(h.render(), 'WHERE').props.value).toBe(''); expect(input(h.render(), 'WHEN').props.value).toBe('');
   input(h.render(), 'WHAT').props.onChangeText('Keep this observation');
   button(h.render(), 'workflow.insertDevicePosition').props.onPress();
@@ -69,13 +76,46 @@ it('report fields start blank; explicit references and typed text survive tab un
   expect(input(h.render(), 'WHERE').props.value).toBe(''); expect(input(h.render(), 'WHEN').props.value).toBe('');
 });
 it('report copy waits for a confirmed native write and failure never produces success', async () => {
-  const h = reportHarness(); button(h.render(), 'reports.spotReport report. reports.spotReportSub').props.onPress();
+  const h = reportHarness(); button(h.render(), 'reportCorrections.spotTitle report. reports.spotReportSub').props.onPress();
+  input(h.render(), 'WHAT').props.onChangeText('Synthetic observation');
   const write = deferred(); Clipboard.setStringAsync.mockReturnValueOnce(write.promise);
   const promise = button(h.render(), 'reports.copyReport').props.onPress();
   expect(notifySuccess).not.toHaveBeenCalled(); write.resolve(false); await promise;
   expect(notifySuccess).not.toHaveBeenCalled(); expect(Alert.alert).toHaveBeenLastCalledWith('workflow.copyFailed');
   Clipboard.setStringAsync.mockResolvedValueOnce(true);
   await button(h.render(), 'reports.copyReport').props.onPress(); expect(notifySuccess).toHaveBeenCalledTimes(1);
+});
+it('empty report copy does not write a placeholder-only record', async () => {
+  const h = reportHarness(); button(h.render(), 'reportCorrections.spotTitle report. reports.spotReportSub').props.onPress();
+  await button(h.render(), 'reports.copyReport').props.onPress();
+  expect(Clipboard.setStringAsync).not.toHaveBeenCalled();
+  expect(Alert.alert).toHaveBeenCalledWith('reportCorrections.emptyTitle','reportCorrections.emptyBody');
+});
+it('medical copy requires an explicit context and never leaks the other variant', async () => {
+  const h = reportHarness('medevac'); button(h.render(), 'reports.medevac report. reports.medevacSub').props.onPress();
+  input(h.render(),'reportCorrections.line1').props.onChangeText('TRAINING PICKUP');
+  await button(h.render(),'reports.copyReport').props.onPress();
+  expect(Clipboard.setStringAsync).not.toHaveBeenCalled();
+  expect(Alert.alert).toHaveBeenLastCalledWith('reportCorrections.contextMissing','reportCorrections.chooseContext');
+  button(h.render(),'reportCorrections.wartime').props.onPress();
+  input(h.render(),'reportCorrections.line6War').props.onChangeText('OLD SECURITY');
+  button(h.render(),'reportCorrections.peacetime').props.onPress();
+  input(h.render(),'reportCorrections.line6Peace').props.onChangeText('FICTIONAL INJURY');
+  Clipboard.setStringAsync.mockResolvedValueOnce(true);
+  await button(h.render(),'reports.copyReport').props.onPress();
+  expect(Clipboard.setStringAsync.mock.calls[0][0]).toContain('FICTIONAL INJURY');
+  expect(Clipboard.setStringAsync.mock.calls[0][0]).not.toContain('OLD SECURITY');
+  React.__reset(); expect(input(h.render(),'reportCorrections.line6Peace').props.value).toBe('FICTIONAL INJURY');
+  button(h.render(),'reportCorrections.wartime').props.onPress();
+  expect(input(h.render(),'reportCorrections.line6War').props.value).toBe('OLD SECURITY');
+});
+it('stale device insertion cannot overwrite an independently entered report location', () => {
+  const h = reportHarness(); button(h.render(),'reportCorrections.spotTitle report. reports.spotReportSub').props.onPress();
+  input(h.render(),'WHERE').props.onChangeText('OBSERVED EVENT');
+  h.setLocation({...fix(),timestamp:Date.now()-31000});
+  button(h.render(),'workflow.insertDevicePosition').props.onPress();
+  expect(input(h.render(),'WHERE').props.value).toBe('OBSERVED EVENT');
+  expect(Alert.alert).toHaveBeenLastCalledWith('gps.noGpsFix','workflow.annotationNoFix');
 });
 it('tappable calculator results copy zero and reject false native success', async () => {
   Clipboard.setStringAsync.mockResolvedValueOnce(false);

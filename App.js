@@ -2,7 +2,7 @@
  * Red Grid MGRS — Root Application v2.1 (HARDENED)
  * Tabs: GRID · MAP · TOOLS · REPORT · LISTS (Pro) · COORDS (Pro) · THEME (Pro)
  *
- * Privacy: no location stored, no network (IAP uses Apple/Google native payment only), no analytics.
+ * Privacy: user-chosen field data stays local; no tracking or telemetry. Native store billing is separate.
  *
  * CRITICAL HARDENING:
  *   - Error boundary catches any hook or component crashes
@@ -58,6 +58,7 @@ import { extractTokenFromUrl, redeemShareToken } from './src/utils/referral';
 import { useReferralTrial } from './src/hooks/useReferralTrial';
 import { ToolsScreen }    from './src/screens/ToolsScreen';
 import { ReportScreen }   from './src/screens/ReportScreen';
+import { IncidentShortcut } from './src/components/IncidentWorkspace';
 import { WaypointListsScreen } from './src/screens/WaypointListsScreen';
 import { ThemeScreen }    from './src/screens/ThemeScreen';
 import { CoordFormatsScreen } from './src/screens/CoordFormatsScreen';
@@ -565,6 +566,9 @@ function AppContent({
   const colors = useColors();
   const { t } = useTranslation();
   useEffect(() => { if (!isPro) setHudMode(false); }, [isPro, setHudMode]);
+  const [incidentRequest,setIncidentRequest]=useState(null);
+  const openIncident=useCallback(reference=>{setIncidentRequest({id:newFieldId(),reference});setTab('report');},[setTab]);
+  const incidentRequestHandled=useCallback(()=>setIncidentRequest(null),[]);
   const display = useTacticalBrightness(tacticalMode);
   const { width, height, fontScale } = useWindowDimensions();
   const wideTabs = fontScale > 1.2 || width < 380;
@@ -613,6 +617,7 @@ function AppContent({
       && !fieldNavigation.isSaving && !fieldNavigation.loading && !fieldNavigation.loadError && !fieldNavigation.saveError,
   });
   const reviewGridProps = { ...gridProps,
+    onOpenIncident:openIncident,
     onCopyGrid: async () => { if (await gridProps.onCopyGrid()) queueReview(); },
     onRateApp: () => { cancelReview(); gridProps.onRateApp(); },
   };
@@ -690,6 +695,7 @@ function AppContent({
 
         {panes.primary === 'report' && (
           <ReportScreen
+            incidentRequest={incidentRequest} onIncidentRequestHandled={incidentRequestHandled}
             location={location}
             mgrs={mgrsFormatted}
             isPro={isPro}
@@ -773,6 +779,7 @@ function AppContent({
         {mapSlot.mounted && (
           <View key="map" style={[staticStyles.pane, mapSlot.style]}>
           <MapScreen
+            onLogIncident={openIncident}
             session={mapSession.current} onSessionChange={onMapSessionChange}
             {...listProps} routeDraft={routeDraft} onRouteDraftChange={setRouteDraft}
             onOpenSavedRoute={id => { setSelectedListId(id); setTab('lists'); }}
@@ -947,7 +954,7 @@ function UpsellScreen({ tabId, onUpgrade }) {
 }
 
 // ─── PORTRAIT GRID ───────────────────────────────────────────────────────────
-function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, compassReference, positionStatus, onRateApp, onEnterHud, onShowSupport, gridScale, speaking, onVoicePress }) {
+function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, onOpenIncident, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, compassReference, positionStatus, onRateApp, onEnterHud, onShowSupport, gridScale, speaking, onVoicePress }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -982,6 +989,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
           <Text style={[staticStyles.markBtnText, { color: colors.text, opacity: Number.isFinite(location?.lat) ? 1 : 0.4 }]} suppressHighlighting={true}>{'◉ ' + t('workflow.access.markPosition')}</Text>
         </TouchableOpacity>
         {markToast && <Text style={[staticStyles.markToast, { color: colors.text2 }]}>✓ {markToast}</Text>}
+        <IncidentShortcut location={location} onOpen={onOpenIncident}/>
       </View>
       {!waypoint ? (
         <View style={staticStyles.noWpBlock}>
@@ -1039,7 +1047,7 @@ function PortraitGrid({ isLoading, location, error, retry, mgrsFormatted, waypoi
 }
 
 // ─── LANDSCAPE GRID ──────────────────────────────────────────────────────────
-function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, compassReference, positionStatus, onRateApp, onEnterHud, onShowSupport, gridScale, speaking, onVoicePress }) {
+function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypoint, waypointMGRS, bearing, arrowAngle, distance, arrowSize, onAddWaypoint, onClearWaypoint, onMarkPosition, markToast, onOpenIncident, isPro, onShowProGate, onCopyGrid, copyToast, coordFormat, altDisplay, compassHeading, compassReference, positionStatus, onRateApp, onEnterHud, onShowSupport, gridScale, speaking, onVoicePress }) {
   const colors = useColors();
   const { t } = useTranslation();
   return (
@@ -1081,6 +1089,7 @@ function LandscapeGrid({ isLoading, location, error, retry, mgrsFormatted, waypo
             <Text style={[staticStyles.lsMarkBtnText, { color: colors.text, opacity: Number.isFinite(location?.lat) ? 1 : 0.4 }]} suppressHighlighting={true}>{'◉ ' + t('workflow.access.markPosition')}</Text>
           </TouchableOpacity>
           {markToast && <Text style={[staticStyles.markToast, { color: colors.text2, textAlign: 'center' }]}>✓ {markToast}</Text>}
+          <IncidentShortcut location={location} onOpen={onOpenIncident}/>
           <View style={staticStyles.lsBtns}>
             <TouchableOpacity style={[staticStyles.lsBtn, { borderColor: colors.text2, backgroundColor: colors.border2 }]} onPress={onAddWaypoint} accessibilityRole="button" accessibilityLabel={waypoint ? t('grid.edit') : t('grid.addWaypoint')}>
               <Text style={[staticStyles.lsBtnText, { color: colors.text }]}>{waypoint ? t('grid.editWp') : t('grid.plusWaypoint')}</Text>
