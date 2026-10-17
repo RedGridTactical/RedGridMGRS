@@ -13,7 +13,7 @@ import './src/i18n';
 import React, { useState, useMemo, useCallback, useRef, useEffect, Component } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated, ScrollView,
-  StatusBar, useWindowDimensions, AccessibilityInfo, Linking,
+  StatusBar, useWindowDimensions, AccessibilityInfo, Linking, Platform, NativeModules,
 } from 'react-native';
 // SafeAreaView MUST come from react-native-safe-area-context, not react-native:
 // RN's built-in SafeAreaView is a no-op on Android, so with edge-to-edge enforced
@@ -30,6 +30,9 @@ import { useTacticalBrightness } from './src/hooks/useTacticalBrightness';
 import { TacticalBrightnessControls, TacticalBlackout } from './src/components/TacticalBrightnessControls';
 import { TacticalDisplaySwitch } from './src/components/TacticalDisplaySwitch';
 import { useTranslation } from './src/hooks/useTranslation';
+
+const hasAndroidSystemBars = Platform.OS === 'android'
+  && typeof NativeModules.RedGridWindowLayout?.setSystemBars === 'function';
 
 import { useLocation }  from './src/hooks/useLocation';
 import { useSettings }  from './src/hooks/useSettings';
@@ -420,6 +423,15 @@ function App() {
 
   // Dynamic StatusBar style: white theme uses dark content, others use light
   const statusBarStyle = themeData.id === 'white' ? 'dark-content' : 'light-content';
+  useEffect(() => {
+    if (!hasAndroidSystemBars) return;
+    // Keep Android edge-to-edge while showing/hiding system bars. The older
+    // RN StatusBar restore path switches decor fitting and cutout modes.
+    NativeModules.RedGridWindowLayout.setSystemBars(
+      isLandscape || hudMode || tacticalMode,
+      !tacticalMode && themeData.id === 'white'
+    );
+  }, [themeData.id, tacticalMode, isLandscape, hudMode]);
 
   const onEnterHud = useCallback(() => {
     if (!isPro) { showProGate(t('grid.hudMode'), 'display'); return; }
@@ -648,7 +660,7 @@ function AppContent({
     <SafeAreaView style={[staticStyles.root, { backgroundColor: colors.bg }]} accessibilityElementsHidden={tacticalMode && fieldModalVisible} importantForAccessibility={tacticalMode && fieldModalVisible ? 'no-hide-descendants' : 'auto'}>
       {/* backgroundColor is deprecated and ignored under edge-to-edge (Android 15+);
           the SafeAreaView background supplies the status-bar backdrop instead. */}
-      <StatusBar barStyle={statusBarStyle} translucent hidden={isLandscape || hudMode || tacticalMode} />
+      {!hasAndroidSystemBars && <StatusBar barStyle={statusBarStyle} translucent hidden={isLandscape || hudMode || tacticalMode} />}
 
       <TacticalDisplaySwitch
         theme={theme}

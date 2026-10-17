@@ -2,6 +2,9 @@ package com.redgrid.redgridtactical
 
 import android.app.Activity
 import androidx.core.util.Consumer
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.window.java.layout.WindowInfoTrackerCallbackAdapter
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
@@ -26,6 +29,7 @@ class WindowLayoutModule(private val reactContext: ReactApplicationContext) :
 
   private var adapter: WindowInfoTrackerCallbackAdapter? = null
   private var latest: WindowLayoutInfo? = null
+  private var systemBars: Pair<Boolean, Boolean>? = null
   private val mainExecutor = Executor { command -> reactContext.runOnUiQueueThread(command) }
   private val consumer = Consumer<WindowLayoutInfo> { info ->
     latest = info
@@ -45,12 +49,35 @@ class WindowLayoutModule(private val reactContext: ReactApplicationContext) :
     promise.resolve(if (info == null) emptyPayload() else toMap(info))
   }
 
+  @ReactMethod
+  fun setSystemBars(statusHidden: Boolean, darkIcons: Boolean) {
+    reactContext.runOnUiQueueThread {
+      systemBars = Pair(statusHidden, darkIcons)
+      applySystemBars()
+    }
+  }
+
+  private fun applySystemBars() {
+    val (statusHidden, darkIcons) = systemBars ?: return
+    val window = currentActivity?.window ?: return
+    WindowCompat.setDecorFitsSystemWindows(window, false)
+    WindowCompat.getInsetsController(window, window.decorView).apply {
+      isAppearanceLightStatusBars = darkIcons
+      isAppearanceLightNavigationBars = darkIcons
+      systemBarsBehavior = if (statusHidden) WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        else WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
+      if (statusHidden) hide(WindowInsetsCompat.Type.statusBars())
+      else show(WindowInsetsCompat.Type.statusBars())
+    }
+  }
+
   // Required so NativeEventEmitter can subscribe without warnings.
   @ReactMethod fun addListener(eventName: String) {}
   @ReactMethod fun removeListeners(count: Int) {}
 
   override fun onHostResume() {
     val activity: Activity = currentActivity ?: return
+    applySystemBars()
     if (adapter == null) adapter = WindowInfoTrackerCallbackAdapter(WindowInfoTracker.getOrCreate(activity))
     adapter?.addWindowLayoutInfoListener(activity, mainExecutor, consumer)
   }
