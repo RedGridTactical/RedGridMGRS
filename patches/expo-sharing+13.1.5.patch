@@ -1,8 +1,43 @@
 diff --git a/node_modules/expo-sharing/ios/SharingModule.swift b/node_modules/expo-sharing/ios/SharingModule.swift
 --- a/node_modules/expo-sharing/ios/SharingModule.swift
 +++ b/node_modules/expo-sharing/ios/SharingModule.swift
-@@ -15,16 +15,10 @@
-       let activityController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+@@ -1,4 +1,17 @@
+ import ExpoModulesCore
++
++// iOS-on-Mac can dismiss the native picker without invoking its completion
++// handler. Settle only when this controller actually leaves its presentation.
++private final class MacSharingViewController: UIActivityViewController {
++  var onDismiss: (() -> Void)?
++
++  override func viewDidDisappear(_ animated: Bool) {
++    super.viewDidDisappear(animated)
++    if isBeingDismissed || presentingViewController == nil {
++      onDismiss?()
++    }
++  }
++}
+ 
+ public final class SharingModule: Module {
+ 
+@@ -12,19 +25,25 @@
+         throw FilePermissionException()
+       }
+ 
+-      let activityController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
++      var settled = false
++      let settle: () -> Void = {
++        guard !settled else { return }
++        settled = true
++        promise.resolve(nil)
++      }
++      let activityController: UIActivityViewController
++      if ProcessInfo.processInfo.isiOSAppOnMac {
++        let controller = MacSharingViewController(activityItems: [url], applicationActivities: nil)
++        controller.onDismiss = settle
++        activityController = controller
++      } else {
++        activityController = UIActivityViewController(activityItems: [url], applicationActivities: nil)
++      }
        activityController.title = options.dialogTitle
  
 -      activityController.completionWithItemsHandler = { type, completed, _, _ in
@@ -15,10 +50,9 @@ diff --git a/node_modules/expo-sharing/ios/SharingModule.swift b/node_modules/ex
 -        if type == nil && !completed {
 -          promise.resolve(nil)
 -        }
-+      // The completion callback also covers an activity that ends without
-+      // reporting success. Always release the caller after the sheet dismisses.
++      // Selected activities can end without reporting success.
 +      activityController.completionWithItemsHandler = { _, _, _, _ in
-+        promise.resolve(nil)
++        settle()
        }
  
        guard let currentViewcontroller = appContext?.utilities?.currentViewController() else {
