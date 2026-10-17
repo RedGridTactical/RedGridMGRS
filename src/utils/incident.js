@@ -165,7 +165,7 @@ export function keepIncidentEditor(state, now = Date.now()) {
 }
 export function archiveIncident(state, incidentId, archived, now = Date.now()) {
   if (state.editor?.incidentId === incidentId) fail('DRAFT_OPEN');
-  return { ...state, pendingLocation:null, activeId:archived && state.activeId === incidentId ? null : archived ? state.activeId : incidentId,
+  return { ...state, pendingLocation:archived ? null : state.pendingLocation, activeId:archived && state.activeId === incidentId ? null : archived ? state.activeId : incidentId,
     incidents:state.incidents.map(i => i.id === incidentId ? {...i, archived, updatedAt:new Date(now).toISOString(), revision:i.revision+1} : i) };
 }
 export function deleteArchivedIncident(state, incidentId) {

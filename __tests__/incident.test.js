@@ -97,3 +97,11 @@ test('a parked map reference survives an imported copy and selection until an en
   const entered=beginIncidentEntry(imported,{now:NOW+5*60000});expect(entered.editor.location).toEqual(state.pendingLocation);expect(entered.pendingLocation).toBeNull();
   expect(beginIncidentEntry(imported,{now:NOW+31*60000}).editor.location).toBeNull();
 });
+
+test('restoring the archived incident chosen for a parked map reference retains it for the next activity',()=>{
+  let state=incidentFixture();const id=state.activeId;state=archiveIncident(state,id,true,NOW);
+  const reference=mapIncidentReference({lat:38.9,lon:-77},NOW);state={...state,activeId:id,pendingLocation:reference};
+  state=archiveIncident(state,id,false,NOW+1000);
+  expect(state.pendingLocation).toEqual(reference);
+  const started=beginIncidentEntry(state,{now:NOW+2000});expect(started.editor.location).toEqual(reference);expect(started.pendingLocation).toBeNull();
+});
