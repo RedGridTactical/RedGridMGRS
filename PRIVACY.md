@@ -34,7 +34,7 @@ The app does not embed third-party advertising, analytics or crash-reporting SDK
 
 ## Support and website
 
-If you contact support, we receive the contact details and message you choose to send. The website contact form uses Formspree to forward those submissions; it is separate from the app. The [website privacy policy](https://redgridtactical.com/privacy) also covers the website and the retired Red Grid Link app.
+If you contact support, we receive the contact details and message you choose to send. The website contact form uses Formspree to forward those submissions; it is separate from the app. See the [website privacy policy](https://redgridtactical.com/privacy) for information about the website.
 
 ## Children and changes
 
