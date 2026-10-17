@@ -35,12 +35,23 @@ for a fee or other consideration (including without limitation fees for hosting
 or consulting services), a product or service whose value derives, entirely or
 substantially, from the functionality of the Software.
 
-Any person or organization wishing to use the Software commercially — including
-but not limited to deploying it across a fleet of devices, incorporating it
-into a paid product, or using it in a professional services context — must
-obtain written permission from RedGrid Tactical prior to such use.
+Official app use and source distribution
 
-To request a commercial license, contact: support@redgridtactical.com
+The Commons Clause restriction above concerns selling the Software or a product
+or service whose value derives entirely or substantially from the Software.
+It does not prohibit lawful personal, professional, or internal organizational
+use of the official Red Grid MGRS builds obtained from the App Store or Google
+Play, including deployment through supported store-managed distribution.
+No separate written commercial-use permission is required for that end use.
+Users must still obtain any required Pro entitlement under the applicable store
+rules; permission to use the app is not a grant of unpaid Pro seats.
+
+The official app's end-user terms and Lifetime Pro commitment are at
+https://redgridtactical.com/terms, alongside the applicable store license and
+usage rules. These end-user rights do not grant permission to resell the
+Software or a derived product or service restricted by the Commons Clause.
+To request permission for such source-based commercial distribution, contact:
+support@redgridtactical.com
 
 Individual personal use, open-source contribution, forking for non-commercial
 purposes, and building the app for personal installation are all permitted

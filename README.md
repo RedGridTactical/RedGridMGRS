@@ -25,13 +25,15 @@ Free includes live 10-digit MGRS, a single saved waypoint, four tools (Back Azim
 
 Pro adds all 12 tools and six report templates, up to 10 waypoint lists with 20 points each, saved route workflows, supported MBTiles imports, GPX/KML import and export, optional radio features, additional coordinate formats, voice readout, HUD and display controls.
 
-Pro is available as a monthly subscription or a one-time lifetime purchase. Check the app for current prices in your region. Apple or Google processes purchases and manages subscription settings.
+Pro is available as a monthly subscription or a one-time Lifetime purchase. Existing and new Lifetime purchasers keep Pro permanently, including all future Red Grid MGRS Pro features, updates, major versions and redesigns, without a new purchase or subscription. A renamed or replacement Red Grid MGRS will honor that purchase; a separate replacement app would require a free migration path rather than assuming store receipts transfer automatically. Check the app for current prices in your region. Apple or Google processes purchases and manages subscription settings. Restores use the purchasing store account; automatic Apple-to-Google transfer is not implemented. See the [Terms of Use](https://redgridtactical.com/terms).
+
+Creating and editing incident workspaces and ICS 214 logs requires Pro. Saved incident records remain readable and exportable when Pro access ends.
 
 The MBTiles importer supports raster maps with 256 × 256 PNG tiles, up to 5,000 tiles, a 256 MB archive and 128 MB of extracted tile data. Vector, JPEG and WebP tile archives are not supported. Supply a map you have permission to use and retain its attribution.
 
 ## Privacy
 
-Saved waypoints, routes, session summaries, settings and imported maps live in local app storage. Exporting files or enabling radio sharing sends the information you choose to share outside the app. Other devices, receiving radios and operating-system backups may retain their own copies.
+Saved waypoints, routes, session summaries, report worksheets, incident records and unfinished incident drafts, settings and imported maps live in local app storage. Exporting files or enabling radio sharing sends the information you choose to share outside the app. Other devices, receiving radios and operating-system backups may retain their own copies.
 
 Online maps use platform map services and tile providers. Purchases use Apple or Google. These providers handle their own service requests; offline-first does not mean every optional feature makes zero network requests. The app does not embed advertising, analytics or crash-reporting SDKs.
 
@@ -41,7 +43,7 @@ See [PRIVACY.md](PRIVACY.md) and the [website privacy policy](https://redgridtac
 
 Inspectable source lets people examine how coordinates, local storage and optional sharing work. A store installation provides a maintained, ready-to-install app without setting up a native build environment. Pro purchases support continued development and unlock the additional workflows described above.
 
-The source is available under [LICENSE](LICENSE), which includes the Commons Clause and an additional commercial-use restriction. It is not an unrestricted open-source license. The license has not changed with this release.
+The source is available under [LICENSE](LICENSE), which includes the Commons Clause restriction on selling the software or a substantially derived product or service. It is not an unrestricted open-source license. Lawful personal, professional and internal organizational use of the official store app is permitted without separate written commercial-use permission; required Pro entitlements and store distribution rules still apply.
 
 ## Build locally
 

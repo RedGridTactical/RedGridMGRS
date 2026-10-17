@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: September 7, 2026. This document describes Red Grid MGRS 4.0.5; older store releases may have different map-download behavior.
+Last updated: October 17, 2026. Persistent report worksheets and incident workspaces described below are available from Red Grid MGRS 4.1.2; older releases may retain those drafts only for a session.
 
 ## App data
 
@@ -10,9 +10,13 @@ The app requests foreground location access for coordinates, navigation and rela
 
 ## Local storage
 
-The app stores settings, saved waypoints and lists, areas of operation, map data, purchase entitlement status, and configured team preferences and keys locally. Version 4.0.5 also stores active route progress and up to 10 local session summaries containing planned route points and manual confirmations. This is not a continuous location recording.
+The app stores settings, saved waypoints and lists, areas of operation, map data, purchase entitlement status and store transaction identifiers needed for restoration or verified revocation handling, and configured team preferences and keys locally. Active route progress and up to 10 local session summaries contain planned route points and manual confirmations. This is not a continuous location recording.
 
-Compatible imported MBTiles data is stored locally. Use the app's available controls to remove saved lists, map data or a team key. Uninstalling normally removes app-local data, but exports, device backups and copies held by other apps or recipients must be managed separately.
+Report worksheet values and their location/time references, incident details and resources, ICS 214 activity entries and correction history, and unfinished incident/activity drafts are saved in a local database and survive app restarts after saving completes. Local previous-record and recovery copies may be retained to recover damaged records. Wait for the saved confirmation before closing. Saved incident records remain readable and exportable if Pro expires; they are not uploaded to Red Grid.
+
+Calculator and tool input drafts are held in process-session memory until cleared or the app process ends. Saved settings and files produced by those tools are separate. Purchase-handling counters and review-prompt eligibility/history are stored locally and are not sent to us as usage analytics.
+
+Compatible imported MBTiles data is stored locally. Use the app's available controls to clear report worksheets or delete archived incidents, saved lists, map data or a team key. Generated PDF/JSON files may remain in the app cache for system sharing; caches are not a secure-erasure guarantee. Uninstalling normally removes app-local data, but exports, device backups and copies held by other apps or recipients must be managed separately. Protect the device and exported files according to your organization's requirements; local storage alone is not a regulatory certification.
 
 ## Sharing and radio features
 
@@ -22,9 +26,9 @@ Team payloads can use AES-256-GCM with a shared team key. The active key is stor
 
 ## Online services
 
-Online maps use platform map services and map tile providers. Those providers may receive your IP address, requested map area or tile coordinates, and standard request information. Version 4.0.5 disables public-provider bulk downloads and supports compatible local MBTiles imports instead. Verify map coverage before going offline.
+Online maps use platform map services and map tile providers. Those providers may receive your IP address, requested map area or tile coordinates, and standard request information. Current versions disable public-provider bulk downloads and support compatible local MBTiles imports instead. Verify map coverage before going offline.
 
-Apple StoreKit and Google Play Billing process purchases and restores. We do not receive your payment details. Subscription management happens through your store account settings.
+Apple StoreKit and Google Play Billing process purchases and restores. We do not receive your payment-card or bank details. The app receives store entitlement/transaction information, and Apple or Google may make sales, subscription and other developer reports available under their policies. These reports do not give us a live feed of your in-app activity. Subscription management happens through your store account settings.
 
 The app does not embed third-party advertising, analytics or crash-reporting SDKs. Apple, Google or the operating system may provide store reports and technical diagnostics according to their policies and your device settings.
 
