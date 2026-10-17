@@ -963,7 +963,7 @@ export default {
     privacyLegal: 'PRIVACY & LEGAL',
     privacyPolicy: 'Privacy Policy',
     privacySub: "Local storage and optional external services",
-    license: 'MIT + Commons Clause License',
+    license: "Source license: MIT + Commons Clause",
     copyright: '\u00a9 2026 Red Grid Tactical',
     // FAQ items
     faqCellService: 'Does this work without cell service?',
@@ -971,7 +971,7 @@ export default {
     faqRestore: 'How do I restore my Pro purchase?',
     faqRestoreA: "Use Restore Previous Purchase below while signed into the same Apple or Google store account used to buy Pro. An internet connection may be needed to verify the purchase.",
     faqData: 'What data does this app collect?',
-    faqDataA: "Saved points, routes, settings and usage counters remain on this device; they are not uploaded as app analytics. Online maps and stores use external services. Exports, photo saving and radio sharing happen when you choose those actions.",
+    faqDataA: "Points, routes, incident logs, report drafts, settings and usage counters stay on this device, with no app analytics upload. Online maps and stores use external services. You choose exports, photo saving and radio sharing.",
     faqAccuracy: 'How accurate is the MGRS grid?',
     faqAccuracyA: "Grid digits describe coordinate resolution, not measured position accuracy. Accuracy depends on the receiver, sky view and fix age. Check the displayed uncertainty and use independent navigation references.",
     faqWhatIsMgrs: 'What is MGRS?',
@@ -1036,6 +1036,8 @@ export default {
 
   // ─── ProGate / paywall ────────────────────────────────────────────────
   proGate: {
+    lifetimePromise: "Pay once. Keep Pro permanently, with all future Red Grid MGRS Pro features and updates. Existing Lifetime purchases are protected too. No subscription or repurchase.",
+    termsOfUse: "Terms of Use",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} is a Pro feature',

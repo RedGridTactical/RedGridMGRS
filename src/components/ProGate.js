@@ -3,7 +3,7 @@
  * Shows feature list, tier selector, and purchase/restore buttons.
  */
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, Linking } from 'react-native';
 import { Modal } from './FieldModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '../utils/ThemeContext';
@@ -11,6 +11,7 @@ import { TYPE } from '../utils/typography';
 import { tapMedium, tapLight } from '../utils/haptics';
 import { useTranslation } from '../hooks/useTranslation';
 import { detectFreeTrial } from '../utils/iapOffers';
+import { allowSystemDisplay } from '../utils/fieldAlert';
 
 // Outcome-led rows matching what the gates actually sell \u2014 a user gated on
 // "Offline Maps" must land on a list that leads with offline maps.
@@ -22,16 +23,8 @@ const PRO_FEATURES = [
   { id: 'reports', icon: 'TXT', labelKey: 'proGate.reportsThemes', subKey: 'proGate.reportsThemesSub' },
 ];
 
-// Pricing (2026-08-01, owner): two paid SKUs. Annual sold one unit in its entire
-// existence and was retired; lifetime was repriced far down after $149.99/$199.99
-// sold zero. LIFETIME is the default selection as of 2026-08-15: month-3
-// retention is 11.11% on monthly against $49.99 banked once, so landing users
-// on monthly pointed them at the worst-LTV tier. Lifetime also carries the
-// value badge, so the default and the badge now agree.
-// RETIRED 2026-08-01: the annual tier is gone. Two paid SKUs only — monthly and
-// lifetime. Annual must not appear here even as a disabled card: a tier rendered
-// from this array is selectable, and selecting a SKU the store no longer sells
-// produces a purchase that always fails.
+// Lifetime includes future Pro features and updates. Annual is retired from sale;
+// existing annual purchases remain recognized by entitlement handling.
 const TIERS = [
   { id: 'monthly',  labelKey: 'proGate.tierMonthly',  periodKey: 'proGate.perMonth' },
   { id: 'lifetime', labelKey: 'proGate.tierLifetime', periodKey: 'proGate.oneTime', badge: 'proGate.bestValue' },
@@ -54,6 +47,10 @@ export function ProGate({
     retryRef.current = true; setRetrying(true);
     try { await onRetryPrices?.(); } catch { /* existing unavailable notice remains */ }
     finally { retryRef.current = false; setRetrying(false); }
+  };
+  const openLegal = async (path) => {
+    if (!(await allowSystemDisplay())) return;
+    Linking.openURL(`https://redgridtactical.com/${path}`).catch(() => {});
   };
 
   // Live store prices only. When the store is unreachable (offline field use)
@@ -153,6 +150,12 @@ export function ProGate({
             })}
           </View>
 
+          {activeTier === 'lifetime' && (
+            <Text style={[styles.lifetimePromise, { color: colors.text2 }]}>
+              {t('proGate.lifetimePromise')}
+            </Text>
+          )}
+
           {/* Purchase button — disabled until live store prices load */}
           <TouchableOpacity
             style={[styles.purchaseBtn, { backgroundColor: colors.text }, (isPurchasing || !selectedPriceLoaded) && { backgroundColor: colors.border }]}
@@ -203,6 +206,14 @@ export function ProGate({
           <Text style={[styles.legal, { color: colors.text3 }]}>
             {t(activeTier === 'monthly' ? 'proGate.legal' : 'proGate.legalOneTime')}
           </Text>
+          <View style={styles.legalLinks}>
+            <TouchableOpacity style={styles.legalLink} onPress={() => openLegal('terms')} accessibilityRole="link">
+              <Text style={[styles.legal, { color: colors.text2, textDecorationLine: 'underline' }]}>{t('proGate.termsOfUse')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.legalLink} onPress={() => openLegal('privacy')} accessibilityRole="link">
+              <Text style={[styles.legal, { color: colors.text2, textDecorationLine: 'underline' }]}>{t('support.privacyPolicy')}</Text>
+            </TouchableOpacity>
+          </View>
 
           </ScrollView>
         </View>
@@ -288,6 +299,9 @@ const styles = StyleSheet.create({
   purchaseBtn: {
     paddingVertical: 14, alignItems: 'center', marginBottom: 10, minHeight: 44,
   },
+  lifetimePromise: { ...TYPE.body, fontSize: 13, textAlign: 'center', marginBottom: 16 },
+  legalLinks: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 },
+  legalLink: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 8 },
   purchaseBtnText: {
     ...TYPE.heading,
     fontSize: 15, letterSpacing: 1,

@@ -18,6 +18,7 @@ const APP_VERSION = '4.1.2';
 const SUPPORT_EMAIL = 'support@redgridtactical.com';
 const GITHUB_URL = 'https://github.com/RedGridTactical/RedGridMGRS';
 const PRIVACY_URL = 'https://redgridtactical.com/privacy';
+const TERMS_URL = 'https://redgridtactical.com/terms';
 
 async function openLink(url) {
   if (!(await allowSystemDisplay())) return;
@@ -210,6 +211,18 @@ export function SupportScreen({ visible, onClose, onRestore, onReviewApp, isRest
 
           {/* Privacy & Legal */}
           <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>{t('support.privacyLegal')}</Text>
+          <TouchableOpacity
+            style={[styles.linkCard, { borderColor: colors.border, backgroundColor: colors.card }]}
+            onPress={() => { tapLight(); openLink(TERMS_URL); }}
+            accessibilityRole="link"
+            accessibilityLabel={t('proGate.termsOfUse')}
+          >
+            <Text style={[styles.linkIcon, { color: colors.text2 }]} maxFontSizeMultiplier={1} numberOfLines={1} importantForAccessibility="no" accessibilityElementsHidden>PRO</Text>
+            <View style={styles.linkInfo}>
+              <Text style={[styles.linkTitle, { color: colors.text }]}>{t('proGate.termsOfUse')}</Text>
+              <Text style={[styles.linkSub, { color: colors.text3 }]}>{t('proGate.lifetimePromise')}</Text>
+            </View>
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.linkCard, { borderColor: colors.border, backgroundColor: colors.card }]}
             onPress={() => { tapLight(); openLink(PRIVACY_URL); }}

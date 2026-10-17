@@ -1,5 +1,5 @@
 jest.mock('react', () => require('./helpers/hookHarness')());
-jest.mock('react-native', () => ({ Platform: { OS: 'ios' } }));
+jest.mock('react-native', () => ({ Platform: { OS: 'ios' }, AppState: { currentState: 'active', addEventListener: jest.fn() } }));
 jest.mock('@react-native-async-storage/async-storage', () => ({ getItem: jest.fn(), setItem: jest.fn(), removeItem: jest.fn() }));
 jest.mock('expo-iap', () => ({
   initConnection: jest.fn(), getProducts: jest.fn(), getSubscriptions: jest.fn(),
@@ -15,7 +15,7 @@ const LIFETIME = 'redgrid_pro_lifetime';
 const MONTHLY = 'redgrid_mgrs_pro_monthly';
 const ANNUAL = 'redgrid_mgrs_pro_annual';
 const ALL = [LIFETIME, MONTHLY, ANNUAL];
-let React, IAP, Storage, Alert, useIAP, data, returnedIds, catalog, owned;
+let React, IAP, Storage, Alert, AppState, useIAP, data, returnedIds, catalog, owned;
 const flush = async () => { for (let i = 0; i < 60; i++) await Promise.resolve(); };
 const render = () => React.__render(useIAP);
 async function settle() { await flush(); const value = render(); React.__effects(); await flush(); return render(); }
@@ -30,6 +30,8 @@ function setup(platform = 'ios') {
   jest.resetModules();
   React = require('react');
   require('react-native').Platform.OS = platform;
+  AppState = require('react-native').AppState;
+  AppState.addEventListener.mockReturnValue({ remove: jest.fn() });
   IAP = require('expo-iap'); Storage = require('@react-native-async-storage/async-storage');
   Alert = require('../src/utils/fieldAlert').Alert;
   useIAP = require('../src/hooks/useIAP').useIAP;
@@ -152,4 +154,318 @@ test('a positive restore is persisted after any already-started revocation write
   expect(render().isPro).toBe(true);
   expect(data.get('rg_pro_unlocked')).toBe('true');
   expect(data.get('rg_pro_product_v1')).toBe(LIFETIME);
+});
+
+
+const emitPurchase = async purchase => {
+  const callback = IAP.purchaseUpdatedListener.mock.calls.at(-1)[0];
+  await callback(purchase);
+  await settle();
+};
+const iosPurchase = (sku = LIFETIME, id = 'tx-lifetime', extra = {}) => ({
+  productId: sku, id, transactionId: id, ...extra,
+});
+function cachedIdentity(sku = LIFETIME, id = 'tx-lifetime') {
+  cachedPro(sku);
+  data.set('rg_pro_transaction_v1', JSON.stringify({ productId: sku, transactionId: id }));
+}
+function resume() {
+  const callback = AppState.addEventListener.mock.calls.at(-1)[1];
+  callback('background'); callback('active');
+}
+
+test.each(['ios', 'android'])('%s clean startup silently recovers an existing lifetime purchase', async platform => {
+  React.__reset(); setup(platform);
+  owned = [iosPurchase(LIFETIME, 'restored', platform === 'android' ? { purchaseStateAndroid: 1, purchaseToken: 'token' } : {})];
+  expect((await mount()).isPro).toBe(true);
+  expect(data.get('rg_pro_unlocked')).toBe('true');
+  expect(data.get('rg_pro_product_v1')).toBe(LIFETIME);
+  expect(Alert.alert).not.toHaveBeenCalled();
+  expect(IAP.initConnection).toHaveBeenCalledTimes(1);
+});
+
+test.each(['ios', 'android'])('%s lifetime and legacy access survive old-cache migration and empty queries', async platform => {
+  for (const sku of [LIFETIME, 'unknown']) {
+    React.__reset(); setup(platform); cachedPro(sku, false);
+    expect((await mount()).isPro).toBe(true);
+    expect(data.get('rg_pro_product_v1')).toBe(sku);
+    await render().restore();
+    expect(render().isPro).toBe(true);
+  }
+});
+
+test.each(['ios', 'android'])('%s monthly results never downgrade cached lifetime or legacy permanent access', async platform => {
+  for (const sku of [LIFETIME, 'unknown']) {
+    React.__reset(); setup(platform); cachedPro(sku);
+    owned = [iosPurchase(MONTHLY, 'tx-monthly')];
+    await mount(); await render().restore(); await emitPurchase(owned[0]);
+    expect(render().isPro).toBe(true);
+    expect(data.get('rg_pro_product_v1')).toBe(sku);
+    expect(data.has('rg_pro_transaction_v1')).toBe(false);
+  }
+});
+
+test.each(['ios', 'android'])('%s lifetime persists after restart while the store is offline', async platform => {
+  React.__reset(); setup(platform); await mount();
+  await emitPurchase(iosPurchase());
+  React.__reset();
+  IAP.getAvailablePurchases.mockRejectedValue(new Error('offline'));
+  await mount();
+  expect(render().isPro).toBe(true);
+  expect(data.get('rg_pro_product_v1')).toBe(LIFETIME);
+  expect(Alert.alert).not.toHaveBeenCalled();
+});
+
+test.each([
+  { revocationDateIOS: 123 },
+  { expirationDateIOS: Date.parse('2026-08-01T00:00:00Z') },
+  { isUpgradedIOS: true },
+])('iOS invalid transaction %j never grants from query, Restore, listener or checkout', async invalid => {
+  owned = [iosPurchase(LIFETIME, 'bad-transaction', invalid)];
+  await mount(); await render().restore(); await emitPurchase(owned[0]);
+  IAP.requestPurchase.mockResolvedValue(owned[0]);
+  await render().purchase('lifetime');
+  expect(render().isPro).toBe(false);
+  expect(data.has('rg_pro_unlocked')).toBe(false);
+});
+
+test('an iOS refund for the exact recorded lifetime rechecks before removing only entitlement keys', async () => {
+  cachedIdentity(); data.set('rg_saved_incidents', 'retained');
+  await mount();
+  await emitPurchase(iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() }));
+  expect(render().isPro).toBe(false);
+  expect(data.has('rg_pro_unlocked')).toBe(false);
+  expect(data.has('rg_pro_transaction_v1')).toBe(false);
+  expect(data.get('rg_saved_incidents')).toBe('retained');
+  expect(IAP.getAvailablePurchases).toHaveBeenCalledTimes(2);
+});
+
+test.each([['different-lifetime', LIFETIME], ['old-monthly', MONTHLY]])('unrelated revoked %s does not remove the recorded lifetime', async (id, sku) => {
+  cachedIdentity(); await mount();
+  await emitPurchase(iosPurchase(sku, id, { revocationDateIOS: Date.now() }));
+  expect(render().isPro).toBe(true);
+  expect(JSON.parse(data.get('rg_pro_transaction_v1')).transactionId).toBe('tx-lifetime');
+});
+
+test.each([LIFETIME, 'unknown'])('legacy %s without transaction identity survives an ambiguous refund', async sku => {
+  cachedPro(sku); await mount();
+  await emitPurchase(iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() }));
+  expect(render().isPro).toBe(true);
+  expect(data.get('rg_pro_product_v1')).toBe(sku);
+});
+
+test.each([LIFETIME, MONTHLY, ANNUAL])('a refunded lifetime retains a separate valid %s entitlement', async sku => {
+  cachedIdentity(); await mount();
+  owned = [iosPurchase(sku, 'other-valid')];
+  await emitPurchase(iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() }));
+  expect(render().isPro).toBe(true);
+  expect(data.get('rg_pro_product_v1')).toBe(sku);
+  expect(JSON.parse(data.get('rg_pro_transaction_v1')).transactionId).toBe('other-valid');
+});
+
+test('revoked older renewal sharing an original transaction does not revoke current renewal', async () => {
+  cachedIdentity(MONTHLY, 'new-renewal');
+  data.set('rg_pro_verified_at_v1', String(Date.now()));
+  await mount();
+  await emitPurchase(iosPurchase(MONTHLY, 'old-renewal', {
+    originalTransactionIdentifierIOS: 'same-original', revocationDateIOS: Date.now(),
+  }));
+  expect(render().isPro).toBe(true);
+  expect(JSON.parse(data.get('rg_pro_transaction_v1')).transactionId).toBe('new-renewal');
+});
+
+test('a revoked exact lifetime remains accessible during an outage and reconciles on resume', async () => {
+  cachedIdentity(); await mount();
+  IAP.getAvailablePurchases.mockRejectedValue(new Error('offline'));
+  await emitPurchase(iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() }));
+  expect(render().isPro).toBe(true);
+  IAP.getAvailablePurchases.mockResolvedValue([]);
+  jest.setSystemTime(Date.now() + 60001); resume(); await settle();
+  expect(render().isPro).toBe(false);
+  expect(Alert.alert).not.toHaveBeenCalled();
+});
+
+test('an incomplete catalog cannot prove there are no entitlements after a refund', async () => {
+  cachedIdentity(); await mount(); returnedIds = [LIFETIME]; catalog.clear();
+  await emitPurchase(iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() }));
+  expect(render().isPro).toBe(true);
+});
+
+test('a stale positive Restore cannot regrant a transaction revoked while its query was pending', async () => {
+  cachedIdentity(); await mount();
+  let releaseRestore;
+  IAP.getAvailablePurchases.mockImplementationOnce(() => new Promise(resolve => { releaseRestore = resolve; }));
+  const restoring = render().restore(); await flush();
+  await emitPurchase(iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() }));
+  expect(render().isPro).toBe(false);
+  releaseRestore([iosPurchase()]); await restoring; await settle();
+  expect(render().isPro).toBe(false);
+  expect(data.has('rg_pro_unlocked')).toBe(false);
+});
+
+test('a refund query finishing after a new valid lifetime grant cannot remove the new purchase', async () => {
+  cachedIdentity(); await mount();
+  let releaseRefund;
+  IAP.getAvailablePurchases.mockImplementationOnce(() => new Promise(resolve => { releaseRefund = resolve; }));
+  const refunding = emitPurchase(iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() }));
+  await flush();
+  await emitPurchase(iosPurchase(LIFETIME, 'new-lifetime'));
+  releaseRefund([]); await refunding;
+  expect(render().isPro).toBe(true);
+  expect(JSON.parse(data.get('rg_pro_transaction_v1')).transactionId).toBe('new-lifetime');
+});
+
+test('a stale checkout promise cannot resurrect its refunded transaction', async () => {
+  await mount(); let finishCheckout;
+  IAP.requestPurchase.mockImplementationOnce(() => new Promise(resolve => { finishCheckout = resolve; }));
+  const checkout = render().purchase(); await flush();
+  await emitPurchase(iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() }));
+  finishCheckout(iosPurchase()); await checkout; await settle();
+  expect(render().isPro).toBe(false);
+  expect(data.has('rg_pro_unlocked')).toBe(false);
+});
+
+test('an older different lifetime event cannot overwrite the identity of a newer known purchase', async () => {
+  cachedIdentity(LIFETIME, 'new-lifetime'); await mount();
+  await emitPurchase(iosPurchase(LIFETIME, 'old-lifetime'));
+  await emitPurchase(iosPurchase(LIFETIME, 'old-lifetime', { revocationDateIOS: Date.now() }));
+  expect(render().isPro).toBe(true);
+  expect(JSON.parse(data.get('rg_pro_transaction_v1')).transactionId).toBe('new-lifetime');
+});
+
+test.each(['ios', 'android'])('%s foreground recovery is silent, throttled and deduplicated', async platform => {
+  React.__reset(); setup(platform); await mount();
+  const initialCalls = IAP.getAvailablePurchases.mock.calls.length;
+  resume(); await settle(); expect(IAP.getAvailablePurchases).toHaveBeenCalledTimes(initialCalls);
+  jest.setSystemTime(Date.now() + 60001);
+  let complete;
+  IAP.getAvailablePurchases.mockImplementationOnce(() => new Promise(resolve => { complete = resolve; }));
+  resume(); await settle();
+  jest.setSystemTime(Date.now() + 60001); resume(); await settle();
+  expect(IAP.getAvailablePurchases).toHaveBeenCalledTimes(initialCalls + 1);
+  complete([iosPurchase()]); await settle();
+  expect(render().isPro).toBe(true);
+  expect(Alert.alert).not.toHaveBeenCalled();
+});
+
+test('Android pending delivery stays locked until completion and is then acknowledged', async () => {
+  React.__reset(); setup('android'); await mount();
+  const payment = iosPurchase(LIFETIME, 'GPA-test', { purchaseStateAndroid: 2, purchaseToken: 'local-token' });
+  await emitPurchase(payment);
+  expect(render().isPro).toBe(false); expect(IAP.finishTransaction).not.toHaveBeenCalled();
+  await emitPurchase({ ...payment, purchaseStateAndroid: 1 });
+  expect(render().isPro).toBe(true); expect(IAP.finishTransaction).toHaveBeenCalledTimes(1);
+});
+
+
+test('a matching verified refund survives offline restart and waits for complete reconciliation', async () => {
+  cachedIdentity(); await mount();
+  IAP.getAvailablePurchases.mockRejectedValue(new Error('offline'));
+  await emitPurchase(iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() }));
+  expect(data.has('rg_pro_pending_revocation_v1')).toBe(true);
+  React.__reset(); await mount();
+  expect(render().isPro).toBe(true);
+  IAP.getAvailablePurchases.mockResolvedValue([]);
+  jest.setSystemTime(Date.now() + 60001); resume(); await settle();
+  expect(render().isPro).toBe(false);
+  expect(data.has('rg_pro_pending_revocation_v1')).toBe(false);
+});
+
+test('a newer grant wins when a verified refund query waits for the old verification clock', async () => {
+  cachedIdentity(); await mount();
+  let finishClock;
+  Storage.getItem.mockImplementation(async key => {
+    if (key === 'rg_pro_verified_at_v1') return new Promise(resolve => { finishClock = resolve; });
+    return data.get(key) ?? null;
+  });
+  const refunding = emitPurchase(iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() }));
+  await flush(); expect(finishClock).toBeDefined();
+  await emitPurchase(iosPurchase(LIFETIME, 'new-lifetime'));
+  finishClock(String(Date.now())); await refunding;
+  expect(render().isPro).toBe(true);
+  expect(JSON.parse(data.get('rg_pro_transaction_v1')).transactionId).toBe('new-lifetime');
+  expect(data.has('rg_pro_pending_revocation_v1')).toBe(false);
+});
+
+
+test('Android unspecified payment state neither grants nor acknowledges', async () => {
+  React.__reset(); setup('android');
+  const unpaid = iosPurchase(LIFETIME, 'GPA-unspecified', { purchaseStateAndroid: 0, purchaseToken: 'local-token' });
+  owned = [unpaid]; await mount(); await render().restore(); await emitPurchase(unpaid);
+  IAP.requestPurchase.mockResolvedValue([unpaid]); await render().purchase();
+  expect(render().isPro).toBe(false);
+  expect(IAP.finishTransaction).not.toHaveBeenCalled();
+});
+
+test('an exact refund arriving before cache hydration completes still matches the saved lifetime', async () => {
+  cachedIdentity(); let finishIdentity;
+  Storage.getItem.mockImplementation(async key => {
+    if (key === 'rg_pro_transaction_v1') return new Promise(resolve => { finishIdentity = resolve; });
+    return data.get(key) ?? null;
+  });
+  await mount();
+  const refunding = emitPurchase(iosPurchase(LIFETIME, 'tx-lifetime', { revocationDateIOS: Date.now() }));
+  await flush();
+  finishIdentity(JSON.stringify({ productId: LIFETIME, transactionId: 'tx-lifetime' }));
+  await refunding; await settle();
+  expect(render().isPro).toBe(false);
+  expect(data.has('rg_pro_unlocked')).toBe(false);
+});
+
+
+test.each([MONTHLY, ANNUAL])('iOS currentEntitlements restores billing-grace %s on a clean startup', async sku => {
+  // StoreKit includes a grace-period subscription in currentEntitlements even
+  // though its last paid transaction expiry is past. It exposes no grace flag.
+  owned = [iosPurchase(sku, 'grace-transaction', { expirationDateIOS: Date.now() - 86400000 })];
+  expect((await mount()).isPro).toBe(true);
+  expect(data.get('rg_pro_product_v1')).toBe(sku);
+  expect(data.get('rg_pro_verified_at_v1')).toBe(String(Date.now()));
+  expect(Alert.alert).not.toHaveBeenCalled();
+});
+
+test.each([MONTHLY, ANNUAL])('explicit Restore accepts current-query billing grace for %s', async sku => {
+  await mount();
+  owned = [iosPurchase(sku, 'restored-grace', { expirationDateIOS: Date.now() - 86400000 })];
+  await render().restore();
+  expect(render().isPro).toBe(true);
+  expect(data.get('rg_pro_product_v1')).toBe(sku);
+  expect(Alert.alert).toHaveBeenLastCalledWith('iap.restoredTitle', 'iap.restoredBody');
+});
+
+test('an expired subscription update or checkout does not claim the grace allowed to a current query', async () => {
+  await mount();
+  const expired = iosPurchase(MONTHLY, 'old-paid-period', { expirationDateIOS: Date.now() - 86400000 });
+  await emitPurchase(expired);
+  expect(render().isPro).toBe(false);
+  IAP.requestPurchase.mockResolvedValue(expired);
+  await render().purchase('monthly');
+  expect(render().isPro).toBe(false);
+  owned = [expired];
+  await render().restore();
+  expect(render().isPro).toBe(true);
+});
+
+test.each([{ revocationDateIOS: 123 }, { isUpgradedIOS: true }])('current-query grace never overrides invalid transaction %j', async invalid => {
+  owned = [iosPurchase(MONTHLY, 'invalid-grace', { expirationDateIOS: Date.now() - 86400000, ...invalid })];
+  await mount(); await render().restore();
+  expect(render().isPro).toBe(false);
+  expect(data.has('rg_pro_unlocked')).toBe(false);
+});
+
+test('a current-query billing-grace result cannot resurrect a known revoked subscription', async () => {
+  const grace = iosPurchase(MONTHLY, 'refunded-grace', { expirationDateIOS: Date.now() - 86400000 });
+  owned = [grace]; await mount();
+  expect(render().isPro).toBe(true);
+  // Simulate a stale current query omitting the revocation field.
+  await emitPurchase({ ...grace, revocationDateIOS: Date.now() });
+  expect(render().isPro).toBe(false);
+  await render().restore();
+  expect(render().isPro).toBe(false);
+});
+
+test('cached subscriber revalidation honors current-query grace after an old local verification clock', async () => {
+  cachedIdentity(MONTHLY, 'grace-transaction');
+  owned = [iosPurchase(MONTHLY, 'grace-transaction', { expirationDateIOS: Date.now() - 86400000 })];
+  expect((await mount()).isPro).toBe(true);
+  expect(data.get('rg_pro_verified_at_v1')).toBe(String(Date.now()));
 });
