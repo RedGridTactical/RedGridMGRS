@@ -55,6 +55,95 @@ function setup(platform = 'ios') {
 beforeEach(() => { jest.useFakeTimers(); jest.setSystemTime(new Date('2026-09-09T12:00:00Z')); setup(); });
 afterEach(() => { React.__reset(); jest.clearAllTimers(); jest.useRealTimers(); });
 
+test.each(['listener-first', 'promise-first'])('Ask to Buy shows one pending notice per checkout (%s)', async order => {
+  await mount();
+  const deferred = { code: 'E_DEFERRED_PAYMENT' };
+  const onError = IAP.purchaseErrorListener.mock.calls.at(-1)[0];
+  if (order === 'listener-first') {
+    IAP.requestPurchase.mockImplementationOnce(async () => { onError(deferred); throw deferred; });
+  } else {
+    IAP.requestPurchase.mockRejectedValueOnce(deferred);
+  }
+  await render().purchase('lifetime');
+  if (order === 'promise-first') onError(deferred);
+  await settle();
+  expect(Alert.alert.mock.calls).toEqual([['iap.paymentPendingTitle', 'iap.paymentPendingBody']]);
+  expect(require('../src/utils/analytics').trackEvent.mock.calls).toEqual([
+    ['purchase_attempt'], ['purchase_deferred'],
+  ]);
+  expect(render().isPurchasing).toBe(false);
+  expect(render().lastPurchaseError).toBe(null);
+  expect(render().isPro).toBe(false);
+  expect(data.has('rg_pro_unlocked')).toBe(false);
+  expect(IAP.finishTransaction).not.toHaveBeenCalled();
+});
+
+test('a later Ask to Buy checkout still gets its own pending notice', async () => {
+  await mount();
+  const deferred = { code: 'E_DEFERRED_PAYMENT' };
+  const onError = IAP.purchaseErrorListener.mock.calls.at(-1)[0];
+  IAP.requestPurchase.mockImplementation(async () => { onError(deferred); throw deferred; });
+  await render().purchase('lifetime');
+  await render().purchase('lifetime');
+  expect(Alert.alert.mock.calls).toEqual([
+    ['iap.paymentPendingTitle', 'iap.paymentPendingBody'],
+    ['iap.paymentPendingTitle', 'iap.paymentPendingBody'],
+  ]);
+  expect(require('../src/utils/analytics').trackEvent.mock.calls.filter(([event]) => event === 'purchase_deferred')).toHaveLength(2);
+});
+
+test('a late catch from an earlier checkout does not consume the next checkout pending notice', async () => {
+  await mount();
+  const deferred = { code: 'E_DEFERRED_PAYMENT' };
+  const onError = IAP.purchaseErrorListener.mock.calls.at(-1)[0];
+  let rejectFirst, rejectSecond;
+  IAP.requestPurchase.mockImplementationOnce(() => new Promise((_, reject) => { rejectFirst = reject; }));
+  const first = render().purchase('lifetime'); await flush();
+  onError(deferred); // The native listener releases the checkout button.
+  IAP.requestPurchase.mockImplementationOnce(() => new Promise((_, reject) => { rejectSecond = reject; }));
+  const second = render().purchase('lifetime'); await flush();
+  rejectFirst(deferred); await first;
+  onError(deferred); rejectSecond(deferred); await second;
+  expect(Alert.alert.mock.calls).toEqual([
+    ['iap.paymentPendingTitle', 'iap.paymentPendingBody'],
+    ['iap.paymentPendingTitle', 'iap.paymentPendingBody'],
+  ]);
+});
+
+test('a real error after a pending notice stays visible and a duplicate pending event cannot clear it', async () => {
+  await mount();
+  const deferred = { code: 'E_DEFERRED_PAYMENT' };
+  const onError = IAP.purchaseErrorListener.mock.calls.at(-1)[0];
+  IAP.requestPurchase.mockRejectedValueOnce(deferred);
+  await render().purchase('lifetime');
+  onError({ code: 'E_NETWORK_ERROR', message: 'Payment service unavailable' });
+  onError(deferred);
+  expect(Alert.alert.mock.calls).toEqual([
+    ['iap.paymentPendingTitle', 'iap.paymentPendingBody'],
+    ['iap.purchaseFailedTitle', 'Payment service unavailable'],
+  ]);
+  expect(render().lastPurchaseError).toEqual({ code: 'E_NETWORK_ERROR', message: 'Payment service unavailable' });
+  IAP.requestPurchase.mockRejectedValueOnce({ code: 'E_ITEM_UNAVAILABLE', message: 'Product unavailable' });
+  await render().purchase('lifetime');
+  expect(Alert.alert).toHaveBeenLastCalledWith('iap.purchaseFailedTitle', 'Product unavailable');
+});
+
+test('each Android pending checkout shows one notice and stays locked until an approved update', async () => {
+  React.__reset(); setup('android'); await mount();
+  const pending = iosPurchase(LIFETIME, 'GPA-pending', { purchaseStateAndroid: 2, purchaseToken: 'local-token' });
+  IAP.requestPurchase.mockResolvedValue([pending]);
+  await render().purchase('lifetime');
+  await emitPurchase(pending);
+  expect(Alert.alert.mock.calls).toEqual([['iap.paymentPendingTitle', 'iap.paymentPendingBody']]);
+  expect(render().isPro).toBe(false);
+  expect(IAP.finishTransaction).not.toHaveBeenCalled();
+  await render().purchase('lifetime');
+  expect(Alert.alert).toHaveBeenCalledTimes(2);
+  await emitPurchase({ ...pending, purchaseStateAndroid: 1 });
+  expect(render().isPro).toBe(true);
+  expect(IAP.finishTransaction).toHaveBeenCalledTimes(1);
+});
+
 test.each([MONTHLY, ANNUAL])('partial iOS catalog cannot revoke a cached %s subscription', async sku => {
   cachedPro(sku); owned = [{ productId: sku, id: 'transaction-1' }]; returnedIds = [LIFETIME];
   expect((await mount()).isPro).toBe(true);

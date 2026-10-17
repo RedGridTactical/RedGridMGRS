@@ -76,6 +76,18 @@ const isAndroid = Platform.OS === 'android';
 const identityKey = identity => identity ? `${identity.productId}:${identity.transactionId}` : null;
 const receiptFor = p => p.transactionReceipt || p.transactionId || p.purchaseToken || p.purchaseTokenAndroid || 'verified';
 
+// The native error event and requestPurchase promise can report the same
+// deferral in either order. Scope the notice to a checkout, never the session,
+// so retrying still gives feedback and unrelated errors remain visible.
+const showPaymentPending = attempt => {
+  if (attempt?.pendingNotified) return false;
+  if (attempt) attempt.pendingNotified = true;
+  try {
+    Alert.alert(i18n.t('iap.paymentPendingTitle'), i18n.t('iap.paymentPendingBody'));
+  } catch {}
+  return true;
+};
+
 // Safely require expo-iap — handles unavailability on iOS beta
 let IAPModule = null;
 try {
@@ -143,6 +155,9 @@ export function useIAP() {
   // effect below — subscribing before connecting leaves the listener deaf.
   const [iapReady, setIapReady] = useState(false);
   const mounted = useRef(true);
+  // Retain the latest attempt after its promise settles: the matching native
+  // event can arrive later. Each new checkout replaces it with a fresh record.
+  const purchaseAttempt = useRef(null);
 
   // Track in-flight + completed product detail fetches so we never call
   // requestPurchase before Play Billing has the ProductDetails cached.
@@ -642,11 +657,10 @@ export function useIAP() {
 
           // A deferred payment is a pending approval, not a failure.
           if (code === 'E_DEFERRED_PAYMENT') {
-            trackEvent('purchase_deferred');
-            if (mounted.current) setLastPurchaseError(null);
-            try {
-              Alert.alert(i18n.t('iap.paymentPendingTitle'), i18n.t('iap.paymentPendingBody'));
-            } catch {}
+            if (showPaymentPending(purchaseAttempt.current)) {
+              trackEvent('purchase_deferred');
+              if (mounted.current) setLastPurchaseError(null);
+            }
             return;
           }
 
@@ -695,6 +709,8 @@ export function useIAP() {
       return;
     }
 
+    const attempt = { pendingNotified: false };
+    purchaseAttempt.current = attempt;
     if (mounted.current) setIsPurchasing(true);
 
     // Normalize BEFORE anything is keyed off the tier: 'annual' is retired, so
@@ -797,12 +813,7 @@ export function useIAP() {
       // purchase (possibly on a later launch) and unlocks then.
       if (matched && isAndroid &&
           matched.purchaseStateAndroid != null && Number(matched.purchaseStateAndroid) === 2) {
-        try {
-          Alert.alert(
-            i18n.t('iap.paymentPendingTitle'),
-            i18n.t('iap.paymentPendingBody')
-          );
-        } catch {}
+        if (showPaymentPending(attempt) && mounted.current) setLastPurchaseError(null);
         return;
       }
 
@@ -836,10 +847,10 @@ export function useIAP() {
       // this the parent-approval flow reads as "Purchase failed" and, worse,
       // increments the purchase_failed canary that exists to detect outages.
       if (e?.code === 'E_DEFERRED_PAYMENT') {
-        trackEvent('purchase_deferred');
-        try {
-          Alert.alert(i18n.t('iap.paymentPendingTitle'), i18n.t('iap.paymentPendingBody'));
-        } catch {}
+        if (showPaymentPending(attempt)) {
+          trackEvent('purchase_deferred');
+          if (mounted.current) setLastPurchaseError(null);
+        }
         return;
       }
 
