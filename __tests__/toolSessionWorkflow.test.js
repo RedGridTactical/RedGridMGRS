@@ -1,3 +1,5 @@
+let mockToolTranslator = null;
+
 jest.mock('react', () => {
   const hooks = require('./helpers/hookHarness')();
   return { ...jest.requireActual('react'), ...hooks,
@@ -13,7 +15,13 @@ jest.mock('react-native', () => ({
   AccessibilityInfo: { announceForAccessibility: jest.fn() },
 }));
 jest.mock('../src/utils/ThemeContext', () => ({ useColors: () => ({ bg: '#000', card: '#222', text: '#fff', text2: '#ddd', text3: '#aaa', border: '#333' }) }));
-jest.mock('../src/hooks/useTranslation', () => ({ useTranslation: () => ({ t: (key, values) => key + (values?.time ? ':' + values.time : '') }) }));
+jest.mock('../src/hooks/useTranslation', () => ({ useTranslation: () => ({ t: (key, values) => {
+  if (mockToolTranslator) return mockToolTranslator(key, values);
+  if (typeof values?.defaultValue === 'string') {
+    return values.defaultValue.replace(/\{\{(\w+)\}\}/g, (_match, name) => String(values[name] ?? ''));
+  }
+  return key + (values?.time ? ':' + values.time : '');
+} }) }));
 jest.mock('../src/utils/fieldAlert', () => ({ Alert: { alert: jest.fn() } }));
 jest.mock('../src/utils/typography', () => ({ TYPE: { body: {}, label: {}, heading: {}, data: {} } }));
 jest.mock('../src/components/FieldInput', () => ({ TextInput: 'TextInput' }));
@@ -44,7 +52,7 @@ const { GeostampTool } = require('../src/components/tools/GeostampTool');
 const { BackAzimuthTool } = require('../src/components/tools/BackAzimuthTool');
 const { ElevationTool } = require('../src/components/tools/ElevationTool');
 const { DeclinationTool } = require('../src/components/tools/DeclinationTool');
-const { ToolResult, ToolInput } = require('../src/components/tools/ToolShared');
+const { ToolResult, ToolInput, ToolHint } = require('../src/components/tools/ToolShared');
 const deferred = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 function nodes(v) { if (!v || typeof v !== 'object') return []; if (Array.isArray(v)) return v.flatMap(nodes); return [v, ...nodes(v.props?.children)]; }
 function text(v) { if (typeof v === 'string') return v; if (Array.isArray(v)) return v.map(text).join(''); return v?.props ? text(v.props.children) : ''; }
@@ -52,7 +60,7 @@ const button = (tree, label) => nodes(tree).find(n => n.type === 'TouchableOpaci
 const input = (tree, label) => nodes(tree).find(n => (n.type === ToolInput && n.props.label === label) || (n.type === 'TextInput' && n.props.accessibilityLabel === label));
 const results = tree => nodes(tree).filter(n => n.type === ToolResult).map(n => n.props);
 const fix = () => ({ lat: 38.9, lon: -77, timestamp: Date.now() - 1000, accuracy: 8, altitude: 0 });
-beforeEach(() => { React.__reset(); sessionDrafts.clearPrefix(''); require('../src/hooks/useReportDrafts').__reset(); jest.clearAllMocks(); global.requestAnimationFrame = fn => { fn(); return 1; }; });
+beforeEach(() => { mockToolTranslator = null; React.__reset(); sessionDrafts.clearPrefix(''); require('../src/hooks/useReportDrafts').__reset(); jest.clearAllMocks(); global.requestAnimationFrame = fn => { fn(); return 1; }; });
 
 function reportHarness(id = 'spot') {
   const screen = React.__render(() => ReportScreen({ location: fix(), isPro: true }));
@@ -138,6 +146,29 @@ it('declination drafts persist but a changed grid/true reference invalidates the
   React.__reset(); expect(input(render(), 'toolLabels.magneticBearingInput').props.value).toBe('90');
   location = null; expect(input(render(), 'toolLabels.magneticBearingInput').props.value).toBe(''); React.__effects();
   expect(results(render())).toHaveLength(0);
+});
+it.each(['en','ar-SA','da','hr','id','nb','sk','sv','th','vi','de','es','fr','hi','it','ja','ko','nl','pl','pt-BR','ru','tr','zh-Hans','zh-Hant'])('%s declination directions remain consistent with signed magnetic-to-true results', async locale => {
+  const translation = require(`../src/i18n/${locale}`).default;
+  const i18n = require('i18next').createInstance();
+  await i18n.init({ lng: locale, fallbackLng: false, resources: { [locale]: { translation } } });
+  mockToolTranslator = i18n.t.bind(i18n);
+  for (const [declination, directionKey, expected] of [
+    [5, 'declinationEast', '95°T'],
+    [-5, 'declinationWest', '85°T'],
+    [0, 'declinationNone', '90°T'],
+  ]) {
+    React.__reset(); sessionDrafts.clearPrefix('tool:declin:');
+    const render = () => React.__render(() => DeclinationTool({ declination, setDeclination: jest.fn(), location: null }));
+    const hint = nodes(render()).find(n => n.type === ToolHint && n.props.text.includes(`(${translation.toolLabels[directionKey]})`));
+    expect(hint).toBeDefined();
+    expect(hint.props.text).toContain(`${declination > 0 ? '+' : ''}${declination}°`);
+    expect(hint.props.text).toContain(`+ = ${translation.toolLabels.declinationEast}`);
+    expect(hint.props.text).toContain(`− = ${translation.toolLabels.declinationWest}`);
+    expect(hint.props.text).not.toContain('toolLabels.');
+    input(render(), translation.toolLabels.magneticBearingInput).props.onChangeText('90');
+    React.__effects();
+    expect(results(render()).find(result => result.primary).value).toBe(expected);
+  }
 });
 it('equator/prime-meridian slope coordinates and zero altitude are valid; nonfinite/prefix values are rejected', () => {
   const render = () => React.__render(() => ElevationTool({ location: { ...fix(), lat: 0, lon: 0, altitude: 0, accuracy: 0 } }));

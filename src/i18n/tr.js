@@ -435,7 +435,7 @@ export default {
       "radio": "Konum ve ekip mesajları için uyumlu bir Meshtastic telsiz bağlayın. Telsiz donanımı ve karşı tarafın kurulumu gerekir. Başarılı gönderim, verinin telsizinize yazıldığını doğrular; karşı tarafa teslim edildiğini değil.",
       "tools": "Bu oturumda hesaplama taslaklarını koruyun, parakete seyri başlangıcını sabitleyin ve tahmini noktaları kaydedin. Bir sonuca güvenmeden önce girişleri ve sensör referanslarını kontrol edin.",
       "routes": "Harita seçimlerinden adlandırılmış rota oluşturun, noktaları sıralayın, not ekleyin, kartı inceleyin ve hazırlık kontrolünü yapın. Navigasyon sırasında her noktayı elle onaylayın.",
-      "reports": "Rapor taslakları hazırlayın ve cihaz referanslarını açıkça ekleyin. Hazır olduğunda kopyalayın. Taslaklar temizlenene ya da uygulama kapanana kadar bu oturumda kalır.",
+      "reports": "Bu cihazda rapor taslakları ve olay faaliyet kayıtları hazırlayın. Kapatmadan önce kaydetme onayını bekleyin. İmzasız bir ICS 214 taslağını inceleyip dışa aktarın; uygulama taslağı imzalamaz veya resmî olarak sunmaz. Pro sona erdikten sonra da kaydedilen kayıtlar okunabilir ve dışa aktarılabilir.",
       "photos": "Bir fotoğrafa sabitlenmiş cihaz konumu açıklaması ekleyin. Fotoğrafın özgün konumunu veya çekim zamanını doğrulamaz.",
       "display": "Pro, ek yeşil ve mavi paletler ile HUD'u içerir. Standart, Taktik, gün ışığı ve temel metin boyutu Pro olmadan kullanılabilir.",
       "receiver": "Uyumlu bir Bluetooth NMEA alıcısı bağlayın. Alıcı donanımı gerekir; satın almadan önce desteklenen hizmetleri ve cümle biçimlerini kontrol edin.",
@@ -608,16 +608,16 @@ export default {
     startTrial: "7 GÜNLÜK ÜCRETSİZ DENEMEYİ BAŞLAT",
     current: {
       "f1": {
-        "title": "ÖMÜR BOYU PRO, KALICI",
-        "body": "Bir kez ödeyin, Red Grid MGRS Pro'nun gelecekteki tüm özelliklerini ve güncellemelerini kullanın. Abonelik yok, yeniden satın alma yok. Mevcut ömür boyu satın almalar korunur. Koşullar ve Gizlilik bağlantıları Pro ekranında ve Yardım'da."
+        "title": "PRO’YU YÖNET",
+        "body": "Yardım’dan kayıtlı Pro planınızı görün, satın alımları geri yükleyin ve mağazanın abonelik ayarlarını açın."
       },
       "f2": {
-        "title": "SATIN ALMA KURTARMA",
-        "body": "Satın almalar açılışta ve uygulamaya dönüşte sessizce geri yüklenir. Çevrimdışı veya eksik bir mağaza denetimi kayıtlı erişimi asla kaldırmaz."
+        "title": "ÖMÜR BOYU SEÇENEĞİ",
+        "body": "Mevcut aboneler Ömür Boyu seçeneğini görebilir. Mağaza abonelikleri ayrıca iptal edilmelidir."
       },
       "f3": {
-        "title": "ANDROID EKRANI",
-        "body": "Kenardan kenara düzen ve döndürme ile devam ettirme sonrasında da tutarlı, daha net sistem çubukları. İzleme veya ağ eklenmedi."
+        "title": "DAHA AÇIK RAPOR YARDIMI",
+        "body": "Taslak ve olay günlüğü açıklamaları düzeltildi. Mevcut Ömür Boyu erişim ve kaydedilmiş kayıtlar korunur."
       }
     },
   },
@@ -814,6 +814,10 @@ export default {
     stop: 'DURDURMAK İÇİN DOKUNUN',
   },
   toolLabels: {
+    declinationEast: "DOĞU",
+    declinationWest: "BATI",
+    declinationNone: "YOK",
+    declinationSignHint: "+ = DOĞU, − = BATI",
     compassGridUnavailable: "Pusuladan otomatik doldurma için gerçek kuzey ve GPS konumu gerekir. Grid yönünü elle gir.",
     useCompassGrid: "Mevcut pusula yönünü kullan: grid kuzeyine göre {{heading}} derece",
     compassGrid: "PUSULA · GRID",
@@ -994,7 +998,7 @@ export default {
     faqCellService: 'Hücresel hizmet olmadan çalışır mı?',
     faqCellServiceA: "GPS konumu varsa koordinatlar ve yerel hesaplamalar hücresel bağlantı olmadan çalışır. Çevrimdışı haritalar önceden içe aktarılmalıdır. Çevrimiçi haritalar ve mağaza işlemleri bağlantı gerektirir.",
     faqRestore: 'Pro satın alımımı nasıl geri yüklerim?',
-    faqRestoreA: "Pro satın aldığınız Apple veya Google hesabıyla aşağıdaki Satın alımı geri yükle seçeneğini kullanın. Satın alımı doğrulamak için internet gerekebilir.",
+    faqRestoreA: "Pro satın aldığınız Apple veya Google hesabıyla Satın alımı geri yükle seçeneğini kullanın. Satın alımı doğrulamak için internet gerekebilir.",
     faqData: 'Bu uygulama hangi verileri toplar?',
     faqDataA: "Noktalar, rotalar, olay kayıtları, rapor taslakları, ayarlar ve kullanım sayaçları bu cihazda kalır; uygulama analitiği yüklenmez. Çevrimiçi haritalar ve mağazalar harici hizmetler kullanır. Dışa aktarma, fotoğraf kaydetme ve telsizle paylaşımı siz seçersiniz.",
     faqAccuracy: 'MGRS ızgarası ne kadar hassastır?',
@@ -1045,13 +1049,32 @@ export default {
     importUnavailable: 'İçe aktarma kullanılamıyor',
     importRequires: 'İçe aktarma için expo-document-picker ve expo-file-system gereklidir.',
   },
+  managePro: {
+    "title": "Pro’yu yönet",
+    "planFree": "Ücretsiz",
+    "planMonthly": "Aylık Pro",
+    "planAnnual": "Yıllık Pro",
+    "planLifetime": "Ömür Boyu Pro",
+    "planLoading": "Satın alımlar kontrol ediliyor…",
+    "planUnknown": "Satın alınan plan bilgisi kullanılamıyor",
+    "giftActive": "Hediye Pro erişimi etkin.",
+    "cached": "Kayıtlı satın alım bilgileri gösteriliyor. Mağazadan doğrulamak için satın alımları geri yükleyin.",
+    "unknownBody": "Satın almadan önce planınızı kontrol etmek için satın alımları geri yükleyin.",
+    "viewOptions": "Pro seçeneklerini görüntüle",
+    "viewLifetime": "Ömür Boyu seçeneğini görüntüle",
+    "buyLifetime": "Ömür Boyu Pro satın al",
+    "manageSubscriptions": "Abonelikleri yönet",
+    "subscriptionNotice": "Ömür Boyu satın almak mevcut bir aboneliği iptal etmez. Bu aboneliği uygulama mağazanızdan yönetin veya iptal edin.",
+    "linkFailedTitle": "Abonelikler açılamadı",
+    "linkFailedBody": "Uygulama mağazanızı açın ve hesabınızdan abonelikleri yönetin."
+  },
   proGate: {
     lifetimePromise: "Bir kez ödeyin. Red Grid MGRS Pro'nun gelecekteki tüm özellikleri ve güncellemeleriyle Pro'yu kalıcı olarak kullanın. Mevcut Ömür Boyu satın almalar da korunur. Abonelik veya yeniden satın alma yok.",
     termsOfUse: "Kullanım Koşulları",
     "offlineMapsSub": "Kapsama alanından çıkmadan izinli bir raster MBTiles haritası içe aktarın",
     "waypointsRoutes": "Kayıtlı Noktalar ve Rotalar",
     "waypointsRoutesSub": "20 noktadan oluşan en fazla 10 liste; GPX/KML nokta içe ve dışa aktarma",
-    "reportsThemesSub": "Altı rapor formu ve ek ekran paletleri",
+    "reportsThemesSub": "Kaydedilmiş taslaklar, olay çalışma alanları ve ICS 214 dışa aktarma",
     "pricesUnavailable": "Güncel mağaza fiyatlarını ve satın alma seçeneklerini yüklemek için bağlanın.",
 
     badge: 'PRO',
@@ -1084,7 +1107,7 @@ export default {
     meshAwarenessSub: "Ağ düğümlerini haritada gör, hücresel şebeke gerekmez",
     allTools: "12 taktik aracın tamamı",
     allToolsSub: "Parakete hesabı, geriden kestirme, güneş/ay, coğrafi damga ve daha fazlası",
-    reportsThemes: "Tüm raporlar ve temalar",
+    reportsThemes: "Raporlar ve Olay Kayıtları",
   },
   mesh: {
     pairing: {

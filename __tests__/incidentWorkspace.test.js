@@ -4,7 +4,7 @@ jest.mock('@react-native-async-storage/async-storage',()=>({}));
 jest.mock('../src/components/FieldInput',()=>({TextInput:'TextInput'}));
 jest.mock('../src/utils/typography',()=>({TYPE:{body:{},label:{},heading:{},data:{}}}));
 jest.mock('../src/utils/ThemeContext',()=>({useColors:()=>({})}));
-jest.mock('../src/hooks/useTranslation',()=>({useTranslation:()=>({t:key=>key})}));
+jest.mock('../src/hooks/useTranslation',()=>({useTranslation:()=>({t:key=>mockTranslate?mockTranslate(key):key})}));
 jest.mock('../src/hooks/useSafeInsets',()=>({useSafeInsets:()=>({bottom:0})}));
 jest.mock('../src/hooks/useReportDrafts',()=>({useReportDrafts:()=>mockState}));
 jest.mock('../src/utils/fieldAlert',()=>({Alert:{alert:jest.fn()},allowSystemDisplay:jest.fn(async()=>true)}));
@@ -17,13 +17,25 @@ jest.mock('expo-clipboard',()=>({setStringAsync:jest.fn(async()=>true)}));
 const React=require('react');const {IncidentWorkspace}=require('../src/components/IncidentWorkspace');
 const {incidentFixture,NOW}=require('./helpers/incidentFixture');const {beginIncidentEntry,mapIncidentReference,archiveIncident}=require('../src/utils/incident');const {incidentBackup}=require('../src/utils/incidentExport');
 const FS=require('expo-file-system'),Sharing=require('expo-sharing'),Print=require('expo-print');
-let mockState,props;
+let mockState,props,mockTranslate;
 function nodes(v){if(!v||typeof v!=='object')return[];if(Array.isArray(v))return v.flatMap(nodes);return[v,...nodes(v.props?.children),...nodes(v.props?.ListHeaderComponent),...nodes(v.props?.ListFooterComponent)];}
 function render(){return React.__render(()=>IncidentWorkspace(props));}
 const action=(tree,key)=>nodes(tree).find(n=>n.props?.label===key&&n.type?.name==='Action');
 beforeEach(()=>{
- React.__reset();jest.clearAllMocks();props={isPro:true,location:null,onClose:jest.fn(),onShowProGate:jest.fn()};
+ React.__reset();jest.clearAllMocks();mockTranslate=null;props={isPro:true,location:null,onClose:jest.fn(),onShowProGate:jest.fn()};
  mockState={data:incidentFixture(),loading:false,locked:false,saving:false,loadError:null,saveError:null,store:{flush:jest.fn(async()=>{}),change:jest.fn(fn=>{mockState.data=fn(mockState.data);}),commit:jest.fn(async fn=>{mockState.data=fn(mockState.data);})}};
+});
+test('Thai operational period uses a localized end label while ICS export stays canonical',()=>{
+ const th=require('../src/i18n/th').default;
+ mockTranslate=key=>key.split('.').reduce((value,part)=>value?.[part],th)??key;
+ const incident=mockState.data.incidents[0];
+ const period=nodes(render()).find(n=>n.type==='Text'&&typeof n.props.children==='string'&&n.props.children.startsWith(incident.from));
+ expect(period.props.children).toContain(`\n${th.incident.to} ${incident.to}`);
+ expect(period.props.children).not.toContain('\nto ');
+ const output=require('../src/utils/incidentExport').ics214Text(incident,NOW);
+ expect(output).toContain('2. OPERATIONAL PERIOD');
+ expect(output).toContain('To: 10/17/2026 19:00 UTC-04:00');
+ expect(output).not.toContain(th.incident.to);
 });
 test('expired Pro retains review/export access but cannot create or edit',async()=>{
  props.isPro=false;let tree=render();expect(action(tree,'incident.addActivity').props.disabled).toBe(true);

@@ -4,8 +4,9 @@
  * Opened via info button on grid footer.
  */
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Platform } from 'react-native';
 import { Modal } from '../components/FieldModal';
+import { ProGate } from '../components/ProGate';
 import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
 import { useColors } from '../utils/ThemeContext';
 import { TYPE } from '../utils/typography';
@@ -13,8 +14,9 @@ import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptic
 import { useTranslation } from '../hooks/useTranslation';
 import { shareTrialLink, shareApp } from '../utils/referral';
 import { useReferralTrial } from '../hooks/useReferralTrial';
+import { purchaseTiersForPlan, ownedPlanLabelKey, subscriptionManagementURL } from '../utils/proManagement';
 
-const APP_VERSION = '4.1.3';
+const APP_VERSION = '4.1.5';
 const SUPPORT_EMAIL = 'support@redgridtactical.com';
 const GITHUB_URL = 'https://github.com/RedGridTactical/RedGridMGRS';
 const PRIVACY_URL = 'https://redgridtactical.com/privacy';
@@ -34,15 +36,50 @@ function FAQItem({ q, a, colors }) {
   );
 }
 
-export function SupportScreen({ visible, onClose, onRestore, onReviewApp, isRestoring = false }) {
+export function SupportScreen({
+  visible, onClose, onRestore, onReviewApp, isRestoring = false,
+  ownedPlan = 'unknown', ownedPlanSource = 'none', giftActive = false,
+  onPurchase, product, products, selectedTier, onSelectTier, trialEligible, onRetryPrices,
+}) {
   const colors = useColors();
   const { t } = useTranslation();
   const [shareBusy, setShareBusy] = useState(false);
   const sharing = useRef(false);
+  const [planOptionsVisible, setPlanOptionsVisible] = useState(false);
+  const [openingSubscriptions, setOpeningSubscriptions] = useState(false);
+  const subscriptionLinkBusy = useRef(false);
+  const previousPlan = useRef(ownedPlan);
+  const canOffer = purchaseTiersForPlan(ownedPlan).length > 0;
+  const hasSubscription = ownedPlan === 'monthly' || ownedPlan === 'annual';
   const trialStatus = useReferralTrial();
   const { refresh: refreshTrial } = trialStatus;
 
   useEffect(() => { if (visible) refreshTrial(); }, [visible, refreshTrial]);
+  useEffect(() => {
+    // A completed purchase/restore closes only the nested chooser; Help remains
+    // its native presenter, avoiding sibling-modal presentation races on iOS.
+    if (!visible || (previousPlan.current !== ownedPlan && ['monthly', 'annual', 'lifetime'].includes(ownedPlan))) {
+      setPlanOptionsVisible(false);
+    }
+    previousPlan.current = ownedPlan;
+  }, [visible, ownedPlan]);
+
+  const handleManageSubscriptions = useCallback(async () => {
+    if (subscriptionLinkBusy.current || isRestoring) return;
+    subscriptionLinkBusy.current = true;
+    setOpeningSubscriptions(true);
+    try {
+      if (!(await allowSystemDisplay())) return;
+      tapLight();
+      await Linking.openURL(subscriptionManagementURL(Platform.OS));
+    } catch {
+      notifyError();
+      Alert.alert(t('managePro.linkFailedTitle'), t('managePro.linkFailedBody'));
+    } finally {
+      subscriptionLinkBusy.current = false;
+      setOpeningSubscriptions(false);
+    }
+  }, [isRestoring, t]);
 
   const handleShareTrial = useCallback(async () => {
     if (sharing.current) return;
@@ -99,6 +136,38 @@ export function SupportScreen({ visible, onClose, onRestore, onReviewApp, isRest
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+
+          <Text style={[styles.sectionTitle, { color: colors.text }]} accessibilityRole="header">{t('managePro.title')}</Text>
+          <View style={[styles.planCard, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            <Text style={[styles.linkTitle, { color: colors.text }]}>{t(ownedPlanLabelKey(ownedPlan))}</Text>
+            {giftActive && <Text style={[styles.planBody, { color: colors.text2 }]}>{t('managePro.giftActive')}</Text>}
+            {ownedPlanSource === 'cache' && <Text style={[styles.planBody, { color: colors.text3 }]}>{t('managePro.cached')}</Text>}
+            {!canOffer && ownedPlan !== 'lifetime' && ownedPlan !== 'loading' && <Text style={[styles.planBody, { color: colors.text3 }]}>{t('managePro.unknownBody')}</Text>}
+            {ownedPlan === 'lifetime' && <Text style={[styles.planBody, { color: colors.text2 }]}>{t('proGate.lifetimePromise')}</Text>}
+            {(hasSubscription || ownedPlan === 'lifetime') && <Text style={[styles.planBody, { color: colors.text3 }]}>{t('managePro.subscriptionNotice')}</Text>}
+            {canOffer && onPurchase && (
+              <TouchableOpacity style={[styles.planAction, { borderWidth: 1, paddingHorizontal: 10, borderColor: colors.text2, opacity: isRestoring ? 0.5 : 1 }]}
+                onPress={() => { if (!canOffer || isRestoring) return; tapLight(); setPlanOptionsVisible(true); }}
+                disabled={isRestoring} accessibilityRole="button"
+                accessibilityState={{ disabled: isRestoring }}
+                accessibilityLabel={t(hasSubscription ? 'managePro.viewLifetime' : 'managePro.viewOptions')}>
+                <Text style={[styles.linkTitle, { color: colors.text }]}>{t(hasSubscription ? 'managePro.viewLifetime' : 'managePro.viewOptions')}</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.planAction}
+              onPress={() => { if (!isRestoring) onRestore?.(); }}
+              disabled={isRestoring || !onRestore} accessibilityRole="button"
+              accessibilityLabel={t('proGate.restore')}
+              accessibilityState={{ disabled: isRestoring || !onRestore, busy: isRestoring }}>
+              <Text style={[styles.linkSub, { color: colors.text2 }]}>{t('proGate.restore')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.planAction} onPress={handleManageSubscriptions}
+              disabled={openingSubscriptions || isRestoring} accessibilityRole="link"
+              accessibilityLabel={t('managePro.manageSubscriptions')}
+              accessibilityState={{ disabled: openingSubscriptions || isRestoring, busy: openingSubscriptions }}>
+              <Text style={[styles.linkSub, { color: colors.text2, textDecorationLine: 'underline' }]}>{t('managePro.manageSubscriptions')}</Text>
+            </TouchableOpacity>
+          </View>
 
           <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('support.supportRedGrid')}</Text>
           <TouchableOpacity style={[styles.linkCard, { borderColor: colors.border, backgroundColor: colors.card }]}
@@ -194,15 +263,6 @@ export function SupportScreen({ visible, onClose, onRestore, onReviewApp, isRest
 
           <FAQItem colors={colors} q={t('support.faqCellService')} a={t('support.faqCellServiceA')} />
           <FAQItem colors={colors} q={t('support.faqRestore')} a={t('support.faqRestoreA')} />
-          <TouchableOpacity
-            style={[styles.linkCard, { backgroundColor: colors.card, borderColor: colors.border2, opacity: isRestoring || !onRestore ? 0.5 : 1 }]}
-            onPress={onRestore}
-            disabled={isRestoring || !onRestore}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: isRestoring || !onRestore, busy: isRestoring }}
-          >
-            <Text style={[styles.faqQ, { color: colors.accentText }]}>{t('proGate.restore')}</Text>
-          </TouchableOpacity>
           <FAQItem colors={colors} q={t('support.faqData')} a={t('support.faqDataA')} />
           <FAQItem colors={colors} q={t('support.faqAccuracy')} a={t('support.faqAccuracyA')} />
           <FAQItem colors={colors} q={t('support.faqWhatIsMgrs')} a={t('support.faqWhatIsMgrsA')} />
@@ -244,6 +304,11 @@ export function SupportScreen({ visible, onClose, onRestore, onReviewApp, isRest
           </View>
 
         </ScrollView>
+        <ProGate visible={visible && planOptionsVisible} management ownedPlan={ownedPlan}
+          onClose={() => setPlanOptionsVisible(false)} onPurchase={onPurchase} onRestore={onRestore}
+          isPurchasing={isRestoring} product={product} products={products}
+          selectedTier={selectedTier} onSelectTier={onSelectTier} trialEligible={trialEligible}
+          onRetryPrices={onRetryPrices} />
       </View>
     </Modal>
   );
@@ -275,6 +340,9 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 40,
   },
+  planCard: { borderWidth: 1, borderRadius: 2, padding: 14, marginBottom: 24 },
+  planBody: { ...TYPE.body, fontSize: 14, lineHeight: 21, marginTop: 8 },
+  planAction: { minHeight: 44, justifyContent: 'center', paddingVertical: 10, marginTop: 8 },
   sectionTitle: {
     ...TYPE.heading,
     fontSize: 15,

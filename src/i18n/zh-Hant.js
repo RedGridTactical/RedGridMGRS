@@ -435,7 +435,7 @@ export default {
     "radio": "連接相容的Meshtastic無線電，使用位置與團隊訊息功能。需要無線電硬體及對方設定。傳送成功表示已寫入您的無線電，不代表已送達對方。",
     "tools": "在本次工作階段保留計算工具草稿、固定推算定位起點並儲存估計航點。採用結果前，請核對輸入與感測器參考基準。",
     "routes": "將地圖選點儲存為具名路線，調整順序、加上備註、查看路線卡並進行出發前檢查。導航期間請逐點手動確認。",
-    "reports": "準備報告草稿，並明確插入裝置參考資料。完成後可複製。草稿會在本次工作階段保留，直到清除或關閉App。",
+    "reports": "在此裝置上準備報告草稿和事件活動日誌。關閉前請等待儲存完成。檢視並匯出未簽署的 ICS 214 草稿；應用程式不會簽署或正式提交。Pro 到期後，已儲存的記錄仍可閱讀和匯出。",
     "photos": "為照片加上固定的裝置位置註記。不會驗證照片的原始位置或拍攝時間。",
     "display": "Pro包含額外綠色、藍色配色與HUD。標準、戰術、日光顯示及基本文字大小調整不需要Pro。",
     "receiver": "連接相容的Bluetooth NMEA接收器。需要接收器硬體；購買前請確認支援的服務與語句格式。",
@@ -607,16 +607,16 @@ export default {
     startTrial: "開始 7 天免費試用",
     current: {
       "f1": {
-        "title": "永久 PRO，永久有效",
-        "body": "一次付費，獲得 Red Grid MGRS Pro 日後的所有功能與更新。無需訂閱，無需再次購買。現有永久購買受到保護。Pro 頁面與說明中新增條款與隱私權連結。"
+        "title": "管理 Pro",
+        "body": "在「說明」中查看已儲存的 Pro 方案、還原購買，並開啟商店訂閱設定。"
       },
       "f2": {
-        "title": "購買復原",
-        "body": "啟動與回到 App 時自動靜默復原已購項目。離線或不完整的商店檢查絕不會移除已儲存的存取權。"
+        "title": "終身選項",
+        "body": "現有訂閱者可以查看終身選項。商店訂閱需要另外取消。"
       },
       "f3": {
-        "title": "ANDROID 顯示",
-        "body": "全螢幕版面，系統列更清晰一致，旋轉與恢復後保持正確。未新增追蹤或網路。"
+        "title": "更清楚的報告說明",
+        "body": "修正了草稿和事件日誌的說明。現有終身使用權限和已儲存的記錄均保留。"
       }
     },
   },
@@ -813,6 +813,10 @@ export default {
     stop: '點按停止',
   },
   toolLabels: {
+    declinationEast: "東",
+    declinationWest: "西",
+    declinationNone: "無",
+    declinationSignHint: "+ = 東, − = 西",
     gridConvergence: '子午線收斂角',
     gmAngle: 'G-M 角',
     gmExplain: 'G-M 角 = 磁偏角 − 子午線收斂角。這是在羅盤與 MGRS 地圖之間換算所需的數值。',
@@ -993,7 +997,7 @@ export default {
     faqCellService: '沒有行動訊號也能用嗎?',
     faqCellServiceA: "取得GPS定位後，座標顯示和本機計算不需行動網路即可使用。離線地圖須事先匯入。線上地圖和商店操作需要網路連線。",
     faqRestore: '如何還原我的 Pro 購買?',
-    faqRestoreA: "請登入購買Pro時使用的同一Apple或Google商店帳號，再使用下方的還原先前購買。驗證購買可能需要網際網路連線。",
+    faqRestoreA: "請登入購買Pro時使用的同一Apple或Google商店帳號，再使用還原先前購買。驗證購買可能需要網際網路連線。",
     faqData: '此應用程式收集哪些資料?',
     faqDataA: "地點、路線、事件紀錄、報告草稿、設定與使用計數都保存在本機，不上傳任何應用程式分析資料。線上地圖與應用程式商店使用外部服務。匯出、照片儲存與無線電分享由你自行選擇。",
     faqAccuracy: 'MGRS 網格有多精確?',
@@ -1044,13 +1048,32 @@ export default {
     importUnavailable: '匯入無法使用',
     importRequires: '匯入需要 expo-document-picker 與 expo-file-system。',
   },
+  managePro: {
+    "title": "管理 Pro",
+    "planFree": "免費",
+    "planMonthly": "Pro 月付",
+    "planAnnual": "Pro 年付",
+    "planLifetime": "Pro 終身版",
+    "planLoading": "正在檢查購買記錄…",
+    "planUnknown": "無法取得購買方案資訊",
+    "giftActive": "獲贈的 Pro 使用權限已生效。",
+    "cached": "正在顯示已儲存的購買資訊。請還原購買，以便向商店確認。",
+    "unknownBody": "請先還原購買並確認您的方案，再進行購買。",
+    "viewOptions": "查看 Pro 選項",
+    "viewLifetime": "查看終身選項",
+    "buyLifetime": "購買終身 Pro",
+    "manageSubscriptions": "管理訂閱",
+    "subscriptionNotice": "購買終身版不會取消現有訂閱。請在您的 App 商店中管理或取消該訂閱。",
+    "linkFailedTitle": "無法開啟訂閱",
+    "linkFailedBody": "請開啟您的 App 商店，並透過您的帳號管理訂閱。"
+  },
   proGate: {
     lifetimePromise: "一次付費，永久保留 Pro，包含 Red Grid MGRS Pro 未來的全部功能與更新。現有終身購買同樣受到保護。無訂閱，無需再次購買。",
     termsOfUse: "使用條款",
     "offlineMapsSub": "離開網路涵蓋區前，匯入獲准使用的點陣式MBTiles地圖",
     "waypointsRoutes": "已儲存的航點和路線",
     "waypointsRoutesSub": "最多10個清單，每個20個地點；支援GPX/KML地點匯入和匯出",
-    "reportsThemesSub": "六種報告表單及額外顯示配色",
+    "reportsThemesSub": "儲存的草稿、事件工作區及 ICS 214 匯出",
     "pricesUnavailable": "請連線以載入目前的商店價格和購買選項。",
 
     badge: 'PRO',
@@ -1083,7 +1106,7 @@ export default {
     meshAwarenessSub: "在地圖上查看網路節點，無需行動訊號",
     allTools: "全部 12 種戰術工具",
     allToolsSub: "航位推算、後方交會、日月、地理標記等",
-    reportsThemes: "全部報告與主題",
+    reportsThemes: "報告與事件日誌",
   },
   mesh: {
     pairing: {

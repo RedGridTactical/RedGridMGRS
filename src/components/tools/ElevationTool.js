@@ -78,7 +78,7 @@ export function ElevationTool({ location }) {
           label={t('workflow.waypointLatitude')}
           value={wpLat}
           onChangeText={setWpLat}
-          placeholder="e.g. 38.8977"
+          placeholder={t('localeAccess.exampleValue', { value: '38.8977', defaultValue: 'e.g. {{value}}' })}
           keyboardType="numeric"
           autoCapitalize="none"
         />
@@ -86,7 +86,7 @@ export function ElevationTool({ location }) {
           label={t('workflow.waypointLongitude')}
           value={wpLon}
           onChangeText={setWpLon}
-          placeholder="e.g. -77.0365"
+          placeholder={t('localeAccess.exampleValue', { value: '-77.0365', defaultValue: 'e.g. {{value}}' })}
           keyboardType="numeric"
           autoCapitalize="none"
         />
@@ -94,7 +94,7 @@ export function ElevationTool({ location }) {
           label={t('workflow.waypointAltitude')}
           value={wpAlt}
           onChangeText={setWpAlt}
-          placeholder="e.g. 150"
+          placeholder={t('localeAccess.exampleValue', { value: '150', defaultValue: 'e.g. {{value}}' })}
           keyboardType="numeric"
           autoCapitalize="none"
         />

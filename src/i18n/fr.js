@@ -435,7 +435,7 @@ export default {
       "radio": "Connectez une radio Meshtastic compatible pour les positions et messages d’équipe. Une radio et la configuration des correspondants sont nécessaires. Un envoi réussi confirme l’écriture vers votre radio, pas la réception par un correspondant.",
       "tools": "Conservez les brouillons de calcul pendant cette session, figez une origine d’estime et enregistrez des points estimés. Vérifiez les saisies et références des capteurs avant d’utiliser un résultat.",
       "routes": "Transformez des sélections sur la Carte en itinéraire nommé, réordonnez les points, ajoutez des notes, consultez la fiche et les vérifications préalables. Confirmez chaque point manuellement pendant la navigation.",
-      "reports": "Préparez des brouillons de rapport et insérez explicitement les références de l’appareil. Copiez quand ils sont prêts. Ils restent dans cette session jusqu’à leur effacement ou la fermeture de l’app.",
+      "reports": "Préparez des brouillons de rapport et des journaux d’activité d’incident sur cet appareil. Attendez la confirmation de l’enregistrement avant de fermer. Vérifiez et exportez un brouillon ICS 214 non signé ; l’app ne le signe ni ne le dépose. Les enregistrements sauvegardés restent lisibles et exportables après l’expiration de Pro.",
       "photos": "Ajoutez à une photo une annotation figée de position de l’appareil. Elle ne vérifie pas le lieu d’origine ni l’heure de prise de vue.",
       "display": "Pro inclut les palettes verte et bleue supplémentaires et le HUD. Standard, Tactique, Jour et le réglage essentiel de taille du texte sont accessibles sans Pro.",
       "receiver": "Connectez un récepteur Bluetooth NMEA compatible. Un récepteur matériel est nécessaire ; vérifiez les services et formats de trames pris en charge avant l’achat.",
@@ -587,16 +587,16 @@ export default {
     startTrial: "DÉMARRER L'ESSAI GRATUIT DE 7 JOURS",
     current: {
       "f1": {
-        "title": "PRO À VIE, PERMANENT",
-        "body": "Payez une fois et conservez toutes les futures fonctions et mises à jour de Red Grid MGRS Pro. Ni abonnement ni nouvel achat. Les achats à vie existants sont protégés. Liens Conditions et Confidentialité sur l'écran Pro et dans l'Aide."
+        "title": "GÉRER PRO",
+        "body": "Depuis l’aide, consultez votre formule Pro enregistrée, restaurez vos achats et ouvrez les réglages d’abonnement de la boutique."
       },
       "f2": {
-        "title": "RÉCUPÉRATION DES ACHATS",
-        "body": "Vos achats sont restaurés silencieusement au lancement et au retour dans l'app. Un contrôle hors ligne ou incomplet ne retire jamais l'accès enregistré."
+        "title": "OPTION À VIE",
+        "body": "Les abonnés peuvent consulter l’option à vie. Les abonnements doivent être annulés séparément dans la boutique."
       },
       "f3": {
-        "title": "AFFICHAGE ANDROID",
-        "body": "Mise en page bord à bord et barres système plus lisibles, cohérentes après rotation et reprise. Aucun suivi ni réseau ajouté."
+        "title": "AIDE AUX RAPPORTS CLARIFIÉE",
+        "body": "Descriptions des brouillons et journaux d’incident corrigées. Vos accès à vie et enregistrements existants sont conservés."
       }
     },
   },
@@ -813,6 +813,10 @@ export default {
     stop: 'TOUCHER POUR ARRÊTER',
   },
   toolLabels: {
+    declinationEast: "EST",
+    declinationWest: "OUEST",
+    declinationNone: "AUCUNE",
+    declinationSignHint: "+ = EST, − = OUEST",
     compassGridUnavailable: "Le remplissage automatique nécessite le nord vrai et une position GPS. Saisissez manuellement un cap par rapport au nord du quadrillage.",
     useCompassGrid: "Utiliser le cap actuel de la boussole : {{heading}} degrés par rapport au nord du quadrillage",
     compassGrid: "BOUSSOLE · QUADRILLAGE",
@@ -993,7 +997,7 @@ export default {
     faqCellService: 'Cela fonctionne-t-il sans r\u00e9seau mobile?',
     faqCellServiceA: "Les coordonnées et calculs locaux fonctionnent sans réseau mobile lorsqu’une position GPS est disponible. Les cartes hors ligne doivent être importées à l’avance. Les cartes en ligne et la boutique nécessitent une connexion.",
     faqRestore: 'Comment restaurer mon achat Pro?',
-    faqRestoreA: "Utilisez Restaurer l’achat ci-dessous avec le même compte Apple ou Google que lors de l’achat de Pro. Une connexion peut être nécessaire pour vérifier l’achat.",
+    faqRestoreA: "Utilisez Restaurer l’achat avec le même compte Apple ou Google que lors de l’achat de Pro. Une connexion peut être nécessaire pour vérifier l’achat.",
     faqData: 'Quelles donn\u00e9es cette appli collecte-t-elle?',
     faqDataA: "Points, itinéraires, journaux d'incident, brouillons de rapport, réglages et compteurs d'utilisation restent sur cet appareil, sans envoi d'analyses d'usage. Les cartes en ligne et les stores utilisent des services externes. Vous choisissez les exports, l'enregistrement des photos et le partage radio.",
     faqAccuracy: 'Quelle est la pr\u00e9cision de la grille MGRS?',
@@ -1055,6 +1059,25 @@ export default {
     importUnavailable: 'Importation indisponible',
     importRequires: 'expo-document-picker et expo-file-system sont requis pour l\'importation.',
   },
+  managePro: {
+    "title": "Gérer Pro",
+    "planFree": "Gratuit",
+    "planMonthly": "Pro mensuel",
+    "planAnnual": "Pro annuel",
+    "planLifetime": "Pro à vie",
+    "planLoading": "Vérification des achats…",
+    "planUnknown": "Informations sur la formule achetée indisponibles",
+    "giftActive": "L’accès Pro offert est actif.",
+    "cached": "Les informations d’achat enregistrées sont affichées. Restaurez les achats pour les vérifier auprès de la boutique.",
+    "unknownBody": "Restaurez les achats pour vérifier votre formule avant d’acheter.",
+    "viewOptions": "Voir les options Pro",
+    "viewLifetime": "Voir l’option à vie",
+    "buyLifetime": "Acheter Pro à vie",
+    "manageSubscriptions": "Gérer les abonnements",
+    "subscriptionNotice": "L’achat à vie n’annule pas un abonnement existant. Gérez ou annulez cet abonnement dans votre boutique d’applications.",
+    "linkFailedTitle": "Impossible d’ouvrir les abonnements",
+    "linkFailedBody": "Ouvrez votre boutique d’applications et gérez les abonnements depuis votre compte."
+  },
   proGate: {
     lifetimePromise: "Payez une fois. Gardez Pro de façon permanente, avec toutes les futures fonctions et mises à jour de Red Grid MGRS Pro. Les achats À vie existants sont protégés aussi. Ni abonnement ni rachat.",
     termsOfUse: "Conditions d'utilisation",
@@ -1094,8 +1117,8 @@ export default {
     allToolsSub: 'Navigation \u00e0 l\u2019estime, r\u00e9section, soleil/lune, g\u00e9otampon et plus',
     waypointsRoutes: "Points et itinéraires enregistrés",
     waypointsRoutesSub: "Jusqu’à 10 listes de 20 points ; import et export de points GPX/KML",
-    reportsThemes: 'Tous les rapports et th\u00e8mes',
-    reportsThemesSub: "Six formulaires de rapport et des palettes supplémentaires",
+    reportsThemes: "Rapports et journaux d’incident",
+    reportsThemesSub: "Brouillons sauvegardés, espaces d’incident et export ICS 214",
     pricesUnavailable: "Connectez-vous pour charger les prix et les options d’achat actuels.",
     tryFreeBadge: 'PRO, ESSAI GRATUIT',
   },

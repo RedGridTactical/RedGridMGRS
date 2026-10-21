@@ -435,7 +435,7 @@ export default {
       "radio": "Conecte um rádio Meshtastic compatível para posições e mensagens de equipe. São necessários hardware de rádio e configuração dos demais dispositivos. Um envio bem-sucedido confirma a escrita no seu rádio, não a entrega a outro dispositivo.",
       "tools": "Mantenha rascunhos de cálculo nesta sessão, fixe uma origem de navegação estimada e salve pontos estimados. Confira entradas e referências dos sensores antes de usar um resultado.",
       "routes": "Transforme seleções no Mapa em uma rota com nome, reordene pontos, adicione notas, revise o cartão e as verificações prévias. Confirme cada ponto manualmente durante a navegação.",
-      "reports": "Prepare rascunhos de relatórios e insira referências do dispositivo explicitamente. Copie quando estiverem prontos. Eles permanecem nesta sessão até serem limpos ou o app fechar.",
+      "reports": "Prepare rascunhos de relatórios e registros de atividades de incidentes neste dispositivo. Aguarde a confirmação de salvamento antes de fechar. Revise e exporte um rascunho ICS 214 sem assinatura; o app não o assina nem o protocola. Os registros salvos continuam disponíveis para leitura e exportação após o vencimento do Pro.",
       "photos": "Adicione a uma foto uma anotação fixada da posição do dispositivo. Ela não verifica o local original nem o horário de captura da foto.",
       "display": "Pro inclui paletas verde e azul adicionais e HUD. Padrão, Tático, Luz diurna e o ajuste essencial do tamanho de texto estão disponíveis sem Pro.",
       "receiver": "Conecte um receptor Bluetooth NMEA compatível. É necessário hardware receptor; confira os serviços e formatos de sentenças compatíveis antes da compra.",
@@ -607,16 +607,16 @@ export default {
     startTrial: "INICIAR TESTE GRÁTIS DE 7 DIAS",
     current: {
       "f1": {
-        "title": "PRO VITALÍCIO, PERMANENTE",
-        "body": "Pague uma vez e mantenha todos os futuros recursos e atualizações do Red Grid MGRS Pro. Sem assinatura, sem nova compra. Compras vitalícias existentes estão protegidas. Links de Termos e Privacidade na tela Pro e na Ajuda."
+        "title": "GERENCIAR PRO",
+        "body": "Na Ajuda, veja seu plano Pro salvo, restaure compras e abra as configurações de assinaturas da loja."
       },
       "f2": {
-        "title": "RECUPERAÇÃO DE COMPRAS",
-        "body": "As compras são restauradas em silêncio ao abrir e ao voltar ao app. Uma verificação off-line ou incompleta nunca remove o acesso salvo."
+        "title": "OPÇÃO VITALÍCIO",
+        "body": "Quem já assina pode ver a opção Vitalício. As assinaturas da loja precisam ser canceladas separadamente."
       },
       "f3": {
-        "title": "TELA ANDROID",
-        "body": "Layout de ponta a ponta com barras do sistema mais claras e consistentes após girar e retomar. Sem rastreamento nem rede adicionados."
+        "title": "AJUDA MAIS CLARA SOBRE RELATÓRIOS",
+        "body": "Descrições de rascunhos e registros de incidentes corrigidas. O acesso Vitalício existente e os registros salvos são preservados."
       }
     },
   },
@@ -813,6 +813,10 @@ export default {
     stop: 'TOQUE PARA PARAR',
   },
   toolLabels: {
+    declinationEast: "LESTE",
+    declinationWest: "OESTE",
+    declinationNone: "NENHUMA",
+    declinationSignHint: "+ = LESTE, − = OESTE",
     compassGridUnavailable: "O preenchimento automático precisa do norte verdadeiro e de uma posição GPS. Insira manualmente uma direção em relação ao norte da quadrícula.",
     useCompassGrid: "Usar a direção atual da bússola: {{heading}} graus em relação ao norte da quadrícula",
     compassGrid: "BÚSSOLA · QUADRÍCULA",
@@ -993,7 +997,7 @@ export default {
     faqCellService: 'Funciona sem sinal de celular?',
     faqCellServiceA: "Coordenadas e cálculos locais funcionam sem rede móvel quando há uma posição GPS. Mapas offline devem ser importados antes. Mapas online e ações da loja precisam de conexão.",
     faqRestore: 'Como restauro minha compra Pro?',
-    faqRestoreA: "Use Restaurar compra abaixo com a mesma conta Apple ou Google usada para comprar Pro. Pode ser necessária conexão para verificar a compra.",
+    faqRestoreA: "Use Restaurar compra com a mesma conta Apple ou Google usada para comprar Pro. Pode ser necessária conexão para verificar a compra.",
     faqData: 'Quais dados este app coleta?',
     faqDataA: "Pontos, rotas, registros de incidente, rascunhos de relatório, configurações e contadores de uso ficam neste dispositivo, sem envio de análises do app. Mapas on-line e lojas usam serviços externos. Você decide exportações, salvamento de fotos e compartilhamento por rádio.",
     faqAccuracy: 'Qual é a precisão da grade MGRS?',
@@ -1044,13 +1048,32 @@ export default {
     importUnavailable: 'Importação indisponível',
     importRequires: 'expo-document-picker e expo-file-system são necessários para importação.',
   },
+  managePro: {
+    "title": "Gerenciar Pro",
+    "planFree": "Grátis",
+    "planMonthly": "Pro Mensal",
+    "planAnnual": "Pro Anual",
+    "planLifetime": "Pro Vitalício",
+    "planLoading": "Verificando compras…",
+    "planUnknown": "Informações do plano comprado indisponíveis",
+    "giftActive": "O acesso Pro recebido de presente está ativo.",
+    "cached": "Exibindo informações de compra salvas. Restaure as compras para verificá-las na loja.",
+    "unknownBody": "Restaure as compras para verificar seu plano antes de comprar.",
+    "viewOptions": "Ver opções Pro",
+    "viewLifetime": "Ver opção Vitalício",
+    "buyLifetime": "Comprar Pro Vitalício",
+    "manageSubscriptions": "Gerenciar assinaturas",
+    "subscriptionNotice": "Comprar o Vitalício não cancela uma assinatura existente. Gerencie ou cancele essa assinatura na sua loja de aplicativos.",
+    "linkFailedTitle": "Não foi possível abrir as assinaturas",
+    "linkFailedBody": "Abra sua loja de aplicativos e gerencie as assinaturas pela sua conta."
+  },
   proGate: {
     lifetimePromise: "Pague uma vez. Mantenha o Pro permanentemente, com todos os futuros recursos e atualizações do Red Grid MGRS Pro. As compras Vitalícias existentes também estão protegidas. Sem assinatura nem recompra.",
     termsOfUse: "Termos de uso",
     "offlineMapsSub": "Importe um mapa raster MBTiles autorizado antes de sair da cobertura",
     "waypointsRoutes": "Pontos e rotas salvos",
     "waypointsRoutesSub": "Até 10 listas de 20 pontos; importação e exportação de pontos GPX/KML",
-    "reportsThemesSub": "Seis formulários de relatório e paletas adicionais",
+    "reportsThemesSub": "Rascunhos salvos, espaços de incidentes e exportação ICS 214",
     "pricesUnavailable": "Conecte-se para carregar preços e opções de compra atuais.",
 
     badge: 'PRO',
@@ -1083,7 +1106,7 @@ export default {
     meshAwarenessSub: "Veja os nós da malha no mapa, sem sinal de celular",
     allTools: "Todas as 12 ferramentas táticas",
     allToolsSub: "Navegação estimada, ressecção, sol/lua, geostamp e mais",
-    reportsThemes: "Todos os relatórios e temas",
+    reportsThemes: "Relatórios e registros de incidentes",
   },
   mesh: {
     pairing: {

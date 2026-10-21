@@ -49,11 +49,11 @@ const SPOT_FIELDS = [
 
 // Pro templates
 const ICS201_FIELDS = [
-  { key: 'incident',  label: 'INCIDENT NAME',    placeholder: 'Operation / incident name' },
+  { key: 'incident',  label: 'INCIDENT NAME',    uiLabelKey: 'incident.name', placeholder: 'Operation / incident name' },
   { key: 'date',      label: 'DATE / TIME',       placeholder: 'YYYY-MM-DD HH:mm ±HH:mm', autoFill: 'datetime' },
   { key: 'location',  label: 'LOCATION',          placeholder: 'MGRS / address', autoFill: 'grid' },
   { key: 'situation', label: 'SITUATION',          placeholder: 'Current situation summary' },
-  { key: 'resources', label: 'RESOURCES ASSIGNED', placeholder: 'Units / personnel / equipment' },
+  { key: 'resources', label: 'RESOURCES ASSIGNED', uiLabelKey: 'incident.resources', placeholder: 'Units / personnel / equipment' },
   { key: 'ic',        label: 'INCIDENT COMMANDER', placeholder: 'Name / callsign' },
   { key: 'objectives',label: 'OBJECTIVES',         placeholder: 'Priority actions' },
   { key: 'safety',    label: 'SAFETY MESSAGE',     placeholder: 'Hazards / precautions' },
@@ -126,7 +126,7 @@ function ReportCard({ report, mgrs, location, isPro, trialEligible, onShowProGat
     if (isLocked) {
       tapMedium();
       // Show ProGate modal directly — matches ThemeScreen pattern
-      onShowProGate(report.label, 'reports');
+      onShowProGate(t(report.labelKey), 'reports');
       return;
     }
     tapMedium();
@@ -176,8 +176,14 @@ function ReportCard({ report, mgrs, location, isPro, trialEligible, onShowProGat
         activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
-        accessibilityLabel={`${t(report.labelKey)} report. ${t(report.subKey)}${isLocked ? '. Pro feature, locked.' : ''}`}
-        accessibilityHint={isLocked ? 'Double tap to view upgrade options' : (open ? 'Double tap to collapse' : 'Double tap to expand')}
+        accessibilityLabel={t('reportFields.access.reportSummary', {
+          title: t(report.labelKey), description: t(report.subKey),
+          state: isLocked ? t('reportFields.access.lockedSuffix', { defaultValue: '. Pro feature, locked.' }) : '',
+          defaultValue: '{{title}} report. {{description}}{{state}}',
+        })}
+        accessibilityHint={isLocked
+          ? t('reportFields.access.upgrade', { defaultValue: 'Double tap to view upgrade options' })
+          : t(`reportFields.access.${open ? 'collapse' : 'expand'}`, { defaultValue: open ? 'Double tap to collapse' : 'Double tap to expand' })}
       >
         <View style={styles.cardText}>
           <View style={styles.labelRow}>
@@ -208,14 +214,20 @@ function ReportCard({ report, mgrs, location, isPro, trialEligible, onShowProGat
           </View>}
           {fields.map(f => {
             const hasReference = !!draft.sources[f.key];
-            const label = f.labelKey ? t(f.labelKey) : f.label;
+            // Localize the editor only. The field definitions passed to the
+            // report exporter retain their existing canonical labels and keys.
+            const label = f.uiLabelKey ? t(f.uiLabelKey) : (f.labelKey ? t(f.labelKey)
+              : t(`reportFields.${report.id}.${f.key}.label`, { defaultValue: f.label }));
+            const placeholder = f.placeholder
+              ? t(`reportFields.${report.id}.${f.key}.placeholder`, { defaultValue: f.placeholder })
+              : t('reportCorrections.blank');
             return (
               <View key={f.key} style={styles.fieldBlock}>
                 <Text style={[styles.fieldLabel, { color: colors.text3 }]}>{label}</Text>
                 {f.hintKey && <Text style={[styles.referenceHint, { color: colors.text2, marginBottom: 6 }]}>{t(f.hintKey)}</Text>}
                 <TextInput
                   style={[styles.fieldInput, { borderColor: colors.border, backgroundColor: colors.card2, color: colors.text }, hasReference && { borderColor: colors.text2 }]}
-                  placeholder={f.placeholder || t('reportCorrections.blank')}
+                  placeholder={placeholder}
                   placeholderTextColor={colors.text3}
                   value={vals[f.key] || ''}
                   editable={!editingDisabled}

@@ -435,7 +435,7 @@ export default {
       "radio": "Verbinden Sie ein kompatibles Meshtastic-Funkgerät für Positions- und Teamnachrichten. Funkhardware und eingerichtete Gegenstellen sind erforderlich. Ein erfolgreicher Sendevorgang bestätigt die Übergabe an Ihr Funkgerät, nicht den Empfang bei einer Gegenstelle.",
       "tools": "Behalten Sie Rechenentwürfe in dieser Sitzung, fixieren Sie einen Ausgangspunkt für Koppelnavigation und speichern Sie geschätzte Punkte. Prüfen Sie Eingaben und Sensorreferenzen, bevor Sie ein Ergebnis verwenden.",
       "routes": "Erstellen Sie aus Kartenauswahlen eine benannte Route, ordnen Sie Punkte neu, ergänzen Sie Notizen, prüfen Sie die Karte und führen Sie die Vorbereitungskontrolle durch. Bestätigen Sie während der Navigation jeden Punkt manuell.",
-      "reports": "Bereiten Sie Berichtsentwürfe vor und fügen Sie Gerätereferenzen ausdrücklich ein. Kopieren Sie sie, sobald sie fertig sind. Entwürfe bleiben bis zum Löschen oder Schließen der App in dieser Sitzung.",
+      "reports": "Erstellen Sie Berichtsentwürfe und Einsatzprotokolle auf diesem Gerät. Warten Sie vor dem Schließen auf die Speicherbestätigung. Prüfen und exportieren Sie einen unsignierten ICS-214-Entwurf; die App unterschreibt ihn nicht und reicht ihn nicht ein. Gespeicherte Einträge bleiben nach Ablauf von Pro lesbar und exportierbar.",
       "photos": "Fügen Sie einem Foto eine fixierte Geräteposition als Anmerkung hinzu. Der ursprüngliche Aufnahmeort oder Aufnahmezeitpunkt des Fotos wird dadurch nicht geprüft.",
       "display": "Pro enthält zusätzliche grüne und blaue Farbpaletten sowie HUD. Standard, Taktisch, Tageslicht und grundlegende Textgröße sind ohne Pro verfügbar.",
       "receiver": "Verbinden Sie einen kompatiblen Bluetooth-NMEA-Empfänger. Empfängerhardware ist erforderlich; prüfen Sie vor dem Kauf die unterstützten Dienste und Datensatzformate.",
@@ -588,16 +588,16 @@ export default {
     startTrial: "7-TAGE-TESTPHASE STARTEN",
     current: {
       "f1": {
-        "title": "PRO AUF LEBENSZEIT, DAUERHAFT",
-        "body": "Einmal zahlen und alle künftigen Funktionen und Updates von Red Grid MGRS Pro behalten. Kein Abo, kein Neukauf. Bestehende Lebenslang-Käufe sind geschützt. Nutzungsbedingungen und Datenschutz auf dem Pro-Bildschirm und in der Hilfe."
+        "title": "PRO VERWALTEN",
+        "body": "Über die Hilfe sehen Sie Ihren gespeicherten Pro-Tarif, stellen Käufe wieder her und öffnen die Abo-Einstellungen des Stores."
       },
       "f2": {
-        "title": "KAUFWIEDERHERSTELLUNG",
-        "body": "Käufe werden beim Start und bei der Rückkehr in die App still wiederhergestellt. Ein Offline- oder unvollständiger Store-Check entfernt gespeicherten Zugang nie."
+        "title": "LEBENSLANGE OPTION",
+        "body": "Abonnenten können die lebenslange Option ansehen. Store-Abonnements müssen separat gekündigt werden."
       },
       "f3": {
-        "title": "ANDROID-ANZEIGE",
-        "body": "Randloses Layout mit klareren, konsistenten Systemleisten, auch nach Drehen und Fortsetzen. Kein Tracking, kein Netzwerk hinzugefügt."
+        "title": "KLARERE BERICHTSHILFE",
+        "body": "Beschreibungen von Entwürfen und Einsatzprotokollen korrigiert. Bestehender lebenslanger Zugang und gespeicherte Einträge bleiben erhalten."
       }
     },
   },
@@ -815,6 +815,10 @@ export default {
     stop: 'ZUM STOPPEN TIPPEN',
   },
   toolLabels: {
+    declinationEast: "OST",
+    declinationWest: "WEST",
+    declinationNone: "KEINE",
+    declinationSignHint: "+ = OST, − = WEST",
     compassGridUnavailable: "Die automatische Kompassübernahme benötigt den geografischen Norden als Bezug und eine GPS-Position. Gib einen Kurs bezogen auf Gitternord manuell ein.",
     useCompassGrid: "Aktuellen Kompasskurs von {{heading}} Grad bezogen auf Gitternord verwenden",
     compassGrid: "KOMPASS · GITTERNORD",
@@ -995,7 +999,7 @@ export default {
     faqCellService: 'Funktioniert das ohne Mobilfunk?',
     faqCellServiceA: "Koordinaten und lokale Berechnungen funktionieren bei vorhandenem GPS-Fix ohne Mobilfunk. Offline-Karten müssen vorher importiert werden. Online-Karten und Store-Aktionen benötigen eine Verbindung.",
     faqRestore: 'Wie stelle ich meinen Pro-Kauf wieder her?',
-    faqRestoreA: "Verwende unten Kauf wiederherstellen mit demselben Apple- oder Google-Konto wie beim Pro-Kauf. Zur Prüfung kann eine Internetverbindung erforderlich sein.",
+    faqRestoreA: "Verwende Kauf wiederherstellen mit demselben Apple- oder Google-Konto wie beim Pro-Kauf. Zur Prüfung kann eine Internetverbindung erforderlich sein.",
     faqData: 'Welche Daten sammelt diese App?',
     faqDataA: "Punkte, Routen, Einsatzprotokolle, Berichtsentwürfe, Einstellungen und Nutzungszähler bleiben auf diesem Gerät; keine App-Analysen werden hochgeladen. Online-Karten und Stores nutzen externe Dienste. Exporte, Fotospeicherung und Funkfreigabe wählst du selbst.",
     faqAccuracy: 'Wie genau ist das MGRS-Gitter?',
@@ -1057,6 +1061,25 @@ export default {
     importUnavailable: 'Import nicht verf\u00fcgbar',
     importRequires: 'expo-document-picker und expo-file-system sind f\u00fcr den Import erforderlich.',
   },
+  managePro: {
+    "title": "Pro verwalten",
+    "planFree": "Kostenlos",
+    "planMonthly": "Pro monatlich",
+    "planAnnual": "Pro jährlich",
+    "planLifetime": "Pro lebenslang",
+    "planLoading": "Käufe werden geprüft…",
+    "planUnknown": "Informationen zum gekauften Tarif nicht verfügbar",
+    "giftActive": "Geschenkter Pro-Zugang ist aktiv.",
+    "cached": "Gespeicherte Kaufinformationen werden angezeigt. Stellen Sie Käufe wieder her, um sie beim Store zu prüfen.",
+    "unknownBody": "Stellen Sie vor dem Kauf Ihre Käufe wieder her, um Ihren Tarif zu prüfen.",
+    "viewOptions": "Pro-Optionen ansehen",
+    "viewLifetime": "Lebenslange Option ansehen",
+    "buyLifetime": "Pro lebenslang kaufen",
+    "manageSubscriptions": "Abonnements verwalten",
+    "subscriptionNotice": "Ein lebenslanger Kauf kündigt kein bestehendes Abonnement. Verwalten oder kündigen Sie dieses Abonnement in Ihrem App-Store.",
+    "linkFailedTitle": "Abonnements konnten nicht geöffnet werden",
+    "linkFailedBody": "Öffnen Sie Ihren App-Store und verwalten Sie Abonnements über Ihr Konto."
+  },
   proGate: {
     lifetimePromise: "Einmal zahlen. Pro dauerhaft behalten, mit allen künftigen Funktionen und Updates von Red Grid MGRS Pro. Bestehende Lebenslang-Käufe sind ebenfalls geschützt. Kein Abo, kein Neukauf.",
     termsOfUse: "Nutzungsbedingungen",
@@ -1096,8 +1119,8 @@ export default {
     allToolsSub: 'Koppelnavigation, R\u00fcckw\u00e4rtseinschnitt, Sonne/Mond, Geostempel u. v. m.',
     waypointsRoutes: "Gespeicherte Wegpunkte und Routen",
     waypointsRoutesSub: "Bis zu 10 Listen mit je 20 Punkten; GPX/KML-Punktimport und -export",
-    reportsThemes: 'Alle Meldungen und Themes',
-    reportsThemesSub: "Sechs Meldeformulare und zusätzliche Farbpaletten",
+    reportsThemes: "Berichte und Einsatzprotokolle",
+    reportsThemesSub: "Gespeicherte Entwürfe, Einsatz-Arbeitsbereiche und ICS-214-Export",
     pricesUnavailable: "Verbindung herstellen, um aktuelle Store-Preise und Kaufoptionen zu laden.",
     tryFreeBadge: 'PRO, GRATIS TESTEN',
   },

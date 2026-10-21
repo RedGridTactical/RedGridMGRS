@@ -1,0 +1,11 @@
+/* Localized permission descriptions. */
+"NSBluetoothAlwaysUsageDescription" = "Red Grid MGRS koristi Bluetooth za povezivanje s Meshtastic radijima za mrežno povezivanje bez mobilne mreže. Podaci se ne šalju internetom.";
+"NSBluetoothPeripheralUsageDescription" = "Red Grid MGRS koristi Bluetooth za povezivanje s Meshtastic radijima za mrežno povezivanje bez mobilne mreže. Podaci se ne šalju internetom.";
+"NSCameraUsageDescription" = "Red Grid MGRS koristi kameru za fotografije s geooznakom. Fotografije se označavaju vašom MGRS mrežom i spremaju samo na vaš uređaj.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Dopusti aplikaciji Red Grid MGRS pristup vašoj lokaciji";
+"NSLocationAlwaysUsageDescription" = "Dopusti aplikaciji Red Grid MGRS pristup vašoj lokaciji";
+"NSLocationWhenInUseUsageDescription" = "Red Grid MGRS koristi vašu lokaciju za koordinate mreže i navigaciju. Međutočke možete spremiti na uređaj i sami odlučiti hoćete li svoj položaj podijeliti ili poslati putem povezanog radija.";
+"NSMicrophoneUsageDescription" = "Dopusti aplikaciji Red Grid MGRS pristup mikrofonu";
+"NSMotionUsageDescription" = "Dopusti aplikaciji Red Grid MGRS pristup senzorima pokreta uređaja";
+"NSPhotoLibraryAddUsageDescription" = "Dopusti aplikaciji Red Grid MGRS spremanje fotografija";
+"NSPhotoLibraryUsageDescription" = "Red Grid MGRS pristupa vašoj fototeci radi odabira slika za geooznačavanje. Fotografije se ne prenose niti šalju.";

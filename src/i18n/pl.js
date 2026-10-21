@@ -435,7 +435,7 @@ export default {
       "radio": "Połącz zgodne radio Meshtastic do przesyłania pozycji i wiadomości zespołu. Wymagane są radio i konfiguracja pozostałych użytkowników. Udane wysłanie potwierdza zapis do Twojego radia, nie dostarczenie do odbiorcy.",
       "tools": "Zachowuj szkice obliczeń w tej sesji, przypnij punkt początkowy zliczania drogi i zapisuj szacowane punkty. Sprawdź dane wejściowe i odniesienia czujników przed użyciem wyniku.",
       "routes": "Zamień wybory na mapie w nazwaną trasę, zmień kolejność punktów, dodaj notatki, przejrzyj kartę i wykonaj kontrolę przygotowania. Podczas nawigacji potwierdzaj każdy punkt ręcznie.",
-      "reports": "Przygotowuj szkice meldunków i świadomie wstawiaj odniesienia z urządzenia. Kopiuj po zakończeniu. Szkice pozostają w tej sesji do usunięcia lub zamknięcia aplikacji.",
+      "reports": "Przygotowuj szkice raportów i dzienniki działań dotyczących zdarzeń na tym urządzeniu. Przed zamknięciem poczekaj na potwierdzenie zapisu. Sprawdź i wyeksportuj niepodpisany szkic ICS 214; aplikacja nie podpisuje go ani nie składa. Zapisane dane pozostają dostępne do odczytu i eksportu po wygaśnięciu Pro.",
       "photos": "Dodaj do zdjęcia adnotację z przypiętą pozycją urządzenia. Nie weryfikuje ona pierwotnej lokalizacji ani czasu wykonania zdjęcia.",
       "display": "Pro obejmuje dodatkowe zielone i niebieskie palety oraz HUD. Tryby standardowy, taktyczny, dzienny i podstawowa zmiana rozmiaru tekstu są dostępne bez Pro.",
       "receiver": "Połącz zgodny odbiornik Bluetooth NMEA. Wymagany jest odbiornik; przed zakupem sprawdź obsługiwane usługi i formaty komunikatów.",
@@ -608,16 +608,16 @@ export default {
     startTrial: "ROZPOCZNIJ 7-DNIOWY BEZPŁATNY OKRES PRÓBNY",
     current: {
       "f1": {
-        "title": "PRO NA ZAWSZE, TRWALE",
-        "body": "Zapłać raz i zachowaj wszystkie przyszłe funkcje oraz aktualizacje Red Grid MGRS Pro. Bez subskrypcji i ponownego zakupu. Istniejące zakupy dożywotnie są chronione. Linki do Warunków i Prywatności na ekranie Pro i w Pomocy."
+        "title": "ZARZĄDZAJ PRO",
+        "body": "W Pomocy zobaczysz zapisany plan Pro, przywrócisz zakupy i otworzysz ustawienia subskrypcji w sklepie."
       },
       "f2": {
-        "title": "ODZYSKIWANIE ZAKUPÓW",
-        "body": "Zakupy są cicho przywracane przy uruchomieniu i po powrocie do aplikacji. Kontrola offline lub niepełna nigdy nie odbiera zapisanego dostępu."
+        "title": "OPCJA DOŻYWOTNIO",
+        "body": "Obecni subskrybenci mogą zobaczyć opcję Dożywotnio. Subskrypcje w sklepie trzeba anulować osobno."
       },
       "f3": {
-        "title": "EKRAN ANDROID",
-        "body": "Układ od krawędzi do krawędzi z czytelniejszymi, spójnymi paskami systemowymi po obrocie i wznowieniu. Bez śledzenia i sieci."
+        "title": "JAŚNIEJSZA POMOC DOTYCZĄCA RAPORTÓW",
+        "body": "Poprawiono opisy szkiców i dzienników incydentów. Dotychczasowy dostęp Dożywotnio i zapisane rekordy pozostają zachowane."
       }
     },
   },
@@ -814,6 +814,10 @@ export default {
     stop: 'DOTKNIJ, ABY ZATRZYMAĆ',
   },
   toolLabels: {
+    declinationEast: "WSCHÓD",
+    declinationWest: "ZACHÓD",
+    declinationNone: "BRAK",
+    declinationSignHint: "+ = WSCHÓD, − = ZACHÓD",
     compassGridUnavailable: "Automatyczne uzupełnianie wymaga północy geograficznej i pozycji GPS. Wpisz ręcznie kierunek względem północy siatki.",
     useCompassGrid: "Użyj bieżącego kierunku kompasu: {{heading}} stopni względem północy siatki",
     compassGrid: "KOMPAS · SIATKA",
@@ -994,7 +998,7 @@ export default {
     faqCellService: 'Czy działa bez sieci komórkowej?',
     faqCellServiceA: "Współrzędne i obliczenia lokalne działają bez sieci komórkowej, gdy dostępna jest pozycja GPS. Mapy offline trzeba wcześniej zaimportować. Mapy online i sklep wymagają połączenia.",
     faqRestore: 'Jak przywrócić mój zakup Pro?',
-    faqRestoreA: "Użyj poniżej Przywróć zakup na tym samym koncie Apple lub Google, z którego kupiono Pro. Weryfikacja może wymagać internetu.",
+    faqRestoreA: "Użyj Przywróć zakup na tym samym koncie Apple lub Google, z którego kupiono Pro. Weryfikacja może wymagać internetu.",
     faqData: 'Jakie dane zbiera ta aplikacja?',
     faqDataA: "Punkty, trasy, dzienniki incydentów, szkice raportów, ustawienia i liczniki użycia pozostają na tym urządzeniu, bez przesyłania analityki aplikacji. Mapy online i sklepy korzystają z usług zewnętrznych. O eksporcie, zapisie zdjęć i udostępnianiu przez radio decydujesz sam.",
     faqAccuracy: 'Jak dokładna jest siatka MGRS?',
@@ -1045,13 +1049,32 @@ export default {
     importUnavailable: 'Import niedostępny',
     importRequires: 'Do importu wymagane są expo-document-picker i expo-file-system.',
   },
+  managePro: {
+    "title": "Zarządzaj Pro",
+    "planFree": "Bezpłatnie",
+    "planMonthly": "Pro miesięcznie",
+    "planAnnual": "Pro rocznie",
+    "planLifetime": "Pro dożywotnio",
+    "planLoading": "Sprawdzanie zakupów…",
+    "planUnknown": "Informacje o zakupionym planie są niedostępne",
+    "giftActive": "Podarowany dostęp do Pro jest aktywny.",
+    "cached": "Wyświetlane są zapisane informacje o zakupach. Przywróć zakupy, aby sprawdzić je w sklepie.",
+    "unknownBody": "Przywróć zakupy, aby sprawdzić swój plan przed zakupem.",
+    "viewOptions": "Zobacz opcje Pro",
+    "viewLifetime": "Zobacz opcję Dożywotnio",
+    "buyLifetime": "Kup Pro dożywotnio",
+    "manageSubscriptions": "Zarządzaj subskrypcjami",
+    "subscriptionNotice": "Zakup opcji Dożywotnio nie anuluje istniejącej subskrypcji. Zarządzaj tą subskrypcją lub anuluj ją w swoim sklepie z aplikacjami.",
+    "linkFailedTitle": "Nie udało się otworzyć subskrypcji",
+    "linkFailedBody": "Otwórz sklep z aplikacjami i zarządzaj subskrypcjami na swoim koncie."
+  },
   proGate: {
     lifetimePromise: "Zapłać raz. Zachowaj Pro na stałe, ze wszystkimi przyszłymi funkcjami i aktualizacjami Red Grid MGRS Pro. Dotychczasowe zakupy Dożywotnio też są chronione. Bez subskrypcji i ponownego zakupu.",
     termsOfUse: "Warunki użytkowania",
     "offlineMapsSub": "Przed utratą zasięgu zaimportuj dozwoloną mapę rastrową MBTiles",
     "waypointsRoutes": "Zapisane punkty i trasy",
     "waypointsRoutesSub": "Do 10 list po 20 punktów; import i eksport punktów GPX/KML",
-    "reportsThemesSub": "Sześć formularzy meldunków i dodatkowe palety",
+    "reportsThemesSub": "Zapisane szkice, obszary robocze zdarzeń i eksport ICS 214",
     "pricesUnavailable": "Połącz się, aby pobrać aktualne ceny i opcje zakupu ze sklepu.",
 
     badge: 'PRO',
@@ -1084,7 +1107,7 @@ export default {
     meshAwarenessSub: "Węzły sieci na mapie, bez zasięgu komórkowego",
     allTools: "Wszystkie 12 narzędzi taktycznych",
     allToolsSub: "Nawigacja zliczeniowa, wcięcie wstecz, słońce/księżyc, geostempel i więcej",
-    reportsThemes: "Wszystkie raporty i motywy",
+    reportsThemes: "Raporty i dzienniki zdarzeń",
   },
   mesh: {
     pairing: {

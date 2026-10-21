@@ -236,7 +236,7 @@ export function IncidentWorkspace({ location, isPro, onShowProGate, onClose, req
     {title('7 · ACTIVITY LOG')}
   </>:<>
     <Text style={[styles.label,{color:colors.text2}]}>{t('incident.workspace')}</Text>{title(incident.name)}{note(incident.number)}
-    {block(t('incident.period'),`${incident.from}\nto ${incident.to}\n${incident.resource}`)}
+    {block(t('incident.period'),`${incident.from}\n${t('incident.to')} ${incident.to}\n${incident.resource}`)}
     {editor&&action('incident.resumeDraft',()=>go('editor'),false,true)}
     {action('incident.details',()=>edit(current=>beginIncidentDetails(current,incident.id)),readOnly,true)}
     {action('incident.addActivity',()=>edit(current=>beginIncidentEntry(current)),readOnly)}{action('incident.review',()=>{setReviewedRevision(null);go('review');},false,true)}

@@ -1,0 +1,11 @@
+/* Localized permission descriptions. */
+"NSBluetoothAlwaysUsageDescription" = "Red Grid MGRS používa Bluetooth na pripojenie k rádiám Meshtastic pre mesh sieť bez mobilného signálu. Cez internet sa neodosielajú žiadne údaje.";
+"NSBluetoothPeripheralUsageDescription" = "Red Grid MGRS používa Bluetooth na pripojenie k rádiám Meshtastic pre mesh sieť bez mobilného signálu. Cez internet sa neodosielajú žiadne údaje.";
+"NSCameraUsageDescription" = "Red Grid MGRS používa fotoaparát na fotografie s geoznačkou. Fotografie sa označia vašou sieťou MGRS a ukladajú sa iba vo vašom zariadení.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Povoliť aplikácii Red Grid MGRS prístup k vašej polohe";
+"NSLocationAlwaysUsageDescription" = "Povoliť aplikácii Red Grid MGRS prístup k vašej polohe";
+"NSLocationWhenInUseUsageDescription" = "Red Grid MGRS používa vašu polohu pre súradnice siete a navigáciu. Trasové body môžete uložiť v zariadení a sami sa rozhodnúť, či svoju polohu zdieľate alebo odošlete cez pripojené rádio.";
+"NSMicrophoneUsageDescription" = "Povoliť aplikácii Red Grid MGRS prístup k mikrofónu";
+"NSMotionUsageDescription" = "Povoliť aplikácii Red Grid MGRS prístup k pohybovým senzorom zariadenia";
+"NSPhotoLibraryAddUsageDescription" = "Povoliť aplikácii Red Grid MGRS ukladať fotografie";
+"NSPhotoLibraryUsageDescription" = "Red Grid MGRS pristupuje k vašej knižnici fotografií na výber obrázkov na geoznačenie. Žiadne fotografie sa nenahrávajú ani neodosielajú.";

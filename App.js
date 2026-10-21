@@ -9,7 +9,8 @@
  *   - Graceful fallback UI if startup fails
  *   - All hooks guaranteed to never throw
  */
-import './src/i18n';
+import i18n from './src/i18n';
+import { locationErrorMessage } from './src/utils/locationErrorMessage';
 import React, { useState, useMemo, useCallback, useRef, useEffect, Component } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated, ScrollView,
@@ -79,6 +80,7 @@ import { stopSpeaking } from './src/utils/voice';
 import { trackSession, trackEvent } from './src/utils/analytics';
 import { formatBearing, relativeWaypointBearing } from './src/utils/tactical';
 import { isFreshPosition } from './src/utils/position';
+import { canPurchaseTier } from './src/utils/proManagement';
 
 // ─── TEXT SCALING ───────────────────────────────────────────────────────────
 // React 19 removed function-component defaultProps, so the old global
@@ -125,16 +127,16 @@ class AppErrorBoundary extends Component {
       return (
         <SafeAreaView style={staticStyles.errorRoot}>
           <View style={staticStyles.errorContainer}>
-            <Text style={staticStyles.errorTitle}>RED GRID ERROR</Text>
-            <Text style={staticStyles.errorMsg}>An unexpected error occurred during startup.</Text>
-            <Text style={staticStyles.errorDetail}>{this.state.error?.message || 'Unknown error'}</Text>
+            <Text style={staticStyles.errorTitle}>{i18n.t('error.title', { defaultValue: 'RED GRID ERROR' })}</Text>
+            <Text style={staticStyles.errorMsg}>{i18n.t('error.message', { defaultValue: 'An unexpected error occurred during startup.' })}</Text>
+            <Text style={staticStyles.errorDetail}>{this.state.error?.message || i18n.t('localeAccess.unknownError', { defaultValue: 'Unknown error' })}</Text>
             <TouchableOpacity
               style={staticStyles.errorRetryBtn}
               onPress={() => this.setState({ hasError: false })}
               accessibilityRole="button"
-              accessibilityLabel="Retry loading application"
+              accessibilityLabel={i18n.t('localeAccess.retryApplication', { defaultValue: 'Retry loading application' })}
             >
-              <Text style={staticStyles.errorRetryText}>RETRY</Text>
+              <Text style={staticStyles.errorRetryText}>{i18n.t('error.retry', { defaultValue: 'RETRY' })}</Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -162,7 +164,7 @@ function App() {
   const positionStatus = { status: fixStatus, ageSeconds, sourceFallback, fix: lastKnownLocation };
   const displayError = location ? null : error;
   const { declination, setDeclination, paceCount, setPaceCount, theme, setTheme, tacticalMode, setTacticalMode, loaded: settingsLoaded, coordFormat, setCoordFormat, shakeToSpeak, setShakeToSpeak, gridCrossing, setGridCrossing, gridScale, setGridScale, tacticalSound, setTacticalSound, saveError: settingsSaveError, retrySave: retrySettingsSave } = useSettings();
-  const { isPro: iapIsPro, isPurchasing, product, products, selectedTier, setSelectedTier, trialEligible, purchase, restore, refreshProducts } = useIAP();
+  const { isPro: iapIsPro, ownedPlan, ownedPlanSource, isPurchasing, product, products, selectedTier, setSelectedTier, trialEligible, purchase, restore, refreshProducts } = useIAP();
 
   // Gift access is independent of paid access, with a live expiry deadline.
   const { active: trialActive, daysLeft: trialDaysLeft, refresh: refreshTrial } = useReferralTrial();
@@ -481,6 +483,9 @@ function App() {
         setTab={setTab}
         TABS={TABS}
         isPro={isPro}
+        ownedPlan={ownedPlan}
+        ownedPlanSource={ownedPlanSource}
+        giftActive={trialActive}
         isLandscape={isLandscape}
         gridProps={gridProps}
         requestReviewIfEligible={requestReviewIfEligible}
@@ -555,7 +560,7 @@ function AppContent({
   // threaded through explicitly — referencing it directly throws
   // "Property 'showTeamRoster' doesn't exist" and trips the error boundary.
   team, showTeamRoster, setShowTeamRoster,
-  safeTab, setTab, TABS, isPro, isLandscape,
+  safeTab, setTab, TABS, isPro, ownedPlan, ownedPlanSource, giftActive, isLandscape,
   gridProps, requestReviewIfEligible, mapSession, onMapSessionChange, location, declination, paceCount,
   setDeclination, setPaceCount, mgrsFormatted, showProGate,
   theme, setTheme, tacticalMode, setTacticalMode, settingsLoaded, setWaypoint,
@@ -616,6 +621,21 @@ function AppContent({
     onSaveList: savedPlans.saveList, onUpdateList: savedPlans.updateList, onDeleteList: savedPlans.deleteList,
   };
   const storeAction = useRef(false);
+  const handlePurchase = useCallback(async (tier) => {
+    if (storeAction.current || !canPurchaseTier(ownedPlan, tier)) return;
+    storeAction.current = true;
+    try {
+      if (!(await allowSystemDisplay())) return;
+      trackEvent(`purchase_tap:${tier || 'unknown'}`);
+      await purchase(tier);
+    } finally { storeAction.current = false; }
+  }, [ownedPlan, purchase]);
+  const handleRestore = useCallback(async () => {
+    if (storeAction.current) return;
+    storeAction.current = true;
+    try { if (await allowSystemDisplay()) await restore(); }
+    finally { storeAction.current = false; }
+  }, [restore]);
   const fieldModalVisible = useFieldModalVisibility();
   const canQueueReview = () => settingsLoaded && display.ready && display.active
     && !tacticalMode && !hudMode && !waypoint && !fieldNavigation.route && !routeDraft.active
@@ -864,8 +884,9 @@ function AppContent({
         products={products}
         trialEligible={trialEligible}
         isPurchasing={isPurchasing}
-        onPurchase={async (tier) => { if (storeAction.current) return; storeAction.current = true; try { if (!(await allowSystemDisplay())) return; trackEvent(`purchase_tap:${tier || 'unknown'}`); await purchase(tier); } finally { storeAction.current = false; } }}
-        onRestore={async () => { if (storeAction.current) return; storeAction.current = true; try { if (await allowSystemDisplay()) await restore(); } finally { storeAction.current = false; } }}
+        ownedPlan={ownedPlan}
+        onPurchase={handlePurchase}
+        onRestore={handleRestore}
         selectedTier={selectedTier}
         onSelectTier={setSelectedTier}
       />
@@ -875,8 +896,18 @@ function AppContent({
         visible={showSupport}
         onReviewApp={reviewGridProps.onRateApp}
         onClose={() => setShowSupport(false)}
-        onRestore={async () => { if (storeAction.current) return; storeAction.current = true; try { if (await allowSystemDisplay()) await restore(); } finally { storeAction.current = false; } }}
+        onRestore={handleRestore}
         isRestoring={isPurchasing}
+        ownedPlan={ownedPlan}
+        ownedPlanSource={ownedPlanSource}
+        giftActive={giftActive}
+        onPurchase={handlePurchase}
+        product={product}
+        products={products}
+        selectedTier={selectedTier}
+        onSelectTier={setSelectedTier}
+        trialEligible={trialEligible}
+        onRetryPrices={refreshProducts}
       />
 
       {/* What's new in this version — first launch post-update only. For free
@@ -892,7 +923,7 @@ function AppContent({
       />
 
       <WhatsNewModal
-        currentVersion="4.1.3"
+        currentVersion="4.1.5"
         showTrialCta={!isPro}
         onStartTrial={() => showProGate('')}
       />
@@ -1164,7 +1195,7 @@ function SignalBadge({ isLoading, location, status }) {
   const label = status === 'stale' ? t('gps.staleFix', { defaultValue: 'STALE FIX' })
     : location ? t('gps.gpsFix') : isLoading ? t('gps.acquiring') : t('gps.noSignal');
   return (
-    <View style={staticStyles.signal} accessibilityLiveRegion="polite" accessibilityLabel={`GPS status: ${label}`}>
+    <View style={staticStyles.signal} accessibilityLiveRegion="polite" accessibilityLabel={label}>
       <View style={[staticStyles.signalDot, { backgroundColor: color }]} />
       <Text style={[staticStyles.signalText, { color: colors.text3 }]}>{label}</Text>
     </View>
@@ -1182,8 +1213,10 @@ function FixDetails({ positionStatus }) {
     ? t('gps.receivedAge', { seconds: ageSeconds, defaultValue: 'Received {{seconds}}s ago' })
     : t('gps.observedAge', { seconds: ageSeconds, defaultValue: 'Observed {{seconds}}s ago' });
   const accuracy = Number.isFinite(fix.accuracy) ? `±${fix.accuracy}m` : t('gps.accuracyUnknown', { defaultValue: 'Accuracy unknown' });
+  // Keep the complete measurement together in RTL text; spoken values stay plain.
+  const visibleAccuracy = Number.isFinite(fix.accuracy) ? `\u2066${accuracy}\u2069` : accuracy;
   return <View style={staticStyles.fixDetails}>
-    <Text style={[staticStyles.fixDetailsText, { color: colors.text3 }]}>{source} · {age} · {accuracy}</Text>
+    <Text style={[staticStyles.fixDetailsText, { color: colors.text3 }]} accessibilityLabel={`${source} · ${age} · ${accuracy}`}>{source} · {age} · {visibleAccuracy}</Text>
     {sourceFallback && status === 'fresh' && <Text style={[staticStyles.fixDetailsText, { color: colors.text3 }]}>{t('gps.phoneFallback', { defaultValue: 'External fix unavailable · using phone GPS' })}</Text>}
   </View>;
 }
@@ -1201,7 +1234,7 @@ function ErrBlock({ error, retry, compact }) {
   const { t } = useTranslation();
   return (
     <View style={[staticStyles.errBlock, compact && { paddingVertical: 10 }]}>
-      <Text style={[staticStyles.errText, { color: colors.text2 }]} maxFontSizeMultiplier={1.3}>{error}</Text>
+      <Text style={[staticStyles.errText, { color: colors.text2 }]} maxFontSizeMultiplier={1.3}>{locationErrorMessage(error, t)}</Text>
       <TouchableOpacity style={[staticStyles.retryBtn, { borderColor: colors.border }]} onPress={retry} accessibilityRole="button" accessibilityLabel={`${t('workflow.retry')} GPS`}>
         <Text style={[staticStyles.retryText, { color: colors.text2 }]}>{t('workflow.retry')}</Text>
       </TouchableOpacity>

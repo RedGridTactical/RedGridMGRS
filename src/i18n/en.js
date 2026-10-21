@@ -3,6 +3,15 @@
  * Military/NATO terms (MGRS, SALUTE, UTM, DAGR, etc.) stay English in all locales.
  */
 export default {
+  locationErrors: {
+    "moduleUnavailable": "Location is unavailable on this device.",
+    "permissionRequestFailed": "Could not request location access. Enable it in device settings, then retry.",
+    "permissionDenied": "Location access is denied. Enable it in device settings, then retry.",
+    "timeout": "No GPS fix yet. Move to open sky or retry.",
+    "invalidObservation": "The GPS returned an invalid position. Wait for another fix or retry.",
+    "positionFailed": "Could not obtain a GPS position. Retry.",
+    "watchFailed": "Could not receive GPS updates. Retry."
+  },
   incident: {
     "resourceName": "RESOURCE NAME",
     "workspace": "INCIDENT WORKSPACE",
@@ -435,7 +444,7 @@ export default {
     "radio": "Connect a compatible Meshtastic radio for position and team messages. Radio hardware and peer setup are required. A successful send confirms a write to your radio, not delivery to a peer.",
     "tools": "Keep calculator drafts in this session, pin a dead-reckoning origin and save estimated points. Check inputs and sensor references before relying on an output.",
     "routes": "Turn Map selections into a named route, reorder points, add notes, review its card and run preflight. Confirm each point manually during navigation.",
-    "reports": "Prepare report drafts and explicitly insert device references. Copy when ready. Drafts stay in this app session until cleared or the app closes.",
+    "reports": "Prepare report drafts and incident activity logs on this device. Wait for Saved before closing. Review and export an unsigned ICS 214 draft; the app does not sign or file it. Saved records stay readable and exportable after Pro expires.",
     "photos": "Add a pinned device-position annotation to a photo. It does not verify the photo’s original location or capture time.",
     "display": "Pro includes additional green and blue palettes and HUD. Standard, Tactical, daylight and essential text sizing are available without Pro.",
     "receiver": "Connect a compatible Bluetooth NMEA receiver. Receiver hardware is required; check supported service and sentence formats before purchase.",
@@ -777,6 +786,10 @@ export default {
     stop: 'TAP TO STOP',
   },
   toolLabels: {
+    declinationEast: "EAST",
+    declinationWest: "WEST",
+    declinationNone: "NONE",
+    declinationSignHint: "+ = EAST, − = WEST",
     gridConvergence: 'GRID CONVERGENCE',
     gmAngle: 'G-M ANGLE',
     gmExplain: 'G-M angle = declination minus grid convergence. This is the number that converts between your compass and an MGRS map.',
@@ -969,7 +982,7 @@ export default {
     faqCellService: 'Does this work without cell service?',
     faqCellServiceA: "Coordinates and local calculations work without cell service when a GPS fix is available. Offline maps require a map imported beforehand. Online maps and store actions need a connection.",
     faqRestore: 'How do I restore my Pro purchase?',
-    faqRestoreA: "Use Restore Previous Purchase below while signed into the same Apple or Google store account used to buy Pro. An internet connection may be needed to verify the purchase.",
+    faqRestoreA: "Use Restore Previous Purchase while signed into the same Apple or Google store account used to buy Pro. An internet connection may be needed to verify the purchase.",
     faqData: 'What data does this app collect?',
     faqDataA: "Points, routes, incident logs, report drafts, settings and usage counters stay on this device, with no app analytics upload. Online maps and stores use external services. You choose exports, photo saving and radio sharing.",
     faqAccuracy: 'How accurate is the MGRS grid?',
@@ -1035,6 +1048,25 @@ export default {
   },
 
   // ─── ProGate / paywall ────────────────────────────────────────────────
+  managePro: {
+    "title": "Manage Pro",
+    "planFree": "Free",
+    "planMonthly": "Pro Monthly",
+    "planAnnual": "Pro Annual",
+    "planLifetime": "Pro Lifetime",
+    "planLoading": "Checking purchases…",
+    "planUnknown": "Purchase plan unavailable",
+    "giftActive": "Gift Pro access is active.",
+    "cached": "Showing saved purchase information. Restore purchases to check with the store.",
+    "unknownBody": "Restore purchases to check your plan before buying.",
+    "viewOptions": "View Pro options",
+    "viewLifetime": "View Lifetime option",
+    "buyLifetime": "Buy Lifetime Pro",
+    "manageSubscriptions": "Manage subscriptions",
+    "subscriptionNotice": "Buying Lifetime does not cancel an existing subscription. Manage or cancel that subscription in your app store.",
+    "linkFailedTitle": "Could not open subscriptions",
+    "linkFailedBody": "Open your app store and manage subscriptions from your account."
+  },
   proGate: {
     lifetimePromise: "Pay once. Keep Pro permanently, with all future Red Grid MGRS Pro features and updates. Existing Lifetime purchases are protected too. No subscription or repurchase.",
     termsOfUse: "Terms of Use",
@@ -1075,8 +1107,8 @@ export default {
     allToolsSub: 'Dead reckoning, resection, sun/moon, geostamp, and more',
     waypointsRoutes: "Saved Waypoints & Routes",
     waypointsRoutesSub: "Up to 10 lists of 20 points; GPX/KML point import and export",
-    reportsThemes: 'All Reports & Themes',
-    reportsThemesSub: "Six report forms and additional display palettes",
+    reportsThemes: "Reports & Incident Logs",
+    reportsThemesSub: "Saved drafts, incident workspaces and ICS 214 export",
     pricesUnavailable: "Connect to load current store prices and purchase options.",
     tryFreeBadge: 'PRO, TRY FREE',
   },
@@ -1246,16 +1278,16 @@ export default {
     startTrial: 'START 7-DAY FREE TRIAL',
     current: {
       "f1": {
-        "title": "LIFETIME PRO, PERMANENT",
-        "body": "Pay once and keep every future Red Grid MGRS Pro feature and update. No subscription, no repurchase. Existing Lifetime purchases are protected. Terms and Privacy links are now on the Pro screen and in Help."
+        "title": "MANAGE PRO",
+        "body": "See your saved Pro plan, restore purchases and open store subscription settings from Help."
       },
       "f2": {
-        "title": "PURCHASE RECOVERY",
-        "body": "Owned purchases restore silently on launch and when you return to the app. An offline or incomplete store check never removes saved access."
+        "title": "LIFETIME OPTION",
+        "body": "Existing subscribers can view Lifetime. Store subscriptions must be cancelled separately."
       },
       "f3": {
-        "title": "ANDROID DISPLAY",
-        "body": "Edge-to-edge layout with clearer, consistent system bars that stay correct after rotation and resume. No tracking or network added."
+        "title": "CLEARER REPORT HELP",
+        "body": "Corrected draft and incident-log descriptions. Existing Lifetime access and saved records are preserved."
       }
     },
   },
@@ -1382,5 +1414,211 @@ export default {
       groundPerKm: "GROUND PER 1000M GRID",
       explain: "Grid distance is not ground distance. Add this correction to every 1000 m measured off the grid.",
     },
+  },
+  reportFields: {
+    "salute": {
+      "size": {
+        "label": "S — SIZE",
+        "placeholder": "Squad / Platoon / Vehicle..."
+      },
+      "activity": {
+        "label": "A — ACTIVITY",
+        "placeholder": "Moving N, Digging in, Firing..."
+      },
+      "location": {
+        "label": "L — LOCATION",
+        "placeholder": "MGRS grid"
+      },
+      "unit": {
+        "label": "U — UNIT",
+        "placeholder": "Uniform / Marking / Equipment..."
+      },
+      "time": {
+        "label": "T — TIME",
+        "placeholder": "DTG observed"
+      },
+      "equip": {
+        "label": "E — EQUIPMENT",
+        "placeholder": "Weapons / Vehicles / Comms..."
+      }
+    },
+    "spot": {
+      "who": {
+        "label": "WHO",
+        "placeholder": "Reporting callsign"
+      },
+      "what": {
+        "label": "WHAT",
+        "placeholder": "What observed"
+      },
+      "where": {
+        "label": "WHERE",
+        "placeholder": "MGRS location"
+      },
+      "when": {
+        "label": "WHEN",
+        "placeholder": "DTG"
+      },
+      "why": {
+        "label": "WHY",
+        "placeholder": "Intent / significance"
+      }
+    },
+    "ics201": {
+      "incident": {
+        "label": "INCIDENT NAME",
+        "placeholder": "Operation / incident name"
+      },
+      "date": {
+        "label": "DATE / TIME",
+        "placeholder": "YYYY-MM-DD HH:mm ±HH:mm"
+      },
+      "location": {
+        "label": "LOCATION",
+        "placeholder": "MGRS / address"
+      },
+      "situation": {
+        "label": "SITUATION",
+        "placeholder": "Current situation summary"
+      },
+      "resources": {
+        "label": "RESOURCES ASSIGNED",
+        "placeholder": "Units / personnel / equipment"
+      },
+      "ic": {
+        "label": "INCIDENT COMMANDER",
+        "placeholder": "Name / callsign"
+      },
+      "objectives": {
+        "label": "OBJECTIVES",
+        "placeholder": "Priority actions"
+      },
+      "safety": {
+        "label": "SAFETY MESSAGE",
+        "placeholder": "Hazards / precautions"
+      }
+    },
+    "angus": {
+      "unit": {
+        "label": "UNIT / CALLSIGN",
+        "placeholder": "Requesting callsign"
+      },
+      "grid": {
+        "label": "TARGET GRID",
+        "placeholder": "MGRS"
+      },
+      "altitude": {
+        "label": "TARGET ALTITUDE",
+        "placeholder": "MSL in metres"
+      },
+      "description": {
+        "label": "TARGET DESCRIPTION",
+        "placeholder": "Personnel, vehicle, structure..."
+      },
+      "danger": {
+        "label": "DANGER CLOSE",
+        "placeholder": "Distance to friendlies (m)"
+      },
+      "effects": {
+        "label": "DESIRED EFFECTS",
+        "placeholder": "Neutralise / Suppress / Destroy"
+      },
+      "method": {
+        "label": "METHOD OF ENGAGEMENT",
+        "placeholder": "Direction, number of rounds..."
+      },
+      "clearance": {
+        "label": "CLEARANCE",
+        "placeholder": "Auth callsign / code word"
+      }
+    },
+    "casevac": {
+      "grid": {
+        "label": "PICKUP GRID",
+        "placeholder": "MGRS of pickup site"
+      },
+      "callsign": {
+        "label": "CALLSIGN / FREQ",
+        "placeholder": "Requesting callsign & frequency"
+      },
+      "casualties": {
+        "label": "CASUALTIES",
+        "placeholder": "Number and type (ambulatory/litter)"
+      },
+      "injuries": {
+        "label": "INJURIES / ILLNESS",
+        "placeholder": "Nature of injuries"
+      },
+      "security": {
+        "label": "SECURITY AT PICKUP",
+        "placeholder": "Clear / Hostile / Unknown"
+      },
+      "marking": {
+        "label": "MARKING",
+        "placeholder": "Panels / Smoke / None"
+      },
+      "equip": {
+        "label": "EQUIPMENT NEEDED",
+        "placeholder": "Ventilator / Litter / None"
+      },
+      "time": {
+        "label": "TIME OF INJURY",
+        "placeholder": "DTG"
+      }
+    },
+    "access": {
+      "reportSummary": "{{title}} report. {{description}}{{state}}",
+      "lockedSuffix": ". Pro feature, locked.",
+      "upgrade": "Double tap to view upgrade options",
+      "collapse": "Double tap to collapse",
+      "expand": "Double tap to expand"
+    }
+  },
+  localeAccess: {
+    "mgrsPosition": "MGRS grid: {{value}}",
+    "accuracyMeters": "accuracy plus or minus {{accuracy}} meters",
+    "altitudeMeters": "altitude {{altitude}} meters",
+    "closeWaypointCard": "Close waypoint card",
+    "navigateTo": "Navigate to {{name}}",
+    "deleteNamed": "Delete {{name}}",
+    "waypoint": "Waypoint",
+    "openLicense": "{{attribution}}. Opens licence page.",
+    "toggleOfflineMap": "Toggle offline map mode",
+    "clearCachedTilesHint": "Long press to clear cached tiles",
+    "mapStyle": "Map style: {{style}}. Tap to cycle.",
+    "exitRoutePlanning": "Exit route planning mode",
+    "startRoutePlanning": "Start route planning mode (Pro)",
+    "routePlanning": "Route Planning",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "optimizeRouteFromLocation": "Optimize route order from current location",
+    "clearRouteWaypoints": "Clear all waypoints from route",
+    "importedMapTiles": "{{name}} · {{total}} tiles",
+    "mapUnavailable": "Map module unavailable. Rebuild the app to enable.",
+    "secondsAgo": "{{seconds}}s ago",
+    "minutesAgo": "{{minutes}}m ago",
+    "hoursAgo": "{{hours}}h ago",
+    "listSummary": "{{name}}, {{total}} of 20 waypoints",
+    "deleteListHint": "Long press to delete list",
+    "createNewList": "Create new waypoint list",
+    "newListName": "New list name",
+    "createList": "Create list",
+    "cancelCreateList": "Cancel creating list",
+    "exportList": "Export waypoint list",
+    "enterMgrsManually": "Enter MGRS grid manually",
+    "addCurrentPosition": "Add current GPS position as waypoint",
+    "waypointLabel": "Waypoint label",
+    "addGridWaypoint": "Add grid waypoint",
+    "cancelGridEntry": "Cancel grid entry",
+    "editMgrsCoordinate": "Edit MGRS coordinate",
+    "saveEditedCoordinate": "Save edited coordinate",
+    "copyNamedMgrs": "Copy {{name}} MGRS",
+    "editNamedCoordinate": "Edit {{name}} coordinate",
+    "retryApplication": "Retry loading application",
+    "unknownError": "Unknown error",
+    "optionalWaypointName": "Optional name for this waypoint",
+    "enterFullMgrs": "Enter full MGRS grid coordinate",
+    "exampleValue": "e.g. {{value}}",
+    "signedDegreeExample": "+5 or -12"
   },
 };

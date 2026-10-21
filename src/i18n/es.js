@@ -435,7 +435,7 @@ export default {
       "radio": "Conecta una radio Meshtastic compatible para posiciones y mensajes de equipo. Requiere hardware de radio y configuración de los pares. Un envío correcto confirma la escritura en tu radio, no la entrega a otro equipo.",
       "tools": "Conserva borradores de cálculo durante esta sesión, fija un origen de estima y guarda puntos estimados. Comprueba las entradas y referencias de sensores antes de usar un resultado.",
       "routes": "Convierte selecciones del Mapa en una ruta con nombre, reordena puntos, añade notas, revisa la tarjeta y las comprobaciones previas. Confirma cada punto manualmente durante la navegación.",
-      "reports": "Prepara borradores de informes e inserta referencias del dispositivo explícitamente. Copia cuando estén listos. Se conservan durante esta sesión hasta borrarlos o cerrar la app.",
+      "reports": "Prepare borradores de informes y registros de actividad de incidentes en este dispositivo. Espere la confirmación de guardado antes de cerrar. Revise y exporte un borrador ICS 214 sin firmar; la app no lo firma ni lo presenta. Los registros guardados se pueden leer y exportar después de que caduque Pro.",
       "photos": "Añade a una foto una anotación fijada de posición del dispositivo. No verifica la ubicación original ni la hora de captura de la foto.",
       "display": "Pro incluye paletas verde y azul adicionales y HUD. Estándar, Táctico, Luz diurna y el tamaño de texto esencial están disponibles sin Pro.",
       "receiver": "Conecta un receptor Bluetooth NMEA compatible. Se necesita hardware receptor; comprueba los formatos de servicio y sentencias compatibles antes de comprar.",
@@ -587,16 +587,16 @@ export default {
     startTrial: "INICIAR PRUEBA GRATIS DE 7 DÍAS",
     current: {
       "f1": {
-        "title": "PRO DE POR VIDA, PERMANENTE",
-        "body": "Paga una vez y conserva todas las futuras funciones y actualizaciones de Red Grid MGRS Pro. Sin suscripción ni nueva compra. Las compras de por vida existentes están protegidas. Enlaces a Términos y Privacidad en la pantalla Pro y en Ayuda."
+        "title": "GESTIONAR PRO",
+        "body": "Desde Ayuda, consulte su plan Pro guardado, restaure compras y abra los ajustes de suscripción de la tienda."
       },
       "f2": {
-        "title": "RECUPERACIÓN DE COMPRAS",
-        "body": "Tus compras se restauran en silencio al iniciar y al volver a la app. Una comprobación sin conexión o incompleta nunca retira el acceso guardado."
+        "title": "OPCIÓN DE POR VIDA",
+        "body": "Los suscriptores pueden ver la opción de por vida. Las suscripciones de la tienda deben cancelarse por separado."
       },
       "f3": {
-        "title": "PANTALLA ANDROID",
-        "body": "Diseño de borde a borde con barras del sistema más claras y coherentes tras girar y reanudar. Sin rastreo ni red añadidos."
+        "title": "AYUDA DE INFORMES MÁS CLARA",
+        "body": "Descripciones de borradores y registros de incidentes corregidas. Se conservan el acceso de por vida y los registros guardados existentes."
       }
     },
   },
@@ -814,6 +814,10 @@ export default {
     stop: 'TOCA PARA DETENER',
   },
   toolLabels: {
+    declinationEast: "ESTE",
+    declinationWest: "OESTE",
+    declinationNone: "NINGUNA",
+    declinationSignHint: "+ = ESTE, − = OESTE",
     compassGridUnavailable: "El autocompletado de la brújula requiere el norte verdadero y una posición GPS. Introduce manualmente un rumbo de cuadrícula.",
     useCompassGrid: "Usar el rumbo actual de la brújula: {{heading}} grados respecto al norte de cuadrícula",
     compassGrid: "BRÚJULA · CUADRÍCULA",
@@ -994,7 +998,7 @@ export default {
     faqCellService: '\u00bfFunciona sin servicio celular?',
     faqCellServiceA: "Las coordenadas y los cálculos locales funcionan sin cobertura móvil si hay una posición GPS. Los mapas sin conexión deben importarse antes. Los mapas en línea y la tienda requieren conexión.",
     faqRestore: '\u00bfC\u00f3mo restauro mi compra Pro?',
-    faqRestoreA: "Usa Restaurar compra abajo con la misma cuenta de Apple o Google utilizada para comprar Pro. Puede ser necesaria una conexión para verificar la compra.",
+    faqRestoreA: "Usa Restaurar compra con la misma cuenta de Apple o Google utilizada para comprar Pro. Puede ser necesaria una conexión para verificar la compra.",
     faqData: '\u00bfQu\u00e9 datos recopila esta app?',
     faqDataA: "Puntos, rutas, registros de incidentes, borradores de informes, ajustes y contadores de uso permanecen en este dispositivo, sin envío de analíticas de la app. Los mapas en línea y las tiendas usan servicios externos. Tú decides las exportaciones, el guardado de fotos y el envío por radio.",
     faqAccuracy: '\u00bfQu\u00e9 tan precisa es la cuadr\u00edcula MGRS?',
@@ -1056,6 +1060,25 @@ export default {
     importUnavailable: 'Importaci\u00f3n no disponible',
     importRequires: 'expo-document-picker y expo-file-system son necesarios para importar.',
   },
+  managePro: {
+    "title": "Gestionar Pro",
+    "planFree": "Gratis",
+    "planMonthly": "Pro mensual",
+    "planAnnual": "Pro anual",
+    "planLifetime": "Pro de por vida",
+    "planLoading": "Comprobando compras…",
+    "planUnknown": "Información del plan comprado no disponible",
+    "giftActive": "El acceso Pro de regalo está activo.",
+    "cached": "Se muestra la información de compra guardada. Restaure las compras para comprobarla con la tienda.",
+    "unknownBody": "Restaure las compras para comprobar su plan antes de comprar.",
+    "viewOptions": "Ver opciones Pro",
+    "viewLifetime": "Ver opción de por vida",
+    "buyLifetime": "Comprar Pro de por vida",
+    "manageSubscriptions": "Gestionar suscripciones",
+    "subscriptionNotice": "Comprar de por vida no cancela una suscripción existente. Gestione o cancele esa suscripción en su tienda de aplicaciones.",
+    "linkFailedTitle": "No se pudieron abrir las suscripciones",
+    "linkFailedBody": "Abra su tienda de aplicaciones y gestione las suscripciones desde su cuenta."
+  },
   proGate: {
     lifetimePromise: "Paga una vez. Conserva Pro de forma permanente, con todas las futuras funciones y actualizaciones de Red Grid MGRS Pro. Las compras De por vida existentes también están protegidas. Sin suscripción ni recompra.",
     termsOfUse: "Términos de uso",
@@ -1095,8 +1118,8 @@ export default {
     allToolsSub: 'Estima, resecci\u00f3n, sol/luna, geosello y m\u00e1s',
     waypointsRoutes: "Puntos y rutas guardados",
     waypointsRoutesSub: "Hasta 10 listas de 20 puntos; importación y exportación de puntos GPX/KML",
-    reportsThemes: 'Todos los informes y temas',
-    reportsThemesSub: "Seis formularios de informe y paletas adicionales",
+    reportsThemes: "Informes y registros de incidentes",
+    reportsThemesSub: "Borradores guardados, espacios de incidentes y exportación ICS 214",
     pricesUnavailable: "Conéctate para cargar precios y opciones de compra actuales.",
     tryFreeBadge: 'PRO, PRUEBA GRATIS',
   },

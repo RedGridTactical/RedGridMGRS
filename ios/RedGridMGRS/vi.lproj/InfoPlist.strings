@@ -1,0 +1,11 @@
+/* Localized permission descriptions. */
+"NSBluetoothAlwaysUsageDescription" = "Red Grid MGRS dùng Bluetooth để kết nối với máy bộ đàm Meshtastic cho mạng mesh ngoài vùng phủ sóng. Không có dữ liệu nào được truyền qua internet.";
+"NSBluetoothPeripheralUsageDescription" = "Red Grid MGRS dùng Bluetooth để kết nối với máy bộ đàm Meshtastic cho mạng mesh ngoài vùng phủ sóng. Không có dữ liệu nào được truyền qua internet.";
+"NSCameraUsageDescription" = "Red Grid MGRS dùng máy ảnh để chụp ảnh gắn tọa độ. Ảnh được đóng dấu lưới MGRS của bạn và chỉ lưu trên thiết bị của bạn.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Cho phép Red Grid MGRS truy cập vị trí của bạn";
+"NSLocationAlwaysUsageDescription" = "Cho phép Red Grid MGRS truy cập vị trí của bạn";
+"NSLocationWhenInUseUsageDescription" = "Red Grid MGRS dùng vị trí của bạn cho tọa độ lưới và dẫn đường. Bạn có thể lưu điểm mốc trên thiết bị và tự chọn chia sẻ hoặc gửi vị trí của mình qua bộ đàm đã kết nối.";
+"NSMicrophoneUsageDescription" = "Cho phép Red Grid MGRS truy cập micrô của bạn";
+"NSMotionUsageDescription" = "Cho phép Red Grid MGRS truy cập cảm biến chuyển động của thiết bị";
+"NSPhotoLibraryAddUsageDescription" = "Cho phép Red Grid MGRS lưu ảnh";
+"NSPhotoLibraryUsageDescription" = "Red Grid MGRS truy cập thư viện ảnh của bạn để chọn ảnh gắn tọa độ. Không có ảnh nào được tải lên hay truyền đi.";

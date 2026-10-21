@@ -1,6 +1,6 @@
 /**
  * useIAP — Crash-safe IAP hook (HARDENED for iOS beta + Android Play Billing).
- * Returns: { isPro, isPurchasing, product, products, selectedTier, setSelectedTier,
+ * Returns: { isPro, ownedPlan, ownedPlanSource, isPurchasing, product, products, selectedTier, setSelectedTier,
  *            trialEligible, purchase, restore, lastPurchaseError, clearPurchaseError }
  *
  * Android-specific notes:
@@ -75,6 +75,12 @@ const isAndroid = Platform.OS === 'android';
 
 const identityKey = identity => identity ? `${identity.productId}:${identity.transactionId}` : null;
 const receiptFor = p => p.transactionReceipt || p.transactionId || p.purchaseToken || p.purchaseTokenAndroid || 'verified';
+const planForSku = sku => sku === PRO_PRODUCT_ID ? 'lifetime' :
+  sku === SUB_MONTHLY_ID ? 'monthly' : sku === SUB_ANNUAL_ID ? 'annual' : 'unknown';
+// Shopping selection never establishes ownership. Existing subscribers may
+// voluntarily buy Lifetime; permanent or ambiguous old grants need no checkout.
+const canPurchaseForRecord = (record, sku) => !record.unlocked ||
+  ((record.sku === SUB_MONTHLY_ID || record.sku === SUB_ANNUAL_ID) && sku === PRO_PRODUCT_ID);
 
 // The native error event and requestPurchase promise can report the same
 // deferral in either order. Scope the notice to a checkout, never the session,
@@ -137,6 +143,7 @@ async function ackAndroid(purchases) {
 
 export function useIAP() {
   const [isPro,        setIsPro]        = useState(false);
+  const [ownedPlanState, setOwnedPlanState] = useState({ plan: 'loading', source: 'loading' });
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring,  setIsRestoring]  = useState(false);
   // Last purchase failure surfaced by the error listener, for the paywall UI.
@@ -170,7 +177,7 @@ export function useIAP() {
   const fetchProductDetailsRef = useRef(null);
 
   const entitlementRevision = useRef(0);
-  const entitlementRecord = useRef({ unlocked: false, sku: null, identity: null });
+  const entitlementRecord = useRef({ unlocked: false, sku: null, identity: null, source: 'none' });
   const hydration = useRef(null);
   const revokedTransactions = useRef(new Set());
   const refreshInFlight = useRef(null);
@@ -238,7 +245,11 @@ export function useIAP() {
         (!isAndroid ? iosTransactionIdentity(purchase, ALL_PRODUCT_IDS) : null));
     // Publish the identity before waiting for disk: a refund arriving during
     // an earlier storage write must be able to match this pending grant.
-    entitlementRecord.current = { unlocked: true, sku, identity };
+    // A positive subscription result must not relabel preserved Lifetime or
+    // unknown legacy access as store-confirmed subscription ownership.
+    const planSource = keepPrevious && previous.sku !== productSku ? previous.source : 'store';
+    entitlementRecord.current = { unlocked: true, sku, identity, source: planSource };
+    setOwnedPlanState({ plan: planForSku(sku), source: planSource });
     setIsPro(true);
     await writeEntitlement(async () => {
       if (!canGrant(purchase, source)) return;
@@ -329,7 +340,8 @@ export function useIAP() {
         }
         if (!explicitlyRevoked && Date.now() - verifiedAt <= SUB_REVERIFY_GRACE_MS) return;
         entitlementRevision.current += 1;
-        entitlementRecord.current = { unlocked: false, sku: null, identity: null };
+        entitlementRecord.current = { unlocked: false, sku: null, identity: null, source: 'none' };
+        setOwnedPlanState({ plan: 'free', source: 'none' });
         setIsPro(false);
         for (const key of [PRO_KEY, PRO_RECEIPT_KEY, PRO_PRODUCT_KEY, PRO_VERIFIED_AT, PRO_TRANSACTION_KEY, PRO_PENDING_REVOCATION]) {
           await AsyncStorage.removeItem(key).catch(() => {});
@@ -378,7 +390,11 @@ export function useIAP() {
           if (identity && identityKey(pending) === identityKey(identity)) revokedTransactions.current.add(identityKey(identity));
         } catch {}
         const unlocked = proFlag === 'true';
-        entitlementRecord.current = { unlocked, sku: unlocked ? sku : null, identity: unlocked ? identity : null };
+        entitlementRecord.current = {
+          unlocked, sku: unlocked ? sku : null, identity: unlocked ? identity : null,
+          source: unlocked ? 'cache' : 'none',
+        };
+        setOwnedPlanState({ plan: unlocked ? planForSku(sku) : 'free', source: unlocked ? 'cache' : 'none' });
         setIsPro(unlocked);
         await writeEntitlement(async () => {
           if (cancelled || revision !== entitlementRevision.current) return;
@@ -702,6 +718,19 @@ export function useIAP() {
 
   // ── Purchase (supports lifetime IAP + subscriptions) ──────────────────────
   const purchase = useCallback(async (tier) => {
+    // Resolve cached ownership before checkout, including calls made from a
+    // stale screen. Loading/legacy/permanent access must never trigger repurchase.
+    if (!hydration.current) return;
+    await hydration.current;
+    if (!mounted.current) return;
+
+    // Annual is retired from sale; it remains valid owned access.
+    const requestedTier = tier || selectedTier;
+    const effectiveTier = requestedTier === 'annual' ? 'monthly' : requestedTier;
+    const sub = isSubTier(effectiveTier);
+    const sku = tierToSku(effectiveTier);
+    if (!canPurchaseForRecord(entitlementRecord.current, sku)) return;
+
     if (!IAPModule) {
       try {
         Alert.alert(i18n.t('iap.unavailableTitle'), i18n.t('iap.unavailableBody'));
@@ -712,14 +741,6 @@ export function useIAP() {
     const attempt = { pendingNotified: false };
     purchaseAttempt.current = attempt;
     if (mounted.current) setIsPurchasing(true);
-
-    // Normalize BEFORE anything is keyed off the tier: 'annual' is retired, so
-    // a stale value (persisted state, deep link) buys monthly instead of
-    // dead-ending on a product lookup that can no longer resolve.
-    const requestedTier = tier || selectedTier;
-    const effectiveTier = requestedTier === 'annual' ? 'monthly' : requestedTier;
-    const sub = isSubTier(effectiveTier);
-    const sku = tierToSku(effectiveTier);
 
     try {
       if (!IAPModule.requestPurchase) {
@@ -786,6 +807,10 @@ export function useIAP() {
       };
 
       const purchaseRequest = { request, type: sub ? 'subs' : 'inapp' };
+
+      // A restore or delayed store event may have granted Lifetime while
+      // product details were loading. Recheck the live record before billing.
+      if (!canPurchaseForRecord(entitlementRecord.current, sku)) return;
 
       // Fire-and-forget: trackEvent swallows its own errors and never rejects,
       // so it cannot break checkout. Not awaited, to keep the sheet instant.
@@ -950,6 +975,8 @@ export function useIAP() {
 
   return {
     isPro,
+    ownedPlan: ownedPlanState.plan,
+    ownedPlanSource: ownedPlanState.source,
     isPurchasing: isPurchasing || isRestoring,
     product,
     products,

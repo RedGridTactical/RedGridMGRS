@@ -435,7 +435,7 @@ export default {
       "radio": "Verbind een compatibele Meshtastic-radio voor positie- en teamberichten. Radiohardware en ingestelde medegebruikers zijn vereist. Succesvol verzenden bevestigt een schrijfactie naar uw radio, niet de ontvangst door een medegebruiker.",
       "tools": "Bewaar rekenconcepten in deze sessie, zet een beginpunt voor gegist bestek vast en sla geschatte punten op. Controleer invoer en sensorreferenties voordat u op een resultaat vertrouwt.",
       "routes": "Maak van kaartselecties een benoemde route, wijzig de puntvolgorde, voeg notities toe, controleer de kaart en voer de vertrekcontrole uit. Bevestig elk punt handmatig tijdens de navigatie.",
-      "reports": "Bereid rapportconcepten voor en voeg apparaatreferenties expliciet in. Kopieer wanneer ze klaar zijn. Concepten blijven in deze app-sessie totdat ze worden gewist of de app sluit.",
+      "reports": "Maak rapportconcepten en activiteitenlogboeken voor incidenten op dit apparaat. Wacht op de opslagbevestiging voordat u afsluit. Controleer en exporteer een niet-ondertekend ICS 214-concept; de app ondertekent het niet en dient het niet in. Opgeslagen gegevens blijven leesbaar en exporteerbaar nadat Pro verloopt.",
       "photos": "Voeg een vastgezette apparaatpositie als annotatie aan een foto toe. Dit verifieert niet de oorspronkelijke locatie of opnametijd van de foto.",
       "display": "Pro bevat extra groene en blauwe kleurpaletten en HUD. Standaard, Tactisch, daglicht en essentiële tekstgrootte zijn zonder Pro beschikbaar.",
       "receiver": "Verbind een compatibele Bluetooth-NMEA-ontvanger. Ontvangerhardware is vereist; controleer ondersteunde diensten en berichtformaten vóór aankoop.",
@@ -608,16 +608,16 @@ export default {
     startTrial: "START GRATIS PROEFPERIODE VAN 7 DAGEN",
     current: {
       "f1": {
-        "title": "PRO VOOR ALTIJD, PERMANENT",
-        "body": "Betaal één keer en houd alle toekomstige functies en updates van Red Grid MGRS Pro. Geen abonnement, geen nieuwe aankoop. Bestaande levenslange aankopen zijn beschermd. Links naar Voorwaarden en Privacy op het Pro-scherm en in Help."
+        "title": "PRO BEHEREN",
+        "body": "Bekijk je opgeslagen Pro-plan, herstel aankopen en open de abonnementsinstellingen van de winkel via Help."
       },
       "f2": {
-        "title": "AANKOOPHERSTEL",
-        "body": "Aankopen worden stil hersteld bij het starten en bij terugkeer naar de app. Een offline of onvolledige storecontrole verwijdert nooit opgeslagen toegang."
+        "title": "OPTIE VOOR HET LEVEN",
+        "body": "Bestaande abonnees kunnen Voor het leven bekijken. Winkelabonnementen moeten apart worden beëindigd."
       },
       "f3": {
-        "title": "ANDROID-WEERGAVE",
-        "body": "Randloze lay-out met duidelijkere, consistente systeembalken na draaien en hervatten. Geen tracking of netwerk toegevoegd."
+        "title": "DUIDELIJKERE HULP BIJ RAPPORTEN",
+        "body": "Beschrijvingen van concepten en incidentlogboeken gecorrigeerd. Bestaande toegang Voor het leven en opgeslagen gegevens blijven behouden."
       }
     },
   },
@@ -814,6 +814,10 @@ export default {
     stop: 'TIK OM TE STOPPEN',
   },
   toolLabels: {
+    declinationEast: "OOST",
+    declinationWest: "WEST",
+    declinationNone: "GEEN",
+    declinationSignHint: "+ = OOST, − = WEST",
     compassGridUnavailable: "Automatisch invullen vereist het ware noorden en een GPS-positie. Voer handmatig een richting ten opzichte van kaartnoord in.",
     useCompassGrid: "Huidige kompasrichting van {{heading}} graden ten opzichte van kaartnoord gebruiken",
     compassGrid: "KOMPAS · KAARTNOORD",
@@ -994,7 +998,7 @@ export default {
     faqCellService: 'Werkt dit zonder mobiel netwerk?',
     faqCellServiceA: "Coördinaten en lokale berekeningen werken zonder mobiel bereik bij een GPS-fix. Offlinekaarten moeten vooraf zijn geïmporteerd. Onlinekaarten en winkelfuncties vereisen verbinding.",
     faqRestore: 'Hoe herstel ik mijn Pro-aankoop?',
-    faqRestoreA: "Gebruik hieronder Aankoop herstellen met hetzelfde Apple- of Google-account als bij de Pro-aankoop. Voor verificatie kan internet nodig zijn.",
+    faqRestoreA: "Gebruik Aankoop herstellen met hetzelfde Apple- of Google-account als bij de Pro-aankoop. Voor verificatie kan internet nodig zijn.",
     faqData: 'Welke data verzamelt deze app?',
     faqDataA: "Punten, routes, incidentlogboeken, rapportconcepten, instellingen en gebruiksteller blijven op dit apparaat, zonder upload van app-analyse. Onlinekaarten en stores gebruiken externe diensten. Exporteren, foto's opslaan en delen via radio kies je zelf.",
     faqAccuracy: 'Hoe nauwkeurig is het MGRS-grid?',
@@ -1045,13 +1049,32 @@ export default {
     importUnavailable: 'Import niet beschikbaar',
     importRequires: 'expo-document-picker en expo-file-system zijn vereist voor importeren.',
   },
+  managePro: {
+    "title": "Pro beheren",
+    "planFree": "Gratis",
+    "planMonthly": "Pro maandelijks",
+    "planAnnual": "Pro jaarlijks",
+    "planLifetime": "Pro voor het leven",
+    "planLoading": "Aankopen controleren…",
+    "planUnknown": "Informatie over het aangeschafte plan niet beschikbaar",
+    "giftActive": "De geschonken Pro-toegang is actief.",
+    "cached": "Opgeslagen aankoopgegevens worden getoond. Herstel aankopen om ze bij de winkel te controleren.",
+    "unknownBody": "Herstel aankopen om je plan te controleren voordat je iets koopt.",
+    "viewOptions": "Pro-opties bekijken",
+    "viewLifetime": "Optie Voor het leven bekijken",
+    "buyLifetime": "Pro voor het leven kopen",
+    "manageSubscriptions": "Abonnementen beheren",
+    "subscriptionNotice": "De aankoop van Voor het leven beëindigt een bestaand abonnement niet. Beheer of beëindig dat abonnement in je appwinkel.",
+    "linkFailedTitle": "Abonnementen konden niet worden geopend",
+    "linkFailedBody": "Open je appwinkel en beheer abonnementen via je account."
+  },
   proGate: {
     lifetimePromise: "Betaal één keer. Houd Pro permanent, met alle toekomstige functies en updates van Red Grid MGRS Pro. Bestaande aankopen voor het leven zijn ook beschermd. Geen abonnement, geen nieuwe aankoop.",
     termsOfUse: "Gebruiksvoorwaarden",
     "offlineMapsSub": "Importeer een toegestane raster-MBTiles-kaart voordat je het bereik verlaat",
     "waypointsRoutes": "Opgeslagen waypoints en routes",
     "waypointsRoutesSub": "Maximaal 10 lijsten van 20 punten; GPX/KML-punten importeren en exporteren",
-    "reportsThemesSub": "Zes rapportformulieren en extra paletten",
+    "reportsThemesSub": "Opgeslagen concepten, incidentwerkruimten en ICS 214-export",
     "pricesUnavailable": "Maak verbinding om actuele winkelprijzen en koopopties te laden.",
 
     badge: 'PRO',
@@ -1084,7 +1107,7 @@ export default {
     meshAwarenessSub: "Zie mesh-nodes op de kaart, zonder mobiel netwerk",
     allTools: "Alle 12 tactische tools",
     allToolsSub: "Gegist bestek, resectie, zon/maan, geostempel en meer",
-    reportsThemes: "Alle rapporten en thema's",
+    reportsThemes: "Rapporten en incidentlogboeken",
   },
   mesh: {
     pairing: {

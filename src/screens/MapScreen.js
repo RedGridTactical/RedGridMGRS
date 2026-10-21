@@ -93,12 +93,12 @@ function PulsingDot({ color }) {
 }
 
 // Time-since helper for mesh markers
-function timeSince(ts) {
+function timeSince(ts, t) {
   if (!ts) return '';
   const sec = Math.floor((Date.now() - ts) / 1000);
-  if (sec < 60) return `${sec}s ago`;
-  if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
-  return `${Math.floor(sec / 3600)}h ago`;
+  if (sec < 60) return t('localeAccess.secondsAgo', { seconds: sec, defaultValue: '{{seconds}}s ago' });
+  if (sec < 3600) return t('localeAccess.minutesAgo', { minutes: Math.floor(sec / 60), defaultValue: '{{minutes}}m ago' });
+  return t('localeAccess.hoursAgo', { hours: Math.floor(sec / 3600), defaultValue: '{{hours}}h ago' });
 }
 
 // Tile sources — Standard (OSM), Dark (CartoDB), Topo (OpenTopoMap).
@@ -284,7 +284,7 @@ export function MapScreen({
         latitudeDelta: Math.max(0.002, (north - south) * 1.1), longitudeDelta: Math.max(0.002, (east - west) * 1.1) };
       setMapRegion(region); mapRef.current?.animateToRegion(region, 300);
       notifySuccess();
-      Alert.alert(t('nightDisplay.importMap'), `${result.metadata.name} · ${result.total} tiles\n\n${t('mapImport.checkBody')}`);
+      Alert.alert(t('nightDisplay.importMap'), `${t('localeAccess.importedMapTiles', { name: result.metadata.name, total: result.total, defaultValue: '{{name}} · {{total}} tiles' })}\n\n${t('mapImport.checkBody')}`);
     } catch (error) {
       setImportInfoVisible(false);
       if (!importCancelled.current && error.code !== 'IMPORT_CANCELLED') Alert.alert(t('nightDisplay.importMap'), error.message || t('nightDisplay.providerBody'));
@@ -352,7 +352,7 @@ export function MapScreen({
   const saveWaypointFromMenu = async () => {
     if (!pendingWaypoint || mapWriteBusy.current || listsLoading || listsLoadError) return false;
     if (!isPro && waypoints.length >= FREE_WAYPOINT_LIMIT) {
-      onShowProGate?.('Saved Waypoints', 'routes'); return false;
+      onShowProGate?.(t('proGate.savedWaypoints'), 'routes'); return false;
     }
     const point = { ...pendingWaypoint, label: wpLabel.trim() || pendingWaypoint.mgrs, source: 'map', recordedAt: Date.now() };
     mapWriteBusy.current = true; setMapSaveError(false);
@@ -429,7 +429,7 @@ export function MapScreen({
 
   // Route order is retained by App across tab changes until saved or discarded.
   const beginRouteMode = () => {
-    if (!isPro) { onShowProGate?.('Route Planning', 'routes'); return; }
+    if (!isPro) { onShowProGate?.(t('localeAccess.routePlanning', { defaultValue: 'Route Planning' }), 'routes'); return; }
     setSelectedMarker(null);
     updateRouteDraft(previous => ({ ...previous, active: true, id: previous?.id || makeId(), waypoints: previous?.waypoints || [], name: previous?.name || '' }));
   };
@@ -526,7 +526,7 @@ export function MapScreen({
     return (
       <View style={[styles.fallback, { backgroundColor: colors.bg }]}>
         <Text style={[styles.fallbackText, { color: colors.text3 }]}>
-          Map module unavailable. Rebuild the app to enable.
+          {t('localeAccess.mapUnavailable', { defaultValue: 'Map module unavailable. Rebuild the app to enable.' })}
         </Text>
       </View>
     );
@@ -600,7 +600,7 @@ export function MapScreen({
             <Marker
               key={wp.mapKey}
               coordinate={{ latitude: wp.lat, longitude: wp.lon }}
-              title={wp.label || 'Waypoint'}
+              title={wp.label || t('localeAccess.waypoint', { defaultValue: 'Waypoint' })}
               description={description}
               onPress={() => handleWaypointPress(wp)}
               pinColor={colors.accent}
@@ -616,7 +616,7 @@ export function MapScreen({
 
         {/* Mesh node markers */}
         {meshPositions.filter(p => p.lat && p.lon).map((node, idx) => {
-          const nodeLabel = node.nodeId ? `#${node.nodeId.toString(16).toUpperCase()}` : `Node ${idx + 1}`;
+          const nodeLabel = node.nodeId ? `#${node.nodeId.toString(16).toUpperCase()}` : `${t('mesh.node')} ${idx + 1}`;
           const mgrs = formatMGRS(toMGRS(node.lat, node.lon, 5));
           let desc = mgrs;
           if (location) {
@@ -626,7 +626,7 @@ export function MapScreen({
               desc = `${mgrs}\nBRG ${brg} DST ${dst}`;
             } catch {}
           }
-          if (node.timestamp) desc += `\n${timeSince(node.timestamp)}`;
+          if (node.timestamp) desc += `\n${timeSince(node.timestamp, t)}`;
           return (
             <Marker
               key={`mesh-${node.nodeId || idx}`}
@@ -675,13 +675,13 @@ export function MapScreen({
               numberOfLines={1}
               accessibilityRole="header"
             >
-              {selectedMarker.label || 'WAYPOINT'}
+              {selectedMarker.label || t('localeAccess.waypoint', { defaultValue: 'Waypoint' })}
             </Text>
             <TouchableOpacity
               style={styles.markerCardClose}
               onPress={() => { tapLight(); setSelectedMarker(null); }}
               accessibilityRole="button"
-              accessibilityLabel="Close waypoint card"
+              accessibilityLabel={t('localeAccess.closeWaypointCard', { defaultValue: 'Close waypoint card' })}
             >
               <Text style={[styles.markerCardCloseText, { color: colors.text3 }]}>✕</Text>
             </TouchableOpacity>
@@ -704,15 +704,15 @@ export function MapScreen({
               style={[styles.markerCardBtn, { borderColor: colors.text2 }]}
               onPress={navigateToSelectedMarker}
               accessibilityRole="button"
-              accessibilityLabel={`Navigate to ${selectedMarker.label || 'waypoint'}`}
+              accessibilityLabel={t('localeAccess.navigateTo', { name: selectedMarker.label || t('localeAccess.waypoint', { defaultValue: 'Waypoint' }), defaultValue: 'Navigate to {{name}}' })}
             >
-              <Text style={[styles.markerCardBtnText, { color: colors.text2 }]}>NAV</Text>
+              <Text style={[styles.markerCardBtnText, { color: colors.text2 }]}>{t('waypoints.nav')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.markerCardBtn, { borderColor: colors.border }]}
               onPress={confirmDeleteSelectedMarker}
               accessibilityRole="button"
-              accessibilityLabel={`Delete ${selectedMarker.label || 'waypoint'}`}
+              accessibilityLabel={t('localeAccess.deleteNamed', { name: selectedMarker.label || t('localeAccess.waypoint', { defaultValue: 'Waypoint' }), defaultValue: 'Delete {{name}}' })}
             >
               <Text style={[styles.markerCardBtnText, { color: colors.text3 }]}>{t('map.delete')}</Text>
             </TouchableOpacity>
@@ -731,7 +731,7 @@ export function MapScreen({
           style={[styles.attribution, { backgroundColor: colors.card + 'E6', borderColor: colors.border }, androidMapPadding && { bottom: androidMapPadding.bottom + 40 }]}
           onPress={openAttribution}
           accessibilityRole="link"
-          accessibilityLabel={`${onlineStyle.attribution}. Opens licence page.`}
+          accessibilityLabel={t('localeAccess.openLicense', { attribution: onlineStyle.attribution, defaultValue: '{{attribution}}. Opens licence page.' })}
         >
           <Text style={[styles.attributionText, { color: colors.text2 }]}>{onlineStyle.attribution}</Text>
         </TouchableOpacity>
@@ -761,7 +761,7 @@ export function MapScreen({
             }]}
             onPress={toggleOffline}
             accessibilityRole="switch"
-            accessibilityLabel="Toggle offline map mode"
+            accessibilityLabel={t('localeAccess.toggleOfflineMap', { defaultValue: 'Toggle offline map mode' })}
             accessibilityState={{ checked: offlineMode }}
           >
             <Text style={[styles.mapBtnIcon, { color: offlineMode ? colors.actionText : colors.accentText }]}>
@@ -778,7 +778,7 @@ export function MapScreen({
           disabled={downloading}
           accessibilityRole="button"
           accessibilityLabel={t('nightDisplay.importMap')}
-          accessibilityHint="Long press to clear cached tiles"
+          accessibilityHint={t('localeAccess.clearCachedTilesHint', { defaultValue: 'Long press to clear cached tiles' })}
         >
           <Text style={[styles.mapBtnIcon, { color: colors.accentText, opacity: downloading ? 0.4 : 1 }]}>⬇</Text>
         </TouchableOpacity>
@@ -788,7 +788,7 @@ export function MapScreen({
           style={[styles.mapBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
           onPress={cycleMapStyle}
           accessibilityRole="button"
-          accessibilityLabel={`Map style: ${mapStyleLabel}. Tap to cycle.`}
+          accessibilityLabel={t('localeAccess.mapStyle', { style: mapStyleLabel, defaultValue: 'Map style: {{style}}. Tap to cycle.' })}
         >
           <Text style={[styles.mapBtnLabel, { color: colors.accentText }]}>{mapStyleLabel}</Text>
         </TouchableOpacity>
@@ -801,7 +801,9 @@ export function MapScreen({
           }]}
           onPress={toggleRouteMode}
           accessibilityRole="button"
-          accessibilityLabel={routeMode ? 'Exit route planning mode' : 'Start route planning mode (Pro)'}
+          accessibilityLabel={routeMode
+            ? t('localeAccess.exitRoutePlanning', { defaultValue: 'Exit route planning mode' })
+            : t('localeAccess.startRoutePlanning', { defaultValue: 'Start route planning mode (Pro)' })}
           accessibilityState={{ selected: routeMode }}
         >
           <Text style={[styles.mapBtnLabel, { color: routeMode ? colors.actionText : colors.accentText }]}>RT</Text>
@@ -813,7 +815,7 @@ export function MapScreen({
           style={[styles.mapBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
           onPress={() => { tapLight(); setPreflightVisible(true); }}
           accessibilityRole="button"
-          accessibilityLabel="Open Mission Preflight"
+          accessibilityLabel={t('preflight.title')}
         >
           <Text style={[styles.mapBtnLabel, { color: colors.accentText }]}>PFL</Text>
         </TouchableOpacity>
@@ -824,7 +826,7 @@ export function MapScreen({
             style={[styles.mapBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={centerOnUser}
             accessibilityRole="button"
-            accessibilityLabel="Center on current location"
+            accessibilityLabel={t('map.center')}
           >
             <Text style={[styles.mapBtnIcon, { color: colors.accentText }]}>◎</Text>
           </TouchableOpacity>
@@ -845,7 +847,7 @@ export function MapScreen({
             }
           }}
           accessibilityRole="button"
-          accessibilityLabel="Zoom in"
+          accessibilityLabel={t('localeAccess.zoomIn', { defaultValue: 'Zoom in' })}
         >
           <Text style={[styles.mapBtnIcon, { color: colors.accentText }]}>＋</Text>
         </TouchableOpacity>
@@ -865,7 +867,7 @@ export function MapScreen({
             }
           }}
           accessibilityRole="button"
-          accessibilityLabel="Zoom out"
+          accessibilityLabel={t('localeAccess.zoomOut', { defaultValue: 'Zoom out' })}
         >
           <Text style={[styles.mapBtnIcon, { color: colors.accentText }]}>ー</Text>
         </TouchableOpacity>
@@ -902,7 +904,7 @@ export function MapScreen({
               onPress={optimizeRouteOrder}
               disabled={routeWaypoints.length < 2}
               accessibilityRole="button"
-              accessibilityLabel="Optimize route order from current location"
+              accessibilityLabel={t('localeAccess.optimizeRouteFromLocation', { defaultValue: 'Optimize route order from current location' })}
             >
               <Text style={[styles.routePanelBtnText, { color: routeWaypoints.length >= 2 ? colors.text2 : colors.text3 }]}>{t('workflow.nearestOrder')}</Text>
             </TouchableOpacity>
@@ -914,7 +916,7 @@ export function MapScreen({
               onPress={clearRoute}
               disabled={routeWaypoints.length === 0}
               accessibilityRole="button"
-              accessibilityLabel="Clear all waypoints from route"
+              accessibilityLabel={t('localeAccess.clearRouteWaypoints', { defaultValue: 'Clear all waypoints from route' })}
             >
               <Text style={[styles.routePanelBtnText, { color: colors.text3 }]}>{t('map.clear')}</Text>
             </TouchableOpacity>
@@ -976,7 +978,7 @@ export function MapScreen({
         </Text>
         {cachedCount > 0 && (
           <Text style={[styles.cacheIndicator, { color: offlineMode ? colors.accentText : colors.text3 }]}>
-            {offlineMode ? '⚡ OFFLINE' : `● ${cachedCount}`}
+            {offlineMode ? `⚡ ${t('map.offline')}` : `● ${cachedCount}`}
           </Text>
         )}
       </View>

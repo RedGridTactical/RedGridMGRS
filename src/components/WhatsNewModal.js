@@ -17,10 +17,44 @@ const SEEN_KEY = 'rg_whatsnew_seen_version';
 // The release whose bullets are translated under `whatsNew.current` in i18n.
 // Bump this in lockstep with the entry added to FEATURES_BY_VERSION below, or
 // the modal silently falls back to English.
-const LOCALIZED_VERSION = '4.1.3';
+const LOCALIZED_VERSION = '4.1.5';
 
 // Features to showcase for a given version. Keep terse — this is a glance screen.
 const FEATURES_BY_VERSION = {
+  '4.1.5': [
+    {
+      "icon": "◉",
+      "title": "MANAGE PRO",
+      "body": "See your saved Pro plan, restore purchases and open store subscription settings from Help."
+    },
+    {
+      "icon": "◆",
+      "title": "LIFETIME OPTION",
+      "body": "Existing subscribers can view Lifetime. Store subscriptions must be cancelled separately."
+    },
+    {
+      "icon": "▤",
+      "title": "CLEARER REPORT HELP",
+      "body": "Corrected draft and incident-log descriptions. Existing Lifetime access and saved records are preserved."
+    }
+  ],
+  '4.1.4': [
+    {
+      "icon": "◉",
+      "title": "EIGHT MORE LANGUAGES",
+      "body": "The app now supports Danish, Croatian, Indonesian, Norwegian Bokmål, Slovak, Swedish, Thai and Vietnamese."
+    },
+    {
+      "icon": "▤",
+      "title": "LOCALIZED FIELD WORK",
+      "body": "Translated report fields and screen-reader labels. Official ICS 214 export labels stay in English."
+    },
+    {
+      "icon": "◆",
+      "title": "YOUR ACCESS STAYS",
+      "body": "Existing Lifetime Pro purchases and saved records remain in place. Translations are bundled on your device."
+    }
+  ],
   '4.1.3': [
     {
       "icon": "◆",
@@ -327,7 +361,7 @@ export function WhatsNewModal({ currentVersion, showTrialCta, onStartTrial }) {
               style={[styles.ctaBtn, { backgroundColor: colors.text }]}
               onPress={() => { tapLight(); dismiss(); setTimeout(() => onStartTrial(), 250); }}
               accessibilityRole="button"
-              accessibilityLabel="Start 7-day free trial"
+              accessibilityLabel={t('whatsNew.startTrial')}
             >
               <Text style={[styles.ctaText, { color: colors.bg }]}>{t('whatsNew.startTrial')}</Text>
             </TouchableOpacity>

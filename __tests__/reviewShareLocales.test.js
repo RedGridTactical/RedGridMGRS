@@ -7,6 +7,14 @@ test.each(locales)('%s review/share actions are bundled, localized and preserve 
   if (locale !== 'en') expect(support.reviewDescription).not.toBe(require('../src/i18n/en.js').default.support.reviewDescription);
 });
 
+test('restore FAQ avoids a stale button position and retains purchase recovery guidance', () => {
+  const answer = require('../src/i18n/en.js').default.support.faqRestoreA;
+  expect(answer).not.toMatch(/\b(?:below|above)\b/i);
+  expect(answer).toContain('Use Restore Previous Purchase');
+  expect(answer).toContain('same Apple or Google store account');
+  expect(answer).toContain('An internet connection may be needed');
+});
+
 
 test.each(locales)('%s current release notes are complete and translated', locale => {
   const current = require(`../src/i18n/${locale}.js`).default.whatsNew.current;

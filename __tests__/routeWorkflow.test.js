@@ -13,7 +13,12 @@ jest.mock('react-native', () => ({
 jest.mock('react-native-maps', () => ({ __esModule: true, default: 'MapView', Marker: 'Marker', UrlTile: 'UrlTile', LocalTile: 'LocalTile' }));
 jest.mock('@react-native-async-storage/async-storage', () => ({ getItem: jest.fn().mockResolvedValue(null), setItem: jest.fn().mockResolvedValue() }));
 jest.mock('../src/utils/ThemeContext', () => ({ useColors: () => ({ bg: '#101718', card: '#202828', text: '#fff', text2: '#ccc', text3: '#aaa', border: '#333', accentText: '#f00' }) }));
-jest.mock('../src/hooks/useTranslation', () => ({ useTranslation: () => ({ t: (key, values) => key + (values?.name ? `:${values.name}` : '') }) }));
+jest.mock('../src/hooks/useTranslation', () => ({ useTranslation: () => ({ t: (key, values) => {
+  if (typeof values?.defaultValue === 'string') {
+    return values.defaultValue.replace(/\{\{(\w+)\}\}/g, (_match, name) => String(values[name] ?? ''));
+  }
+  return key + (values?.name ? `:${values.name}` : '');
+} }) }));
 jest.mock('../src/utils/fieldAlert', () => ({ Alert: { alert: jest.fn() }, allowSystemDisplay: jest.fn().mockResolvedValue(true) }));
 jest.mock('../src/utils/typography', () => ({ TYPE: { body: {}, label: {}, heading: {}, data: {} } }));
 jest.mock('../src/components/FieldInput', () => ({ TextInput: 'TextInput' }));

@@ -435,7 +435,7 @@ export default {
     "radio": "対応するMeshtastic無線機で位置とチームメッセージを利用できます。無線機と相手側の設定が必要です。送信成功は手元の無線機への書き込み確認であり、相手への配信確認ではありません。",
     "tools": "計算ツールの下書きをセッション中に保持し、推測航法の起点を固定して推定地点を保存できます。結果を使う前に入力値とセンサーの基準を確認してください。",
     "routes": "地図上の選択から名前付きルートを作り、地点の並べ替え、メモ、カード確認、出発前確認を行えます。ナビゲーション中は各地点を手動で確認します。",
-    "reports": "報告の下書きを作り、端末の参考値を明示的に挿入できます。準備後にコピーしてください。下書きは消去またはアプリ終了までセッション中に保持されます。",
+    "reports": "この端末で報告書の下書きとインシデント活動記録を作成できます。閉じる前に保存完了を確認してください。署名のないICS 214の下書きを確認して書き出せます。アプリは署名や正式な提出を行いません。Proの有効期限後も、保存済みの記録を閲覧・書き出しできます。",
     "photos": "写真に固定した端末位置の注記を追加できます。写真本来の撮影位置や撮影時刻を検証するものではありません。",
     "display": "Proには緑・青の追加配色とHUDが含まれます。標準、タクティカル、日中表示と基本の文字サイズ調整はProなしで利用できます。",
     "receiver": "対応するBluetooth NMEA受信機に接続できます。受信機本体が必要です。購入前に対応サービスとセンテンス形式を確認してください。",
@@ -587,16 +587,16 @@ export default {
     startTrial: "7日間の無料トライアルを開始",
     current: {
       "f1": {
-        "title": "永久 PRO は恒久的",
-        "body": "一度の支払いで、Red Grid MGRS Pro の今後のすべての機能とアップデートを利用できます。サブスクリプションも再購入も不要。既存の永久購入も保護されます。利用規約とプライバシーへのリンクを Pro 画面とヘルプに追加。"
+        "title": "Proを管理",
+        "body": "ヘルプから保存済みのProプランを確認し、購入を復元したり、ストアのサブスクリプション設定を開いたりできます。"
       },
       "f2": {
-        "title": "購入の復元",
-        "body": "起動時とアプリに戻ったときに、購入内容を自動で復元します。オフラインや不完全なストア確認で保存済みのアクセスが失われることはありません。"
+        "title": "永久版のオプション",
+        "body": "既存のサブスクリプション利用者も永久版を表示できます。ストアのサブスクリプションは別途解約が必要です。"
       },
       "f3": {
-        "title": "ANDROID の表示",
-        "body": "エッジツーエッジ表示と、回転や復帰後も一貫した見やすいシステムバー。トラッキングや通信の追加はありません。"
+        "title": "レポートのヘルプを明確に",
+        "body": "下書きとインシデントログの説明を修正しました。既存の永久版の利用権と保存済みの記録は保持されます。"
       }
     },
   },
@@ -814,6 +814,10 @@ export default {
     stop: 'タップして停止',
   },
   toolLabels: {
+    declinationEast: "東",
+    declinationWest: "西",
+    declinationNone: "なし",
+    declinationSignHint: "+ = 東, − = 西",
     gridConvergence: '子午線収差',
     gmAngle: 'G-M角',
     gmExplain: 'G-M角 = 磁気偏角 − 子午線収差。コンパスとMGRS地図の間を換算する値です。',
@@ -994,7 +998,7 @@ export default {
     faqCellService: '\u643a\u5e2f\u96fb\u8a71\u306e\u96fb\u6ce2\u306a\u3057\u3067\u52d5\u4f5c\u3057\u307e\u3059\u304b\uff1f',
     faqCellServiceA: "GPSの測位ができれば、座標表示と端末内の計算は携帯回線なしで動作します。オフライン地図は事前のインポートが必要です。オンライン地図とストア操作には通信が必要です。",
     faqRestore: 'Pro\u8cfc\u5165\u3092\u5fa9\u5143\u3059\u308b\u306b\u306f\uff1f',
-    faqRestoreA: "Proを購入したときと同じAppleまたはGoogleのストアアカウントで、下の「購入を復元」を使用してください。購入確認にインターネット接続が必要な場合があります。",
+    faqRestoreA: "Proを購入したときと同じAppleまたはGoogleのストアアカウントで、「購入を復元」を使用してください。購入確認にインターネット接続が必要な場合があります。",
     faqData: '\u3053\u306e\u30a2\u30d7\u30ea\u306f\u3069\u306e\u30c7\u30fc\u30bf\u3092\u53ce\u96c6\u3057\u307e\u3059\u304b\uff1f',
     faqDataA: "地点、ルート、インシデント記録、報告の下書き、設定、利用回数はこの端末に保存され、アプリの利用分析は送信されません。オンライン地図とストアは外部サービスを利用します。書き出し、写真の保存、無線での共有はご自身で選択します。",
     faqAccuracy: 'MGRS\u30b0\u30ea\u30c3\u30c9\u306e\u7cbe\u5ea6\u306f\uff1f',
@@ -1056,6 +1060,25 @@ export default {
     importUnavailable: '\u30a4\u30f3\u30dd\u30fc\u30c8\u5229\u7528\u4e0d\u53ef',
     importRequires: '\u30a4\u30f3\u30dd\u30fc\u30c8\u306b\u306fexpo-document-picker\u3068expo-file-system\u304c\u5fc5\u8981\u3067\u3059\u3002',
   },
+  managePro: {
+    "title": "Proを管理",
+    "planFree": "無料",
+    "planMonthly": "Pro 月額",
+    "planAnnual": "Pro 年額",
+    "planLifetime": "Pro 永久版",
+    "planLoading": "購入を確認中…",
+    "planUnknown": "購入プランの情報を取得できません",
+    "giftActive": "ギフトのPro利用権は有効です。",
+    "cached": "保存された購入情報を表示しています。ストアで確認するには、購入を復元してください。",
+    "unknownBody": "購入する前に、購入を復元してプランを確認してください。",
+    "viewOptions": "Proのオプションを見る",
+    "viewLifetime": "永久版のオプションを見る",
+    "buyLifetime": "Pro永久版を購入",
+    "manageSubscriptions": "サブスクリプションを管理",
+    "subscriptionNotice": "永久版を購入しても、既存のサブスクリプションは解約されません。ご利用のアプリストアで、そのサブスクリプションを管理または解約してください。",
+    "linkFailedTitle": "サブスクリプションを開けませんでした",
+    "linkFailedBody": "ご利用のアプリストアを開き、アカウントからサブスクリプションを管理してください。"
+  },
   proGate: {
     lifetimePromise: "一度の支払いで、Pro を永続的に利用できます。Red Grid MGRS Pro の今後のすべての機能とアップデートを含みます。既存の永久購入も同様に保護されます。サブスクリプションも再購入もありません。",
     termsOfUse: "利用規約",
@@ -1095,8 +1118,8 @@ export default {
     allToolsSub: '\u63a8\u6e2c\u822a\u6cd5\u3001\u5f8c\u65b9\u4ea4\u4f1a\u6cd5\u3001\u592a\u967d/\u6708\u3001\u30b8\u30aa\u30b9\u30bf\u30f3\u30d7\u306a\u3069',
     waypointsRoutes: "保存したウェイポイントとルート",
     waypointsRoutesSub: "最大10リスト、各20地点。GPX/KML地点のインポート・エクスポート",
-    reportsThemes: '\u5168\u30ec\u30dd\u30fc\u30c8\u3068\u5168\u30c6\u30fc\u30de',
-    reportsThemesSub: "6種類の報告書式と追加の表示配色",
+    reportsThemes: "報告書とインシデント記録",
+    reportsThemesSub: "保存済み下書き、インシデント作業スペース、ICS 214書き出し",
     pricesUnavailable: "接続して、現在のストア価格と購入方法を読み込んでください。",
     tryFreeBadge: 'PRO\u30fb\u7121\u6599\u4f53\u9a13',
   },

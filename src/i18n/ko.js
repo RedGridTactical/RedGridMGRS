@@ -435,7 +435,7 @@ export default {
     "radio": "호환되는 Meshtastic 무전기를 연결해 위치와 팀 메시지를 사용하세요. 무전기 하드웨어와 상대방 설정이 필요합니다. 전송 성공은 내 무전기에 쓰기가 확인된 것이며 상대방 전달을 뜻하지 않습니다.",
     "tools": "현재 세션에 계산기 초안을 유지하고, 추측 항법 출발점을 고정하고, 추정 지점을 저장할 수 있습니다. 결과를 활용하기 전에 입력값과 센서 기준을 확인하세요.",
     "routes": "지도 선택을 이름 있는 경로로 만들고, 지점 순서와 메모를 편집하며, 카드를 검토하고 출발 전 점검을 진행하세요. 항법 중 각 지점은 수동으로 확인합니다.",
-    "reports": "보고 초안을 작성하고 기기 참고값을 직접 삽입하세요. 준비되면 복사할 수 있습니다. 초안은 지우거나 앱을 닫을 때까지 현재 세션에 유지됩니다.",
+    "reports": "이 기기에서 보고서 초안과 사고 활동 기록을 작성하세요. 닫기 전에 저장 완료를 확인하세요. 서명되지 않은 ICS 214 초안을 검토하고 내보낼 수 있으며, 앱은 서명하거나 공식 제출하지 않습니다. Pro가 만료된 뒤에도 저장된 기록을 읽고 내보낼 수 있습니다.",
     "photos": "사진에 고정된 기기 위치 주석을 추가하세요. 사진의 원래 위치나 촬영 시각을 검증하지 않습니다.",
     "display": "Pro에는 추가 초록·파랑 색상과 HUD가 포함됩니다. 표준, 전술, 주간 화면과 기본 글자 크기는 Pro 없이 이용할 수 있습니다.",
     "receiver": "호환되는 Bluetooth NMEA 수신기를 연결하세요. 수신기 하드웨어가 필요합니다. 구매 전에 지원 서비스와 문장 형식을 확인하세요.",
@@ -587,16 +587,16 @@ export default {
     startTrial: "7일 무료 체험 시작",
     current: {
       "f1": {
-        "title": "평생 PRO, 영구",
-        "body": "한 번 결제하면 Red Grid MGRS Pro의 모든 향후 기능과 업데이트를 이용합니다. 구독도 재구매도 없습니다. 기존 평생 구매도 보호됩니다. 이용약관과 개인정보 링크를 Pro 화면과 도움말에 추가했습니다."
+        "title": "Pro 관리",
+        "body": "도움말에서 저장된 Pro 플랜을 확인하고, 구매를 복원하고, 스토어 구독 설정을 열 수 있습니다."
       },
       "f2": {
-        "title": "구매 복구",
-        "body": "실행할 때와 앱으로 돌아올 때 구매가 자동으로 복원됩니다. 오프라인이거나 불완전한 스토어 확인으로 저장된 접근 권한이 사라지지 않습니다."
+        "title": "평생 옵션",
+        "body": "기존 구독자도 평생 옵션을 볼 수 있습니다. 스토어 구독은 별도로 취소해야 합니다."
       },
       "f3": {
-        "title": "ANDROID 화면",
-        "body": "가장자리까지 채우는 레이아웃과 회전·재개 후에도 일관되고 선명한 시스템 바. 추적이나 네트워크는 추가되지 않았습니다."
+        "title": "더 명확해진 보고서 도움말",
+        "body": "초안과 사건 로그 설명을 수정했습니다. 기존 평생 이용 권한과 저장된 기록은 유지됩니다."
       }
     },
   },
@@ -814,6 +814,10 @@ export default {
     stop: '탭하여 중지',
   },
   toolLabels: {
+    declinationEast: "동",
+    declinationWest: "서",
+    declinationNone: "없음",
+    declinationSignHint: "+ = 동, − = 서",
     gridConvergence: '자오선 수렴각',
     gmAngle: 'G-M 각',
     gmExplain: 'G-M 각 = 편각 − 자오선 수렴각. 나침반과 MGRS 지도 사이를 환산하는 값입니다.',
@@ -994,7 +998,7 @@ export default {
     faqCellService: '\ud734\ub300\ud3f0 \uc11c\ube44\uc2a4 \uc5c6\uc774 \uc791\ub3d9\ud558\ub098\uc694?',
     faqCellServiceA: "GPS 위치를 확보하면 이동통신 없이 좌표와 기기 내 계산을 사용할 수 있습니다. 오프라인 지도는 미리 가져와야 합니다. 온라인 지도와 스토어 작업에는 연결이 필요합니다.",
     faqRestore: 'Pro \uad6c\ub9e4\ub97c \ubcf5\uc6d0\ud558\ub824\uba74?',
-    faqRestoreA: "Pro 구매에 사용한 것과 같은 Apple 또는 Google 스토어 계정으로 로그인한 뒤 아래의 이전 구매 복원을 사용하세요. 구매 확인에 인터넷 연결이 필요할 수 있습니다.",
+    faqRestoreA: "Pro 구매에 사용한 것과 같은 Apple 또는 Google 스토어 계정으로 로그인한 뒤 이전 구매 복원을 사용하세요. 구매 확인에 인터넷 연결이 필요할 수 있습니다.",
     faqData: '\uc774 \uc571\uc740 \uc5b4\ub5a4 \ub370\uc774\ud130\ub97c \uc218\uc9d1\ud558\ub098\uc694?',
     faqDataA: "지점, 경로, 사건 기록, 보고 초안, 설정, 사용 횟수는 이 기기에 남으며 앱 사용 분석을 업로드하지 않습니다. 온라인 지도와 스토어는 외부 서비스를 사용합니다. 내보내기, 사진 저장, 무전 공유는 사용자가 직접 선택합니다.",
     faqAccuracy: 'MGRS \uadf8\ub9ac\ub4dc\ub294 \uc5bc\ub9c8\ub098 \uc815\ud655\ud55c\uac00\uc694?',
@@ -1056,6 +1060,25 @@ export default {
     importUnavailable: '\uac00\uc838\uc624\uae30 \uc0ac\uc6a9 \ubd88\uac00',
     importRequires: '\uac00\uc838\uc624\uae30\uc5d0\ub294 expo-document-picker\uc640 expo-file-system\uc774 \ud544\uc694\ud569\ub2c8\ub2e4.',
   },
+  managePro: {
+    "title": "Pro 관리",
+    "planFree": "무료",
+    "planMonthly": "월간 Pro",
+    "planAnnual": "연간 Pro",
+    "planLifetime": "평생 Pro",
+    "planLoading": "구매 확인 중…",
+    "planUnknown": "구매한 플랜 정보를 확인할 수 없음",
+    "giftActive": "선물로 받은 Pro 이용 권한이 활성화되어 있습니다.",
+    "cached": "저장된 구매 정보를 표시하고 있습니다. 스토어에서 확인하려면 구매를 복원하세요.",
+    "unknownBody": "구매하기 전에 구매를 복원하여 이용 중인 플랜을 확인하세요.",
+    "viewOptions": "Pro 옵션 보기",
+    "viewLifetime": "평생 옵션 보기",
+    "buyLifetime": "평생 Pro 구매",
+    "manageSubscriptions": "구독 관리",
+    "subscriptionNotice": "평생 옵션을 구매해도 기존 구독은 취소되지 않습니다. 앱 스토어에서 해당 구독을 관리하거나 취소하세요.",
+    "linkFailedTitle": "구독을 열 수 없음",
+    "linkFailedBody": "앱 스토어를 열고 계정에서 구독을 관리하세요."
+  },
   proGate: {
     lifetimePromise: "한 번만 결제하세요. Red Grid MGRS Pro의 향후 모든 기능과 업데이트를 포함해 Pro를 영구적으로 유지합니다. 기존 평생 구매도 보호됩니다. 구독이나 재구매는 없습니다.",
     termsOfUse: "이용약관",
@@ -1095,8 +1118,8 @@ export default {
     allToolsSub: '\ucd94\uce21 \ud56d\ubc95, \ud6c4\ubc29\uad50\ud68c\ubc95, \ud0dc\uc591/\ub2ec, \uc9c0\uc624\uc2a4\ud0ec\ud504 \ub4f1',
     waypointsRoutes: "저장된 경유지와 경로",
     waypointsRoutesSub: "최대 10개 목록, 목록당 20개 지점; GPX/KML 지점 가져오기 및 내보내기",
-    reportsThemes: '\ubaa8\ub4e0 \ubcf4\uace0\uc11c\uc640 \ud14c\ub9c8',
-    reportsThemesSub: "보고 양식 6개와 추가 표시 팔레트",
+    reportsThemes: "보고서 및 사고 기록",
+    reportsThemesSub: "저장된 초안, 사고 작업 공간 및 ICS 214 내보내기",
     pricesUnavailable: "연결하여 현재 스토어 가격과 구매 옵션을 불러오세요.",
     tryFreeBadge: 'PRO \u00b7 \ubb34\ub8cc \uccb4\ud5d8',
   },
