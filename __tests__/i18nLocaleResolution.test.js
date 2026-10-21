@@ -1,142 +1,133 @@
-/**
- * Device-locale resolution guard.
- *
- * WHY THIS EXISTS: language detection used `locales[0].languageCode`, which
- * returns the bare language and discards the script. For Chinese that means
- * 'zh', which mapped to `resources.zh` = Simplified. Every Traditional device
- * (Taiwan, Hong Kong, Macau) was served Simplified Chinese, even though the app
- * ships a complete, correct Traditional file. Verified on an Android emulator
- * set to zh-TW: the UI rendered 网格 / 地图 / 报告 (Simplified) instead of
- * 網格 / 地圖 / 報告 (Traditional).
- *
- * These fixtures mirror what expo-localization's getLocales() actually returns.
- */
-
-const path = require('path');
+/** Exercise the production module with real catalogs and i18next, mocking only native boundaries. */
 const fs = require('fs');
+const path = require('path');
 
-// Import the resolver without pulling in expo-localization / react-native by
-// evaluating just the exported function against a stub resources map. The real
-// module is ESM with native deps, so we assert on behaviour via a re-implement
-// check plus a source pin, the same approach used by the IAP guards.
-const src = fs.readFileSync(path.join(__dirname, '..', 'src/i18n/index.js'), 'utf8');
+const mockGetLocales = jest.fn();
+const mockAppState = { addEventListener: jest.fn() };
+jest.mock('expo-localization', () => ({ getLocales: mockGetLocales }));
+jest.mock('react-native', () => ({ AppState: mockAppState }));
+jest.mock('react-i18next', () => ({ initReactI18next: { type: '3rdParty', init: jest.fn() } }));
 
-// Resource keys the app actually bundles.
-const RESOURCE_KEYS = [
-  'en', 'fr', 'de', 'es', 'ja', 'ko', 'it', 'nl', 'pt-BR', 'pt', 'ru',
-  'zh-Hans', 'zh-CN', 'zh', 'zh-Hant', 'zh-TW', 'zh-HK', 'tr', 'pl',
-  'ar-SA', 'ar', 'hi',
-];
-const resources = Object.fromEntries(RESOURCE_KEYS.map((k) => [k, {}]));
+let moduleUnderTest;
+let onAppStateChange;
 
-// Mirror of resolveDeviceLang in src/i18n/index.js.
-function resolveDeviceLang(locale) {
-  if (!locale) return 'en';
-  const base = String(locale.languageCode || '').toLowerCase();
-  const script = String(locale.languageScriptCode || '').toLowerCase();
-  const region = String(locale.regionCode || '').toUpperCase();
-  const tag = String(locale.languageTag || '').toLowerCase();
-
-  if (base === 'zh') {
-    if (script === 'hant' || tag.includes('hant')) return 'zh-Hant';
-    if (script === 'hans' || tag.includes('hans')) return 'zh-Hans';
-    if (region === 'TW' || region === 'HK' || region === 'MO') return 'zh-Hant';
-    return 'zh-Hans';
-  }
-  const exact = Object.keys(resources).find((k) => k.toLowerCase() === tag);
-  if (exact) return exact;
-  return resources[base] ? base : 'en';
+function loadWithLocales(locales) {
+  jest.resetModules();
+  mockGetLocales.mockReset().mockReturnValue(locales);
+  mockAppState.addEventListener.mockReset().mockImplementation((event, listener) => {
+    expect(event).toBe('change');
+    onAppStateChange = listener;
+    return { remove: jest.fn() };
+  });
+  moduleUnderTest = require('../src/i18n');
+  return moduleUnderTest;
 }
 
-describe('Chinese script resolution (the bug)', () => {
-  test('Taiwan gets Traditional', () => {
-    expect(resolveDeviceLang({
-      languageCode: 'zh', languageTag: 'zh-Hant-TW',
-      languageScriptCode: 'Hant', regionCode: 'TW',
-    })).toBe('zh-Hant');
-  });
+beforeEach(() => loadWithLocales([{ languageCode: 'en', languageTag: 'en-US' }]));
 
-  test('Hong Kong gets Traditional', () => {
-    expect(resolveDeviceLang({
-      languageCode: 'zh', languageTag: 'zh-Hant-HK',
-      languageScriptCode: 'Hant', regionCode: 'HK',
-    })).toBe('zh-Hant');
-  });
-
-  test('Macau gets Traditional', () => {
-    expect(resolveDeviceLang({
-      languageCode: 'zh', languageTag: 'zh-MO', regionCode: 'MO',
-    })).toBe('zh-Hant');
-  });
-
-  test('Traditional is inferred from region when no script subtag is present', () => {
-    // Android often reports zh-TW with no script code at all.
-    expect(resolveDeviceLang({
-      languageCode: 'zh', languageTag: 'zh-TW', regionCode: 'TW',
-    })).toBe('zh-Hant');
-  });
-
-  test('mainland China gets Simplified', () => {
-    expect(resolveDeviceLang({
-      languageCode: 'zh', languageTag: 'zh-Hans-CN',
-      languageScriptCode: 'Hans', regionCode: 'CN',
-    })).toBe('zh-Hans');
-  });
-
-  test('Singapore Chinese gets Simplified', () => {
-    expect(resolveDeviceLang({
-      languageCode: 'zh', languageTag: 'zh-SG', regionCode: 'SG',
-    })).toBe('zh-Hans');
-  });
-
-  test('bare zh with no region defaults to Simplified', () => {
-    expect(resolveDeviceLang({ languageCode: 'zh', languageTag: 'zh' })).toBe('zh-Hans');
-  });
-
-  test('the OLD implementation would have sent Taiwan to Simplified', () => {
-    // Documents the defect so nobody reverts to languageCode.
-    const legacy = { languageCode: 'zh', languageTag: 'zh-Hant-TW', regionCode: 'TW' }.languageCode;
-    expect(legacy).toBe('zh');
-    expect(resources[legacy]).toBeDefined(); // resources.zh === Simplified
-  });
-});
-
-describe('other languages still resolve', () => {
+describe('bundled locale resolution', () => {
   test.each([
-    [{ languageCode: 'en', languageTag: 'en-US', regionCode: 'US' }, 'en'],
-    [{ languageCode: 'de', languageTag: 'de-DE', regionCode: 'DE' }, 'de'],
-    [{ languageCode: 'fr', languageTag: 'fr-CA', regionCode: 'CA' }, 'fr'],
-    [{ languageCode: 'ja', languageTag: 'ja-JP', regionCode: 'JP' }, 'ja'],
-    [{ languageCode: 'ar', languageTag: 'ar-EG', regionCode: 'EG' }, 'ar'],
-    [{ languageCode: 'pt', languageTag: 'pt-BR', regionCode: 'BR' }, 'pt-BR'],
-  ])('%o resolves to %s', (locale, expected) => {
-    expect(resolveDeviceLang(locale)).toBe(expected);
+    ['da-DK', 'da'], ['da-GL', 'da'], ['hr-HR', 'hr'], ['hr-BA', 'hr'],
+    ['id-ID', 'id'], ['in-ID', 'id'], ['nb-NO', 'nb'], ['nb-SJ', 'nb'],
+    ['no-NO', 'nb'], ['no', 'nb'], ['sk-SK', 'sk'], ['sv-SE', 'sv'],
+    ['sv-FI', 'sv'], ['th-TH', 'th'], ['vi-VN', 'vi'],
+    ['en-US', 'en'], ['fr-CA', 'fr'], ['de-DE', 'de'], ['ja-JP', 'ja'],
+    ['ar-EG', 'ar'], ['pt-BR', 'pt-BR'], ['pt-PT', 'pt'],
+    ['nb_NO', 'nb'], ['ID-id', 'id'],
+  ])('%s selects the bundled %s catalog', (languageTag, expected) => {
+    const languageCode = languageTag.split(/[-_]/)[0];
+    expect(moduleUnderTest.resolveDeviceLang({ languageTag, languageCode })).toBe(expected);
+    expect(moduleUnderTest.default.hasResourceBundle(expected, 'translation')).toBe(true);
   });
 
-  test('an unsupported language falls back to English', () => {
-    expect(resolveDeviceLang({ languageCode: 'sw', languageTag: 'sw-KE' })).toBe('en');
-    expect(resolveDeviceLang({ languageCode: 'is', languageTag: 'is-IS' })).toBe('en');
+  test.each(['da', 'hr', 'id', 'nb', 'sk', 'sv', 'th', 'vi'])('%s initializes using its actual catalog', (languageCode) => {
+    const { default: i18n } = loadWithLocales([{ languageCode, languageTag: languageCode }]);
+    const catalog = require(`../src/i18n/${languageCode}`).default;
+    expect(i18n.language).toBe(languageCode);
+    expect(i18n.t('tabs.grid')).toBe(catalog.tabs.grid);
+    expect(i18n.t('incident.saveFailed')).toBe(catalog.incident.saveFailed);
+    expect(i18n.getResourceBundle(languageCode, 'translation')).toEqual(catalog);
   });
 
-  test('missing or malformed locale falls back to English', () => {
-    expect(resolveDeviceLang(null)).toBe('en');
-    expect(resolveDeviceLang(undefined)).toBe('en');
-    expect(resolveDeviceLang({})).toBe('en');
+  test.each([null, undefined, {}, { languageTag: 'sw-KE' }, { languageTag: 'nn-NO' }])('missing or unsupported %o uses English', (locale) => {
+    expect(moduleUnderTest.resolveDeviceLang(locale)).toBe('en');
+  });
+
+  test('accepts tag-only native locales without losing language or region', () => {
+    expect(moduleUnderTest.resolveDeviceLang({ languageTag: 'vi-VN' })).toBe('vi');
+    expect(moduleUnderTest.resolveDeviceLang({ languageTag: 'zh-TW' })).toBe('zh-Hant');
+  });
+
+  test('skips unsupported preferences but respects English when explicitly preferred', () => {
+    const { resolvePreferredDeviceLang } = moduleUnderTest;
+    expect(resolvePreferredDeviceLang([{ languageTag: 'nn-NO' }, { languageTag: 'nb-NO' }])).toBe('nb');
+    expect(resolvePreferredDeviceLang([{ languageTag: 'sw-KE' }, { languageTag: 'hr-HR' }])).toBe('hr');
+    expect(resolvePreferredDeviceLang([{ languageTag: 'en-GB' }, { languageTag: 'th-TH' }])).toBe('en');
+    expect(resolvePreferredDeviceLang([])).toBe('en');
+    expect(resolvePreferredDeviceLang(null)).toBe('en');
   });
 });
 
-describe('source no longer uses bare languageCode', () => {
-  test('resolveDeviceLang is exported and used for detection', () => {
-    expect(src).toMatch(/export function resolveDeviceLang/);
-    expect(src).toMatch(/deviceLang = resolveDeviceLang\(locales\[0\]\)/);
+describe('Chinese script selection', () => {
+  test.each([
+    [{ languageCode: 'zh', languageTag: 'zh-Hant-TW', languageScriptCode: 'Hant', regionCode: 'TW' }, 'zh-Hant'],
+    [{ languageCode: 'zh', languageTag: 'zh-Hant-HK', regionCode: 'HK' }, 'zh-Hant'],
+    [{ languageCode: 'zh', languageTag: 'zh-MO', regionCode: 'MO' }, 'zh-Hant'],
+    [{ languageCode: 'zh', languageTag: 'zh-TW', regionCode: 'US' }, 'zh-Hant'],
+    [{ languageCode: 'zh', languageTag: 'zh', languageRegionCode: 'TW', regionCode: 'US' }, 'zh-Hant'],
+    [{ languageCode: 'zh', languageTag: 'zh-Hans-TW', regionCode: 'TW' }, 'zh-Hans'],
+    [{ languageCode: 'zh', languageTag: 'zh-Hans-CN', languageScriptCode: 'Hans', regionCode: 'CN' }, 'zh-Hans'],
+    [{ languageCode: 'zh', languageTag: 'zh-SG', regionCode: 'SG' }, 'zh-Hans'],
+    [{ languageCode: 'zh', languageTag: 'zh' }, 'zh-Hans'],
+    [{ languageTag: 'zh-TW-u-ca-chinese', regionCode: 'US' }, 'zh-Hant'],
+  ])('%o resolves to %s', (locale, expected) => {
+    expect(moduleUnderTest.resolveDeviceLang(locale)).toBe(expected);
+  });
+});
+
+describe('native language changes', () => {
+  test('returning from Settings applies the new language without a process restart', () => {
+    const { default: i18n } = moduleUnderTest;
+    const change = jest.spyOn(i18n, 'changeLanguage');
+    mockGetLocales.mockReturnValue([{ languageTag: 'th-TH' }]);
+    onAppStateChange('background');
+    expect(change).not.toHaveBeenCalled();
+    onAppStateChange('active');
+    expect(change).toHaveBeenCalledTimes(1);
+    expect(i18n.language).toBe('th');
+    expect(i18n.t('tabs.grid')).toBe(require('../src/i18n/th').default.tabs.grid);
+    onAppStateChange('active');
+    expect(change).toHaveBeenCalledTimes(1);
   });
 
-  test('the bare languageCode assignment is gone', () => {
-    expect(src).not.toMatch(/deviceLang\s*=\s*locales\[0\]\.languageCode/);
+  test('native read failure or empty preferences preserve the current language', () => {
+    const { default: i18n } = loadWithLocales([{ languageTag: 'sv-SE' }]);
+    mockGetLocales.mockImplementation(() => { throw new Error('native unavailable'); });
+    expect(() => onAppStateChange('active')).not.toThrow();
+    expect(i18n.language).toBe('sv');
+    mockGetLocales.mockReturnValue([]);
+    onAppStateChange('active');
+    expect(i18n.language).toBe('sv');
   });
 
-  test('both Chinese scripts are bundled', () => {
-    expect(src).toMatch(/from '\.\/zh-Hans'/);
-    expect(src).toMatch(/from '\.\/zh-Hant'/);
+  test('empty startup preferences safely initialize English', () => {
+    expect(loadWithLocales([]).default.language).toBe('en');
+  });
+});
+
+describe('OS app-language declarations', () => {
+  const declared = ['en', 'fr', 'de', 'es', 'ja', 'ko', 'it', 'nl', 'pt-BR', 'ru', 'zh-Hans', 'zh-Hant', 'tr', 'pl', 'ar-SA', 'hi', 'da', 'hr', 'id', 'nb', 'sk', 'sv', 'th', 'vi'];
+  const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
+
+  test('Expo config, actual iOS plist and Android locale config declare exactly 24 bundled languages', () => {
+    const config = JSON.parse(read('app.json'));
+    expect(config.expo.ios.infoPlist.CFBundleLocalizations).toEqual(declared);
+    const plist = read('ios/RedGridMGRS/Info.plist');
+    const section = plist.match(/<key>CFBundleLocalizations<\/key>\s*<array>([\s\S]*?)<\/array>/)[1];
+    expect([...section.matchAll(/<string>(.*?)<\/string>/g)].map((match) => match[1])).toEqual(declared);
+    const xml = read('android/app/src/main/res/xml/locale_config.xml');
+    expect([...xml.matchAll(/<locale android:name="([^"]+)"/g)].map((match) => match[1])).toEqual(declared);
+    expect(read('android/app/src/main/AndroidManifest.xml')).toContain('android:localeConfig="@xml/locale_config"');
+    for (const locale of declared) expect(moduleUnderTest.default.hasResourceBundle(locale, 'translation')).toBe(true);
   });
 });

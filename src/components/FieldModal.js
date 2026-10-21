@@ -1,6 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Modal as NativeModal, View, StyleSheet, BackHandler } from 'react-native';
 import { useDisplaySafety } from '../utils/ThemeContext';
+import { setReviewBlocker, noteReviewDismissal } from '../utils/reviewPresentation';
 
 let sequence = 0;
 const entries = new Map();
@@ -25,6 +26,11 @@ export function Modal(props) {
   if (!id.current) id.current = ++sequence;
   const visible = props.visible !== false;
   useLayoutEffect(() => {
+    const key = `modal:${id.current}`;
+    setReviewBlocker(key, visible);
+    return () => setReviewBlocker(key, false);
+  }, [visible]);
+  useLayoutEffect(() => {
     if (tacticalMode && visible) {
       entries.set(id.current, { id: id.current, children: props.children, onRequestClose: props.onRequestClose });
       publish();
@@ -32,7 +38,12 @@ export function Modal(props) {
   }, [tacticalMode, visible, props.children, props.onRequestClose]);
   useEffect(() => () => { if (entries.delete(id.current)) publish(); }, []);
   if (tacticalMode) return null;
-  return <NativeModal {...props} />;
+  // Keep content within the dialog's viewport. With the legacy Android
+  // renderer, an intrinsic-height child can otherwise expand beyond the
+  // modal host and leave its ScrollView with no scrollable overflow.
+  return <NativeModal {...props} onDismiss={() => { noteReviewDismissal(); props.onDismiss?.(); }}>
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">{props.children}</View>
+  </NativeModal>;
 }
 
 export function FieldModalHost() {

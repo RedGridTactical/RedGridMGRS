@@ -1,3 +1,5 @@
+let mockToolTranslator = null;
+
 jest.mock('react', () => {
   const hooks = require('./helpers/hookHarness')();
   return { ...jest.requireActual('react'), ...hooks,
@@ -13,7 +15,13 @@ jest.mock('react-native', () => ({
   AccessibilityInfo: { announceForAccessibility: jest.fn() },
 }));
 jest.mock('../src/utils/ThemeContext', () => ({ useColors: () => ({ bg: '#000', card: '#222', text: '#fff', text2: '#ddd', text3: '#aaa', border: '#333' }) }));
-jest.mock('../src/hooks/useTranslation', () => ({ useTranslation: () => ({ t: (key, values) => key + (values?.time ? ':' + values.time : '') }) }));
+jest.mock('../src/hooks/useTranslation', () => ({ useTranslation: () => ({ t: (key, values) => {
+  if (mockToolTranslator) return mockToolTranslator(key, values);
+  if (typeof values?.defaultValue === 'string') {
+    return values.defaultValue.replace(/\{\{(\w+)\}\}/g, (_match, name) => String(values[name] ?? ''));
+  }
+  return key + (values?.time ? ':' + values.time : '');
+} }) }));
 jest.mock('../src/utils/fieldAlert', () => ({ Alert: { alert: jest.fn() } }));
 jest.mock('../src/utils/typography', () => ({ TYPE: { body: {}, label: {}, heading: {}, data: {} } }));
 jest.mock('../src/components/FieldInput', () => ({ TextInput: 'TextInput' }));
@@ -22,6 +30,13 @@ jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn() }));
 jest.mock('expo-image-picker', () => ({ requestCameraPermissionsAsync: jest.fn(), requestMediaLibraryPermissionsAsync: jest.fn(), launchCameraAsync: jest.fn(), launchImageLibraryAsync: jest.fn() }));
 jest.mock('expo-media-library', () => ({ requestPermissionsAsync: jest.fn(), saveToLibraryAsync: jest.fn() }));
 jest.mock('react-native-view-shot', () => ({ captureRef: jest.fn(), releaseCapture: jest.fn() }));
+jest.mock('@react-native-async-storage/async-storage',()=>({}));
+jest.mock('../src/hooks/useReportDrafts',()=>{
+  let data;
+  const reset=()=>{data={version:1,activeId:null,pendingLocation:null,incidents:[],editor:null,worksheets:{}};};reset();
+  const change=fn=>{data=fn(data);const {sessionDrafts}=require('../src/utils/sessionDrafts');for(const [id,value] of Object.entries(data.worksheets))sessionDrafts.write(`report:${id}:draft`,value);};
+  return {__reset:reset,useReportDrafts:()=>({data,loading:false,locked:false,saving:false,loadError:null,saveError:null,store:{change,flush:()=>Promise.resolve(),commit:fn=>{change(fn);return Promise.resolve();}}})};
+});
 const React = require('react');
 const { Image } = require('react-native');
 const { Alert } = require('../src/utils/fieldAlert');
@@ -37,7 +52,7 @@ const { GeostampTool } = require('../src/components/tools/GeostampTool');
 const { BackAzimuthTool } = require('../src/components/tools/BackAzimuthTool');
 const { ElevationTool } = require('../src/components/tools/ElevationTool');
 const { DeclinationTool } = require('../src/components/tools/DeclinationTool');
-const { ToolResult, ToolInput } = require('../src/components/tools/ToolShared');
+const { ToolResult, ToolInput, ToolHint } = require('../src/components/tools/ToolShared');
 const deferred = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
 function nodes(v) { if (!v || typeof v !== 'object') return []; if (Array.isArray(v)) return v.flatMap(nodes); return [v, ...nodes(v.props?.children)]; }
 function text(v) { if (typeof v === 'string') return v; if (Array.isArray(v)) return v.map(text).join(''); return v?.props ? text(v.props.children) : ''; }
@@ -45,7 +60,7 @@ const button = (tree, label) => nodes(tree).find(n => n.type === 'TouchableOpaci
 const input = (tree, label) => nodes(tree).find(n => (n.type === ToolInput && n.props.label === label) || (n.type === 'TextInput' && n.props.accessibilityLabel === label));
 const results = tree => nodes(tree).filter(n => n.type === ToolResult).map(n => n.props);
 const fix = () => ({ lat: 38.9, lon: -77, timestamp: Date.now() - 1000, accuracy: 8, altitude: 0 });
-beforeEach(() => { React.__reset(); sessionDrafts.clearPrefix(''); jest.clearAllMocks(); global.requestAnimationFrame = fn => { fn(); return 1; }; });
+beforeEach(() => { mockToolTranslator = null; React.__reset(); sessionDrafts.clearPrefix(''); require('../src/hooks/useReportDrafts').__reset(); jest.clearAllMocks(); global.requestAnimationFrame = fn => { fn(); return 1; }; });
 
 function reportHarness(id = 'spot') {
   const screen = React.__render(() => ReportScreen({ location: fix(), isPro: true }));
@@ -54,7 +69,7 @@ function reportHarness(id = 'spot') {
   return { render: () => React.__render(() => card.type({ ...card.props, location })), setLocation: v => { location = v; } };
 }
 it('report fields start blank; explicit references and typed text survive tab unmount with no GPS overwrite', () => {
-  const h = reportHarness(); button(h.render(), 'reports.spotReport report. reports.spotReportSub').props.onPress();
+  const h = reportHarness(); button(h.render(), 'reportCorrections.spotTitle report. reports.spotReportSub').props.onPress();
   expect(input(h.render(), 'WHERE').props.value).toBe(''); expect(input(h.render(), 'WHEN').props.value).toBe('');
   input(h.render(), 'WHAT').props.onChangeText('Keep this observation');
   button(h.render(), 'workflow.insertDevicePosition').props.onPress();
@@ -69,13 +84,46 @@ it('report fields start blank; explicit references and typed text survive tab un
   expect(input(h.render(), 'WHERE').props.value).toBe(''); expect(input(h.render(), 'WHEN').props.value).toBe('');
 });
 it('report copy waits for a confirmed native write and failure never produces success', async () => {
-  const h = reportHarness(); button(h.render(), 'reports.spotReport report. reports.spotReportSub').props.onPress();
+  const h = reportHarness(); button(h.render(), 'reportCorrections.spotTitle report. reports.spotReportSub').props.onPress();
+  input(h.render(), 'WHAT').props.onChangeText('Synthetic observation');
   const write = deferred(); Clipboard.setStringAsync.mockReturnValueOnce(write.promise);
   const promise = button(h.render(), 'reports.copyReport').props.onPress();
   expect(notifySuccess).not.toHaveBeenCalled(); write.resolve(false); await promise;
   expect(notifySuccess).not.toHaveBeenCalled(); expect(Alert.alert).toHaveBeenLastCalledWith('workflow.copyFailed');
   Clipboard.setStringAsync.mockResolvedValueOnce(true);
   await button(h.render(), 'reports.copyReport').props.onPress(); expect(notifySuccess).toHaveBeenCalledTimes(1);
+});
+it('empty report copy does not write a placeholder-only record', async () => {
+  const h = reportHarness(); button(h.render(), 'reportCorrections.spotTitle report. reports.spotReportSub').props.onPress();
+  await button(h.render(), 'reports.copyReport').props.onPress();
+  expect(Clipboard.setStringAsync).not.toHaveBeenCalled();
+  expect(Alert.alert).toHaveBeenCalledWith('reportCorrections.emptyTitle','reportCorrections.emptyBody');
+});
+it('medical copy requires an explicit context and never leaks the other variant', async () => {
+  const h = reportHarness('medevac'); button(h.render(), 'reports.medevac report. reports.medevacSub').props.onPress();
+  input(h.render(),'reportCorrections.line1').props.onChangeText('TRAINING PICKUP');
+  await button(h.render(),'reports.copyReport').props.onPress();
+  expect(Clipboard.setStringAsync).not.toHaveBeenCalled();
+  expect(Alert.alert).toHaveBeenLastCalledWith('reportCorrections.contextMissing','reportCorrections.chooseContext');
+  button(h.render(),'reportCorrections.wartime').props.onPress();
+  input(h.render(),'reportCorrections.line6War').props.onChangeText('OLD SECURITY');
+  button(h.render(),'reportCorrections.peacetime').props.onPress();
+  input(h.render(),'reportCorrections.line6Peace').props.onChangeText('FICTIONAL INJURY');
+  Clipboard.setStringAsync.mockResolvedValueOnce(true);
+  await button(h.render(),'reports.copyReport').props.onPress();
+  expect(Clipboard.setStringAsync.mock.calls[0][0]).toContain('FICTIONAL INJURY');
+  expect(Clipboard.setStringAsync.mock.calls[0][0]).not.toContain('OLD SECURITY');
+  React.__reset(); expect(input(h.render(),'reportCorrections.line6Peace').props.value).toBe('FICTIONAL INJURY');
+  button(h.render(),'reportCorrections.wartime').props.onPress();
+  expect(input(h.render(),'reportCorrections.line6War').props.value).toBe('OLD SECURITY');
+});
+it('stale device insertion cannot overwrite an independently entered report location', () => {
+  const h = reportHarness(); button(h.render(),'reportCorrections.spotTitle report. reports.spotReportSub').props.onPress();
+  input(h.render(),'WHERE').props.onChangeText('OBSERVED EVENT');
+  h.setLocation({...fix(),timestamp:Date.now()-31000});
+  button(h.render(),'workflow.insertDevicePosition').props.onPress();
+  expect(input(h.render(),'WHERE').props.value).toBe('OBSERVED EVENT');
+  expect(Alert.alert).toHaveBeenLastCalledWith('gps.noGpsFix','workflow.annotationNoFix');
 });
 it('tappable calculator results copy zero and reject false native success', async () => {
   Clipboard.setStringAsync.mockResolvedValueOnce(false);
@@ -98,6 +146,29 @@ it('declination drafts persist but a changed grid/true reference invalidates the
   React.__reset(); expect(input(render(), 'toolLabels.magneticBearingInput').props.value).toBe('90');
   location = null; expect(input(render(), 'toolLabels.magneticBearingInput').props.value).toBe(''); React.__effects();
   expect(results(render())).toHaveLength(0);
+});
+it.each(['en','ar-SA','da','hr','id','nb','sk','sv','th','vi','de','es','fr','hi','it','ja','ko','nl','pl','pt-BR','ru','tr','zh-Hans','zh-Hant'])('%s declination directions remain consistent with signed magnetic-to-true results', async locale => {
+  const translation = require(`../src/i18n/${locale}`).default;
+  const i18n = require('i18next').createInstance();
+  await i18n.init({ lng: locale, fallbackLng: false, resources: { [locale]: { translation } } });
+  mockToolTranslator = i18n.t.bind(i18n);
+  for (const [declination, directionKey, expected] of [
+    [5, 'declinationEast', '95°T'],
+    [-5, 'declinationWest', '85°T'],
+    [0, 'declinationNone', '90°T'],
+  ]) {
+    React.__reset(); sessionDrafts.clearPrefix('tool:declin:');
+    const render = () => React.__render(() => DeclinationTool({ declination, setDeclination: jest.fn(), location: null }));
+    const hint = nodes(render()).find(n => n.type === ToolHint && n.props.text.includes(`(${translation.toolLabels[directionKey]})`));
+    expect(hint).toBeDefined();
+    expect(hint.props.text).toContain(`${declination > 0 ? '+' : ''}${declination}°`);
+    expect(hint.props.text).toContain(`+ = ${translation.toolLabels.declinationEast}`);
+    expect(hint.props.text).toContain(`− = ${translation.toolLabels.declinationWest}`);
+    expect(hint.props.text).not.toContain('toolLabels.');
+    input(render(), translation.toolLabels.magneticBearingInput).props.onChangeText('90');
+    React.__effects();
+    expect(results(render()).find(result => result.primary).value).toBe(expected);
+  }
 });
 it('equator/prime-meridian slope coordinates and zero altitude are valid; nonfinite/prefix values are rejected', () => {
   const render = () => React.__render(() => ElevationTool({ location: { ...fix(), lat: 0, lon: 0, altitude: 0, accuracy: 0 } }));

@@ -13,15 +13,19 @@
  * Privacy: no tracking, no analytics. Location is ephemeral.
  */
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Platform, ScrollView, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Platform, ScrollView, Linking, KeyboardAvoidingView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Modal } from '../components/FieldModal';
 import { TextInput } from '../components/FieldInput';
 import { Alert, allowSystemDisplay } from '../utils/fieldAlert';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '../utils/ThemeContext';
+import { restoreSelectedMarker, resolvePendingSelection } from '../utils/mapSession';
+import { useMapViewport } from '../hooks/useInitialViewport';
 import { useTranslation } from '../hooks/useTranslation';
 import { toMGRS, formatMGRS, calculateBearing, calculateDistance, formatDistance } from '../utils/mgrs';
 import { formatBearing } from '../utils/tactical';
+import { mapIncidentReference } from '../utils/incident';
 import { tapLight, tapMedium, notifySuccess, notifyError } from '../utils/haptics';
 import { MGRSGridOverlay } from '../components/MGRSGridOverlay';
 import { RouteOverlay } from '../components/RouteOverlay';
@@ -35,11 +39,21 @@ import {
 import { importRasterMBTiles } from '../utils/offlineMaps';
 import * as DocumentPicker from 'expo-document-picker';
 import { PreflightScreen } from './PreflightScreen';
+import { MapImportRequirements } from '../components/MapImportRequirements';
 import { TYPE } from '../utils/typography';
 
 // Free-tier persistent-waypoint cap. Free users get 1 saved waypoint; Pro is
 // limited to 10 saved lists with 20 points each.
 const FREE_WAYPOINT_LIMIT = 1;
+// Android draws Google's vector labels above raster tile overlays. The base
+// map is already "none" (set in GoogleMapOptions at creation and re-applied on
+// map-ready through the react-native-maps patch); this style is the second
+// guard against base-map labels or POIs appearing above provider tiles.
+const ANDROID_BASEMAP_STYLE = [
+  { featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+];
 const makeId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 let MapView = null;
@@ -79,12 +93,12 @@ function PulsingDot({ color }) {
 }
 
 // Time-since helper for mesh markers
-function timeSince(ts) {
+function timeSince(ts, t) {
   if (!ts) return '';
   const sec = Math.floor((Date.now() - ts) / 1000);
-  if (sec < 60) return `${sec}s ago`;
-  if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
-  return `${Math.floor(sec / 3600)}h ago`;
+  if (sec < 60) return t('localeAccess.secondsAgo', { seconds: sec, defaultValue: '{{seconds}}s ago' });
+  if (sec < 3600) return t('localeAccess.minutesAgo', { minutes: Math.floor(sec / 60), defaultValue: '{{minutes}}m ago' });
+  return t('localeAccess.hoursAgo', { hours: Math.floor(sec / 3600), defaultValue: '{{hours}}h ago' });
 }
 
 // Tile sources — Standard (OSM), Dark (CartoDB), Topo (OpenTopoMap).
@@ -101,22 +115,52 @@ export function MapScreen({
   trialEligible,
   onShowProGate,
   onSetWaypoint,
+  onLogIncident,
   meshPositions = [],
   // v3.4 Mission Preflight pipes — optional so older callers keep working.
   gpsSource,
   gpsDeviceName,
   mesh,
   team,
+  // In-memory session (App-owned) so a remount after a tab round trip or a
+  // layout change starts from the last viewport, selection and unsaved form.
+  session,
+  onSessionChange,
 }) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const mapRef = useRef(null);
-  const [mapRegion, setMapRegion] = useState(null);
+  // The bottom MGRS bar overlays the map. On Android the Google logo must stay
+  // visible, so the measured bar height becomes map padding and the reticle
+  // moves to the padded camera target. iOS layout is unchanged.
+  const [bottomBarHeight, setBottomBarHeight] = useState(0);
+  const onBottomBarLayout = useCallback(event => {
+    const height = Math.round(event?.nativeEvent?.layout?.height || 0);
+    setBottomBarHeight(previous => (previous === height ? previous : height));
+  }, []);
+  const androidMapPadding = Platform.OS === 'android' && bottomBarHeight > 0 ? { top: 0, left: 0, right: 0, bottom: bottomBarHeight } : undefined;
+  // Initial region — captured ONCE per mount (restored session viewport, else
+  // the fix available at mount, else the default) and used to seed mapRegion,
+  // so the footer, coverage check, grid overlay AND the session all describe
+  // the viewport the native map was created with until a real region event or
+  // an explicit recenter. A fix arriving later never moves the labels alone,
+  // and an untouched map survives an unmount/remount at its own viewport.
+  const { initialRegion, mapRegion, setMapRegion } = useMapViewport(session, location, onSessionChange);
   const [centerMGRS, setCenterMGRS] = useState(null);
   const waypoints = useMemo(() => savedLists.flatMap(list => list.waypoints.map(point => ({ ...point, mapKey: `${list.id}:${point.id}`, listId: list.id, listName: list.name }))), [savedLists]);
   const mapWriteBusy = useRef(false);
   const [mapSaveError, setMapSaveError] = useState(false);
-  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [selectedMarker, setSelectedMarker] = useState(() => restoreSelectedMarker(session, waypoints));
+  // A remembered selection whose list has not loaded yet is kept pending and
+  // re-resolved as lists arrive; it is given up only once loading has ended.
+  const pendingSelectionKey = useRef(selectedMarker ? null : (session?.selectedMarkerKey || null));
+  useEffect(() => {
+    if (!pendingSelectionKey.current || selectedMarker) return;
+    const { marker, waiting } = resolvePendingSelection({ key: pendingSelectionKey.current, markers: waypoints, listsLoading });
+    if (marker) { pendingSelectionKey.current = null; setSelectedMarker(marker); }
+    else if (!waiting) { pendingSelectionKey.current = null; onSessionChange?.({ selectedMarkerKey: null }); }
+  }, [waypoints, listsLoading, selectedMarker, onSessionChange]);
   const [downloading, setDownloading] = useState(false);
   const [dlProgress, setDlProgress] = useState(0);
   const [cachedCount, setCachedCount] = useState(0);
@@ -162,11 +206,18 @@ export function MapScreen({
   }, []);
 
   // Waypoint creation menu state
-  const [wpMenuVisible, setWpMenuVisible] = useState(false);
-  const [pendingWaypoint, setPendingWaypoint] = useState(null); // { lat, lon, mgrs }
-  const [wpLabel, setWpLabel] = useState('');
+  const [wpMenuVisible, setWpMenuVisible] = useState(() => !!session?.waypointForm?.visible);
+  const [pendingWaypoint, setPendingWaypoint] = useState(() => session?.waypointForm?.pending || null); // { lat, lon, mgrs }
+  const [wpLabel, setWpLabel] = useState(() => session?.waypointForm?.label || '');
   const wpLists = savedLists;
-  const [wpSelectedList, setWpSelectedList] = useState(null);
+  const [wpSelectedList, setWpSelectedList] = useState(() => session?.waypointForm?.listId ?? null);
+
+  // Publish the session-worthy state. The App keeps it in a ref, so these
+  // effects never re-render anything; they only make the next mount cheap.
+  useEffect(() => { onSessionChange?.({ selectedMarkerKey: selectedMarker?.mapKey || pendingSelectionKey.current || null }); }, [selectedMarker, onSessionChange]);
+  useEffect(() => {
+    onSessionChange?.({ waypointForm: pendingWaypoint ? { pending: pendingWaypoint, label: wpLabel, listId: wpSelectedList, visible: wpMenuVisible } : null });
+  }, [pendingWaypoint, wpLabel, wpSelectedList, wpMenuVisible, onSessionChange]);
 
   // Route-planning mode (Pro). When enabled, tapping waypoint markers adds/
   // removes them from the route in tap order and a polyline + summary appear.
@@ -185,13 +236,6 @@ export function MapScreen({
   // the right-side stack; closes back to the map untouched.
   const [preflightVisible, setPreflightVisible] = useState(false);
 
-  // Initial region — center on user location or default to CONUS center
-  const initialRegion = useMemo(() => ({
-    latitude: location?.lat ?? 38.8895,
-    longitude: location?.lon ?? -77.0353,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
-  }), [location?.lat, location?.lon]);
 
   const coverageZooms = useMemo(() => offlineMetadata?.zoomLevels || [], [offlineMetadata]);
 
@@ -210,40 +254,45 @@ export function MapScreen({
   }, [mapRegion, initialRegion, coverageZooms]);
 
   // Import a user-selected, locally licensed map; no public-provider prefetch.
+  const [importInfoVisible, setImportInfoVisible] = useState(false);
+  // Requirements are shown first; the system picker opens only from there.
   const handleImportMap = useCallback(() => {
     if (downloadingRef.current) return;
     if (!isPro) { onShowProGate(t('proGate.offlineMaps'), 'offline'); return; }
-    Alert.alert(t('nightDisplay.importMap'), t('nightDisplay.importDescription', { defaultValue: 'Choose a local raster MBTiles map you have permission to use. This version accepts 256-pixel PNG tiles, up to 5,000 tiles and 256 MB. A valid import replaces the current saved map.' }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('nightDisplay.importMap'), onPress: async () => {
-        if (!(await allowSystemDisplay())) return;
-        try {
-          const selected = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
-          if (selected.canceled || !selected.assets?.[0]?.uri || importCancelled.current) return;
-          downloadingRef.current = true;
-          setDownloading(true); setDlProgress(0);
-          const result = await importRasterMBTiles(selected.assets[0].uri, {
-            shouldCancel: () => importCancelled.current,
-            onProgress: (done, total) => { if (!importCancelled.current) setDlProgress(total ? done / total : 0); },
-          });
-          if (importCancelled.current) return;
-          setOfflineMetadata(result.metadata);
-          setCachedCount(result.total); setOfflineMode(true); setTileRevision(value => value + 1);
-          const [west, south, east, north] = result.metadata.bounds;
-          const region = { latitude: (south + north) / 2, longitude: (west + east) / 2,
-            latitudeDelta: Math.max(0.002, (north - south) * 1.1), longitudeDelta: Math.max(0.002, (east - west) * 1.1) };
-          setMapRegion(region); mapRef.current?.animateToRegion(region, 300);
-          notifySuccess();
-          Alert.alert(t('nightDisplay.importMap'), `${result.metadata.name} · ${result.total} tiles`);
-        } catch (error) {
-          if (!importCancelled.current && error.code !== 'IMPORT_CANCELLED') Alert.alert(t('nightDisplay.importMap'), error.message || t('nightDisplay.providerBody'));
-        } finally {
-          downloadingRef.current = false;
-          if (!importCancelled.current) setDownloading(false);
-        }
-      } },
-    ]);
+    setImportInfoVisible(true);
   }, [isPro, onShowProGate, t]);
+  const chooseMapFile = useCallback(async () => {
+    if (downloadingRef.current) return;
+    if (!(await allowSystemDisplay())) return;
+    try {
+      // The requirements sheet stays up while the system picker is open, so the
+      // picker is presented from the visible sheet rather than a closing one.
+      const selected = await DocumentPicker.getDocumentAsync({ type: '*/*', copyToCacheDirectory: true });
+      setImportInfoVisible(false);
+      if (selected.canceled || !selected.assets?.[0]?.uri || importCancelled.current) return;
+      downloadingRef.current = true;
+      setDownloading(true); setDlProgress(0);
+      const result = await importRasterMBTiles(selected.assets[0].uri, {
+        shouldCancel: () => importCancelled.current,
+        onProgress: (done, total) => { if (!importCancelled.current) setDlProgress(total ? done / total : 0); },
+      });
+      if (importCancelled.current) return;
+      setOfflineMetadata(result.metadata);
+      setCachedCount(result.total); setOfflineMode(true); setTileRevision(value => value + 1);
+      const [west, south, east, north] = result.metadata.bounds;
+      const region = { latitude: (south + north) / 2, longitude: (west + east) / 2,
+        latitudeDelta: Math.max(0.002, (north - south) * 1.1), longitudeDelta: Math.max(0.002, (east - west) * 1.1) };
+      setMapRegion(region); mapRef.current?.animateToRegion(region, 300);
+      notifySuccess();
+      Alert.alert(t('nightDisplay.importMap'), `${t('localeAccess.importedMapTiles', { name: result.metadata.name, total: result.total, defaultValue: '{{name}} · {{total}} tiles' })}\n\n${t('mapImport.checkBody')}`);
+    } catch (error) {
+      setImportInfoVisible(false);
+      if (!importCancelled.current && error.code !== 'IMPORT_CANCELLED') Alert.alert(t('nightDisplay.importMap'), error.message || t('nightDisplay.providerBody'));
+    } finally {
+      downloadingRef.current = false;
+      if (!importCancelled.current) setDownloading(false);
+    }
+  }, [t]);
 
   // Clear tile cache
   const handleClearCache = useCallback(() => {
@@ -303,7 +352,7 @@ export function MapScreen({
   const saveWaypointFromMenu = async () => {
     if (!pendingWaypoint || mapWriteBusy.current || listsLoading || listsLoadError) return false;
     if (!isPro && waypoints.length >= FREE_WAYPOINT_LIMIT) {
-      onShowProGate?.('Saved Waypoints', 'routes'); return false;
+      onShowProGate?.(t('proGate.savedWaypoints'), 'routes'); return false;
     }
     const point = { ...pendingWaypoint, label: wpLabel.trim() || pendingWaypoint.mgrs, source: 'map', recordedAt: Date.now() };
     mapWriteBusy.current = true; setMapSaveError(false);
@@ -380,7 +429,7 @@ export function MapScreen({
 
   // Route order is retained by App across tab changes until saved or discarded.
   const beginRouteMode = () => {
-    if (!isPro) { onShowProGate?.('Route Planning', 'routes'); return; }
+    if (!isPro) { onShowProGate?.(t('localeAccess.routePlanning', { defaultValue: 'Route Planning' }), 'routes'); return; }
     setSelectedMarker(null);
     updateRouteDraft(previous => ({ ...previous, active: true, id: previous?.id || makeId(), waypoints: previous?.waypoints || [], name: previous?.name || '' }));
   };
@@ -390,7 +439,7 @@ export function MapScreen({
   };
   const toggleRouteMode = () => routeMode ? finishRouteMode() : beginRouteMode();
   const handleWaypointPress = wp => {
-    if (!routeMode) { setSelectedMarker(wp); return; }
+    if (!routeMode) { pendingSelectionKey.current = null; setSelectedMarker(wp); return; }
     if (!routeWaypoints.some(point => point.originMapKey === wp.mapKey) && routeWaypoints.length >= 20) {
       Alert.alert(t('waypoints.limitReached'), t('waypoints.maxWaypoints')); return;
     }
@@ -477,7 +526,7 @@ export function MapScreen({
     return (
       <View style={[styles.fallback, { backgroundColor: colors.bg }]}>
         <Text style={[styles.fallbackText, { color: colors.text3 }]}>
-          Map module unavailable. Rebuild the app to enable.
+          {t('localeAccess.mapUnavailable', { defaultValue: 'Map module unavailable. Rebuild the app to enable.' })}
         </Text>
       </View>
     );
@@ -492,6 +541,8 @@ export function MapScreen({
         onRegionChangeComplete={onRegionChange}
         onLongPress={onLongPress}
         mapType={Platform.OS === 'ios' ? 'standard' : 'none'}
+        {...(Platform.OS === 'android' ? { customMapStyle: ANDROID_BASEMAP_STYLE } : {})}
+        {...(androidMapPadding ? { mapPadding: androidMapPadding } : {})}
         showsPointsOfInterest={false}
         showsBuildings={false}
         minZoomLevel={offlineMode && offlineMetadata ? offlineMetadata.minZoom : undefined}
@@ -549,7 +600,7 @@ export function MapScreen({
             <Marker
               key={wp.mapKey}
               coordinate={{ latitude: wp.lat, longitude: wp.lon }}
-              title={wp.label || 'Waypoint'}
+              title={wp.label || t('localeAccess.waypoint', { defaultValue: 'Waypoint' })}
               description={description}
               onPress={() => handleWaypointPress(wp)}
               pinColor={colors.accent}
@@ -565,7 +616,7 @@ export function MapScreen({
 
         {/* Mesh node markers */}
         {meshPositions.filter(p => p.lat && p.lon).map((node, idx) => {
-          const nodeLabel = node.nodeId ? `#${node.nodeId.toString(16).toUpperCase()}` : `Node ${idx + 1}`;
+          const nodeLabel = node.nodeId ? `#${node.nodeId.toString(16).toUpperCase()}` : `${t('mesh.node')} ${idx + 1}`;
           const mgrs = formatMGRS(toMGRS(node.lat, node.lon, 5));
           let desc = mgrs;
           if (location) {
@@ -575,7 +626,7 @@ export function MapScreen({
               desc = `${mgrs}\nBRG ${brg} DST ${dst}`;
             } catch {}
           }
-          if (node.timestamp) desc += `\n${timeSince(node.timestamp)}`;
+          if (node.timestamp) desc += `\n${timeSince(node.timestamp, t)}`;
           return (
             <Marker
               key={`mesh-${node.nodeId || idx}`}
@@ -607,7 +658,7 @@ export function MapScreen({
       </MapView>
 
       {/* Center reticle */}
-      <View style={styles.reticle} pointerEvents="none">
+      <View style={[styles.reticle, androidMapPadding && { marginTop: -10 - androidMapPadding.bottom / 2 }]} pointerEvents="none">
         <View style={[styles.reticleH, { backgroundColor: colors.accent + '66' }]} />
         <View style={[styles.reticleV, { backgroundColor: colors.accent + '66' }]} />
       </View>
@@ -624,13 +675,13 @@ export function MapScreen({
               numberOfLines={1}
               accessibilityRole="header"
             >
-              {selectedMarker.label || 'WAYPOINT'}
+              {selectedMarker.label || t('localeAccess.waypoint', { defaultValue: 'Waypoint' })}
             </Text>
             <TouchableOpacity
               style={styles.markerCardClose}
               onPress={() => { tapLight(); setSelectedMarker(null); }}
               accessibilityRole="button"
-              accessibilityLabel="Close waypoint card"
+              accessibilityLabel={t('localeAccess.closeWaypointCard', { defaultValue: 'Close waypoint card' })}
             >
               <Text style={[styles.markerCardCloseText, { color: colors.text3 }]}>✕</Text>
             </TouchableOpacity>
@@ -645,19 +696,23 @@ export function MapScreen({
             </Text>
           )}
           <View style={styles.markerCardBtnRow}>
+            {onLogIncident&&<TouchableOpacity style={[styles.markerCardBtn,{borderColor:colors.border}]} accessibilityRole="button" accessibilityLabel={t('incident.logHere')}
+              onPress={()=>onLogIncident(mapIncidentReference(selectedMarker))}>
+              <Text style={[styles.markerCardBtnText,{color:colors.text2}]}>{t('incident.logHere')}</Text>
+            </TouchableOpacity>}
             <TouchableOpacity
               style={[styles.markerCardBtn, { borderColor: colors.text2 }]}
               onPress={navigateToSelectedMarker}
               accessibilityRole="button"
-              accessibilityLabel={`Navigate to ${selectedMarker.label || 'waypoint'}`}
+              accessibilityLabel={t('localeAccess.navigateTo', { name: selectedMarker.label || t('localeAccess.waypoint', { defaultValue: 'Waypoint' }), defaultValue: 'Navigate to {{name}}' })}
             >
-              <Text style={[styles.markerCardBtnText, { color: colors.text2 }]}>NAV</Text>
+              <Text style={[styles.markerCardBtnText, { color: colors.text2 }]}>{t('waypoints.nav')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.markerCardBtn, { borderColor: colors.border }]}
               onPress={confirmDeleteSelectedMarker}
               accessibilityRole="button"
-              accessibilityLabel={`Delete ${selectedMarker.label || 'waypoint'}`}
+              accessibilityLabel={t('localeAccess.deleteNamed', { name: selectedMarker.label || t('localeAccess.waypoint', { defaultValue: 'Waypoint' }), defaultValue: 'Delete {{name}}' })}
             >
               <Text style={[styles.markerCardBtnText, { color: colors.text3 }]}>{t('map.delete')}</Text>
             </TouchableOpacity>
@@ -673,10 +728,10 @@ export function MapScreen({
       {/* Provider attribution — required to stay visible over online layers. */}
       {!(offlineMode && localTilePath) && (
         <TouchableOpacity
-          style={[styles.attribution, { backgroundColor: colors.card + 'E6', borderColor: colors.border }]}
+          style={[styles.attribution, { backgroundColor: colors.card + 'E6', borderColor: colors.border }, androidMapPadding && { bottom: androidMapPadding.bottom + 40 }]}
           onPress={openAttribution}
           accessibilityRole="link"
-          accessibilityLabel={`${onlineStyle.attribution}. Opens licence page.`}
+          accessibilityLabel={t('localeAccess.openLicense', { attribution: onlineStyle.attribution, defaultValue: '{{attribution}}. Opens licence page.' })}
         >
           <Text style={[styles.attributionText, { color: colors.text2 }]}>{onlineStyle.attribution}</Text>
         </TouchableOpacity>
@@ -706,7 +761,7 @@ export function MapScreen({
             }]}
             onPress={toggleOffline}
             accessibilityRole="switch"
-            accessibilityLabel="Toggle offline map mode"
+            accessibilityLabel={t('localeAccess.toggleOfflineMap', { defaultValue: 'Toggle offline map mode' })}
             accessibilityState={{ checked: offlineMode }}
           >
             <Text style={[styles.mapBtnIcon, { color: offlineMode ? colors.actionText : colors.accentText }]}>
@@ -723,7 +778,7 @@ export function MapScreen({
           disabled={downloading}
           accessibilityRole="button"
           accessibilityLabel={t('nightDisplay.importMap')}
-          accessibilityHint="Long press to clear cached tiles"
+          accessibilityHint={t('localeAccess.clearCachedTilesHint', { defaultValue: 'Long press to clear cached tiles' })}
         >
           <Text style={[styles.mapBtnIcon, { color: colors.accentText, opacity: downloading ? 0.4 : 1 }]}>⬇</Text>
         </TouchableOpacity>
@@ -733,7 +788,7 @@ export function MapScreen({
           style={[styles.mapBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
           onPress={cycleMapStyle}
           accessibilityRole="button"
-          accessibilityLabel={`Map style: ${mapStyleLabel}. Tap to cycle.`}
+          accessibilityLabel={t('localeAccess.mapStyle', { style: mapStyleLabel, defaultValue: 'Map style: {{style}}. Tap to cycle.' })}
         >
           <Text style={[styles.mapBtnLabel, { color: colors.accentText }]}>{mapStyleLabel}</Text>
         </TouchableOpacity>
@@ -746,7 +801,9 @@ export function MapScreen({
           }]}
           onPress={toggleRouteMode}
           accessibilityRole="button"
-          accessibilityLabel={routeMode ? 'Exit route planning mode' : 'Start route planning mode (Pro)'}
+          accessibilityLabel={routeMode
+            ? t('localeAccess.exitRoutePlanning', { defaultValue: 'Exit route planning mode' })
+            : t('localeAccess.startRoutePlanning', { defaultValue: 'Start route planning mode (Pro)' })}
           accessibilityState={{ selected: routeMode }}
         >
           <Text style={[styles.mapBtnLabel, { color: routeMode ? colors.actionText : colors.accentText }]}>RT</Text>
@@ -758,7 +815,7 @@ export function MapScreen({
           style={[styles.mapBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
           onPress={() => { tapLight(); setPreflightVisible(true); }}
           accessibilityRole="button"
-          accessibilityLabel="Open Mission Preflight"
+          accessibilityLabel={t('preflight.title')}
         >
           <Text style={[styles.mapBtnLabel, { color: colors.accentText }]}>PFL</Text>
         </TouchableOpacity>
@@ -769,7 +826,7 @@ export function MapScreen({
             style={[styles.mapBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={centerOnUser}
             accessibilityRole="button"
-            accessibilityLabel="Center on current location"
+            accessibilityLabel={t('map.center')}
           >
             <Text style={[styles.mapBtnIcon, { color: colors.accentText }]}>◎</Text>
           </TouchableOpacity>
@@ -790,7 +847,7 @@ export function MapScreen({
             }
           }}
           accessibilityRole="button"
-          accessibilityLabel="Zoom in"
+          accessibilityLabel={t('localeAccess.zoomIn', { defaultValue: 'Zoom in' })}
         >
           <Text style={[styles.mapBtnIcon, { color: colors.accentText }]}>＋</Text>
         </TouchableOpacity>
@@ -810,7 +867,7 @@ export function MapScreen({
             }
           }}
           accessibilityRole="button"
-          accessibilityLabel="Zoom out"
+          accessibilityLabel={t('localeAccess.zoomOut', { defaultValue: 'Zoom out' })}
         >
           <Text style={[styles.mapBtnIcon, { color: colors.accentText }]}>ー</Text>
         </TouchableOpacity>
@@ -847,7 +904,7 @@ export function MapScreen({
               onPress={optimizeRouteOrder}
               disabled={routeWaypoints.length < 2}
               accessibilityRole="button"
-              accessibilityLabel="Optimize route order from current location"
+              accessibilityLabel={t('localeAccess.optimizeRouteFromLocation', { defaultValue: 'Optimize route order from current location' })}
             >
               <Text style={[styles.routePanelBtnText, { color: routeWaypoints.length >= 2 ? colors.text2 : colors.text3 }]}>{t('workflow.nearestOrder')}</Text>
             </TouchableOpacity>
@@ -859,7 +916,7 @@ export function MapScreen({
               onPress={clearRoute}
               disabled={routeWaypoints.length === 0}
               accessibilityRole="button"
-              accessibilityLabel="Clear all waypoints from route"
+              accessibilityLabel={t('localeAccess.clearRouteWaypoints', { defaultValue: 'Clear all waypoints from route' })}
             >
               <Text style={[styles.routePanelBtnText, { color: colors.text3 }]}>{t('map.clear')}</Text>
             </TouchableOpacity>
@@ -914,109 +971,116 @@ export function MapScreen({
       </Modal>
 
       {/* Bottom bar — center MGRS + cache indicator */}
-      <View style={[styles.bottomBar, { backgroundColor: colors.bg, borderTopColor: colors.border2 }]}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.bg, borderTopColor: colors.border2 }]} onLayout={Platform.OS === 'android' ? onBottomBarLayout : undefined}>
         <Text style={[styles.bottomLabel, { color: colors.text3 }]}>{t('map.center')}</Text>
         <Text style={[styles.bottomMGRS, { color: colors.text }]} numberOfLines={1}>
           {centerMGRS || '\u2014'}
         </Text>
         {cachedCount > 0 && (
           <Text style={[styles.cacheIndicator, { color: offlineMode ? colors.accentText : colors.text3 }]}>
-            {offlineMode ? '⚡ OFFLINE' : `● ${cachedCount}`}
+            {offlineMode ? `⚡ ${t('map.offline')}` : `● ${cachedCount}`}
           </Text>
         )}
       </View>
 
       {/* Waypoint creation menu — themed, not native Alert */}
       <Modal visible={wpMenuVisible} transparent animationType="fade" onRequestClose={() => setWpMenuVisible(false)}>
-        <View style={styles.wpMenuOverlay}>
+        <KeyboardAvoidingView style={[styles.wpMenuOverlay, { paddingTop: Math.max(24, insets.top) }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined} enabled={Platform.OS === 'ios'}>
           <View style={[styles.wpMenuCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            {/* Header with MGRS */}
-            <Text style={[styles.wpMenuTitle, { color: colors.text }]}>
-              {t('map.addWaypoint')}
-            </Text>
-            <Text style={[styles.wpMenuMGRS, { color: colors.accentText }]}>
-              {pendingWaypoint?.mgrs || ''}
-            </Text>
+            <ScrollView contentContainerStyle={styles.wpMenuContent} keyboardShouldPersistTaps="handled">
+              {/* Header with MGRS */}
+              <Text style={[styles.wpMenuTitle, { color: colors.text }]}>
+                {t('map.addWaypoint')}
+              </Text>
+              <Text style={[styles.wpMenuMGRS, { color: colors.accentText }]}>
+                {pendingWaypoint?.mgrs || ''}
+              </Text>
 
-            {/* Rename input */}
-            <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>{t('map.label')}</Text>
-            <TextInput
-              style={[styles.wpMenuInput, { borderColor: colors.border, backgroundColor: colors.bg, color: colors.text }]}
-              value={wpLabel}
-              onChangeText={setWpLabel}
-              maxLength={24}
-              autoCapitalize="characters"
-              placeholderTextColor={colors.text3}
-              placeholder={t('map.waypointNamePlaceholder')}
-            />
+              {/* Rename input */}
+              <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>{t('map.label')}</Text>
+              <TextInput
+                style={[styles.wpMenuInput, { borderColor: colors.border, backgroundColor: colors.bg, color: colors.text }]}
+                value={wpLabel}
+                onChangeText={setWpLabel}
+                maxLength={24}
+                autoCapitalize="characters"
+                placeholderTextColor={colors.text3}
+                placeholder={t('map.waypointNamePlaceholder')}
+              />
 
-            {/* List picker */}
-            <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>{t('map.addToList')}</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.wpMenuListScroll}>
-              {wpLists.map(list => (
+              {/* List picker */}
+              <Text style={[styles.wpMenuLabel, { color: colors.text3 }]}>{t('map.addToList')}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.wpMenuListScroll}>
+                {wpLists.map(list => (
+                  <TouchableOpacity
+                    key={list.id}
+                    style={[styles.wpMenuListBtn, {
+                      borderColor: wpSelectedList === list.id ? colors.accent : colors.border,
+                      backgroundColor: wpSelectedList === list.id ? colors.border2 : 'transparent',
+                    }]}
+                    onPress={() => setWpSelectedList(list.id)}
+                  >
+                    <Text style={[styles.wpMenuListText, { color: wpSelectedList === list.id ? colors.text : colors.text2 }]}>
+                      {list.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+                {wpLists.length === 0 && (
+                  <Text style={[styles.wpMenuHint, { color: colors.text3 }]}>{t('map.newListNote')}</Text>
+                )}
+              </ScrollView>
+
+              {/* Action buttons */}
+              {onLogIncident&&<View style={styles.wpMenuActions}><TouchableOpacity style={[styles.wpMenuBtn,{borderColor:colors.border}]} accessibilityRole="button" accessibilityLabel={t('incident.logHere')}
+                onPress={()=>{const reference=mapIncidentReference(pendingWaypoint);setWpMenuVisible(false);onLogIncident(reference);}}>
+                <Text style={[styles.wpMenuBtnText,{color:colors.text2}]}>{t('incident.logHere')}</Text>
+              </TouchableOpacity></View>}
+              {mapSaveError && <Text accessibilityRole="alert" style={[styles.wpMenuHint, { color: colors.text }]}>{t('workflow.saveFailed')}</Text>}
+              <View style={styles.wpMenuActions}>
                 <TouchableOpacity
-                  key={list.id}
-                  style={[styles.wpMenuListBtn, {
-                    borderColor: wpSelectedList === list.id ? colors.accent : colors.border,
-                    backgroundColor: wpSelectedList === list.id ? colors.border2 : 'transparent',
-                  }]}
-                  onPress={() => setWpSelectedList(list.id)}
-                >
-                  <Text style={[styles.wpMenuListText, { color: wpSelectedList === list.id ? colors.text : colors.text2 }]}>
-                    {list.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-              {wpLists.length === 0 && (
-                <Text style={[styles.wpMenuHint, { color: colors.text3 }]}>{t('map.newListNote')}</Text>
-              )}
-            </ScrollView>
-
-            {/* Action buttons */}
-            {mapSaveError && <Text accessibilityRole="alert" style={[styles.wpMenuHint, { color: colors.text }]}>{t('workflow.saveFailed')}</Text>}
-            <View style={styles.wpMenuActions}>
-              <TouchableOpacity
-                style={[styles.wpMenuBtn, { borderColor: colors.accent, backgroundColor: colors.border2 }]}
-                onPress={saveWaypointFromMenu}
-                disabled={listsLoading || listsLoadError || listsSaving}
-              >
-                <Text style={[styles.wpMenuBtnText, { color: colors.text }]}>{t('common.save')}</Text>
-              </TouchableOpacity>
-
-              {onSetWaypoint && (
-                <TouchableOpacity
-                  style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
-                  onPress={() => { saveWaypointFromMenu().then(saved => { if (saved) navigateToWaypoint(); }); }}
+                  style={[styles.wpMenuBtn, { borderColor: colors.accent, backgroundColor: colors.border2 }]}
+                  onPress={saveWaypointFromMenu}
                   disabled={listsLoading || listsLoadError || listsSaving}
                 >
-                  <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('map.saveNav')}</Text>
+                  <Text style={[styles.wpMenuBtnText, { color: colors.text }]}>{t('common.save')}</Text>
                 </TouchableOpacity>
-              )}
 
-              {onSetWaypoint && (
+                {onSetWaypoint && (
+                  <TouchableOpacity
+                    style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
+                    onPress={() => { saveWaypointFromMenu().then(saved => { if (saved) navigateToWaypoint(); }); }}
+                    disabled={listsLoading || listsLoadError || listsSaving}
+                  >
+                    <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('map.saveNav')}</Text>
+                  </TouchableOpacity>
+                )}
+
+                {onSetWaypoint && (
+                  <TouchableOpacity
+                    style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
+                    onPress={navigateToWaypoint}
+                  >
+                    <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('map.navOnly')}</Text>
+                  </TouchableOpacity>
+                )}
+
                 <TouchableOpacity
-                  style={[styles.wpMenuBtn, { borderColor: colors.text2 }]}
-                  onPress={navigateToWaypoint}
+                  style={[styles.wpMenuBtn, { borderColor: colors.border }]}
+                  onPress={() => { setWpMenuVisible(false); setPendingWaypoint(null); }}
                 >
-                  <Text style={[styles.wpMenuBtnText, { color: colors.text2 }]}>{t('map.navOnly')}</Text>
+                  <Text style={[styles.wpMenuBtnText, { color: colors.text3 }]}>{t('common.cancel')}</Text>
                 </TouchableOpacity>
-              )}
-
-              <TouchableOpacity
-                style={[styles.wpMenuBtn, { borderColor: colors.border }]}
-                onPress={() => { setWpMenuVisible(false); setPendingWaypoint(null); }}
-              >
-                <Text style={[styles.wpMenuBtnText, { color: colors.text3 }]}>{t('common.cancel')}</Text>
-              </TouchableOpacity>
-            </View>
+              </View>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* v3.4 Mission Preflight modal. Consumes the current map viewport so its
           coverage estimates and "Save current AO" reflect what the operator
           can actually see. Mesh + GPS props are optional; the screen degrades
           gracefully when the parent hasn't lifted them yet. */}
+      <MapImportRequirements visible={importInfoVisible} onChoose={chooseMapFile} onClose={() => setImportInfoVisible(false)} />
       <PreflightScreen
         visible={preflightVisible}
         onClose={() => setPreflightVisible(false)}
@@ -1074,8 +1138,8 @@ const styles = StyleSheet.create({
   markerCardCloseText: { fontSize: 14, fontWeight: '700' },
   markerCardMgrs: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6 },
   markerCardBrg: { ...TYPE.data, fontSize: 11, letterSpacing: 0.6 },
-  markerCardBtnRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  markerCardBtn: { flex: 1, borderWidth: 1, paddingVertical: 8, alignItems: 'center', minHeight: 44, justifyContent: 'center' },
+  markerCardBtnRow: { flexDirection: 'row', flexWrap:'wrap', gap: 8, marginTop: 8 },
+  markerCardBtn: { flex: 1, minWidth:90, borderWidth: 1, paddingVertical: 8, paddingHorizontal:5, alignItems: 'center', minHeight: 48, justifyContent: 'center' },
   markerCardBtnText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
 
   // Right-side button stack
@@ -1117,12 +1181,13 @@ const styles = StyleSheet.create({
 
   // Waypoint creation menu
   wpMenuOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 24 },
-  wpMenuCard: { width: '100%', maxWidth: 340, borderWidth: 1, padding: 16, gap: 8 },
+  wpMenuCard: { width: '100%', maxWidth: 340, borderWidth: 1, flexShrink: 1, maxHeight: '100%' },
+  wpMenuContent: { padding: 16, gap: 8 },
   wpMenuTitle: { ...TYPE.heading, fontSize: 14, letterSpacing: 1.2 },
   wpMenuMGRS: { ...TYPE.data, fontSize: 16, letterSpacing: 0.6, marginBottom: 4 },
   wpMenuLabel: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2, marginTop: 4 },
   wpMenuInput: { borderWidth: 1, ...TYPE.body, fontSize: 13, letterSpacing: 0.3, paddingHorizontal: 10, paddingVertical: 8 },
-  wpMenuListScroll: { maxHeight: 40, marginVertical: 4 },
+  wpMenuListScroll: { flexGrow: 0, flexShrink: 0, marginVertical: 4 },
   wpMenuListBtn: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, marginRight: 6 },
   wpMenuListText: { ...TYPE.label, fontSize: 11, letterSpacing: 1.2 },
   wpMenuHint: { ...TYPE.body, fontSize: 12, letterSpacing: 0.3, alignSelf: 'center' },

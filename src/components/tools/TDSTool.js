@@ -36,7 +36,7 @@ export function TDSTool({ location }) {
 
   return (
     <View>
-      <ToolInput label={t('toolLabels.distanceMetres')} value={distance} onChangeText={setDistance} placeholder="e.g. 1500" keyboardType="numeric" />
+      <ToolInput label={t('toolLabels.distanceMetres')} value={distance} onChangeText={setDistance} placeholder={t('localeAccess.exampleValue', { value: '1500', defaultValue: 'e.g. {{value}}' })} keyboardType="numeric" />
 
       <Text style={[styles.presetsLabel, { color: colors.text3 }]}>{t('toolLabels.speedPresets')}</Text>
       <View style={styles.presets}>
@@ -52,7 +52,7 @@ export function TDSTool({ location }) {
         ))}
       </View>
 
-      <ToolInput label={t('toolLabels.orEnterSpeed')} value={speed} onChangeText={setSpeed} placeholder="e.g. 3.5" keyboardType="numeric" />
+      <ToolInput label={t('toolLabels.orEnterSpeed')} value={speed} onChangeText={setSpeed} placeholder={t('localeAccess.exampleValue', { value: '3.5', defaultValue: 'e.g. {{value}}' })} keyboardType="numeric" />
 
       {(!!distance || !!speed) && time === null && <ToolHint text={t('workflow.speedRange')} />}
       {time !== null && (

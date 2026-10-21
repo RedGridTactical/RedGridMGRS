@@ -17,6 +17,10 @@ const FORMATS = [
   { id: 'fixphrase', labelKey: 'coords.fixphrase', subKey: 'coords.fixphraseSub' },
 ];
 
+// Presentation only: Android ignores writingDirection. Isolate each coordinate
+// line so RTL paragraphs cannot move a negative sign or reverse numeric groups.
+const coordinateText = value => value.split('\n').map(line => `\u2066${line}\u2069`).join('\n');
+
 export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -62,7 +66,7 @@ export function CoordFormatsScreen({ location, coordFormat, setCoordFormat }) {
             {positions && isActive && (
               <View style={[styles.preview, { borderTopColor: colors.border2 }]}>
                 <Text style={[styles.previewLabel, { color: colors.text3 }]}>{t('coords.yourPosition')}</Text>
-                <Text style={[styles.previewValue, { color: colors.text }]}>{positions[f.id]}</Text>
+                <Text style={[styles.previewValue, { color: colors.text }]} accessibilityLabel={positions[f.id]}>{coordinateText(positions[f.id])}</Text>
               </View>
             )}
           </TouchableOpacity>

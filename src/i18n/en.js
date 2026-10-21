@@ -3,6 +3,264 @@
  * Military/NATO terms (MGRS, SALUTE, UTM, DAGR, etc.) stay English in all locales.
  */
 export default {
+  locationErrors: {
+    "moduleUnavailable": "Location is unavailable on this device.",
+    "permissionRequestFailed": "Could not request location access. Enable it in device settings, then retry.",
+    "permissionDenied": "Location access is denied. Enable it in device settings, then retry.",
+    "timeout": "No GPS fix yet. Move to open sky or retry.",
+    "invalidObservation": "The GPS returned an invalid position. Wait for another fix or retry.",
+    "positionFailed": "Could not obtain a GPS position. Retry.",
+    "watchFailed": "Could not receive GPS updates. Retry."
+  },
+  incident: {
+    "resourceName": "RESOURCE NAME",
+    "workspace": "INCIDENT WORKSPACE",
+    "ics214": "ICS 214 · ACTIVITY LOG",
+    "empty": "No incidents saved. Create a local draft to begin.",
+    "newIncident": "NEW INCIDENT",
+    "chooseIncident": "SAVED INCIDENTS",
+    "open": "OPEN WORKSPACE",
+    "localOnly": "Local drafts. No account, analytics or automatic uploads. Export only through an action you choose.",
+    "proReadOnly": "Pro is required to create or edit incidents. Your saved records remain readable and exportable.",
+    "loading": "Opening local drafts…",
+    "saving": "Saving on this device…",
+    "saved": "Saved on this device",
+    "saveFailed": "Not saved. Your changes remain here. Retry before closing the app.",
+    "loadFailed": "Saved drafts could not be opened. Original data has been preserved. Retry; do not clear app data.",
+    "retry": "RETRY",
+    "recover": "RESTORE PREVIOUS SAVE",
+    "recoverTitle": "Restore a previous local save?",
+    "recoverBody": "A verified earlier copy is available. Recent changes in the damaged record may be missing. The unreadable copy will be retained separately.",
+    "details": "DETAILS AND ASSIGNED RESOURCES",
+    "name": "INCIDENT NAME",
+    "number": "INCIDENT NUMBER / LOCAL REFERENCE",
+    "from": "OPERATIONAL PERIOD FROM",
+    "to": "OPERATIONAL PERIOD TO",
+    "timeHint": "YYYY-MM-DD HH:mm ±HH:mm. Use 24-hour time and an explicit UTC offset.",
+    "resource": "UNIT / RESOURCE DESIGNATOR",
+    "person": "RESPONSIBLE PERSON",
+    "position": "ICS POSITION",
+    "agency": "HOME AGENCY / UNIT",
+    "preparer": "PREPARER NAME",
+    "preparerPosition": "PREPARER POSITION / TITLE",
+    "resources": "RESOURCES ASSIGNED",
+    "addResource": "ADD RESOURCE",
+    "removeResource": "REMOVE RESOURCE",
+    "keepDetails": "KEEP DETAILS",
+    "activityLog": "ACTIVITY LOG",
+    "entryCount": "{{count}} activities",
+    "addActivity": "ADD ACTIVITY",
+    "eventTime": "EVENT DATE / TIME",
+    "eventTimeHint": "Confirm the observed event time. Entry time is recorded separately when you keep the activity.",
+    "notableActivity": "NOTABLE ACTIVITY",
+    "observationHint": "Record observations and actions. Keep inference distinct from observed facts.",
+    "location": "LOCATION REFERENCE · OPTIONAL",
+    "noLocation": "NO LOCATION",
+    "deviceLocation": "INSERT DEVICE REFERENCE",
+    "mapLocation": "SELECTED MAP POINT",
+    "manualGrid": "MANUAL MGRS REFERENCE",
+    "locationHint": "Confirm the subject location. A device fix or selected map point does not establish where the event occurred.",
+    "locationSource": "{{kind}} · MGRS / WGS 84 · {{grid}}",
+    "deviceSource": "Device reference",
+    "mapSource": "Selected map point",
+    "manualSource": "Manual reference",
+    "fixDetails": "Fix {{time}} · {{accuracy}}",
+    "selectedAt": "Selected {{time}}",
+    "unknownAccuracy": "Accuracy unverified",
+    "staleFix": "No fresh device fix. Keep a manual/map reference or leave the activity unlocated.",
+    "keepActivity": "KEEP ACTIVITY",
+    "correct": "CORRECT",
+    "correctActivity": "CORRECT ACTIVITY",
+    "keepCorrection": "KEEP CORRECTION",
+    "reason": "CORRECTION REASON",
+    "history": "CORRECTION HISTORY",
+    "corrected": "Corrected · {{count}} previous versions",
+    "previous": "PREVIOUS VERSION",
+    "enteredAt": "Entered {{time}}",
+    "correctedAt": "Corrected {{time}}",
+    "historyHint": "Previous entries and correction reasons remain with this local record. This is not a certified evidence record.",
+    "resumeDraft": "RESUME UNFINISHED DRAFT",
+    "unfinished": "An unfinished draft is saved. Resume it before starting another.",
+    "discard": "DISCARD EDITOR DRAFT",
+    "discardTitle": "Discard this unfinished draft?",
+    "discardBody": "Only these unfinished edits will be cleared. Kept activities and their history remain.",
+    "review": "REVIEW ICS 214",
+    "unsigned": "DRAFT · UNSIGNED",
+    "reviewHint": "Check the incident, period, resources and activities before export. No report is transmitted, signed or filed by this app.",
+    "reviewed": "I reviewed this draft",
+    "exportPdf": "SHARE ICS 214 PDF",
+    "backup": "SHARE INCIDENT BACKUP",
+    "importBackup": "IMPORT INCIDENT BACKUP",
+    "copy": "COPY ICS 214 TEXT",
+    "exportHint": "U.S. ICS 214 field labels remain in English. Your entered text is preserved. Agency procedures govern signatures, approval and routing.",
+    "signature": "Signature: ____________________",
+    "preparationTime": "Preparation date/time: ____________________",
+    "annex": "Location references, entry times and correction history are included in a separate Red Grid annex.",
+    "exportFailed": "The export did not complete. Your saved incident is unchanged.",
+    "pdfLimit": "This log is too large for a safe PDF export. Use the complete JSON backup or text export; no activities have been omitted.",
+    "copied": "Draft copied to clipboard.",
+    "backupHint": "The JSON backup includes this incident, locations and correction history. Choose its destination carefully. Import creates a separate local copy.",
+    "importTitle": "Import a separate incident copy?",
+    "importBody": "{{name}} · {{count}} activities. Existing incidents will not be replaced.",
+    "importFailed": "This file could not be imported. Use a supported Red Grid incident backup. Existing records were not replaced.",
+    "alreadyImported": "This exact backup is already saved. Opening its existing copy.",
+    "archive": "ARCHIVE INCIDENT",
+    "archiveTitle": "Archive this incident?",
+    "archiveBody": "The incident remains saved, readable and exportable. You can restore it from Saved Incidents.",
+    "archived": "ARCHIVED",
+    "restore": "RESTORE FOR EDITING",
+    "returnWorkspace": "INCIDENT WORKSPACE",
+    "backReports": "REPORTS",
+    "logHere": "LOG ACTIVITY HERE",
+    "logDevice": "LOG DEVICE REFERENCE",
+    "period": "OPERATIONAL PERIOD",
+    "errorINVALID_PERIOD": "Enter an incident name and valid start/end times. End must follow start.",
+    "errorPERIOD_EXCLUDES_ACTIVITY": "This period excludes a kept activity. Correct that activity or keep a period that includes it.",
+    "errorINVALID_EVENT_TIME": "Enter a valid event time within this operational period, including its UTC offset.",
+    "errorEMPTY_ACTIVITY": "Enter a notable activity.",
+    "errorCORRECTION_REASON_REQUIRED": "Add a correction reason. The previous entry will remain in history.",
+    "errorINVALID_LOCATION": "Enter a valid MGRS reference or leave the location blank.",
+    "errorRECORD_LIMIT": "This record reached its local size limit. Export it and start a new incident or period.",
+    "errorDRAFT_OPEN": "Resume or discard the unfinished editor draft first.",
+    "errorNO_ACTIVE_INCIDENT": "Choose an active incident first.",
+    "errorUNSUPPORTED_SCHEMA": "These drafts require a compatible app version. Original data has been preserved.",
+    "errorSTORAGE_TIMEOUT": "Still saving on this device. Wait for Saved on this device before closing the app.",
+    "errorSTORAGE_UNAVAILABLE": "Saving is in progress or unavailable right now. Wait for Saved on this device, then repeat your last change.",
+    "importCapacity": "This backup does not fit in the local incident store. Export, archive and delete existing incidents, then import again. Existing records were not changed.",
+    "worksheetsSaved": "Report drafts save locally and survive app restarts. Wait for Saved on this device before closing."
+  },
+  reportCorrections: {
+    "adaptedTitle": "ICS 201 — ADAPTED SUMMARY",
+    "spotTitle": "SPOT — SIMPLIFIED NOTE",
+    "medevacScope": "Reference worksheet. Follow your current agency or unit protocol. This does not assign clinical priority or transmit a request.",
+    "icsScope": "Adapted from FEMA ICS 201 v3. This summary does not contain every official form block.",
+    "spotScope": "Simplified observation note, not the complete Army SPOTREP S055.",
+    "casevacScope": "Working evacuation note, not a patient handover or medical record.",
+    "unverifiedScope": "Custom worksheet. Standard-format parity has not been verified.",
+    "contextTitle": "9-LINE CONTEXT",
+    "peacetime": "PEACETIME",
+    "wartime": "WARTIME",
+    "contextMissing": "Choose a report context",
+    "chooseContext": "Select peacetime or wartime before copying. Lines 6 and 9 use different fields.",
+    "draftLabel": "DRAFT / REFERENCE WORKSHEET",
+    "blank": "NOT ENTERED",
+    "sessionOnly": "Drafts stay in this running app session only. Copy them before closing or restarting.",
+    "insertedTimeNote": "Inserted times use {{basis}}. Enter the event or observation time separately when different.",
+    "positionReference": "MGRS / WGS 84 · {{source}} · fix {{time}} · accuracy {{accuracy}}",
+    "line1": "LINE 1 — PICKUP LOCATION",
+    "line1Hint": "Pickup-site MGRS with grid-zone and square identifiers",
+    "line2": "LINE 2 — FREQUENCY / CALLSIGN",
+    "line2Hint": "Pickup-site radio frequency, callsign and suffix",
+    "line3": "LINE 3 — PATIENTS BY PRECEDENCE",
+    "line3Hint": "A=Urgent; B=Urgent-surgical; C=Priority; D=Routine; E=Convenience",
+    "line4": "LINE 4 — SPECIAL EQUIPMENT",
+    "line4Hint": "A=None; B=Hoist; C=Extraction equipment; D=Ventilator",
+    "line5": "LINE 5 — PATIENTS BY TYPE",
+    "line5Hint": "L + count = litter; A + count = ambulatory",
+    "line6War": "LINE 6 — PICKUP-SITE SECURITY",
+    "line6WarHint": "N=No enemy troops; P=Possible enemy troops; E=Enemy troops; X=Enemy troops, armed escort required",
+    "line6Peace": "LINE 6 — WOUND / INJURY / ILLNESS",
+    "line6PeaceHint": "Number and type of wounds, injuries or illness, as assessed by qualified personnel",
+    "line7": "LINE 7 — PICKUP-SITE MARKING",
+    "line7Hint": "A=Panels; B=Pyrotechnic signal; C=Smoke signal; D=None; E=Other",
+    "line8": "LINE 8 — NATIONALITY / STATUS",
+    "line8Hint": "A=US military; B=US citizen; C=Non-US military; D=Non-US citizen; E=Enemy prisoner of war",
+    "line9War": "LINE 9 — CBRN (WHEN APPLICABLE)",
+    "line9WarHint": "C=Chemical; B=Biological; R=Radiological; N=Nuclear",
+    "line9Peace": "LINE 9 — TERRAIN DESCRIPTION",
+    "line9PeaceHint": "Terrain around the proposed pickup/landing site and nearby landmarks",
+    "emptyTitle": "Nothing to copy yet",
+    "emptyBody": "Enter report details before copying.",
+    "referenceLabel": "REFERENCE",
+    "contextLabel": "CONTEXT",
+    "timeBasisLabel": "INSERTED TIME BASIS",
+    "localTime": "LOCAL TIME WITH UTC OFFSET",
+    "utcTime": "UTC"
+  },
+  routeCoverage: {
+    title: "ROUTE MAP COVERAGE",
+    check: "CHECK ROUTE MAP",
+    recheck: "CHECK AGAIN",
+    cancel: "CANCEL CHECK",
+    notChecked: "Not checked yet.",
+    starting: "Preparing check…",
+    checking: "Checking {{done}} of {{total}} map tiles…",
+    complete: "All {{count}} map tiles under the planned legs are on this device.",
+    partial: "{{missing}} of {{total}} map tiles under the planned legs are missing.",
+    missing: "The imported map has no tiles under this route.",
+    noMap: "No offline map is imported. Online maps need a connection.",
+    cancelled: "Check cancelled. Coverage is not verified.",
+    stale: "The route or the map changed. Check again.",
+    unknown: "Coverage could not be verified.",
+    detail: "Detail checked: zoom {{zooms}}.",
+    disclaimer: "This checks map files only. It does not show whether the route is safe, passable or permitted.",
+    legComplete: "COVERED",
+    legPartial: "PARTLY MISSING",
+    legMissing: "MISSING",
+    legUnknown: "NOT VERIFIED",
+    reason: {
+      budget: "The route is too long for a full check at this map detail.",
+      inventory: "The imported map inventory could not be verified. Import the map again.",
+      changing: "The map changed during the check.",
+      failed: "Map storage could not be read.",
+      point: "Point {{number}} cannot be checked.",
+      leg: "Leg {{number}} spans half the globe and cannot be checked.",
+    },
+  },
+  fieldPack: {
+    button: "FIELD PACK",
+    title: "FIELD PACK",
+    revision: "Revision {{rev}}",
+    contents: "CONTENTS",
+    points: "{{count}} checkpoints in route order, with names, coordinates and notes.",
+    legs: "Planned straight-line legs for the route card.",
+    mapReference: "Map reference only: {{name}}. The recipient needs their own permitted copy.",
+    noMapReference: "No map reference. No offline map is imported on this device.",
+    mapsNotIncluded: "Map files are not included.",
+    estimatedNote: "Estimated points are shared as coordinates only. Their dead-reckoning origin is not included.",
+    importedFrom: "Imported from pack revision {{rev}}, exported {{date}}.",
+    senderMap: "Sender’s map reference: {{name}}. This says nothing about maps on this device.",
+    share: "SHARE FIELD PACK",
+    shareHint: "Sharing uses your device’s file-sharing controls. Nothing is sent until you choose a destination.",
+    empty: "Add at least one point before making a field pack.",
+    exportFailed: "The field pack could not be created.",
+    import: "IMPORT PACK",
+    importTitle: "FIELD PACK PREVIEW",
+    importMeta: "Revision {{rev}} · exported {{date}}",
+    importPoints: "{{count}} CHECKPOINTS",
+    importAdd: "ADD AS NEW LIST",
+    importHint: "Adds a new list. Existing lists are not changed.",
+    importRenamed: "A list with this name exists. The pack will be added as {{name}}.",
+    mapNone: "This pack has no map reference.",
+    mapAbsent: "This pack refers to the map “{{name}}”, which is not on this device.",
+    mapDifferent: "This pack refers to the map “{{name}}”. A different map is imported on this device.",
+    mapSame: "A map described like “{{name}}” is imported on this device. Matching descriptions do not prove the same tiles. Check route coverage before use.",
+    added: "Field pack added as {{name}}.",
+    errors: {
+      tooLarge: "This file is larger than a field pack can be.",
+      invalid: "This file is not a valid Red Grid field pack.",
+      version: "This pack was made by a newer app version. Update the app to open it.",
+      damaged: "The pack contents do not match its revision. It may be damaged or edited.",
+      point: "The pack contains a point that cannot be used.",
+      listLimit: "You already have 10 lists. Delete one before importing.",
+      read: "The file could not be read.",
+    },
+  },
+  mapImport: {
+    title: "BRING THE RIGHT MAP",
+    intro: "Import a permitted MBTiles file before leaving connectivity.",
+    formatTitle: "Raster PNG tiles · 256 × 256",
+    formatBody: "Vector, JPEG and WebP archives are not supported.",
+    limitTitle: "Up to {{tiles}} tiles",
+    limitBody: "{{archive}} MB archive · {{extracted}} MB extracted tile data.",
+    rightsTitle: "Keep source and attribution",
+    rightsBody: "Use a map you have permission to use.",
+    replaceTitle: "Replaces the current map",
+    replaceBody: "A valid import replaces the saved map. If the import fails or is cancelled, the current map stays.",
+    checkTitle: "Check before departure",
+    checkBody: "A successful import does not establish route coverage. Run the route map check afterwards.",
+    choose: "CHOOSE MAP FILE",
+  },
   workflow: {
   "generated": "GENERATED",
   "plannedDistance": "PLANNED DISTANCE",
@@ -186,7 +444,7 @@ export default {
     "radio": "Connect a compatible Meshtastic radio for position and team messages. Radio hardware and peer setup are required. A successful send confirms a write to your radio, not delivery to a peer.",
     "tools": "Keep calculator drafts in this session, pin a dead-reckoning origin and save estimated points. Check inputs and sensor references before relying on an output.",
     "routes": "Turn Map selections into a named route, reorder points, add notes, review its card and run preflight. Confirm each point manually during navigation.",
-    "reports": "Prepare report drafts and explicitly insert device references. Copy when ready. Drafts stay in this app session until cleared or the app closes.",
+    "reports": "Prepare report drafts and incident activity logs on this device. Wait for Saved before closing. Review and export an unsigned ICS 214 draft; the app does not sign or file it. Saved records stay readable and exportable after Pro expires.",
     "photos": "Add a pinned device-position annotation to a photo. It does not verify the photo’s original location or capture time.",
     "display": "Pro includes additional green and blue palettes and HUD. Standard, Tactical, daylight and essential text sizing are available without Pro.",
     "receiver": "Connect a compatible Bluetooth NMEA receiver. Receiver hardware is required; check supported service and sentence formats before purchase.",
@@ -528,6 +786,10 @@ export default {
     stop: 'TAP TO STOP',
   },
   toolLabels: {
+    declinationEast: "EAST",
+    declinationWest: "WEST",
+    declinationNone: "NONE",
+    declinationSignHint: "+ = EAST, − = WEST",
     gridConvergence: 'GRID CONVERGENCE',
     gmAngle: 'G-M ANGLE',
     gmExplain: 'G-M angle = declination minus grid convergence. This is the number that converts between your compass and an MGRS map.',
@@ -692,6 +954,12 @@ export default {
 
   // ─── Support / Help screen ────────────────────────────────────────────
   support: {
+    supportRedGrid: "SUPPORT RED GRID",
+    writeReview: "Write a review",
+    reviewDescription: "Share an honest review on the store.",
+    shareApp: "Share Red Grid",
+    shareAppDescription: "Send the app link to a friend or team.",
+    shareAppMessage: "Red Grid MGRS: MGRS navigation, maps and field tools. {{url}}",
     "faqSourcePaid": "Why publish the source and offer Pro?",
     "faqSourcePaidA": "The source is available for inspection under the repository license, which includes use restrictions. The store app makes installation and updates simpler; Pro supports maintenance and adds advanced navigation workflows. See the license in the linked source repository for its terms.",
 
@@ -708,15 +976,15 @@ export default {
     privacyLegal: 'PRIVACY & LEGAL',
     privacyPolicy: 'Privacy Policy',
     privacySub: "Local storage and optional external services",
-    license: 'MIT + Commons Clause License',
+    license: "Source license: MIT + Commons Clause",
     copyright: '\u00a9 2026 Red Grid Tactical',
     // FAQ items
     faqCellService: 'Does this work without cell service?',
     faqCellServiceA: "Coordinates and local calculations work without cell service when a GPS fix is available. Offline maps require a map imported beforehand. Online maps and store actions need a connection.",
     faqRestore: 'How do I restore my Pro purchase?',
-    faqRestoreA: "Use Restore Previous Purchase below while signed into the same Apple or Google store account used to buy Pro. An internet connection may be needed to verify the purchase.",
+    faqRestoreA: "Use Restore Previous Purchase while signed into the same Apple or Google store account used to buy Pro. An internet connection may be needed to verify the purchase.",
     faqData: 'What data does this app collect?',
-    faqDataA: "Saved points, routes, settings and usage counters remain on this device; they are not uploaded as app analytics. Online maps and stores use external services. Exports, photo saving and radio sharing happen when you choose those actions.",
+    faqDataA: "Points, routes, incident logs, report drafts, settings and usage counters stay on this device, with no app analytics upload. Online maps and stores use external services. You choose exports, photo saving and radio sharing.",
     faqAccuracy: 'How accurate is the MGRS grid?',
     faqAccuracyA: "Grid digits describe coordinate resolution, not measured position accuracy. Accuracy depends on the receiver, sky view and fix age. Check the displayed uncertainty and use independent navigation references.",
     faqWhatIsMgrs: 'What is MGRS?',
@@ -780,7 +1048,28 @@ export default {
   },
 
   // ─── ProGate / paywall ────────────────────────────────────────────────
+  managePro: {
+    "title": "Manage Pro",
+    "planFree": "Free",
+    "planMonthly": "Pro Monthly",
+    "planAnnual": "Pro Annual",
+    "planLifetime": "Pro Lifetime",
+    "planLoading": "Checking purchases…",
+    "planUnknown": "Purchase plan unavailable",
+    "giftActive": "Gift Pro access is active.",
+    "cached": "Showing saved purchase information. Restore purchases to check with the store.",
+    "unknownBody": "Restore purchases to check your plan before buying.",
+    "viewOptions": "View Pro options",
+    "viewLifetime": "View Lifetime option",
+    "buyLifetime": "Buy Lifetime Pro",
+    "manageSubscriptions": "Manage subscriptions",
+    "subscriptionNotice": "Buying Lifetime does not cancel an existing subscription. Manage or cancel that subscription in your app store.",
+    "linkFailedTitle": "Could not open subscriptions",
+    "linkFailedBody": "Open your app store and manage subscriptions from your account."
+  },
   proGate: {
+    lifetimePromise: "Pay once. Keep Pro permanently, with all future Red Grid MGRS Pro features and updates. Existing Lifetime purchases are protected too. No subscription or repurchase.",
+    termsOfUse: "Terms of Use",
     badge: 'PRO',
     title: 'RED GRID PRO',
     subtitleFeature: '{{feature}} is a Pro feature',
@@ -818,8 +1107,8 @@ export default {
     allToolsSub: 'Dead reckoning, resection, sun/moon, geostamp, and more',
     waypointsRoutes: "Saved Waypoints & Routes",
     waypointsRoutesSub: "Up to 10 lists of 20 points; GPX/KML point import and export",
-    reportsThemes: 'All Reports & Themes',
-    reportsThemesSub: "Six report forms and additional display palettes",
+    reportsThemes: "Reports & Incident Logs",
+    reportsThemesSub: "Saved drafts, incident workspaces and ICS 214 export",
     pricesUnavailable: "Connect to load current store prices and purchase options.",
     tryFreeBadge: 'PRO, TRY FREE',
   },
@@ -989,12 +1278,16 @@ export default {
     startTrial: 'START 7-DAY FREE TRIAL',
     current: {
       "f1": {
-        "title": "CLEARER PRO TABS",
-        "body": "LISTS, COORDS and MESH now explain what each tab does and what Free already includes before offering Pro."
+        "title": "MANAGE PRO",
+        "body": "See your saved Pro plan, restore purchases and open store subscription settings from Help."
       },
       "f2": {
-        "title": "LOCALIZED PAYWALL",
-        "body": "Map import and locked-tab prompts use translated feature names, and the Pro feature list is now localized in every language."
+        "title": "LIFETIME OPTION",
+        "body": "Existing subscribers can view Lifetime. Store subscriptions must be cancelled separately."
+      },
+      "f3": {
+        "title": "CLEARER REPORT HELP",
+        "body": "Corrected draft and incident-log descriptions. Existing Lifetime access and saved records are preserved."
       }
     },
   },
@@ -1121,5 +1414,211 @@ export default {
       groundPerKm: "GROUND PER 1000M GRID",
       explain: "Grid distance is not ground distance. Add this correction to every 1000 m measured off the grid.",
     },
+  },
+  reportFields: {
+    "salute": {
+      "size": {
+        "label": "S — SIZE",
+        "placeholder": "Squad / Platoon / Vehicle..."
+      },
+      "activity": {
+        "label": "A — ACTIVITY",
+        "placeholder": "Moving N, Digging in, Firing..."
+      },
+      "location": {
+        "label": "L — LOCATION",
+        "placeholder": "MGRS grid"
+      },
+      "unit": {
+        "label": "U — UNIT",
+        "placeholder": "Uniform / Marking / Equipment..."
+      },
+      "time": {
+        "label": "T — TIME",
+        "placeholder": "DTG observed"
+      },
+      "equip": {
+        "label": "E — EQUIPMENT",
+        "placeholder": "Weapons / Vehicles / Comms..."
+      }
+    },
+    "spot": {
+      "who": {
+        "label": "WHO",
+        "placeholder": "Reporting callsign"
+      },
+      "what": {
+        "label": "WHAT",
+        "placeholder": "What observed"
+      },
+      "where": {
+        "label": "WHERE",
+        "placeholder": "MGRS location"
+      },
+      "when": {
+        "label": "WHEN",
+        "placeholder": "DTG"
+      },
+      "why": {
+        "label": "WHY",
+        "placeholder": "Intent / significance"
+      }
+    },
+    "ics201": {
+      "incident": {
+        "label": "INCIDENT NAME",
+        "placeholder": "Operation / incident name"
+      },
+      "date": {
+        "label": "DATE / TIME",
+        "placeholder": "YYYY-MM-DD HH:mm ±HH:mm"
+      },
+      "location": {
+        "label": "LOCATION",
+        "placeholder": "MGRS / address"
+      },
+      "situation": {
+        "label": "SITUATION",
+        "placeholder": "Current situation summary"
+      },
+      "resources": {
+        "label": "RESOURCES ASSIGNED",
+        "placeholder": "Units / personnel / equipment"
+      },
+      "ic": {
+        "label": "INCIDENT COMMANDER",
+        "placeholder": "Name / callsign"
+      },
+      "objectives": {
+        "label": "OBJECTIVES",
+        "placeholder": "Priority actions"
+      },
+      "safety": {
+        "label": "SAFETY MESSAGE",
+        "placeholder": "Hazards / precautions"
+      }
+    },
+    "angus": {
+      "unit": {
+        "label": "UNIT / CALLSIGN",
+        "placeholder": "Requesting callsign"
+      },
+      "grid": {
+        "label": "TARGET GRID",
+        "placeholder": "MGRS"
+      },
+      "altitude": {
+        "label": "TARGET ALTITUDE",
+        "placeholder": "MSL in metres"
+      },
+      "description": {
+        "label": "TARGET DESCRIPTION",
+        "placeholder": "Personnel, vehicle, structure..."
+      },
+      "danger": {
+        "label": "DANGER CLOSE",
+        "placeholder": "Distance to friendlies (m)"
+      },
+      "effects": {
+        "label": "DESIRED EFFECTS",
+        "placeholder": "Neutralise / Suppress / Destroy"
+      },
+      "method": {
+        "label": "METHOD OF ENGAGEMENT",
+        "placeholder": "Direction, number of rounds..."
+      },
+      "clearance": {
+        "label": "CLEARANCE",
+        "placeholder": "Auth callsign / code word"
+      }
+    },
+    "casevac": {
+      "grid": {
+        "label": "PICKUP GRID",
+        "placeholder": "MGRS of pickup site"
+      },
+      "callsign": {
+        "label": "CALLSIGN / FREQ",
+        "placeholder": "Requesting callsign & frequency"
+      },
+      "casualties": {
+        "label": "CASUALTIES",
+        "placeholder": "Number and type (ambulatory/litter)"
+      },
+      "injuries": {
+        "label": "INJURIES / ILLNESS",
+        "placeholder": "Nature of injuries"
+      },
+      "security": {
+        "label": "SECURITY AT PICKUP",
+        "placeholder": "Clear / Hostile / Unknown"
+      },
+      "marking": {
+        "label": "MARKING",
+        "placeholder": "Panels / Smoke / None"
+      },
+      "equip": {
+        "label": "EQUIPMENT NEEDED",
+        "placeholder": "Ventilator / Litter / None"
+      },
+      "time": {
+        "label": "TIME OF INJURY",
+        "placeholder": "DTG"
+      }
+    },
+    "access": {
+      "reportSummary": "{{title}} report. {{description}}{{state}}",
+      "lockedSuffix": ". Pro feature, locked.",
+      "upgrade": "Double tap to view upgrade options",
+      "collapse": "Double tap to collapse",
+      "expand": "Double tap to expand"
+    }
+  },
+  localeAccess: {
+    "mgrsPosition": "MGRS grid: {{value}}",
+    "accuracyMeters": "accuracy plus or minus {{accuracy}} meters",
+    "altitudeMeters": "altitude {{altitude}} meters",
+    "closeWaypointCard": "Close waypoint card",
+    "navigateTo": "Navigate to {{name}}",
+    "deleteNamed": "Delete {{name}}",
+    "waypoint": "Waypoint",
+    "openLicense": "{{attribution}}. Opens licence page.",
+    "toggleOfflineMap": "Toggle offline map mode",
+    "clearCachedTilesHint": "Long press to clear cached tiles",
+    "mapStyle": "Map style: {{style}}. Tap to cycle.",
+    "exitRoutePlanning": "Exit route planning mode",
+    "startRoutePlanning": "Start route planning mode (Pro)",
+    "routePlanning": "Route Planning",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "optimizeRouteFromLocation": "Optimize route order from current location",
+    "clearRouteWaypoints": "Clear all waypoints from route",
+    "importedMapTiles": "{{name}} · {{total}} tiles",
+    "mapUnavailable": "Map module unavailable. Rebuild the app to enable.",
+    "secondsAgo": "{{seconds}}s ago",
+    "minutesAgo": "{{minutes}}m ago",
+    "hoursAgo": "{{hours}}h ago",
+    "listSummary": "{{name}}, {{total}} of 20 waypoints",
+    "deleteListHint": "Long press to delete list",
+    "createNewList": "Create new waypoint list",
+    "newListName": "New list name",
+    "createList": "Create list",
+    "cancelCreateList": "Cancel creating list",
+    "exportList": "Export waypoint list",
+    "enterMgrsManually": "Enter MGRS grid manually",
+    "addCurrentPosition": "Add current GPS position as waypoint",
+    "waypointLabel": "Waypoint label",
+    "addGridWaypoint": "Add grid waypoint",
+    "cancelGridEntry": "Cancel grid entry",
+    "editMgrsCoordinate": "Edit MGRS coordinate",
+    "saveEditedCoordinate": "Save edited coordinate",
+    "copyNamedMgrs": "Copy {{name}} MGRS",
+    "editNamedCoordinate": "Edit {{name}} coordinate",
+    "retryApplication": "Retry loading application",
+    "unknownError": "Unknown error",
+    "optionalWaypointName": "Optional name for this waypoint",
+    "enterFullMgrs": "Enter full MGRS grid coordinate",
+    "exampleValue": "e.g. {{value}}",
+    "signedDegreeExample": "+5 or -12"
   },
 };

@@ -1,0 +1,11 @@
+/* Localized permission descriptions. */
+"NSBluetoothAlwaysUsageDescription" = "Red Grid MGRS uses Bluetooth to connect to Meshtastic radios for off-grid mesh networking. No data is transmitted over the internet.";
+"NSBluetoothPeripheralUsageDescription" = "Red Grid MGRS uses Bluetooth to connect to Meshtastic radios for off-grid mesh networking. No data is transmitted over the internet.";
+"NSCameraUsageDescription" = "Red Grid MGRS uses your camera to take geotagged photos. Photos are stamped with your MGRS grid and saved to your device only.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Allow Red Grid MGRS to access your location";
+"NSLocationAlwaysUsageDescription" = "Allow Red Grid MGRS to access your location";
+"NSLocationWhenInUseUsageDescription" = "Red Grid MGRS uses your location for grid coordinates and navigation. You can save waypoints on your device and choose to share or send your position over a connected radio.";
+"NSMicrophoneUsageDescription" = "Allow Red Grid MGRS to access your microphone";
+"NSMotionUsageDescription" = "Allow Red Grid MGRS to access your device motion";
+"NSPhotoLibraryAddUsageDescription" = "Allow Red Grid MGRS to save photos";
+"NSPhotoLibraryUsageDescription" = "Red Grid MGRS accesses your photo library to select images for geostamping. No photos are uploaded or transmitted.";

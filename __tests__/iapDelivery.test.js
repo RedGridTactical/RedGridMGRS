@@ -112,7 +112,7 @@ describe('the purchase listener is armed only AFTER initConnection', () => {
   });
 
   test('iapReady is a dependency, so the effect re-runs once ready', () => {
-    expect(src).toMatch(/\}, \[persistPro, iapReady\]\);/);
+    expect(src).toMatch(/\}, \[persistPro, canGrant, reverifyEntitlement, writeEntitlement, iapReady\]\);/);
   });
 
   test('iapReady is never flipped before a connection has been attempted', () => {
@@ -146,7 +146,7 @@ describe('every store entitlement query also acknowledges', () => {
     // An unacknowledged purchase is refunded whether or not the hook is alive,
     // so ackAndroid must precede the cancelled/mounted early return.
     const i = src.indexOf('ackAndroid(result);');
-    const j = src.indexOf('if (cancelled || !mounted.current) return;', i - 400);
+    const j = src.indexOf('if (!mounted.current || revision !== entitlementRevision.current', i);
     expect(i).toBeGreaterThan(-1);
     expect(i).toBeLessThan(j);
   });

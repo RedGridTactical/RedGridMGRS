@@ -1,10 +1,11 @@
+jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }) }));
 jest.mock('react', () => {
   const hooks = require('./helpers/hookHarness')();
   return { ...jest.requireActual('react'), ...hooks, useMemo: (fn, deps) => hooks.useCallback(fn, deps)() };
 });
 jest.mock('react-native', () => ({
   useWindowDimensions: () => ({ width: 393, height: 852, fontScale: 1 }),
-  View: 'View', Text: 'Text', TouchableOpacity: 'TouchableOpacity', ScrollView: 'ScrollView',
+  View: 'View', KeyboardAvoidingView: 'KeyboardAvoidingView', Text: 'Text', TouchableOpacity: 'TouchableOpacity', ScrollView: 'ScrollView',
   StyleSheet: { create: value => value, hairlineWidth: 1 }, Platform: { OS: 'ios', select: value => value.ios },
   useWindowDimensions: () => ({ width: 390, height: 844, fontScale: 1 }),
   Animated: { Value: jest.fn(), View: 'AnimatedView' },
@@ -12,7 +13,12 @@ jest.mock('react-native', () => ({
 jest.mock('react-native-maps', () => ({ __esModule: true, default: 'MapView', Marker: 'Marker', UrlTile: 'UrlTile', LocalTile: 'LocalTile' }));
 jest.mock('@react-native-async-storage/async-storage', () => ({ getItem: jest.fn().mockResolvedValue(null), setItem: jest.fn().mockResolvedValue() }));
 jest.mock('../src/utils/ThemeContext', () => ({ useColors: () => ({ bg: '#101718', card: '#202828', text: '#fff', text2: '#ccc', text3: '#aaa', border: '#333', accentText: '#f00' }) }));
-jest.mock('../src/hooks/useTranslation', () => ({ useTranslation: () => ({ t: (key, values) => key + (values?.name ? `:${values.name}` : '') }) }));
+jest.mock('../src/hooks/useTranslation', () => ({ useTranslation: () => ({ t: (key, values) => {
+  if (typeof values?.defaultValue === 'string') {
+    return values.defaultValue.replace(/\{\{(\w+)\}\}/g, (_match, name) => String(values[name] ?? ''));
+  }
+  return key + (values?.name ? `:${values.name}` : '');
+} }) }));
 jest.mock('../src/utils/fieldAlert', () => ({ Alert: { alert: jest.fn() }, allowSystemDisplay: jest.fn().mockResolvedValue(true) }));
 jest.mock('../src/utils/typography', () => ({ TYPE: { body: {}, label: {}, heading: {}, data: {} } }));
 jest.mock('../src/components/FieldInput', () => ({ TextInput: 'TextInput' }));

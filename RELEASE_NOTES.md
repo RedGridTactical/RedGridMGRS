@@ -1,3 +1,10 @@
+# v4.1.1 — Reviews and app sharing (next release)
+
+- Native in-app review requests after a completed grid copy or route-detail save, with local usage gates and a five-second quiet pause. Requests cancel on further interaction and stay suppressed during Tactical display, navigation, radio activity, alerts and other dialogs.
+- Help now provides Write a review and Share Red Grid actions in all 16 app languages. Ordinary sharing remains available independently of the existing seven-day Pro gift.
+- In-app What’s New is translated into all 16 app languages; store release notes cover all configured App Store and Play languages. The update screen keeps Continue reachable at large text sizes.
+- Reviews are optional and receive no reward. Eligibility stays on the device; no tracking, analytics service or app network requests were added.
+
 ## Red Grid MGRS v1.0.0
 
 First public release.

@@ -2,7 +2,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({ getItem: jest.fn
 jest.mock('react-native', () => ({ Share: { share: jest.fn(), sharedAction: 'sharedAction', dismissedAction: 'dismissedAction' } }));
 const Storage = require('@react-native-async-storage/async-storage');
 const { Share } = require('react-native');
-const { mintShareToken, verifyShareToken, redeemShareToken, mintShareLink, shareTrialLink, getTrialStatus, extractTokenFromUrl } = require('../src/utils/referral');
+const { mintShareToken, verifyShareToken, redeemShareToken, mintShareLink, shareTrialLink, shareApp, getTrialStatus, extractTokenFromUrl } = require('../src/utils/referral');
 let data;
 beforeEach(() => {
   jest.useFakeTimers(); jest.setSystemTime(new Date('2026-09-09T12:00:00Z')); jest.resetAllMocks(); data = new Map();
@@ -78,4 +78,16 @@ test('only exact app and HTTPS gift URLs are accepted', () => {
   for (const url of ['https://notredgridtactical.com/trial#RG1.a.b', 'https://redgridtactical.com/trial-other#RG1.a.b', 'http://redgridtactical.com/trial#RG1.a.b']) {
     expect(extractTokenFromUrl(url)).toBeNull();
   }
+});
+
+test('ordinary app sharing survives spent/expired gifts without minting tokens or touching storage', async () => {
+  data.set('rg_trial_shared_v1', 'true');
+  Storage.getItem.mockClear(); Storage.setItem.mockClear();
+  expect(await shareApp(url => `Red Grid: ${url}`)).toEqual({ ok: true, shared: true });
+  expect(Share.share).toHaveBeenCalledWith({ message: 'Red Grid: https://redgridtactical.com/mgrs' });
+  expect(Storage.getItem).not.toHaveBeenCalled(); expect(Storage.setItem).not.toHaveBeenCalled();
+  Share.share.mockResolvedValueOnce({ action: Share.dismissedAction });
+  expect(await shareApp(url => url)).toEqual({ ok: true, shared: false });
+  Share.share.mockRejectedValueOnce(new Error('unavailable'));
+  expect(await shareApp(url => url)).toEqual({ ok: false, reason: 'share' });
 });

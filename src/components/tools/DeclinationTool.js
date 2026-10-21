@@ -72,7 +72,7 @@ export function DeclinationTool({ declination, setDeclination, location }) {
     }
   }
 
-  const dir = declination > 0 ? 'EAST' : declination < 0 ? 'WEST' : 'NONE';
+  const dir = t(declination > 0 ? 'toolLabels.declinationEast' : declination < 0 ? 'toolLabels.declinationWest' : 'toolLabels.declinationNone');
   const signed = (v, dp = 2) => `${v > 0 ? '+' : ''}${v.toFixed(dp)}°`;
 
   return (
@@ -80,13 +80,13 @@ export function DeclinationTool({ declination, setDeclination, location }) {
       <Text style={[styles.sectionLabel, { color: colors.text3 }]}>{t('toolLabels.localDeclination')}</Text>
       <View style={styles.calibRow}>
         <View style={{ flex: 1 }}>
-          <ToolInput label={t('toolLabels.localDeclination')} value={decInput} onChangeText={setDecInput} placeholder="+5 or -12" keyboardType="numbers-and-punctuation" />
+          <ToolInput label={t('toolLabels.localDeclination')} value={decInput} onChangeText={setDecInput} placeholder={t('localeAccess.signedDegreeExample', { defaultValue: '+5 or -12' })} keyboardType="numbers-and-punctuation" />
         </View>
         <TouchableOpacity style={[styles.saveBtn, { borderColor: colors.border }]} onPress={saveDec} disabled={saving || dec === null} accessibilityRole="button" accessibilityState={{ disabled: saving || dec === null }}>
           <Text style={[styles.saveBtnText, { color: colors.text3 }]}>{t('toolLabels.save')}</Text>
         </TouchableOpacity>
       </View>
-      <ToolHint text={`${t('toolLabels.saved')}: ${declination > 0 ? '+' : ''}${declination}° (${dir})  ·  + = EAST, - = WEST`} />
+      <ToolHint text={`${t('toolLabels.saved')}: ${declination > 0 ? '+' : ''}${declination}° (${dir})  ·  ${t('toolLabels.declinationSignHint')}`} />
 
       <ToolHint text={t('workflow.declinationRange')} />
       {!!saveError && <ToolHint text={saveError} />}

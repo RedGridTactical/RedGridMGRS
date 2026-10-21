@@ -16,6 +16,7 @@
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		C41F134C22D6496BA459134A /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B0E681BC174A78BB4BFB5D /* noop-file.swift */; };
+		F4B8766492206CEED99E0A7E /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 9832EC1961B40EDFB1426937 /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +36,15 @@
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-RedGridMGRS/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		19AC94D81460084017114E23 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = "RedGridMGRS/en.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		D7B985CFFA9C022C38443212 /* da */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = da; path = "RedGridMGRS/da.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		2A88A6C37E9CD9BF0A57B01F /* hr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hr; path = "RedGridMGRS/hr.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		0AAD9A8FB057BDA43A9CB246 /* id */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = id; path = "RedGridMGRS/id.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		AA95F870CD3A173BE7E70F9A /* nb */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nb; path = "RedGridMGRS/nb.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		8C934D8FF1A46C6196033771 /* sk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sk; path = "RedGridMGRS/sk.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		0CC762E0147E5A9049B064DF /* sv */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = sv; path = "RedGridMGRS/sv.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		8431EEF5B806635555B892E5 /* th */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = th; path = "RedGridMGRS/th.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		525358D8A84F2F7F33ED39A7 /* vi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = vi; path = "RedGridMGRS/vi.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +67,7 @@
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
+				9832EC1961B40EDFB1426937 /* InfoPlist.strings */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				B6B0E681BC174A78BB4BFB5D /* noop-file.swift */,
@@ -184,6 +195,14 @@
 			knownRegions = (
 				en,
 				Base,
+				da,
+				hr,
+				id,
+				nb,
+				sk,
+				sv,
+				th,
+				vi,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
@@ -204,10 +223,30 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				3CD0B0427BF8CFF1ACA3DE67 /* PrivacyInfo.xcprivacy in Resources */,
+				F4B8766492206CEED99E0A7E /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		9832EC1961B40EDFB1426937 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				19AC94D81460084017114E23 /* en */,
+				D7B985CFFA9C022C38443212 /* da */,
+				2A88A6C37E9CD9BF0A57B01F /* hr */,
+				0AAD9A8FB057BDA43A9CB246 /* id */,
+				AA95F870CD3A173BE7E70F9A /* nb */,
+				8C934D8FF1A46C6196033771 /* sk */,
+				0CC762E0147E5A9049B064DF /* sv */,
+				8431EEF5B806635555B892E5 /* th */,
+				525358D8A84F2F7F33ED39A7 /* vi */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */ = {
@@ -349,7 +388,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = RedGridMGRS/RedGridMGRS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 83;
+				CURRENT_PROJECT_VERSION = 103;
 				DEVELOPMENT_TEAM = 79PGQG73FG;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -359,7 +398,7 @@
 				INFOPLIST_FILE = RedGridMGRS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 4.0.8;
+				MARKETING_VERSION = 4.1.5;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -385,12 +424,12 @@
 				CODE_SIGN_ENTITLEMENTS = RedGridMGRS/RedGridMGRS.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 83;
+				CURRENT_PROJECT_VERSION = 103;
 				DEVELOPMENT_TEAM = 79PGQG73FG;
 				INFOPLIST_FILE = RedGridMGRS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 4.0.8;
+				MARKETING_VERSION = 4.1.5;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

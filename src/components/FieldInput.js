@@ -14,7 +14,7 @@ export function TextInput(props) {
   const [draft, setDraft] = useState('');
   if (!tacticalMode) return <NativeTextInput {...props} />;
   const numeric = ['numeric', 'number-pad', 'decimal-pad', 'phone-pad'].includes(props.keyboardType);
-  const rows = numeric ? ['123', '456', '789', '-0.'] : ['12345', '67890', 'ABCDEFG', 'HIJKLMN', 'OPQRSTU', 'VWXYZ', '-.,/'];
+  const rows = numeric ? ['123', '456', '789', '-0.'] : ['12345', '67890', 'ABCDEFG', 'HIJKLMN', 'OPQRSTU', 'VWXYZ', '-.,/:+'];
   const append = key => setDraft(value => (value + key).slice(0, props.maxLength ?? 2000));
   const close = commit => {
     if (commit) props.onChangeText?.(draft);

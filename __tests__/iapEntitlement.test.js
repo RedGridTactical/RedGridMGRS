@@ -161,7 +161,7 @@ describe('entitlement queries warm the product cache first', () => {
     expect(i).toBeGreaterThan(-1);
     // Slice to the revocation itself so the ordering assertion is meaningful
     // rather than dependent on an arbitrary window size.
-    const revokeAt = src.indexOf('removeItem(PRO_KEY)', i);
+    const revokeAt = src.indexOf('AsyncStorage.removeItem(key)', i);
     expect(revokeAt).toBeGreaterThan(i);
     const block = src.slice(i, revokeAt);
 
@@ -172,10 +172,11 @@ describe('entitlement queries warm the product cache first', () => {
     expect(before(block, 'fetchProductDetailsRef.current', 'getAvailablePurchases()')).toBe(true);
   });
 
-  test('loadProStatus warms the cache too', () => {
+  test('loadProStatus starts the same cache-aware refresh after hydration', () => {
     const i = src.indexOf('const loadProStatus');
     const block = src.slice(i, i + 3000);
-    expect(block).toContain('fetchProductDetailsRef.current');
+    expect(block).toContain('hydration.current.then');
+    expect(block).toContain('refreshEntitlement()');
   });
 });
 
@@ -198,10 +199,10 @@ describe('Android PENDING purchases never grant Pro', () => {
     expect(isPendingAndroid(iosMonthly, true)).toBe(false);
   });
 
-  test('all three query paths apply the pending filter', () => {
-    const sites = src.match(/!isPendingAndroid\(p\) && entitlingSku\(p, ALL_PRODUCT_IDS\)/g) || [];
-    // restore(), reverifyEntitlement(), loadProStatus()
-    expect(sites.length).toBe(3);
+  test('the shared eligibility filter rejects pending results on Android', () => {
+    const { isEntitlingPurchase } = require('../src/utils/iapOffers');
+    expect(isEntitlingPurchase(androidPendingLifetime, 'android', ALL)).toBe(false);
+    expect(isEntitlingPurchase(androidLifetime, 'android', ALL)).toBe(true);
   });
 });
 

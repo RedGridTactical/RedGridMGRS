@@ -1,0 +1,11 @@
+/* Localized permission descriptions. */
+"NSBluetoothAlwaysUsageDescription" = "Red Grid MGRS menggunakan Bluetooth untuk terhubung ke radio Meshtastic untuk jaringan mesh tanpa sinyal seluler. Tidak ada data yang dikirim melalui internet.";
+"NSBluetoothPeripheralUsageDescription" = "Red Grid MGRS menggunakan Bluetooth untuk terhubung ke radio Meshtastic untuk jaringan mesh tanpa sinyal seluler. Tidak ada data yang dikirim melalui internet.";
+"NSCameraUsageDescription" = "Red Grid MGRS menggunakan kamera untuk mengambil foto bergeotag. Foto diberi stempel grid MGRS Anda dan hanya disimpan di perangkat Anda.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Izinkan Red Grid MGRS mengakses lokasi Anda";
+"NSLocationAlwaysUsageDescription" = "Izinkan Red Grid MGRS mengakses lokasi Anda";
+"NSLocationWhenInUseUsageDescription" = "Red Grid MGRS menggunakan lokasi Anda untuk koordinat grid dan navigasi. Anda dapat menyimpan waypoint di perangkat dan memilih untuk membagikan atau mengirim posisi Anda melalui radio yang terhubung.";
+"NSMicrophoneUsageDescription" = "Izinkan Red Grid MGRS mengakses mikrofon Anda";
+"NSMotionUsageDescription" = "Izinkan Red Grid MGRS mengakses sensor gerak perangkat";
+"NSPhotoLibraryAddUsageDescription" = "Izinkan Red Grid MGRS menyimpan foto";
+"NSPhotoLibraryUsageDescription" = "Red Grid MGRS mengakses galeri foto Anda untuk memilih gambar yang akan diberi stempel geografis. Tidak ada foto yang diunggah atau dikirim.";

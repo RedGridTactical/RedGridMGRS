@@ -1,0 +1,11 @@
+/* Localized permission descriptions. */
+"NSBluetoothAlwaysUsageDescription" = "Red Grid MGRS bruger Bluetooth til at forbinde til Meshtastic-radioer til mesh-netværk uden mobildækning. Ingen data sendes via internettet.";
+"NSBluetoothPeripheralUsageDescription" = "Red Grid MGRS bruger Bluetooth til at forbinde til Meshtastic-radioer til mesh-netværk uden mobildækning. Ingen data sendes via internettet.";
+"NSCameraUsageDescription" = "Red Grid MGRS bruger dit kamera til geotaggede fotos. Fotos stemples med dit MGRS-grid og gemmes kun på din enhed.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Tillad Red Grid MGRS at bruge din position";
+"NSLocationAlwaysUsageDescription" = "Tillad Red Grid MGRS at bruge din position";
+"NSLocationWhenInUseUsageDescription" = "Red Grid MGRS bruger din position til gridkoordinater og navigation. Du kan gemme waypoints på din enhed og selv vælge at dele eller sende din position via en tilsluttet radio.";
+"NSMicrophoneUsageDescription" = "Tillad Red Grid MGRS at bruge din mikrofon";
+"NSMotionUsageDescription" = "Tillad Red Grid MGRS at bruge enhedens bevægelsessensorer";
+"NSPhotoLibraryAddUsageDescription" = "Tillad Red Grid MGRS at gemme fotos";
+"NSPhotoLibraryUsageDescription" = "Red Grid MGRS bruger dit fotobibliotek til at vælge billeder til geostempling. Ingen fotos uploades eller sendes.";

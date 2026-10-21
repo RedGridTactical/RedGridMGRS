@@ -6,6 +6,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import * as Localization from 'expo-localization';
+import { AppState } from 'react-native';
 
 import en from './en';
 import fr from './fr';
@@ -23,6 +24,14 @@ import tr from './tr';
 import pl from './pl';
 import arSA from './ar-SA';
 import hi from './hi';
+import da from './da';
+import hr from './hr';
+import id from './id';
+import nb from './nb';
+import sk from './sk';
+import sv from './sv';
+import th from './th';
+import vi from './vi';
 
 const resources = {
   en: { translation: en },
@@ -47,6 +56,14 @@ const resources = {
   'ar-SA': { translation: arSA },
   ar: { translation: arSA },
   hi: { translation: hi },
+  da: { translation: da },
+  hr: { translation: hr },
+  id: { translation: id },
+  nb: { translation: nb },
+  sk: { translation: sk },
+  sv: { translation: sv },
+  th: { translation: th },
+  vi: { translation: vi },
 };
 
 /**
@@ -59,36 +76,57 @@ const resources = {
  * served to anyone. Script and region must be consulted before falling back to
  * the bare language.
  */
-export function resolveDeviceLang(locale) {
-  if (!locale) return 'en';
-  const base = String(locale.languageCode || '').toLowerCase();
-  const script = String(locale.languageScriptCode || '').toLowerCase();
-  const region = String(locale.regionCode || '').toUpperCase();
-  const tag = String(locale.languageTag || '').toLowerCase();
+function supportedDeviceLang(locale) {
+  if (!locale) return undefined;
+  const tag = String(locale.languageTag || '').replace(/_/g, '-').toLowerCase();
+  // Ignore extensions when extracting script/region (for example, -u-ca-gregory).
+  const subtags = tag.split('-');
+  const extension = subtags.findIndex((part, index) => index > 0 && part.length === 1);
+  const languageSubtags = extension < 0 ? subtags.slice(1) : subtags.slice(1, extension);
+  const base = String(locale.languageCode || subtags[0] || '').toLowerCase();
+  const script = String(locale.languageScriptCode || languageSubtags.find((part) => /^[a-z]{4}$/.test(part)) || '').toLowerCase();
+  // iOS regionCode is the user's formatting region, not necessarily the language's.
+  const region = String(locale.languageRegionCode || languageSubtags.find((part) => /^([a-z]{2}|\d{3})$/.test(part)) || locale.regionCode || '').toUpperCase();
+
+  if (base === 'no' || base === 'nb') return 'nb';
+  if (base === 'in') return 'id';
 
   if (base === 'zh') {
-    if (script === 'hant' || tag.includes('hant')) return 'zh-Hant';
-    if (script === 'hans' || tag.includes('hans')) return 'zh-Hans';
+    if (script === 'hant') return 'zh-Hant';
+    if (script === 'hans') return 'zh-Hans';
     // No script subtag: infer from region. Everything else stays Simplified.
     if (region === 'TW' || region === 'HK' || region === 'MO') return 'zh-Hant';
     return 'zh-Hans';
   }
 
-  // Exact tag first (e.g. 'pt-BR'), then the bare language, then English.
+  // Exact tag first (e.g. 'pt-BR'), then the bare language.
   const exact = Object.keys(resources).find((k) => k.toLowerCase() === tag);
   if (exact) return exact;
-  return resources[base] ? base : 'en';
+  return Object.prototype.hasOwnProperty.call(resources, base) ? base : undefined;
 }
 
-let deviceLang = 'en';
-try {
-  const locales = Localization.getLocales?.();
-  if (locales && locales.length > 0) {
-    deviceLang = resolveDeviceLang(locales[0]);
-  }
-} catch {
-  // Fall back to English
+export function resolveDeviceLang(locale) {
+  return supportedDeviceLang(locale) || 'en';
 }
+
+export function resolvePreferredDeviceLang(locales) {
+  for (const locale of Array.isArray(locales) ? locales : []) {
+    const language = supportedDeviceLang(locale);
+    if (language) return language;
+  }
+  return 'en';
+}
+
+function readDeviceLang() {
+  try {
+    const locales = Localization.getLocales?.();
+    return Array.isArray(locales) && locales.length > 0 ? resolvePreferredDeviceLang(locales) : null;
+  } catch {
+    return null;
+  }
+}
+
+const deviceLang = readDeviceLang() || 'en';
 
 i18n
   .use(initReactI18next)
@@ -104,5 +142,18 @@ i18n
       useSuspense: false,
     },
   });
+
+// Android can change its app language without restarting this JS process.
+// Recheck on return from Settings; a failed native read must not reset the UI.
+const localeSubscription = AppState.addEventListener('change', (state) => {
+  if (state !== 'active') return;
+  const language = readDeviceLang();
+  if (language && language !== i18n.language) {
+    i18n.changeLanguage(language);
+  }
+});
+
+// The listener belongs to this module only; preserve other AppState listeners.
+if (module.hot) module.hot.dispose(() => localeSubscription.remove());
 
 export default i18n;

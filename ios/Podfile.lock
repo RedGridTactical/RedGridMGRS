@@ -91,6 +91,8 @@ PODS:
     - Yoga
   - ExpoNetwork (7.1.5):
     - ExpoModulesCore
+  - ExpoPrint (14.1.4):
+    - ExpoModulesCore
   - ExpoSensors (14.1.4):
     - ExpoModulesCore
   - ExpoSharing (13.1.5):
@@ -1836,6 +1838,7 @@ DEPENDENCIES:
   - ExpoMediaLibrary (from `../node_modules/expo-media-library/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoNetwork (from `../node_modules/expo-network/ios`)
+  - ExpoPrint (from `../node_modules/expo-print/ios`)
   - ExpoSensors (from `../node_modules/expo-sensors/ios`)
   - ExpoSharing (from `../node_modules/expo-sharing/ios`)
   - ExpoSpeech (from `../node_modules/expo-speech/ios`)
@@ -1967,6 +1970,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-core"
   ExpoNetwork:
     :path: "../node_modules/expo-network/ios"
+  ExpoPrint:
+    :path: "../node_modules/expo-print/ios"
   ExpoSensors:
     :path: "../node_modules/expo-sensors/ios"
   ExpoSharing:
@@ -2148,6 +2153,7 @@ SPEC CHECKSUMS:
   ExpoMediaLibrary: 0daf5e811e00daa47690f5da2989e71ff7de56e0
   ExpoModulesCore: f55e7872391bae03ee5547c83152c81750d89508
   ExpoNetwork: 92cac43c13a2d9e9c1470ec8804836574ff34068
+  ExpoPrint: b278f5d9ac844f4b1f65dd06183970602e09bc8b
   ExpoSensors: 38ae3a55b484410a7976fa3ff78ea80339252e75
   ExpoSharing: b0377be82430d07398c6a4cd60b5a15696accbd3
   ExpoSpeech: 9b3bdf552e69c8015c246dc52b5ad5fcdbec878e
@@ -2229,6 +2235,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: dc7c21200195acacb62fa920c588e7c2106de45e
 
-PODFILE CHECKSUM: 4dcd03099f4754397ea648248fb6230747042f96
+PODFILE CHECKSUM: cecbb98c3f21476bd9058e599da3d997e77b8867
 
 COCOAPODS: 1.16.2

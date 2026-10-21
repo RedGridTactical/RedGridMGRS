@@ -1,6 +1,6 @@
 {
   "name": "redgrid-tactical",
-  "version": "4.0.8",
+  "version": "4.1.5",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "expo start",
@@ -32,6 +32,7 @@
     "expo-media-library": "~17.1.7",
     "expo-navigation-bar": "~4.2.8",
     "expo-network": "~7.1.5",
+    "expo-print": "14.1.4",
     "expo-sensors": "~14.1.4",
     "expo-sharing": "~13.1.5",
     "expo-speech": "~13.1.7",

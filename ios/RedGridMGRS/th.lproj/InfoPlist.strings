@@ -1,0 +1,11 @@
+/* Localized permission descriptions. */
+"NSBluetoothAlwaysUsageDescription" = "Red Grid MGRS ใช้ Bluetooth เพื่อเชื่อมต่อกับวิทยุ Meshtastic สำหรับเครือข่าย mesh นอกพื้นที่สัญญาณ ไม่มีการส่งข้อมูลผ่านอินเทอร์เน็ต";
+"NSBluetoothPeripheralUsageDescription" = "Red Grid MGRS ใช้ Bluetooth เพื่อเชื่อมต่อกับวิทยุ Meshtastic สำหรับเครือข่าย mesh นอกพื้นที่สัญญาณ ไม่มีการส่งข้อมูลผ่านอินเทอร์เน็ต";
+"NSCameraUsageDescription" = "Red Grid MGRS ใช้กล้องเพื่อถ่ายภาพที่มีพิกัด ภาพจะถูกประทับกริด MGRS ของคุณและบันทึกไว้ในอุปกรณ์เท่านั้น";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "อนุญาตให้ Red Grid MGRS เข้าถึงตำแหน่งของคุณ";
+"NSLocationAlwaysUsageDescription" = "อนุญาตให้ Red Grid MGRS เข้าถึงตำแหน่งของคุณ";
+"NSLocationWhenInUseUsageDescription" = "Red Grid MGRS ใช้ตำแหน่งของคุณสำหรับพิกัดกริดและการนำทาง คุณสามารถบันทึกจุดอ้างอิงในอุปกรณ์ และเลือกแชร์หรือส่งตำแหน่งของคุณผ่านวิทยุที่เชื่อมต่อได้";
+"NSMicrophoneUsageDescription" = "อนุญาตให้ Red Grid MGRS เข้าถึงไมโครโฟนของคุณ";
+"NSMotionUsageDescription" = "อนุญาตให้ Red Grid MGRS เข้าถึงเซ็นเซอร์การเคลื่อนไหวของอุปกรณ์";
+"NSPhotoLibraryAddUsageDescription" = "อนุญาตให้ Red Grid MGRS บันทึกรูปภาพ";
+"NSPhotoLibraryUsageDescription" = "Red Grid MGRS เข้าถึงคลังภาพของคุณเพื่อเลือกรูปสำหรับประทับพิกัด ไม่มีการอัปโหลดหรือส่งรูปภาพ";

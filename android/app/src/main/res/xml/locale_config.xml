@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- UI translations are bundled in JavaScript, so declare supported locales explicitly. -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en"/>
+    <locale android:name="fr"/>
+    <locale android:name="de"/>
+    <locale android:name="es"/>
+    <locale android:name="ja"/>
+    <locale android:name="ko"/>
+    <locale android:name="it"/>
+    <locale android:name="nl"/>
+    <locale android:name="pt-BR"/>
+    <locale android:name="ru"/>
+    <locale android:name="zh-Hans"/>
+    <locale android:name="zh-Hant"/>
+    <locale android:name="tr"/>
+    <locale android:name="pl"/>
+    <locale android:name="ar-SA"/>
+    <locale android:name="hi"/>
+    <locale android:name="da"/>
+    <locale android:name="hr"/>
+    <locale android:name="id"/>
+    <locale android:name="nb"/>
+    <locale android:name="sk"/>
+    <locale android:name="sv"/>
+    <locale android:name="th"/>
+    <locale android:name="vi"/>
+</locale-config>

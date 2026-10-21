@@ -188,7 +188,7 @@ export function entitlingSku(purchase, allowedIds) {
  */
 export function needsAndroidAck(purchase, allowedIds) {
   if (!purchase) return false;
-  if (purchase.purchaseStateAndroid != null && Number(purchase.purchaseStateAndroid) === 2) return false;
+  if (purchase.purchaseStateAndroid != null && Number(purchase.purchaseStateAndroid) !== 1) return false;
   if (purchase.isAcknowledgedAndroid === true) return false;
   if (!(purchase.purchaseToken || purchase.purchaseTokenAndroid)) return false;
   return !!entitlingSku(purchase, allowedIds);
@@ -203,4 +203,46 @@ export function canConfirmNoEntitlement(platform, resolvedProductIds, allowedIds
   if (platform === 'android') return true;
   if (platform !== 'ios' || !Array.isArray(resolvedProductIds)) return false;
   return allowedIds.length > 0 && allowedIds.every(id => resolvedProductIds.includes(id));
+}
+
+/** StoreKit 2 only forwards verified transactions; its updates also include
+ * refunds, revoked shared purchases, and superseded subscriptions. Those are
+ * notifications, not grants. Missing dates retain compatibility with older
+ * native records; a present invalid expiry cannot establish paid access.
+ */
+export function isRevokedIOS(purchase) {
+  return purchase?.revocationDateIOS != null;
+}
+
+export function isEntitlingPurchase(purchase, platform, allowedIds, now = Date.now(), source = 'transaction') {
+  const sku = entitlingSku(purchase, allowedIds);
+  if (!sku) return false;
+  if (platform === 'android') {
+    return purchase.purchaseStateAndroid == null || Number(purchase.purchaseStateAndroid) === 1;
+  }
+  if (platform === 'ios') {
+    if (isRevokedIOS(purchase) || purchase.isUpgradedIOS === true) return false;
+    if (purchase.expirationDateIOS != null) {
+      const expiry = Number(purchase.expirationDateIOS);
+      if (!Number.isFinite(expiry)) return false;
+      // Verified StoreKit currentEntitlements includes subscriptions in billing
+      // grace, whose last paid transaction can already have expired. Only that
+      // current-query provenance establishes grace; an old update or checkout
+      // response with the same date does not. Refund/upgraded checks above and
+      // the hook's known-revoked transaction guard still apply.
+      const currentSubscription = source === 'currentEntitlements' && SUB_PRODUCT_IDS.includes(sku);
+      if (expiry <= now && !currentSubscription) return false;
+    }
+  }
+  return true;
+}
+
+// Exact transaction identity, never originalTransactionIdentifierIOS: the
+// latter groups subscription renewals, so revoking an old renewal must not
+// revoke a different current transaction. Stored only on this device.
+export function iosTransactionIdentity(purchase, allowedIds) {
+  const productId = entitlingSku(purchase, allowedIds);
+  const id = purchase?.transactionId || purchase?.id;
+  if (!productId || typeof id !== 'string' || !id || allowedIds.includes(id)) return null;
+  return { productId, transactionId: id };
 }

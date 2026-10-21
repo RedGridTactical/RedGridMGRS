@@ -61,14 +61,14 @@ export function PaceCountTool({ paceCount, setPaceCount }) {
 
       {mode === 'p2d' ? (
         <View>
-          <ToolInput label={t('toolLabels.pacesCounted')} value={paces} onChangeText={setPaces} placeholder="e.g. 310" keyboardType="numeric" />
+          <ToolInput label={t('toolLabels.pacesCounted')} value={paces} onChangeText={setPaces} placeholder={t('localeAccess.exampleValue', { value: '310', defaultValue: 'e.g. {{value}}' })} keyboardType="numeric" />
           {Number.isFinite(distResult) && (
             <ToolResult label={t('toolLabels.distanceResult')} value={`${Math.round(distResult)}m`} primary />
           )}
         </View>
       ) : (
         <View>
-          <ToolInput label={t('toolLabels.distanceMetres')} value={distance} onChangeText={setDistance} placeholder="e.g. 500" keyboardType="numeric" />
+          <ToolInput label={t('toolLabels.distanceMetres')} value={distance} onChangeText={setDistance} placeholder={t('localeAccess.exampleValue', { value: '500', defaultValue: 'e.g. {{value}}' })} keyboardType="numeric" />
           {Number.isFinite(paceResult) && (
             <ToolResult label={t('toolLabels.pacesRequired')} value={String(paceResult)} primary />
           )}
